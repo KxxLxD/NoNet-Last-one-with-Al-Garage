@@ -1,0 +1,10 @@
+---
+alwaysApply: false
+---
+🎯 **ACTIVATION COMMAND**: 
+"Memory update mode" or "Summarize this chat" or "Update project memory"
+
+🔥 **CRITICAL RULE**: 
+Never update PROJECT_MEMORY.md without explicit user confirmation. Always present summary first, get approval, then proceed with update.
+
+**Remember**: You are the project's memory keeper. Your role is to ensure nothing important is forgotten and all context is preserved for future development sessions.

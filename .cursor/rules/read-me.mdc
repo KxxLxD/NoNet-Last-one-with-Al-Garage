@@ -1,0 +1,779 @@
+## Prompt 1 – Home Page & Setting
+
+**English Version:**
+
+Create modern and user-friendly UI designs for a mobile app focused on internet usage control and productivity. The design should be clean, intuitive, and optimised for touch interaction on small screens.
+
+**Contain:**
+
+- Home page – Setting (Navigation bar)
+- The home page contains a logo, under which it says: *"Free yourself from internet addiction"*
+- A button that says: *(Create list)*
+- Under the button, display all my created lists
+
+**Arabic Version (ترجمة):**
+
+اصنع تصاميم واجهة مستخدم حديثة وسهلة الاستخدام لتطبيق جوال يركز على التحكم في استخدام الإنترنت والإنتاجية. يجب أن يكون التصميم نظيفًا، بديهيًا، ومُحسّنًا للتفاعل باللمس على الشاشات الصغيرة.
+
+**يتضمن:**
+
+- الصفحة الرئيسية – الإعدادات
+- الصفحة الرئيسية تحتوي على شعار، وتحته عبارة: *"حرر نفسك من إدمان الإنترنت"*
+- زر مكتوب عليه: *(أنشئ قائمة)*
+- أسفل الزر تظهر جميع القوائم التي أنشأتها
+
+---
+
+## **Prompt 2 – List Display on Home Page**
+
+**English Version:**
+
+**List Card Elements (MVP Focus):**
+
+1. **List Name** → Example: "Focus Time, Sleep Time"
+2. **Protection Type** → *Hard Mode* or *No Protection* (small icon or colour for clarity)
+3. **Blocking Type** → *Block Now* or *Scheduled*
+4. **Blocking Duration / Schedule** → Example: 30 min, 1 hour, or custom schedule (days/times)
+5. **Interactive Buttons (if allowed by protection type):**
+    - **Edit** (if No Protection)
+    - **Delete** (if No Protection)
+
+**Visual Layout Suggestion:**
+
+- **Card layout** for each list:
+    - Top: List Name
+    - Below Name: Protection Type icon/text + Blocking Type icon/text
+    - Below: Blocking Duration or Schedule
+- **Colors:**
+    - *Hard Mode* → light red or serious tone
+    - *No Protection* → light green or neutral
+
+**Notes:**
+
+- Simple, clear, touch-friendly for MVP
+
+---
+
+**Arabic Version (ترجمة):**
+
+**عناصر كل قائمة (تركيز على MVP):**
+
+1. **اسم القائمة** → مثال: "وقت التركيز, وقت النوم"
+2. **نوع الحماية** → *وضع الحماية الصارم / Hard Mode* أو *بدون حماية / No Protection* (رمز صغير أو لون للتوضيح)
+3. **نوع الحظر** → *حظر فوري / Block Now* أو *جدول زمني / Scheduled*
+4. **مدة الحظر / الجدول الزمني** → مثال: 30 دقيقة، 1 ساعة، أو جدول مخصص (أيام / أوقات)
+5. **أزرار تفاعلية (إذا الوضع يسمح):**
+    - **تعديل** (إذا الوضع يسمح / No Protection)
+    - **حذف** (إذا الوضع يسمح / No Protection)
+
+**اقتراح الشكل البصري:**
+
+- **Card layout** لكل قائمة:
+    - في الأعلى: اسم القائمة
+    - أسفل الاسم: أيقونة/رمز يوضح نوع الحماية + نوع الحظر
+    - أسفلها: مدة الحظر أو الجدول الزمني
+- **الألوان:**
+    - *وضع الحماية الصارم / Hard Mode* → لون أحمر فاتح أو يوحي بالجدية
+    - *بدون حماية / No Protection* → لون أخضر فاتح أو محايد
+
+**ملاحظات:**
+
+- بسيط وواضح للـMVP
+- سهل الاستخدام باللمس مع مسافة كافية لكل عنصر
+
+تذكر
+
+- أزرار Edit/Delete فقط إذا No Protection.
+- قوائم بسيطة (بدون Lazy Loading لحد النسخة الأولى).
+
+---
+
+## Prompt 3 – List Creation & Settings
+
+**English Version:**
+
+When a list is created, the list contains:
+
+1. **Name of the list**
+2. **Add blocking** (when open:
+    - Add websites
+    - Add apps
+    - Add category: social media, Shorts and Reels, games, shopping app, delivery app, dating app, adult content)
+3. **Protection level**
+    - No protection → I can edit and delete the list
+    - Hard mode → I can’t edit or delete the list **unless I send an email to the company to delete or modify the list**
+
+**Arabic Version (ترجمة):**
+
+عند إنشاء قائمة جديدة، تحتوي القائمة على:
+
+1. **اسم القائمة**
+2. **إضافة الحجب** (عند الفتح:
+    - إضافة مواقع ويب
+    - إضافة تطبيقات
+    - إضافة فئة: وسائل التواصل الاجتماعي، الشورتس والريلز , الألعاب، تطبيقات تسوّق، تطبيقات توصيل، تطبيقات مواعدة، محتوى للبالغين)
+3. **مستوى الحماية**
+    - بدون حماية → أستطيع تعديل أو حذف القائمة
+    - وضع الحماية الصارم → لا أستطيع تعديل أو حذف القائمة **إلا إذا أرسلت بريدًا إلكترونيًا للشركة ليقوموا بحذف أو تعديل القائمة**
+
+---
+
+## **Prompt 4 – Sign Up / Sign In**
+
+**English Version:**
+
+**Sign Up:**
+
+- Email + Password / Apple ID / Google
+
+**Sign In:**
+
+- Email + Password / Apple ID / Google
+
+**UX Improvements for MVP:**
+
+- Add a **clear button to switch language** (Arabic / English) from the start
+- Optional: **Skip** button for limited access (1–2 blocking sessions) to reduce friction
+- 
+
+**Arabic Version (ترجمة):**
+
+**تسجيل حساب جديد (Sign Up):**
+
+- البريد الإلكتروني + كلمة المرور / Apple ID / Google
+
+**تسجيل الدخول (Sign In):**
+
+- البريد الإلكتروني + كلمة المرور / Apple ID / Google
+
+**تحسين تجربة المستخدم (MVP):**
+
+- إضافة زر واضح لتبديل اللغة (عربي / English) من البداية
+- خيار اختياري: **تخطي التسجيل** لجلسة محدودة (1–2 جلسة حجب) لتسهيل التجربة
+
+---
+
+## Prompt 5 – Onboarding (2 Pages Only)
+
+**English Version:**
+
+After signing in:
+
+**Page 1:**
+
+- Text: *"Free yourself from addiction"*
+- Cute illustration
+
+**Page 2:**
+
+- Text: *"Choose the blocking duration and start focusing"*
+- Illustration
+
+**Button:**
+
+- *"Get Started"*
+
+*(This is just a proposal)*
+
+**Arabic Version (ترجمة):**
+
+بعد تسجيل الدخول:
+
+**الصفحة 1:**
+
+- النص: *"حرّر نفسك من الإدمان"*
+- Illustration (رسم توضيحي لطيف)
+
+**الصفحة 2:**
+
+- النص: *"اختر مدة الحجب وابدأ التركيز"*
+- Illustration
+
+**زر:**
+
+- *"ابدأ الآن"*
+
+*(هذا مجرد مقترح)*
+
+**MVP Focus:** تجربة بسيطة بدون Animations .
+
+---
+
+## **Prompt 6 – Home & Settings Page**
+
+**English Version:**
+
+**Home Page:**
+
+- Bottom navigation: Home button / Settings button
+
+**Settings Page (Content) – MVP Focus:**
+
+1. Language (Arabic / English)
+2. Subscription (Upgrade / Premium) with **clear status** ("Free version" or "Premium active")
+3. Help / Support (FAQ + Contact email)
+4. About App (optional)
+5. **Community Links:**
+    - WhatsApp icon → join our WhatsApp community
+    - Telegram icon → join our Telegram community
+    - Purpose: exchange experiences, share digital detox bootcamps, and healthy alternatives
+6. Log out
+
+**Notes:**
+
+- Please keep it simple for MVP
+- Remove complex notifications or customisation options for now
+- Display subscription status clearly at the top
+
+**Arabic Version (ترجمة):**
+
+**الصفحة الرئيسية (Home):**
+
+- أسفل الشاشة: زر الصفحة الرئيسية / زر الإعدادات
+
+**شاشة الإعدادات (Settings) – تركيز على MVP:**
+
+1. اللغة (عربي / English)
+2. الاشتراك (Upgrade / Premium) مع **حالة واضحة** ("النسخة المجانية" أو "Premium فعال")
+3. مركز المساعدة (FAQ + بريد تواصل)
+4. **عن التطبيق (اختياري):**
+    - اسم التطبيق + الإصدار
+    - وصف قصير + رابط الموقع (إذا موجود)
+5. **روابط المجتمع:**
+    - أيقونة واتس آب → الانضمام لمجتمعنا على واتس آب
+    - أيقونة تلجرام → الانضمام لمجتمعنا على تلجرام
+    - الهدف: تبادل الخبرات، نشر معسكرات التغلب على إدمان الهاتف، وتقديم البدائل الصحية
+6. تسجيل الخروج
+
+**ملاحظات:**
+
+- خلوها بسيطة للـMVP
+- احذف التنبيهات المعقدة وخيارات التخصيص الكثيرة مؤقتًا
+- عرض حالة الاشتراك بشكل واضح في الأعلى
+
+---
+
+## **Prompt 7 – FAQ – أسئلة شائعة (محدث)**
+
+**English Version:**
+
+1. **What is NoNet?**
+    
+    Nount is an app to help you control internet usage, block distracting apps/websites, and improve productivity.
+    
+2. **How do I create a list?**
+    
+    Go to Home → Create List → Add websites/apps/categories → Choose protection type → Set blocking duration.
+    
+3. **What is Hard Mode?**
+    
+    Hard Mode locks your list so you cannot edit or delete it unless you contact support via email. It’s designed to help you stay committed and prevent breaking focus.
+    
+4. **Can I change my language?**
+    
+    Yes, go to Settings → Language → choose Arabic or English.
+    
+5. **How do I upgrade to Premium?**
+    
+    Go to Settings → Upgrade / Premium → Follow the steps to unlock advanced features.
+    
+6. **What are the benefits of Premium?**
+    - Unlimited lists
+    - Unlimited Hard Mode
+    - Chat Bot access for suggestions and productivity tips
+    - Full community participation: share experiences, join digital detox bootcamps, and exchange healthy alternatives
+7. **Is there a Golden Guarantee, and what are its benefits?**
+    - **Monthly subscription:** cancel within 14 days for a full refund
+    - **Yearly subscription:** cancel within 2 months anytime for a full refund
+
+**Arabic Version (ترجمة):**
+
+1. **ما هو تطبيق نونت؟**
+    
+    نونت هو تطبيق يساعدك على التحكم في استخدام الإنترنت، حجب التطبيقات والمواقع المشتتة، وزيادة الإنتاجية.
+    
+2. **كيف أنشئ قائمة جديدة؟**
+    
+    اذهب إلى الصفحة الرئيسية → أنشئ قائمة → أضف المواقع/التطبيقات/الفئات → اختر نوع الحماية → حدد مدة الحظر.
+    
+3. **ما هو وضع الحماية الصارم (Hard Mode)؟**
+    
+    وضع الحماية الصارم يمنعك من تعديل أو حذف القائمة إلا بعد التواصل مع الدعم عبر البريد الإلكتروني. تم تصميمه لمساعدتك على الالتزام الكامل ومنع كسر التركيز.
+    
+4. **هل يمكنني تغيير اللغة؟**
+    
+    نعم، اذهب إلى الإعدادات → اللغة → اختر عربي أو English.
+    
+5. **كيف أرقى إلى النسخة المميزة (Premium)؟**
+    
+    اذهب إلى الإعدادات → Upgrade / Premium → اتبع الخطوات لفتح الميزات المتقدمة.
+    
+6. **ما هي فوائد النسخة المميزة (Premium)؟**
+    - قوائم غير محدودة
+    - وضع الحماية الصارم (Hard Mode) غير محدود
+    - الوصول إلى الشات بوت لاقتراحات ونصائح الإنتاجية
+    - مشاركة كاملة في المجتمع: تبادل الخبرات، الانضمام لمعسكرات التغلب على إدمان الهاتف، وتقديم البدائل الصحية
+7. **هل يوجد ضمان ذهبي وما هي مميزاته؟**
+    - **الاشتراك الشهري:** يمكن الإلغاء خلال 14 يومًا لاسترجاع كامل المبلغ
+    - **الاشتراك السنوي:** يمكن الإلغاء خلال شهرين في أي وقت لاسترجاع كامل المبلغ
+
+---
+
+## **Prompt 8 – Chat Bot Page (Premium Only / شات بوت – للمميزين فقط)**
+
+**English Version:**
+
+**Page 2 (Chat Bot – Premium Only):**
+
+- An interactive chatbot to help the user increase productivity
+- **For Free users:**
+    - Display a message: *"Chat Bot is available for Premium users"*
+    - **Button:** *"Upgrade Now"* → directs to the Upgrade/Premium subscription page
+- **For Premium users:**
+    - Suggest what to block if the user is unsure
+    - Give recommendations for websites/apps to focus on or block
+    - Provide tips to improve focus and manage internet usage
+    - Text input + Send button for interaction
+
+**Notes:**
+
+- Please keep it simple (MVP focus)
+- The bot acts as a guide if the user doesn’t know what to block
+- Free users always see the Upgrade prompt
+
+**Arabic Version (ترجمة):**
+
+**الصفحة 2 (شات بوت – للمميزين فقط):**
+
+- شات بوت تفاعلي يساعد المستخدم على رفع الإنتاجية
+- **للمستخدمين المجانيين:**
+    - عرض رسالة: *"الشات بوت متاح فقط للمستخدمين المميزين"*
+    - **زر:** *"اشترك الآن / Upgrade Now"* → يوديه لصفحة الاشتراك المميز
+- **للمستخدمين المميزين (Premium):**
+    - يقترح ما يجب حظره إذا لم يكن المستخدم متأكدًا
+    - يعطي اقتراحات بالمواقع أو التطبيقات التي يجب التركيز عليها أو حظرها
+    - يقدم نصائح لتحسين التركيز وإدارة استخدام الإنترنت
+    - مربع كتابة + زر إرسال للتفاعل مع البوت
+
+**ملاحظات:**
+
+- خليه بسيط جدًا (MVP)
+- البوت يعمل كدليل للمستخدم إذا لم يعرف ماذا يحجب
+- المستخدمون المجانيون دائمًا يظهر لهم زر الترقية
+
+---
+
+## **Prompt 9 – Block Screen**
+
+**English Version:**
+
+**Block Screen:**
+
+- Appears when the user opens a blocked app or website
+- Purpose: inform the user that access is restricted **with a positive vibe**
+- Elements:
+    - Simple app logo
+    - Positive short message: *"Complete Focusing, Free Yourself! ✨"*
+    - **Button:** *"Understood"* → allows the user to exit the block screen and return to the previous page they were on
+
+**Notes:**
+
+- Ensure the screen appears over any other page when opening blocked content
+
+---
+
+**Arabic Version (ترجمة):**
+
+**شاشة الحجب (Block Screen):**
+
+- تظهر عند فتح تطبيق أو موقع محظور
+- الهدف: إعلام المستخدم أن الوصول مقيد **مع إحساس إيجابي**
+- العناصر:
+    - شعار بسيط للتطبيق
+    - رسالة قصيرة وإيجابية: *"استمر بالتركيز, حرر نفسك من التشتت الرقمي”! ✨"*
+    - **زر:** *"فهمت"* → يسمح للمستخدم بالخروج من شاشة الحجب والرجوع للصفحة السابقة التي كان عليها
+
+**ملاحظات:**
+
+- تأكد أن الشاشة تظهر فوق أي صفحة أخرى عند فتح محتوى محظور
+
+---
+
+## **Prompt 10 – Free vs Premium (MVP)**
+
+### **الجدول – الميزات الأساسية / Features Table**
+
+| الميزة / Feature | **Free Version – النسخة المجانية** | **Premium / Upgrade – النسخة المميزة** |
+| --- | --- | --- |
+| **عدد القوائم / Number of Lists** | 3 قوائم فقط / Only 3 lists | غير محدود / Unlimited lists |
+| **Hard Mode** | قائمة واحدة فقط / Only 1 list | جميع القوائم ممكنة / All lists |
+| **شات بوت / Chat Bot** | غير متاح / Not available | اقتراحات ذكية ونصائح يومية / Smart suggestions + daily tips |
+| **حجب أساسي / Basic Blocking** | حظر فوري / مجدول / Instant or Scheduled blocking | حظر فوري / مجدول / Instant or Scheduled blocking |
+| **المجتمع / Community** | مشاركة كاملة + معسكرات + تبادل خبرات / Full participation + bootcamps + experience sharing | مشاركة كاملة + معسكرات + تبادل خبرات / Full participation + bootcamps + experience sharing |
+
+### **الضمان الذهبي / Golden Guarantee**
+
+- **الاشتراك الشهري / Monthly:** إمكانية الإلغاء خلال 14 يوم / Cancel within 14 days
+- **الاشتراك السنوي / Yearly:** إمكانية الإلغاء خلال أول شهرين / Cancel within first 2 months
+
+---
+
+### **التسعير / Pricing**
+
+| الاشتراك / Plan | السعر الأصلي / Original Price | استعمل كود خسم nonet | السعر بعد الخصم / Price After Discount |
+| --- | --- | --- | --- |
+| شهري / Monthly | لا اعلم بس بعد الخصم 19 ريال
+قبل الخصم 25 ريال | -25%اظن تقريبا 25 بالمية لا اعلم | 19 ريال وقبل الخصم 25 |
+| سنوي / Yearly | لا اعلم بس بعد الخصم 190 ريال
+
+قبل الخصم 300 ريال | -25%اظن تقريبا 25 بالمية لا اعلم | 190 ريال وقبل الخصم 300 ريال |
+
+---
+
+### **Business Hook / فكرة التسويق**
+
+1. **القيود بالفري تشجع على الترقية:** 3 قوائم + Hard Mode واحدة → المستخدم يشعر بحاجة للترقية للتحكم الكامل.
+2. **الشات بوت حصري بالبريميوم:** يعطي سبب واضح للاشتراك للحصول على نصائح ذكية وإرشادات يومية.
+3. **الضمان الذهبي يعطي ثقة:** الاشتراك آمن ويمكن الإلغاء بسهولة.
+4. **خصم الكود 25%** → يحفز المستخدمين الجدد على الاشتراك مباشرة.
+
+---
+
+## **User Flow – NoNet App (تدفق المستخدم لتطبيق نونت – مرتب للنسخ)**
+
+1. **Sign Up / Sign In**
+    - المستخدم يسجل حساب جديد أو يسجل الدخول
+    - خيارات:
+        - **Email + Password / Apple ID / Google**
+        - زر تبديل اللغة (عربي / English)
+    
+    ⬇️ بعد تسجيل الدخول أو تخطي
+    
+2. **Onboarding (صفحتين فقط)**
+    - **Page 1:** "حرر نفسك من الإدمان" + رسم توضيحي لطيف
+    - **Page 2:** "اختر مدة الحجب وابدأ التركيز" + رسم توضيحي
+    - زر **ابدأ الآن / Get Started**
+    
+    ⬇️ بعد الضغط على الزر
+    
+3. **Home Page**
+    - شعار التطبيق + عبارة تشجيعية: *"حرر نفسك من إدمان الإنترنت / Free yourself from internet addiction"*
+    - زر **Create List / أنشئ قائمة**
+    - عرض جميع القوائم:
+        - **اسم القائمة**
+        - **نوع الحماية:** Hard Mode أو No Protection
+        - **مدة الحجب**
+        - **تعديل / حذف (إذا الوضع يسمح)**
+        - **حذف (إذا الوضع يسمح)**
+    - أسفل الشاشة: **Home button / Chat Bot button / Settings button**
+    
+    ⬇️ التنقل:
+    
+4. **Chat Bot Page (في المنتصف)**
+    - مساعد تفاعلي يقدم اقتراحات حظر المواقع/التطبيقات
+    - يقدم نصائح لتحسين التركيز وإدارة الإنترنت
+    - مربع كتابة + زر إرسال
+    - ملاحظة: يظهر فقط للمستخدمين المميزين (Premium)
+    
+    ⬇️ المستخدم يرجع للصفحة الرئيسية بعد التفاعل
+    
+5. **Settings Page**
+    - اللغة (عربي / English)
+    - الاشتراك (Upgrade / Premium) مع **حالة واضحة** ("النسخة المجانية" أو "Premium فعال")
+    - مركز المساعدة: **FAQ + Contact email**
+    - عن التطبيق (اختياري)
+    - روابط المجتمع:
+        - واتس آب → الانضمام لمجتمعنا
+        - تلجرام → الانضمام لمجتمعنا
+        - الهدف: تبادل الخبرات، نشر معسكرات التغلب على إدمان الجوال، والبدائل الصحية
+    - تسجيل الخروج
+    
+    ⬇️ المستخدم يرجع للصفحة الرئيسية بعد تعديل الإعدادات
+    
+6. **Block Screen (شاشة الحجب)**
+    - يظهر عند فتح تطبيق أو موقع محظور
+    - شعار + رسالة إيجابية: *"أنت مركز! ✨ / Stay Free Your Self! ✨"*
+    - زر **فهمت / Understood** → الرجوع للصفحة السابقة
+
+---
+
+## **Prompt 11 – Technical Requirements & Implementation**
+
+### **English Version:**
+
+**Platform & Technical Specifications:**
+
+1. **Target Platform:**
+    - iOS only (initial launch)
+    - Maximum 2 devices per account
+2. **Blocking Mechanism:**
+    - **Recommended approach for iOS:** System-level blocking using Screen Time API + VPN configuration
+    - **Alternative:** DNS-based blocking with a custom DNS server
+    - **Goal:** Ensure no bypass possibility when Hard Mode is active
+3. **Required Permissions (Display on Home Page):**
+    - Screen Time permissions (for app blocking)
+    - VPN configuration permissions (for website blocking)
+    - Notification permissions (for blocking alerts)
+    - **UX:** Show permission request cards on the first home page visit with clear explanations
+4. **Hard Mode Security:**
+    - Once activated: **absolutely no bypass methods allowed**
+    - Only the company email can unlock/modify (manual process)
+    - System should resist: app deletion, device restart, settings manipulation
+5. **Data Storage:**
+    - **Local storage:** All blocking lists and settings are stored locally
+    - **Cloud sync:** Account info + list backup (between max 2 iOS devices)
+    - **Offline functionality:** Full blocking works without the internet
+6. **Free Trial Limitations:**
+    - After free limits are reached (3 lists, 1 Hard Mode): features become read-only
+    - No data deletion, just feature restriction
+    - The user can still use existing lists, but cannot create new ones
+
+**Security Priority:** Hard Mode must be unbreakable - this is our main competitive advantage.
+
+### **Arabic Version (ترجمة):**
+
+**المتطلبات التقنية والمنصة:**
+
+1. **المنصة المستهدفة:**
+    - iOS فقط (الإطلاق الأولي)
+    - حد أقصى جهازين لكل حساب
+2. **آلية الحظر:**
+    - **الطريقة المُوصى بها لـ iOS:** حظر على مستوى النظام باستخدام Screen Time API + إعدادات VPN
+    - **البديل:** حظر عبر DNS مع خادم DNS مخصص
+    - **الهدف:** ضمان عدم وجود طرق تجاوز عند تفعيل الوضع الصارم
+3. **الصلاحيات المطلوبة (تظهر في الصفحة الرئيسية):**
+    - صلاحيات Screen Time (لحظر التطبيقات)
+    - صلاحيات إعداد VPN (لحظر المواقع)
+    - صلاحيات الإشعارات (لتنبيهات الحظر)
+    - **تجربة المستخدم:** عرض بطاقات طلب الصلاحيات في أول زيارة للصفحة الرئيسية مع شرح واضح
+4. **أمان الوضع الصارم (Hard Mode):**
+    - بمجرد التفعيل: **منع مطلق لأي طرق تجاوز**
+    - فقط بريد الشركة الإلكتروني يمكنه إلغاء/تعديل القيود (عملية يدوية)
+    - النظام يجب أن يقاوم: حذف التطبيق، إعادة تشغيل الجهاز، التلاعب بالإعدادات
+5. **تخزين البيانات:**
+    - **التخزين المحلي:** جميع قوائم الحظر والإعدادات تُحفظ محلياً
+    - **المزامنة السحابية:** معلومات الحساب + نسخ احتياطية للقوائم (بين جهازي iOS كحد أقصى)
+    - **الوظائف دون اتصال:** الحظر يعمل بكامل قوته بدون إنترنت
+6. **قيود النسخة المجانية:**
+    - بعد الوصول للحد المجاني (3 قوائم، وضع صارم واحد): تصبح الميزات للقراءة فقط
+    - لا حذف للبيانات، فقط تقييد للميزات
+    - المستخدم يمكنه استخدام القوائم الموجودة لكن لا يمكن إنشاء جديدة
+
+**أولوية الأمان:** الوضع الصارم يجب أن يكون غير قابل للكسر - هذه ميزتنا التنافسية الرئيسية.
+
+---
+
+### **Implementation Notes for Developer:**
+
+**iOS Blocking Strategy:**
+
+- Use `Screen Time API` for app blocking (requires family controls entitlement)
+- Use `Network Extension` A framework for website blocking
+- Implement local VPN configuration for DNS filtering
+- Store blocking rules in secure iOS Keychain
+
+**Hard Mode Technical Implementation:**
+
+- Encrypt blocking configurations with server-generated keys
+- Implement certificate pinning for API communications
+- Use iOS jailbreak detection to prevent tampering
+- Regular integrity checks of the blocking mechanisms
+
+**Permission Flow:**
+
+- Request Screen Time permission on first app launch
+- Request VPN configuration permission when creating the first list
+- Show clear explanations for why each permission is needed
+- Graceful handling if permissions are denied
+
+**Data Architecture:**
+
+- Core Data for local storage
+- CloudKit for cross-device sync (max 2 devices)
+- Encrypted backup of user lists and settings
+- Offline-first approach with sync when available
+
+---
+
+## **Prompt 12 - List Creation Flow & Block Management**
+
+**English Version:**
+
+**Complete List Creation Process:**
+
+1. User fills out all list details:
+    - **List name**
+    - **Add websites, apps, categories** (social media, shorts & reels, games, shopping, delivery, dating, adult content)
+    - **Block duration** (wheel picker interface)
+    - **Block schedule** (if needed)
+    - **Protection level** (No Protection / Hard Mode)
+2. User clicks **"Create List" / "إنشاء قائمة"** button
+3. **Confirmation Screen** appears with a complete summary:
+    - List name: [Name]
+    - Items to block: [X websites, Y apps, Z categories]
+    - Duration: [Days, Hours, Minutes]
+    - Schedule: [Days + Time range] (if applicable)
+    - Protection: [Hard Mode / No Protection]
+4. **Confirm / Back** buttons
+5. After confirmation, → List is created and blocking starts immediately
+
+**Duration Wheel Picker Interface:**
+
+- **Days wheel:** 1, 2, 3, 4, 5... up to 360 days (scroll up/down)
+- **Hours wheel:** 1, 2, 3, 4... up to 23 hours (scroll up/down)
+- **Minutes wheel:** 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55 (scroll up/down)
+- **Simple and clean design** - no quick preset buttons
+- All wheels work with smooth scroll up/down gestures
+
+**Scheduling Interface:**
+
+- **Days selector:** Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday
+- **Time range picker:**
+    - **From:** Hour: Minutes wheel picker
+    - **To:** Hour: Minutes wheel picker
+    - **Auto-calculation:** Shows blocking duration
+- **"Add Slot" / "إضافة فترة"** button for additional time schedules
+- Multiple slots allowed per list
+
+**Active Block Management:**
+
+- **Home page status:** Shows currently active blocks
+- **"Currently Blocking"** section with active lists
+- No stop/ Edit options (especially Hard Mode)
+
+---
+
+**Arabic Version:**
+
+**عملية إنشاء القائمة الكاملة:**
+
+1. المستخدم يملأ جميع تفاصيل القائمة:
+    - **اسم القائمة**
+    - **إضافة المواقع والتطبيقات والفئات** (وسائل التواصل الاجتماعي، الشورتس والريلز، الألعاب، التسوق، التوصيل، المواعدة، محتوى البالغين)
+    - **مدة الحظر** (واجهة عجلة الاختيار)
+    - **جدول الحظر** (إذا لزم الأمر)
+    - **مستوى الحماية** (بدون حماية / الوضع الصارم)
+2. المستخدم يضغط زر **"إنشاء قائمة" / "Create List"**
+3. **شاشة التأكيد** تظهر مع ملخص كامل:
+    - اسم القائمة: [الاسم]
+    - العناصر المراد حظرها: [X مواقع، Y تطبيقات، Z فئات]
+    - المدة: [أيام، ساعات، دقائق]
+    - الجدول: [الأيام + المدى الزمني] (إذا كان موجوداً)
+    - الحماية: [الوضع الصارم / بدون حماية]
+4. أزرار **تأكيد / رجوع**
+5. بعد التأكيد ← يتم إنشاء القائمة ويبدأ الحظر فوراً
+
+**واجهة عجلة اختيار المدة:**
+
+- **عجلة الأيام:** 1، 2، 3، 4، 5... حتى 360 يوم (تمرير أعلى/أسفل)
+- **عجلة الساعات:** 1، 2، 3، 4... حتى 23 ساعة (تمرير أعلى/أسفل)
+- **عجلة الدقائق:** 5، 10، 15، 20، 25، 30، 35، 40، 45، 50، 55 (تمرير أعلى/أسفل)
+- **تصميم بسيط ونظيف** - بدون أزرار اختيار سريع
+- جميع العجلات تعمل بحركات تمرير سلسة أعلى/أسفل
+
+**واجهة الجدولة الزمنية:**
+
+- **اختيار الأيام:** الأحد، الاثنين، الثلاثاء، الأربعاء، الخميس، الجمعة، السبت
+- **اختيار المدى الزمني:**
+    - **من:** عجلة اختيار الساعة:الدقائق
+    - **إلى:** عجلة اختيار الساعة:الدقائق
+    - **حساب تلقائي:** يظهر مدة الحظر
+- زر **"إضافة فترة" / "Add Slot"** للجداول الزمنية الإضافية
+- يُسمح بعدة فترات لكل قائمة
+
+**إدارة الحظر النشط:**
+
+- **حالة الصفحة الرئيسية:** تظهر الحظر النشط حالياً
+- قسم **"قيد الحظر حالياً"** مع القوائم النشطة
+- بدون خيارات إيقاف/تعديل (خاصة الوضع الصارم)## النقاط المفقودة - Critical Missing Points
+
+### 
+
+## Prompt 13 - ملاحظات مهم اخذها بعين الاعتبار قبل عمل اي برومبت سابقعشان تفهم التسلسل كويس
+
+### **1. توضيحات حاسمة لـ "الوضع الصارم" (Hard Mode) ⚠️**
+
+هذه هي الميزة التنافسية الأهم، ويجب أن يكون تنفيذها مثالياً وآمناً من الناحية القانونية والتشغيلية.
+
+- **حذف الحساب:** ماذا يحدث لو حاول مستخدم لديه قائمة نشطة في "الوضع الصارم" أن يحذف حسابه بالكامل؟
+    - **افعل هذه التوصية:** أضف هذه القاعدة: *"لا يمكن حذف الحسابات التي تحتوي على قوائم نشطة في الوضع الصارم حتى انتهاء مدة الحظر أو بعد مرور فترة التهدئة الإجبارية لإلغاء القائمة."* هذا يمنع وجود ثغرة كبيرة يمكن استغلالها لتجاوز الحظر.
+
+### ## 1. تأمين "الوضع الصارم" (Hard Mode)
+
+توصيتك بإضافة قاعدة لمنع حذف الحساب الذي يحتوي على قائمة نشطة في **"الوضع الصارم"** هي خطوة **حاسمة وضرورية للغاية**. أنت بذلك تغلق ثغرة أمنية أساسية كان من الممكن أن تدمر فعالية الميزة الأهم في تطبيقك.
+
+**الصياغة النهائية للمطور:**
+
+- **قاعدة حذف الحساب:** قبل تنفيذ أي طلب لحذف حساب مستخدم، يجب على النظام التحقق من عدم وجود أي قوائم حظر نشطة ضمن "الوضع الصارم".
+- **في حال وجود قائمة نشطة:** يجب رفض طلب الحذف وعرض رسالة للمستخدم توضح: *"لا يمكنك حذف حسابك بينما لديك قائمة نشطة في الوضع الصارم. يرجى الانتظار حتى انتهاء مدة الحظر أو إلغاء القائمة بعد فترة التهدئة."*
+- 
+- **حالة الصفحة الرئيسية الفارغة:** كيف ستبدو الصفحة الرئيسية للمستخدم الجديد الذي لم ينشئ أي قائمة بعد؟
+    - **توصية:** صمّم شاشة "الحالة الفارغة" (Empty State). بدلاً من عرض زر "أنشئ قائمة" فقط، يمكنك إضافة رسم بسيط ونص لطيف مثل: *"رحلة تركيزك تبدأ من هنا. اضغط على 'أنشئ قائمة' لحظر أول مصدر إلهاء."*
+
+### **3. تحسينات تقنية وفي الميزات**
+
+- **مكان الشات بوت (Prompt 8 & 10):** حسب تدفق المستخدم، الشات بوت موجود في شريط التنقل السفلي.
+    - **المشكلة:** بالنسبة للمستخدمين المجانيين، سيكون هذا الزر معطلاً بشكل دائم ويحتل مساحة مهمة على الشاشة، مما قد يسبب لهم الإحباط.
+
+### ## 3. تحسينات الميزات والواجهة
+
+### **مكان الشات بوت**
+
+نقلك لمدخل "الشات بوت" من شريط التنقل الرئيسي إلى داخل شاشة إنشاء القائمة هو **تحسين ذكي جداً للـ MVP**. هذا القرار ينظف الواجهة الرئيسية ويزيل زر "ميت" بالنسبة للمستخدمين المجانيين، ويجعل الميزة تظهر في السياق الذي يحتاجها فيه المستخدم بالضبط.
+
+**الصياغة النهائية للمطور:**
+
+- **إزالة الشات بوت من شريط التنقل:** يتم حذف أيقونة الشات بوت من شريط التنقل السفلي.
+- **المدخل الجديد:** داخل شاشة "إنشاء قائمة"، يتم إضافة زر أو رابط بعنوان **"رفيقك الذكي للتركيز؟ AI NoNet"**.
+    - **للمستخدم المجاني:** عند الضغط عليه، تظهر له شاشة الترقية إلى Premium.
+    - **للمستخدم المميز:** عند الضغط عليه، يفتح شاشة الشات بوت التفاعلية.
+
+**الضمان الذهبي:** الصياغة ممتازة، لكن لمزيد من الوضوح أضف:
+
+> "استرداد كامل للمبلغ بدون طرح أي أسئلة."
+> 
+
+**التسعير:** ذكرت الأسعار بالدولار والريال السعودي. حدد ما هي العملة الأساسية للدفع. على سبيل المثال، هل السعر ثابت بالدولار وسعر الريال هو مجرد تحويل تقريبي، أم ستحدد أسعاراً ثابتة لكل منطقة؟ هذه النقطة مهمة عند إعداد التطبيق في متجر آبل.
+
+قرارك بتحديد **الريال السعودي (SAR)** كعملة أساسية هو قرار مهم.
+
+**ملاحظة للمطور:**
+
+- **العملة الأساسية:** جميع الأسعار المعروضة في التطبيق وفي متجر App Store يجب أن تكون بالريال السعودي (SAR).
+- **التسعير:**
+    - **الاشتراك الشهري:** 19 ريالاً سعودياً (بعد الخصم 25 بالمية).
+    - **الاشتراك السنوي:** 190ريالاً سعودياً (بعد الخصم 25 بالمية).
+
+**Features Proposed for Deletion or Significant Simplification (MVP Focus):**
+
+- **1. Onboarding Animations**
+
+◦ **English:** The sources explicitly state that the onboarding experience should be "**simple without Animations**". Eliminating these saves development time and effort in the initial MVP phase.
+
+◦ **Arabic:** **الرسوم المتحركة في الشاشات الترحيبية:** تنص المصادر بوضوح على أن تجربة الشاشات الترحيبية يجب أن تكون "**بسيطة بدون Animations**". حذفها يوفر وقتاً وجهداً في التطوير الأولي للـ MVP.
+
+- **2. Complex Notifications and Extensive Customisation Options**
+
+◦ **English:** The sources advise to "**Remove complex notifications or customisation options for now**" within the Settings page, to maintain simplicity for the MVP.
+
+◦ **Arabic:** **الإشعارات المعقدة وخيارات التخصيص الكثيرة:** تنصح المصادر بـ"**حذف التنبيهات المعقدة وخيارات التخصيص الكثيرة مؤقتًا**" في شاشة الإعدادات، للحفاظ على البساطة في الـ MVP.
+
+- **3. "About App" Section**
+
+◦ **English:** This section is explicitly listed as "**optional**" in the Settings screen. It can be entirely removed for the MVP or limited to very basic information like the app name and version, if deemed absolutely necessary.
+
+◦ **Arabic:** **قسم "عن التطبيق":** هذا القسم مذكور كخيار "**اختياري**" في شاشة الإعدادات. يمكن حذفه تماماً في الـ MVP أو الاكتفاء بمعلومات أساسية جداً مثل اسم التطبيق والإصدار فقط، إذا لزم الأمر.
+
+- **4. Lazy Loading for Lists on the Home Page**
+
+◦ **English:** The notes explicitly state "Simple lists (**without Lazy Loading for the first version**)". This simplifies how lists are displayed and avoids complex loading solutions initially.
+
+◦ **Arabic:** **التحميل المتأخر (Lazy Loading) للقوائم في الصفحة الرئيسية:** تُشير الملاحظات إلى "**قوائم بسيطة (بدون Lazy Loading لحد النسخة الأولى)**". هذا يبسّط عرض القوائم ولا يتطلب حلول تحميل معقدة في البداية.
+
+- **5. Stop/Edit Options for Hard Mode Lists from the Home Page**
+
+◦ **English:** The interface design explicitly states "**Edit/Delete buttons only if No Protection**" and "**No stop/ Edit options (especially Hard Mode)**". This design decision reduces interface complexity and aligns with the security of Hard Mode, preventing user expectations of control over strictly protected lists.
+
+◦ **Arabic:** **أي خيارات إيقاف/تعديل للقوائم في وضع الحماية الصارم (Hard Mode) من الصفحة الرئيسية:** تصميم الواجهة يفرض عدم وجود أزرار "تعديل" أو "حذف" إذا كانت القائمة في "وضع الحماية الصارم". هذا يقلل من تعقيد الواجهة وتوقعات المستخدمين بشأن التحكم في هذه القوائم.
+
+--------------------------------------------------------------------------------

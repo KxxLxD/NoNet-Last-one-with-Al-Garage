@@ -1,0 +1,137 @@
+---
+alwaysApply: true
+---
+
+
+
+@slow-mode
+
+Purpose:
+- تشغيل وضع التنفيذ البطيء المنضبط: خطوة صغيرة محكمة في كل مرة، بدون أخطاء.
+
+Rules:
+- طرح 3 أسئلة إيضاحية (على الأقل) قبل أي تعديل على الملفات أو إضافة قدرات/اعتمادات.
+- تأكيد النطاق والاعتمادات والتضاربات قبل التنفيذ.
+- تنفيذ edits صغيرة ومتماسكة فقط، مع الحفاظ على تنسيق المشروع كما هو.
+- البناء المحلي والتحقق بعد كل edit؛ وإن ظهر خطأ يُصلَح فورًا قبل الانتقال.
+- طلب موافقة صريحة قبل: إضافة SDKs، تمكين iCloud/CloudKit، Network Extensions، Screen Time/Family Controls، إعدادات VPN/DNS.
+- استخدام قائمة مهام (TODOs) لتتبع التقدم، لكن عدم تنفيذ edits جديدة دون موافقة.
+- تلخيص مختصر قبل/بعد كل خطوة، والالتزام باللغة العربية.
+
+Definition of Ready (DoR):
+- المهمة جاهزة للبدء فقط إذا:
+  - هدف واضح ومُقاس.
+  - Scope Mode محدّد + WIP Policy محددة للجلسة.
+  - Key States رئيسية معروفة (empty/loading/error/success) + Edge-case Matrix محسوبة.
+  - تبعيات وقيود معلومة ولا تضارب معروف.
+  - موافقات/وصول مطلوب مُتاح (Credentials/Keys/Access).
+
+Activation:
+- فعّل هذا الوضع دائما 
+
+Study the Page (Context First):
+- تنطبق على جميع المهام (Frontend/Backend).
+- المخرجات داخل المحادثة فقط.
+- قبل البدء: أسأل عن مستوى الدراسة: مختصر أم مفصّل.
+
+Workflow (ملخّص):
+- 1) Study the Page → 2) Clarify (≥3 أسئلة) → 3) Suggestions (اقتراحات) → 4) Impact (أثر القرار) → 5) Propose Before Build → 6) Approval Gate (موافقة صريحة للوحدة) → 7) Implement (edits صغيرة) → 8) Verify (بناء محلي فوري) → 9) Status + Summary → 10) Commit/PR → 11) إدارة التعطّل والتضارب.
+
+Template — Study the Page
+```markdown
+Study the Page — Context First
+- Purpose & Audience: …
+- Structure & Hierarchy: sections/components → …
+- Key States: empty/loading/error/success → …
+- Edge-case Matrix: نص طويل/ترجمة وRTL/شبكات بطيئة/أحجام بيانات/حالات خطأ
+- Constraints & Dependencies: …
+- Scope Mode: UI-only | Backend-only | API-only | DB-only | Full‑stack | Other(…)
+- WIP Policy: WIP=1 | 1 عميقة + 1 صغيرة (اختر الآن)
+- Suggestions (اقتراحات): …
+- Impact (أثر القرار): …
+- Quick Wins (حسب النطاق مثلا : UI-Only او حسب النطاق): 1) … 2) … 3) …
+- Open Questions (≥3): 1) … 2) … 3) …
+- Risks & Assumptions: …
+``` 
+
+Scope Mode (نطاق التنفيذ):
+- ممنوع الافتراض — يجب سؤالك دائمًا عن النطاق قبل أي تنفيذ.
+- UI-only:
+  - المسموح: SwiftUI/Layout/Styles/Assets/Localization UI.
+  - الممنوع: Business Logic/Services/API/DB/Entitlements.
+- Backend-only:
+  - المسموح: Services/UseCases/Business Rules/Integrations.
+  - الممنوع: Views/Styles/Theme/UI Layout.
+- API-only:
+  - المسموح: Endpoints/Routing/DTOs/Validation/Auth Middleware.
+  - الممنوع: DB Schema/Views/UI.
+- DB-only:
+  - المسموح: Schema/Migrations/Indexes/Core Data Models.
+  - الممنوع: Endpoints/Views/Business Logic.
+- Full‑stack:
+  - عبر الطبقات لنفس الميزة، بتجزئة TODOs لكل طبقة وموافقة صريحة.
+- Other(…):
+  - يتم تعريفه بدقة قبل البدء.
+
+قاعدة إلزامية:
+- عند الحاجة للخروج من النطاق المتفق: إيقاف التنفيذ فورًا وطلب موافقة صريحة.
+
+WIP Policy (Work In Progress):
+- ممنوع الافتراض — يجب سؤالك دائمًا قبل البدء: تختار إما WIP=1 دائمًا أو 1 عميقة + 1 صغيرة.
+- WIP=1 دائمًا: مهمة واحدة فقط قيد التنفيذ حتى الاكتمال أو التعليق رسميًا.
+- 1 عميقة + 1 صغيرة: مهمة أساسية عميقة + مهمة صغيرة واحدة فقط أثناء انتظار بناء/مراجعة؛ العودة للمهمة الأساسية فور انتهاء الانتظار.
+- إن تغيّر قرار WIP أثناء المهمة: أوقف التنفيذ وأطلب موافقة صريحة على التبديل.
+
+SLAs (Service Level Agreements — اتفاقات زمنية):
+- Study the Page: مختصر 3–5 دقائق | مفصّل 10–15 دقيقة (أسأل كل مرة أيهما تفضّل).
+- Clarify: ≤ 5 دقائق.
+- Suggestions: ≤ 5 دقائق.
+- Impact: ≤ 5 دقائق.
+- Propose: UI لكل صفحة ≤ 10 دقائق | Backend تغيير صغير ≤ 5–10 دقائق.
+- Implement (لكل edit صغير): ≤ 25 دقيقة.
+- Verify (بعد كل edit): ≤ 3 دقائق.
+- Blocked Escalation: طرح سؤال محدد بعد 15 دقيقة تعلّق.
+
+Pacing Guidelines (إرشادات الإيقاع):
+- لا مؤقتات صارمة. التركيز على تدفق صغير/سريع.
+- Verify فوري بعد كل edit.
+- Blocked Escalation: إن علِقنا > 15 دقيقة نطرح سؤالًا محددًا وننتظر القرار.
+- Status Update نبضي عند العمل الطويل (كل 30–60 دقيقة): Done/Next/Risks.
+
+ملاحظة: SLAs أدناه إرشادية، وليست إلزامية.
+
+Commit Messages (نماذج رسائل الكومِت):
+- الصيغ: feat/ui, fix/ui, chore, refactor, docs, test, feat/api, fix/backend, chore/db
+- مثال:
+  - feat/ui: settings screen — flat spacing 16–24pt, rounded 12pt, no shadows
+
+Appendix — Templates:
+- Clarifying Questions (≥3):
+  1) …
+  2) …
+  3) …
+- Status Update:
+  - Done: …
+  - Next: …
+  - Risks/Blocks: …
+- PR Template (مختصر):
+  - Summary: …
+  - Scope Mode: UI-only | Backend-only | API-only | DB-only | Full‑stack | Other(…)
+  - WIP Policy: WIP=1 | 1 عميقة + 1 صغيرة
+  - Recommendations (اقتراحات) — إلزامي: …
+  - Impact (الأثر) — إلزامي: …
+  - Owner: …
+  - Approver (الموافق): …
+  - Change Log Mapping: [التغيير] → [الوحدة/العنصر]
+  - Rollback/Mitigation: كيف نرجع بسرعة أو نخفف المخاطر؟
+  - DoD: بناء نظيف، لا تحذيرات، لقطات UI (إن وجدت)
+
+Acronyms (اختصارات):
+- WIP (Work In Progress): عدد المهام التي تعمل عليها بالتوازي في نفس الوقت.
+- SLA (Service Level Agreement): سقف زمني متفق عليه لكل خطوة قبل الانتقال/التصعيد.
+- PR (Pull Request): طلب دمج التغييرات وفتح مراجعة الكود قبل الدمج إلى الفرع الرئيسي.
+- DoR (Definition of Ready): معايير الجاهزية لبدء المهمة (هدف/Scope/States/Deps/Access).
+
+
+References (مراجع):
+- UI Mode Rules: .cursor/rules/UI-Mode.mdc

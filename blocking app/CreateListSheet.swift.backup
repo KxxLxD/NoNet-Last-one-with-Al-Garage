@@ -1,0 +1,959 @@
+import SwiftUI
+import CoreData
+
+struct CreateListSheet: View {
+    @EnvironmentObject var lang: LanguageManager
+    @Environment(\.managedObjectContext) private var context
+    @Environment(\.dismiss) private var dismiss
+
+    @AppStorage("isPremium") private var isPremium: Bool = false
+
+    @State private var name: String = ""
+    @State private var protection: String = "noProtection" // hard | noProtection
+    @State private var blockType: String = "now" // now | scheduled
+
+    // Wheel pickers (step 5 minutes)
+    @State private var days: Int = 0
+    @State private var hours: Int = 0
+    @State private var minutes: Int = 15
+    // Breaks UI (UI only)
+    @State private var breaksCount: Int = 0
+    @State private var breakDurationMinutes: Int = 5
+    private let breakDurationOptions: [Int] = [5, 10, 15]
+
+    // Items draft
+    @State private var draft = BlockItemsDraft()
+    @State private var showingEditor = false
+
+    // Scheduling
+    struct ScheduleSlot: Codable, Identifiable { let id: UUID; var day: Int; var fromMinutes: Int; var toMinutes: Int }
+    @State private var slots: [ScheduleSlot] = []
+    @State private var showScheduleEditor = false
+
+    // Confirm sheet
+    @State private var showConfirmSheet = false
+
+    // Alerts
+    @State private var showLimitAlert = false
+    @State private var showValidationAlert = false
+    @State private var validationMessage = ""
+    @State private var showHardConfirmAlert = false
+    @State private var pendingSeconds: Int64 = 0
+    @State private var pendingBaseName: String = ""
+
+    // Upgrade sheet
+    @State private var showUpgradeSheet = false
+
+    private var minuteOptions: [Int] { Array(stride(from: 0, through: 55, by: 5)) }
+
+    var body: some View {
+        NavigationView {
+            contentView
+        }
+    }
+
+    private var contentView: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                nameCard()
+                addItemsCard()
+                timeToBlockCard()
+                if blockType == "now" {
+                    durationCard()
+                }
+                protectionCard()
+                breaksCard()
+            }
+            .padding(.vertical)
+        }
+        .background(AppColors.uiBackground)
+        .navigationTitle(lang.isArabicEffective ? "إنشاء قائمة" : "Create List")
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button(lang.isArabicEffective ? "إلغاء" : "Cancel") { dismiss() }
+            }
+        }
+        .sheet(isPresented: $showingEditor) {
+            BlockItemsEditorView(draft: draft, onSave: { newDraft in
+                self.draft = newDraft
+            })
+            .environmentObject(lang)
+            .padding(16)
+            .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $showScheduleEditor) {
+            ScheduleEditorSheet(isArabic: lang.isArabicEffective, initialSlots: slots) { newSlots in
+                slots = newSlots
+            }
+            .padding(16)
+            .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $showUpgradeSheet) {
+            NavigationView { UpgradeView().environmentObject(lang) }
+                .padding(16)
+                .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $showConfirmSheet) {
+            ConfirmCreateSheet(
+                isArabic: lang.isArabicEffective,
+                name: name,
+                protection: protection,
+                blockType: blockType,
+                durationSeconds: Int64(days * 86400 + hours * 3600 + minutes * 60),
+                websites: draft.websites.map { $0.displayName ?? $0.value },
+                apps: draft.apps.map { $0.displayName ?? $0.value },
+                categories: draft.categories.map { $0.displayName ?? $0.value },
+                slots: slots.map { ($0.day, $0.fromMinutes, $0.toMinutes) },
+                onBack: { showConfirmSheet = false },
+                onConfirm: {
+                    let totalSeconds = Int64(days * 86400 + hours * 3600 + minutes * 60)
+                    let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+                    pendingSeconds = totalSeconds
+                    pendingBaseName = trimmedName
+                    if protection == "hard" {
+                        showConfirmSheet = false
+                        showHardConfirmAlert = true
+                    } else {
+                        save(totalSeconds: totalSeconds, baseName: trimmedName)
+                    }
+                }
+            )
+            .padding(16)
+            .presentationDetents([.medium, .large])
+        }
+        .alert(lang.isArabicEffective ? "ترقية لفتح كامل طاقتك" : "Upgrade to unlock your full potential", isPresented: $showLimitAlert) {
+            Button(lang.isArabicEffective ? "لاحقًا" : "Later", role: .cancel) {}
+            Button("Upgrade") {}
+        } message: {
+            Text(lang.isArabicEffective ? "أنت قريب من انطلاقة إنتاجية أقوى! مع الترقية، حرر كامل طاقتك وأنشئ قوائم غير محدودة، ركّز أكثر وغيّر عاداتك الرقمية للأفضل." : "You’re close to a stronger productivity breakthrough! Upgrade to unlock unlimited lists, focus deeper, and transform your digital habits.")
+        }
+        .alert(lang.isArabicEffective ? "تحقق من الإدخالات" : "Check inputs", isPresented: $showValidationAlert) {
+            Button(lang.isArabicEffective ? "حسنًا" : "OK", role: .cancel) {}
+        } message: {
+            Text(validationMessage)
+        }
+        .alert(lang.isArabicEffective ? "تأكيد الوضع الصارم" : "Confirm Hard Mode", isPresented: $showHardConfirmAlert) {
+            Button(lang.isArabicEffective ? "تأكيد" : "Confirm") {
+                save(totalSeconds: pendingSeconds, baseName: pendingBaseName)
+            }
+            Button(lang.isArabicEffective ? "رجوع" : "Back", role: .cancel) {}
+        } message: {
+            Text(lang.isArabicEffective ? "سيتم إنشاء قائمة بوضع صارم (Hard Mode). لن تتمكن من تعديلها أو حذفها خلال المدة." : "This list will be created in Hard Mode. You won’t be able to edit or delete it during the duration.")
+        }
+        .safeAreaInset(edge: .bottom) {
+            doneButtonView()
+        }
+    }
+
+    private func doneButtonView() -> some View {
+        VStack(spacing: 8) {
+            EmptyView()
+            Button(action: { attemptConfirm() }) {
+                Text(lang.isArabicEffective ? "تم" : "Done")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(AppColors.primaryBlue)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+            }
+            .buttonStyle(.plain)
+            .disabled(!isFormValid)
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+        .padding(.bottom, 16)
+        .background(Color(.systemBackground))
+    }
+
+    // MARK: - Card Views
+    private func nameCard() -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "pencil")
+                Text(lang.isArabicEffective ? "اسم القائمة" : "List Name")
+                Spacer()
+            }
+            .font(.headline)
+            .padding(.horizontal, 24)
+            
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
+                TextField(lang.isArabicEffective ? "مثال: وقت التركيز" : "e.g., Focus Time", text: $name)
+                    .textInputAutocapitalization(.words)
+                    .disableAutocorrection(true)
+                    .padding(12)
+                    .background(AppColors.uiSurface)
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12).stroke(AppColors.uiBorder, lineWidth: 0.5)
+                    )
+                if !isNameValid, !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Text(lang.isArabicEffective ? "الاسم قصير جدًا" : "Name is too short")
+                        .font(.footnote)
+                        .foregroundColor(AppColors.textSecondary)
+                }
+            }
+            .padding(20)
+            .background(AppColors.uiSurface)
+            .cornerRadius(20)
+            .overlay(
+                RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5)
+            )
+            .padding(.horizontal, 24)
+        }
+    }
+    
+    private func addItemsCard() -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "square.stack.3d.up.fill")
+                Text(lang.isArabicEffective ? "إنشاء قائمة الحجب" : "Create blocking list")
+                Spacer()
+            }
+            .font(.headline)
+            .padding(.horizontal, 24)
+            
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
+                Button(action: { openEditor() }) {
+                    Text(lang.isArabicEffective ? "أضف عناصر الحجب" : "Add items to block")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                        .background(AppColors.accentDark)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                }
+                .buttonStyle(.plain)
+
+                websitesListCard()
+
+                appsListCard()
+
+                categoriesListCard()
+
+                if draft.websites.isEmpty && draft.apps.isEmpty && draft.categories.isEmpty {
+                    Text(lang.isArabicEffective ? "أضف عنصرًا واحدًا على الأقل" : "Add at least one item")
+                        .font(.footnote)
+                        .foregroundColor(AppColors.textSecondary)
+                }
+            }
+            .padding(20)
+            .background(AppColors.uiSurface)
+            .cornerRadius(20)
+            .overlay(
+                RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5)
+            )
+            .padding(.horizontal, 24)
+        }
+    }
+
+    private func timeToBlockCard() -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "clock")
+                Text(lang.isArabicEffective ? "وقت الحجب" : "Time to block")
+                Spacer()
+            }
+            .font(.headline)
+            .padding(.horizontal, 24)
+            
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
+                Picker("Time", selection: $blockType) {
+                    Text(lang.isArabicEffective ? "حظر فوري" : "Block Now").tag("now")
+                    Text("Scheduled").tag("scheduled")
+                }
+                .pickerStyle(.segmented)
+                .frame(maxWidth: 320, alignment: .center)
+                .onChange(of: blockType) { newVal in
+                    if newVal == "scheduled" && !isPremium {
+                        blockType = "now"
+                        showLimitAlert = true
+                        showUpgradeSheet = true
+                    } else if newVal == "scheduled" && isPremium {
+                        showScheduleEditor = true
+                    }
+                }
+
+                if !isPremium {
+                    Text(lang.isArabicEffective ? "ميزة الجدولة ضمن الترقية: افتح قوّة التركيز مع قوائم غير محدودة." : "Scheduling is part of Upgrade: unlock deeper focus with unlimited lists.")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                    Button(action: { showUpgradeSheet = true }) {
+                        Text(lang.isArabicEffective ? "ترقية / تجربة 7 أيام" : "Upgrade / 7‑day Trial")
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(AppColors.primaryBlue)
+                }
+                if blockType == "scheduled" && isPremium {
+                    if slots.isEmpty {
+                        Text(lang.isArabicEffective ? "لا توجد فترات مجدولة بعد" : "No schedule slots yet")
+                            .font(.footnote).foregroundColor(.secondary)
+                    } else {
+                        ForEach(slots) { s in
+                            Group {
+                                if lang.isArabicEffective {
+                                    HStack {
+                                        Text(timeRangeLabel(s)).foregroundColor(.secondary); Spacer(); Text(dayName(s.day))
+                                    }
+                                } else {
+                                    HStack {
+                                        Text(dayName(s.day)); Spacer(); Text(timeRangeLabel(s)).foregroundColor(.secondary)
+                                    }
+                                }
+                            }
+                        }
+                        .onDelete { indexSet in slots.remove(atOffsets: indexSet) }
+                    }
+                    Button(action: { showScheduleEditor = true }) {
+                        Label(lang.isArabicEffective ? "تحرير الجدول" : "Edit Schedule", systemImage: "calendar")
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+            .padding(20)
+            .background(AppColors.uiSurface)
+            .cornerRadius(20)
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+            .padding(.horizontal, 24)
+        }
+    }
+
+    private func durationCard() -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "hourglass")
+                Text(lang.isArabicEffective ? "المدة" : "Duration")
+                Spacer()
+            }
+            .font(.headline)
+            .padding(.horizontal, 24)
+            
+            VStack(alignment: .center, spacing: 12) {
+                DurationPickerView(days: $days, hours: $hours, minutes: $minutes, minuteOptions: minuteOptions, lang: lang)
+                Text(lang.isArabicEffective ? "الحد الأدنى 5 دقائق." : "Minimum duration is 5 minutes.")
+                    .font(.footnote).foregroundColor(.secondary)
+                if blockType == "now" && !isDurationValid {
+                    Text(lang.isArabicEffective ? "اختر مدة لا تقل عن 5 دقائق" : "Select at least 5 minutes")
+                        .font(.footnote).foregroundColor(.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(20)
+            .background(AppColors.uiSurface)
+            .cornerRadius(20)
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+            .padding(.horizontal, 24)
+        }
+    }
+
+    private func protectionCard() -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "shield.checkered")
+                Text(lang.isArabicEffective ? "الحماية" : "Protection")
+                Spacer()
+            }
+            .font(.headline)
+            .padding(.horizontal, 24)
+            
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
+                Picker("Protection", selection: $protection) {
+                    Text(lang.isArabicEffective ? "بدون حماية" : "No Protection").tag("noProtection")
+                    Text(lang.isArabicEffective ? "الوضع الصارم" : "Hard Mode").tag("hard")
+                }
+                .pickerStyle(.segmented)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(lang.isArabicEffective ? "No Protection: يمكنك تعديل أو حذف القائمة في أي وقت. مثال: حجب قصير أثناء المذاكرة." : "No Protection: Edit or delete anytime. Example: short study-focus block.")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                    Text(lang.isArabicEffective ? "Hard Mode: وضع صارم يصعّب إيقاف الحجب خلال المدة. مثال: تركيز عميق أو روتين نوم." : "Hard Mode: Strict mode makes stopping/editing difficult during duration. Example: deep focus or sleep routine.")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                }
+                .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+            }
+            .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+            .padding(20)
+            .background(AppColors.uiSurface)
+            .cornerRadius(20)
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+            .padding(.horizontal, 24)
+        }
+    }
+    
+    private func breaksCard() -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "cup.and.saucer")
+                Text(lang.isArabicEffective ? "الاستراحات المسموحة" : "Allows Breaks")
+                Spacer()
+            }
+            .font(.headline)
+            .padding(.horizontal, 24)
+            
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
+                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 6) {
+                    Text(lang.isArabicEffective ? "العدد" : "Count")
+                        .font(.footnote).foregroundColor(.secondary)
+                    Picker("Breaks", selection: $breaksCount) {
+                        ForEach(0...5, id: \.self) { Text("\($0)") }
+                    }
+                    .pickerStyle(.wheel)
+                    .frame(height: 120)
+                }
+                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 6) {
+                    Text(lang.isArabicEffective ? "مدة كل استراحة" : "Duration of each break")
+                        .font(.footnote).foregroundColor(.secondary)
+                    Picker("Break Duration", selection: $breakDurationMinutes) {
+                        ForEach(breakDurationOptions, id: \.self) { v in
+                            Text(lang.isArabicEffective ? "\(v) دقائق" : "\(v) minutes").tag(v)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+                let summaryAr = "ستُتاح \(breaksCount) استراحة خلال 24 ساعة، مدة كل واحدة \(breakDurationMinutes) دقيقة."
+                let summaryEn = "You can take \(breaksCount) break(s) across 24h, each for \(breakDurationMinutes) minutes."
+                Text(lang.isArabicEffective ? summaryAr : summaryEn)
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+            .padding(20)
+            .background(AppColors.uiSurface)
+            .cornerRadius(20)
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+            .padding(.horizontal, 24)
+        }
+    }
+
+    // MARK: - Small UI helpers to reduce type-check complexity
+    private func headerRow(_ title: String, count: Int, icon: String) -> some View {
+        HStack {
+            if lang.isArabicEffective {
+                Text("\(count)").font(.caption2).foregroundColor(AppColors.textSecondary)
+                Spacer()
+                Label { Text(title) } icon: { Image(systemName: icon) }
+            } else {
+                Label { Text(title) } icon: { Image(systemName: icon) }
+                Spacer()
+                Text("\(count)").font(.caption2).foregroundColor(AppColors.textSecondary)
+            }
+        }
+        .padding(.bottom, 8)
+    }
+
+    private func websitesListCard() -> some View {
+        Group {
+            if !draft.websites.isEmpty {
+                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 0) {
+                    headerRow(lang.isArabicEffective ? "المواقع" : "Websites", count: draft.websites.count, icon: "globe")
+                    ForEach(Array(draft.websites.enumerated()), id: \.element.id) { idx, it in
+                        Text(it.displayName ?? it.value)
+                            .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+                            .padding(.vertical, 8)
+                        if idx != draft.websites.count - 1 { SoftDivider(width: 280, opacity: 0.70) }
+                    }
+                    .onDelete { indexSet in draft.websites.remove(atOffsets: indexSet) }
+                    Button(action: { openEditor() }) { Label(lang.isArabicEffective ? "إضافة مواقع" : "Add Websites", systemImage: "plus") }
+                    .buttonStyle(.borderless)
+                }
+            }
+        }
+    }
+
+    private func appsListCard() -> some View {
+        Group {
+            if !draft.apps.isEmpty {
+                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 0) {
+                    headerRow(lang.isArabicEffective ? "التطبيقات" : "Apps", count: draft.apps.count, icon: "app")
+                    ForEach(Array(draft.apps.enumerated()), id: \.element.id) { idx, it in
+                        Text(it.displayName ?? it.value)
+                            .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+                            .padding(.vertical, 8)
+                        if idx != draft.apps.count - 1 { SoftDivider(width: 280, opacity: 0.70) }
+                    }
+                    .onDelete { indexSet in draft.apps.remove(atOffsets: indexSet) }
+                    Button(action: { openEditor() }) { Label(lang.isArabicEffective ? "إضافة تطبيقات" : "Add Apps", systemImage: "plus") }
+                    .buttonStyle(.borderless)
+                }
+            }
+        }
+    }
+
+    private func categoriesListCard() -> some View {
+        Group {
+            if !draft.categories.isEmpty {
+                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 0) {
+                    headerRow(lang.isArabicEffective ? "الفئات" : "Categories", count: draft.categories.count, icon: "square.grid.2x2")
+                    ForEach(Array(draft.categories.enumerated()), id: \.element.id) { idx, it in
+                        Text(it.displayName ?? it.value)
+                            .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+                            .padding(.vertical, 8)
+                        if idx != draft.categories.count - 1 { SoftDivider(width: 280, opacity: 0.70) }
+                    }
+                    .onDelete { indexSet in draft.categories.remove(atOffsets: indexSet) }
+                    Button(action: { openEditor() }) { Label(lang.isArabicEffective ? "إضافة فئات" : "Add Categories", systemImage: "plus") }
+                    .buttonStyle(.borderless)
+                }
+            }
+        }
+    }
+
+    private var itemsCountSummary: String {
+        let w = draft.websites.count
+        let a = draft.apps.count
+        let c = draft.categories.count
+        guard (w + a + c) > 0 else { return "" }
+        if lang.isArabicEffective {
+            return "\(w) مواقع، \(a) تطبيقات، \(c) فئات"
+        } else {
+            return "\(w) websites, \(a) apps, \(c) categories"
+        }
+    }
+
+    private func openEditor() {
+        draft.name = name
+        showingEditor = true
+    }
+
+    private func attemptConfirm() {
+        if currentListsCount() >= 3 {
+            showLimitAlert = true
+            return
+        }
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedName.count < 2 {
+            validationMessage = lang.isArabicEffective ? "الاسم يجب أن لا يقل عن حرفين" : "Name must be at least 2 characters"
+            showValidationAlert = true
+            return
+        }
+        if draft.websites.isEmpty && draft.apps.isEmpty && draft.categories.isEmpty {
+            validationMessage = lang.isArabicEffective ? "أضف موقعًا أو تطبيقًا أو فئة واحدة على الأقل" : "Add at least one website, app, or category"
+            showValidationAlert = true
+            return
+        }
+        let totalSeconds = Int64(days * 86400 + hours * 3600 + minutes * 60)
+        if blockType == "now" && totalSeconds < 300 {
+            validationMessage = lang.isArabicEffective ? "اختر مدة لا تقل عن 5 دقائق" : "Select at least 5 minutes duration"
+            showValidationAlert = true
+            return
+        }
+        if blockType == "scheduled" && slots.isEmpty {
+            validationMessage = lang.isArabicEffective ? "أضف فترة زمنية واحدة على الأقل للجدولة" : "Add at least one schedule slot"
+            showValidationAlert = true
+            return
+        }
+        showConfirmSheet = true
+    }
+
+    private func save(totalSeconds: Int64, baseName: String) {
+        let finalName = uniqueName(from: baseName)
+        let entity = ListEntity(context: context)
+        entity.id = UUID()
+        entity.name = finalName
+        entity.protection = protection
+        entity.blockType = blockType
+        entity.durationSeconds = totalSeconds
+        entity.createdAt = Date()
+        entity.updatedAt = Date()
+        if blockType == "scheduled" {
+            entity.scheduleSlots = encodeSlots()
+        }
+
+        for w in draft.websites {
+            let it = BlockItemEntity(context: context)
+            it.id = UUID()
+            it.kind = "website"
+            it.value = w.value
+            it.displayName = w.displayName
+            it.list = entity
+        }
+        for a in draft.apps {
+            let it = BlockItemEntity(context: context)
+            it.id = UUID()
+            it.kind = "app"
+            it.value = a.value
+            it.displayName = a.displayName
+            it.list = entity
+        }
+        for c in draft.categories {
+            let it = BlockItemEntity(context: context)
+            it.id = UUID()
+            it.kind = "category"
+            it.value = c.value
+            it.displayName = c.displayName
+            it.list = entity
+        }
+
+        do {
+            try context.save()
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            dismiss()
+        } catch {
+            print("Save error: \(error)")
+        }
+    }
+
+    private func currentListsCount() -> Int {
+        let req: NSFetchRequest<ListEntity> = ListEntity.fetchRequest()
+        do { return try context.count(for: req) } catch { return 0 }
+    }
+
+    private func uniqueName(from base: String) -> String {
+        var candidate = base
+        var i = 2
+        while nameExists(candidate) {
+            candidate = "\(base) (\(i))"
+            i += 1
+        }
+        return candidate
+    }
+
+    private func nameExists(_ n: String) -> Bool {
+        let req: NSFetchRequest<ListEntity> = ListEntity.fetchRequest()
+        req.predicate = NSPredicate(format: "name ==[c] %@", n)
+        req.fetchLimit = 1
+        do { return try context.count(for: req) > 0 } catch { return false }
+    }
+
+    private var isNameValid: Bool {
+        name.trimmingCharacters(in: .whitespacesAndNewlines).count >= 2
+    }
+    private var hasAtLeastOneItem: Bool {
+        !(draft.websites.isEmpty && draft.apps.isEmpty && draft.categories.isEmpty)
+    }
+    private var isDurationValid: Bool {
+        let seconds = days * 86400 + hours * 3600 + minutes * 60
+        return seconds >= 300
+    }
+    private var isFormValid: Bool {
+        isNameValid && hasAtLeastOneItem && (blockType == "now" ? isDurationValid : true)
+    }
+
+    private func dayName(_ d: Int) -> String {
+        let ar = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"]
+        let en = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
+        return lang.isArabicEffective ? ar[d] : en[d]
+    }
+    private func timeRangeLabel(_ s: ScheduleSlot) -> String {
+        func fmt(_ m: Int) -> String { String(format: "%02d:%02d", m/60, m%60) }
+        return "\(fmt(s.fromMinutes)) - \(fmt(s.toMinutes))"
+    }
+    private func encodeSlots() -> Data? {
+        try? JSONEncoder().encode(slots)
+    }
+}
+
+private struct SoftDivider: View {
+    let width: CGFloat
+    let opacity: Double
+    var body: some View {
+        HStack {
+            Spacer()
+            Rectangle()
+                .fill(AppColors.uiBorder.opacity(opacity))
+                .frame(width: width, height: 1)
+            Spacer()
+        }
+        .padding(.vertical, 8)
+    }
+}
+
+private struct ScheduleEditorSheet: View {
+    let isArabic: Bool
+    var initialSlots: [CreateListSheet.ScheduleSlot]
+    var onSave: ([CreateListSheet.ScheduleSlot]) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var working: [CreateListSheet.ScheduleSlot] = []
+
+    // Multi-day selection via toggles
+    @State private var selectedDays: Set<Int> = [] // 0..6
+    @State private var fromHour: Int = 9
+    @State private var fromMinute: Int = 0
+    @State private var toHour: Int = 17
+    @State private var toMinute: Int = 0
+
+    private var minuteOptions: [Int] { Array(stride(from: 0, through: 55, by: 5)) }
+    private var totalDurationLabel: String {
+        let from = fromHour * 60 + fromMinute
+        let to = toHour * 60 + toMinute
+        let minutes: Int = {
+            if to == from { return 24 * 60 }
+            if to > from { return to - from }
+            return (24 * 60 - from) + to
+        }()
+        let h = minutes / 60
+        let m = minutes % 60
+        if isArabic { return "المجموع: \(h) ساعة \(m) دقيقة" }
+        return "Total: \(h)h \(m)m"
+    }
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text(isArabic ? "الأيام" : "Days")) {
+                    ForEach(0...6, id: \.self) { d in
+                        Toggle(isOn: Binding(get: { selectedDays.contains(d) }, set: { v in
+                            if v { selectedDays.insert(d) } else { selectedDays.remove(d) }
+                        })) {
+                            Text(dayName(d))
+                        }
+                    }
+                }
+                Section {
+                    HStack(alignment: .top, spacing: 16) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(isArabic ? "من" : "From").font(.footnote).foregroundColor(.secondary)
+                            HStack {
+                                Picker("h", selection: $fromHour) { ForEach(0...23, id: \.self) { Text("\($0)") } }
+                                    .frame(width: 90, height: 120)
+                                    .pickerStyle(.wheel)
+                                Picker("m", selection: $fromMinute) { ForEach(minuteOptions, id: \.self) { Text("\($0)") } }
+                                    .frame(width: 90, height: 120)
+                                    .pickerStyle(.wheel)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(isArabic ? "إلى" : "To").font(.footnote).foregroundColor(.secondary)
+                            HStack {
+                                Picker("h", selection: $toHour) { ForEach(0...23, id: \.self) { Text("\($0)") } }
+                                    .frame(width: 90, height: 120)
+                                    .pickerStyle(.wheel)
+                                Picker("m", selection: $toMinute) { ForEach(minuteOptions, id: \.self) { Text("\($0)") } }
+                                    .frame(width: 90, height: 120)
+                                    .pickerStyle(.wheel)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
+                    }
+                    .padding(.vertical, 4)
+                    Text(totalDurationLabel)
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                        .padding(.top, 6)
+                        .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
+                }
+                Button(action: addSlotsForSelectedDays) {
+                    Label(isArabic ? "إضافة فترة" : "Add Slot", systemImage: "plus.circle")
+                }
+                .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
+                if working.isEmpty {
+                    Text(isArabic ? "لا توجد فترات" : "No slots").foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
+                } else {
+                    ForEach(working) { s in
+                        Group {
+                            if isArabic {
+                                HStack {
+                                    Text(timeRangeLabel(s)).foregroundColor(.secondary)
+                                    Spacer()
+                                    Text(dayName(s.day))
+                                }
+                            } else {
+                                HStack {
+                                    Text(dayName(s.day))
+                                    Spacer()
+                                    Text(timeRangeLabel(s)).foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                    }
+                    .onDelete { idx in working.remove(atOffsets: idx) }
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .navigationTitle(isArabic ? "الجدولة" : "Scheduling")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button(isArabic ? "إلغاء" : "Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) { Button(isArabic ? "تم" : "Done") { onSave(working); dismiss() } }
+            }
+            .onAppear {
+                working = initialSlots
+            }
+        }
+    }
+
+    private func addSlotsForSelectedDays() {
+        let from = fromHour * 60 + fromMinute
+        let to = toHour * 60 + toMinute
+        for d in selectedDays.sorted() {
+            working.append(.init(id: UUID(), day: d, fromMinutes: from, toMinutes: to))
+        }
+    }
+
+    private func dayName(_ d: Int) -> String {
+        let ar = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"]
+        let en = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
+        return isArabic ? ar[d] : en[d]
+    }
+    private func timeRangeLabel(_ s: CreateListSheet.ScheduleSlot) -> String {
+        func fmt(_ m: Int) -> String { String(format: "%02d:%02d", m/60, m%60) }
+        return "\(fmt(s.fromMinutes)) - \(fmt(s.toMinutes))"
+    }
+}
+
+private struct ConfirmCreateSheet: View {
+    let isArabic: Bool
+    let name: String
+    let protection: String
+    let blockType: String
+    let durationSeconds: Int64
+    let websites: [String]
+    let apps: [String]
+    let categories: [String]
+    let slots: [(Int, Int, Int)] // (day, from, to)
+
+    var onBack: () -> Void
+    var onConfirm: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text(isArabic ? "الاسم" : "Name")) {
+                    Text(name)
+                        .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
+                }
+                Section(header: Text(isArabic ? "الحماية" : "Protection")) {
+                    let isHard = protection == "hard"
+                    Label(isHard ? "Hard Mode" : "No Protection", systemImage: isHard ? "lock.fill" : "lock.open")
+                        .foregroundColor(isHard ? AppColors.alertRed : AppColors.successGreen)
+                    if isHard {
+                        Text(isArabic ? "سيتم تفعيل الوضع الصارم ولا يمكن التعديل أو الحذف خلال المدة." : "Hard Mode will be enabled; no edits/deletes during duration.")
+                            .font(.footnote).foregroundColor(.secondary)
+                            .multilineTextAlignment(isArabic ? .trailing : .leading)
+                    }
+                }
+                Section(header: Text(isArabic ? "وقت الحجب" : "Time to block")) {
+                    if blockType == "now" {
+                        Text(durationLabel)
+                            .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
+                    } else {
+                        if slots.isEmpty {
+                            Text(isArabic ? "لا توجد فترات" : "No slots")
+                                .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
+                                .foregroundColor(.secondary)
+                        } else {
+                            ForEach(0..<slots.count, id: \.self) { idx in
+                                let s = slots[idx]
+                                HStack(alignment: .firstTextBaseline) {
+                                    if isArabic {
+                                        VStack(alignment: .trailing, spacing: 2) {
+                                            Text(timeRangeLabel(from: s.1, to: s.2))
+                                            Text(totalDurationLabel(from: s.1, to: s.2))
+                                                .font(.footnote)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        Spacer()
+                                        Text(dayName(s.0))
+                                    } else {
+                                        Text(dayName(s.0))
+                                        Spacer()
+                                        VStack(alignment: .trailing, spacing: 2) {
+                                            Text(timeRangeLabel(from: s.1, to: s.2))
+                                            Text(totalDurationLabel(from: s.1, to: s.2))
+                                                .font(.footnote)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if !websites.isEmpty {
+                    Section(header: Text("Websites")) {
+                        ForEach(websites, id: \.self) { Text($0).frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading) }
+                    }
+                }
+                if !apps.isEmpty {
+                    Section(header: Text("Apps")) {
+                        ForEach(apps, id: \.self) { Text($0).frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading) }
+                    }
+                }
+                if !categories.isEmpty {
+                    Section(header: Text(isArabic ? "الفئات" : "Categories")) {
+                        ForEach(categories, id: \.self) { Text($0).frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading) }
+                    }
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .navigationTitle(isArabic ? "تأكيد الإنشاء" : "Confirm Create")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button(isArabic ? "رجوع" : "Back") { onBack() } }
+                ToolbarItem(placement: .confirmationAction) { Button(isArabic ? "تأكيد" : "Confirm") { onConfirm() } }
+            }
+        }
+    }
+
+    private var durationLabel: String {
+        let total = Int(durationSeconds)
+        let d = total / 86400
+        let h = (total % 86400) / 3600
+        let m = (total % 3600) / 60
+        if isArabic {
+            return "\(d) يوم، \(h) ساعة، \(m) دقيقة"
+        } else {
+            return "\(d)d \(h)h \(m)m"
+        }
+    }
+
+    private func dayName(_ d: Int) -> String {
+        let ar = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"]
+        let en = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
+        return isArabic ? ar[d] : en[d]
+    }
+    private func timeRangeLabel(from: Int, to: Int) -> String {
+        func fmt(_ m: Int) -> String { String(format: "%02d:%02d", m/60, m%60) }
+        return "\(fmt(from)) - \(fmt(to))"
+    }
+    private func totalDurationLabel(from: Int, to: Int) -> String {
+        let minutes: Int = {
+            if to == from { return 24 * 60 }
+            if to > from { return to - from }
+            return (24 * 60 - from) + to
+        }()
+        let h = minutes / 60
+        let m = minutes % 60
+        if isArabic { return "المجموع: \(h) ساعة \(m) دقيقة" }
+        return "Total: \(h)h \(m)m"
+    }
+}
+
+fileprivate struct DurationPickerView: View {
+    @Binding var days: Int
+    @Binding var hours: Int
+    @Binding var minutes: Int
+    let minuteOptions: [Int]
+    @ObservedObject var lang: LanguageManager
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 16) {
+            VStack(alignment: .center, spacing: 8) {
+                Text(lang.isArabicEffective ? "أيام" : "Days").font(.subheadline)
+                Picker("Days", selection: $days) { ForEach(0...360, id: \.self) { Text("\($0)") } }
+                .pickerStyle(.wheel).frame(width: 100, height: 140)
+            }
+            VStack(alignment: .center, spacing: 8) {
+                Text(lang.isArabicEffective ? "ساعات" : "Hours").font(.subheadline)
+                Picker("Hours", selection: $hours) { ForEach(0...23, id: \.self) { Text("\($0)") } }
+                .pickerStyle(.wheel).frame(width: 100, height: 140)
+            }
+            VStack(alignment: .center, spacing: 8) {
+                Text(lang.isArabicEffective ? "دقائق" : "Minutes").font(.subheadline)
+                Picker("Minutes", selection: $minutes) { ForEach(minuteOptions, id: \.self) { Text("\($0)") } }
+                .pickerStyle(.wheel).frame(width: 100, height: 140)
+            }
+        }
+    }
+}
+
+#Preview {
+    CreateListSheet()
+        .environmentObject(LanguageManager.shared)
+} 

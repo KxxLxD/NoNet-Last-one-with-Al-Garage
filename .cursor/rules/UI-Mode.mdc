@@ -1,0 +1,420 @@
+---
+alwaysApply: true
+---
+
+
+@ui-mode
+
+# UI-Mode: قواعد وتوجّهات تصميم الواجهة (محايدة التطبيق)
+
+## Rules
+- UI فقط: ممنوع تعديل المنطق/قاعدة البيانات/القيم الجوهرية.
+- أسلوب العمل لكل صفحة:
+  1) وصف تفصيلي لعناصر الصفحة الحالية (العناصر، الهيكل، الغرض).
+  2) اقتراح تصميم صفحة-صفحة ومكوّن-مكوّن مع شرح ما سنبنيه.
+  3) انتظار موافقة صريحة قبل تنفيذ كل صفحة/مكوّن (خطوة بخطوة).
+- استخدام TODO لتتبّع كل خطوة UI.
+- بناء محلي والتحقق بعد كل تعديل UI.
+- لغة التواصل: العربية؛ ثنائية عند الحاجة.
+
+## North Star & Vibe (اتجاه التصميم والإلهام)
+- **الإحساس العام**: هدوء وثقة وبساطة. واجهة تشجّع على التركيز دون ضوضاء أو إغراءات لونية.
+- **الشخصية**: حازم/ودود؛ يساعدك على الالتزام بدون توتر.
+- **المبادئ**:
+  - وضوح أولًا: هرميّة بصرية بسيطة، نصوص قصيرة وواضحة.
+  - أقلّ أفضل: لا مؤثرات ولا حركات غير ضرورية؛ حالات فقط بالألوان/الشفافية.
+  - إيقاع متنفس: مسافات großzügية (spacing-16 وما فوق)، عناصر متناظرة، هوامش مريحة.
+  - اتساق تام: لون accent واحد ثابت؛ الكروت بحدود خفيفة بدل الظلال الثقيلة.
+  - وصول للجميع: تباين AA، أحجام خط ديناميكية، مساحة لمس ≥ 44×44.
+- **النتيجة المرجوّة**: شعور بالسيطرة والهدوء؛ توجه المستخدم دائمًا نحو الإجراء الصحيح دون تشتيت.
+
+## الهوية البصرية العامة
+- **الألوان الأساسية**: لوحة هادئة، تباين مريح، بدون تدرجات صاخبة.
+- **بدون وضع داكن**: ثيم فاتح فقط.
+- **بدون أنيميشن**: تفاعلات ساكنة، حالات ضغط عبر تغيّر الشفافية/اللون.
+- **الزوايا**: نصف قطر قياسي radius-12 للكروت والأزرار.
+- **الظلال**: elevation خفيف (opacity ≤ 0.06) لرفع الكروت فقط.
+
+## دليل تبنّي سريع (Adoption Guide)
+1) عرّف Design Tokens التالية في طبقة الثيم لديك.
+2) اربط المكونات الأساسية المذكورة أدناه بهذه التوكنز.
+3) ابدأ بالمكوّنات الأكثر استخدامًا والسيناريوهات المتكررة (نماذج/قوائم/لوحات معلومات عامة).
+4) اختبر التباين والهوامش على الأجهزة المختلفة.
+
+### قالب JSON مقترح للتوكنز
+```json
+{
+  "colors": {
+    "background": "#F3F4F6",
+    "surface": "#FFFFFF",
+    "border": "#E5E7EB",
+    "accent": "#2563EB",
+    "text_primary": "#374151",
+    "text_secondary": "#6B7280",
+    "success_bg": "#16A34A1A",
+    "success_fg": "#16A34A",
+    "warning_bg": "#F59E0B1A",
+    "warning_fg": "#F59E0B",
+    "info_bg": "#2563EB1A",
+    "info_fg": "#2563EB",
+    "danger_bg": "#EF44441A",
+    "danger_fg": "#EF4444",
+    "overlay": "#00000066",
+    "focus_ring": "#2563EB"
+  },
+  "spacing": {
+    "scale": [4, 8, 12, 16, 20, 24, 32, 40],
+    "spacing_16": 16,
+    "card_padding": 16,
+    "page_horizontal": 24
+  },
+  "radius": {
+    "radius_8": 8,
+    "radius_12": 12,
+    "radius_16": 16
+  },
+  "elevation": {
+    "e0": 0,
+    "e1": 1,
+    "e2": 2
+  },
+  "typography": {
+    "heading_1": {"size": 24, "weight": "semibold", "line_height": 30},
+    "heading_2": {"size": 20, "weight": "semibold", "line_height": 26},
+    "heading_3": {"size": 18, "weight": "medium", "line_height": 24},
+    "body": {"size": 16, "weight": "regular", "line_height": 22},
+    "caption": {"size": 12, "weight": "regular", "line_height": 16}
+  }
+}
+```
+
+## قاعدة التسمية للتوكنز
+- داخل النص: استخدم kebab-case مثل text-primary, page-horizontal.
+- داخل JSON/الكود المعجّم: استخدم snake_case مثل text_primary, page_horizontal.
+
+## Design Tokens (أسماء عامة)
+- Colors: background, surface, border, accent, text-primary, text-secondary, states (success/warning/info/danger), overlay, focus-ring.
+- Spacing: scale ثابت 4/8/12/16/20/24/32/40، مع قيم مختصرة مثل spacing-16, card-padding, page-horizontal.
+- Radius: radius-8/12/16.
+- Elevation: e0 (بدون ظل)، e1 (ظل خفيف)، e2 (ظل متوسط للمودال/الأوفرلاي).
+- Typography: heading-1/2/3, body, caption مع line-height كما في القالب أعلاه.
+
+## لوحة الألوان الدقيقة (Neutral Palette)
+- الرمادي (Gray Scale): gray-50/100/200/300/400/500/600/700 كما هو أعلاه.
+- اللون المميّز (Accent Blue): accent-50/100/200/400/600/700.
+- الحالات (States): success/warning/info/danger بنمط fg/bg.
+- الخرائط إلى التوكنز: background/surface/border/text-primary/text-secondary/accent.
+- التباين: نص أساسي ≥ 7:1، زر أساسي ≥ 4.5:1.
+
+### إضافات دقيقة (من صفحة Home)
+- accent-dark: #4DA2FC، accent-light: #8CBCFC (للتدرج عند الحاجة؛ الافتراضي لون مصمت accent-dark).
+- text-primary: #374151، text-secondary: #6B7280.
+- info-bg: #2563EB1A، info-fg: accent-dark.
+- card: radius-16، border 0.5pt، padding 16–20.
+- divider-soft: ارتفاع 1pt، عرض افتراضي 120–300 حسب السياق، opacity 0.35–0.70، متمركز داخليًا مع inset أفقي.
+
+## حالات وتفاصيل تفاعلية
+- focus-ring: لون focus-ring بسمك 2px؛ للحقول inset 1px.
+- overlay/scrim: overlay (مثال: #00000066).
+- disabled: نص gray-400، حدود gray-200، خلفية gray-50.
+- error feedback: border danger-fg + خلفية danger-bg + أيقونة اختيارية.
+- روابط: default accent-600، hover accent-700، disabled gray-400.
+- loading: skeleton gray-200/100؛ بدون أنيميشن أو شفافية بسيطة.
+
+## Component & Pattern Library (تفصيل المكوّنات)
+- Cards
+  - surface + border 0.5 + radius-16 + elevation e0.
+  - محتوى داخلي card-padding 16–20، عناوين heading-3، أوصاف body.
+  - حالات: default / selected (border accent-dark) / disabled (gray-50 + text gray-400).
+- StatsCard
+  - قيمة كبيرة (title2 semibold) + تسمية footnote؛ محاذاة مركزية؛ مقاس ارتفاع 96–104؛ تباعد 12؛ grid 3+2 شائع.
+- PermissionCard
+  - عنوان headline + وصف subheadline ثانوي + زر تفعيل أسفل يسار (leading) بارتفاع 36 وراديوس 10؛ أيقونة tint accent-dark.
+- Lists Container
+  - كارد واحد يجمع الصفوف؛ dividers داخلية "divider-soft" بعرض 120–300، opacity 0.35–0.70، inset أفقي 16؛ صف فعّال يمكن إبراز حده accent-dark.
+- ChallengesCard
+  - مثل StatsCard مع زر "+" صغير داخل الزاوية trailing (24px، radius 8، bg info-bg، tint accent-dark).
+- Share Button
+  - زر ممتد أسفل شبكة الكروت: ارتفاع 44، radius 12، لون accent-dark، نص Semibold.
+- Tab Bar
+  - لون محدد selected = accent-dark، غير محدد = text-secondary؛ hairline علوي 0.5pt/0.35؛ safe-area inset سفلي 12؛ عناوين ظاهرة مع أيقونات SF (sparkles/gearshape/house).
+- Buttons
+  - primary: accent-600 + نص أبيض؛ pressed: accent-700؛ أحجام 40/44/48؛ padding أفقي 16–20.
+  - secondary: إطار accent-600، خلفية شفافة؛ pressed: opacity 0.6.
+  - destructive: نص/إطار danger-fg؛ خلفية شفافة.
+- Inputs (TextField, TextArea, Select)
+  - surface، border 0.7، radius-12، padding 12.
+  - focus: focus-ring 2px؛ error: border danger-fg + رسالة caption.
+  - disabled: نص gray-400، خلفية gray-50.
+- Toggles / Switches
+  - tint accent-600؛ مساحة لمس ≥ 44×44؛ حالة disabled بالرمادي.
+- Dividers
+  - ارتفاع 1px، لون border، شفافية ~0.6، inset أفقي 2–8.
+- Tags / Badges
+  - info: info-bg + نص أبيض/غامق حسب التباين؛ success/warning/danger بنفس النمط.
+  - الحجم: Caption2، radius-4، padding 4×2.
+- Rows & Options Patterns
+  - ToggleRow: نص يسار + Toggle يمين.
+  - NavigationRow: نص يسار + سهم يمين text-secondary.
+  - LinkRow: نص accent-600 + سهم؛ hover accent-700.
+  - ValueRow: عنوان يسار + قيمة يمين text-secondary.
+- Pricing Card (اختياري)
+  - بطاقة مميزة: خلفية success-bg، إطار success-fg 0.2، سعر success-fg.
+  - بطاقة عادية: surface + border.
+- CTA Block
+  - زر ممتلئ primary يمتد بكامل العرض؛ وصف قصير أعلاه.
+- Empty States
+  - أيقونة نصية محايدة، عنوان heading-3، وصف body ثانوي، CTA اختياري.
+
+## ASCII Blueprints (رسومات مبسطة)
+- Card
+```
+┌──────────────────────────────┐
+│ Heading (H3)                 │
+│ body text wraps two lines... │
+│                              │
+│ [Action]        [Secondary]  │
+└──────────────────────────────┘
+```
+- Primary Button
+```
+[  LABEL  ]  (height: 44, radius: 12, bg: accent-600, text: white)
+```
+- Secondary Button
+```
+[  LABEL  ]  (height: 44, radius: 12, border: accent-600, bg: transparent)
+```
+- Input Field
+```
+┌──────────────────────────────┐  focus → ring 2px
+│ Placeholder / Value          │  error → border danger-fg + caption
+└──────────────────────────────┘
+```
+- Toggle Row
+```
+Label text                           [  ○ ]  (tint: accent)
+```
+- Navigation Row
+```
+Label text                      ›    (chevron color: text-secondary)
+```
+- Link Row
+```
+Action link text (accent-600)   ›    (hover: accent-700)
+```
+- Value Row
+```
+Label text                   Value (text-secondary)
+```
+- Tag / Badge
+```
+Operational Golden Rule (مرجع تشغيلي)
+- افهم أولًا، اشرح ثانيًا، نفّذ ثالثًا — الالتزام ببروتوكول Slow Mode: Study → Clarify (≥3) → Suggestions → Impact → Propose → Approval → Implement → Verify → Status → PR.
+
+@ui-mode
+
+# UI-Mode: قواعد وتوجّهات تصميم الواجهة (محايدة التطبيق)
+
+## Rules
+- UI فقط: ممنوع تعديل المنطق/قاعدة البيانات/القيم الجوهرية.
+- أسلوب العمل لكل صفحة:
+  1) وصف تفصيلي لعناصر الصفحة الحالية (العناصر، الهيكل، الغرض).
+  2) اقتراح تصميم صفحة-صفحة ومكوّن-مكوّن مع شرح ما سنبنيه.
+  3) انتظار موافقة صريحة قبل تنفيذ كل صفحة/مكوّن (خطوة بخطوة).
+- استخدام TODO لتتبّع كل خطوة UI.
+- بناء محلي والتحقق بعد كل تعديل UI.
+- لغة التواصل: العربية؛ ثنائية عند الحاجة.
+
+## North Star & Vibe (اتجاه التصميم والإلهام)
+- **الإحساس العام**: هدوء وثقة وبساطة. واجهة تشجّع على التركيز دون ضوضاء أو إغراءات لونية.
+- **الشخصية**: حازم/ودود؛ يساعدك على الالتزام بدون توتر.
+- **المبادئ**:
+  - وضوح أولًا: هرميّة بصرية بسيطة، نصوص قصيرة وواضحة.
+  - أقلّ أفضل: لا مؤثرات ولا حركات غير ضرورية؛ حالات فقط بالألوان/الشفافية.
+  - إيقاع متنفس: مسافات großzügية (spacing-16 وما فوق)، عناصر متناظرة، هوامش مريحة.
+  - اتساق تام: لون accent واحد ثابت؛ الكروت بحدود خفيفة بدل الظلال الثقيلة.
+  - وصول للجميع: تباين AA، أحجام خط ديناميكية، مساحة لمس ≥ 44×44.
+- **النتيجة المرجوّة**: شعور بالسيطرة والهدوء؛ توجه المستخدم دائمًا نحو الإجراء الصحيح دون تشتيت.
+
+## الهوية البصرية العامة
+- **الألوان الأساسية**: لوحة هادئة، تباين مريح، بدون تدرجات صاخبة.
+- **بدون وضع داكن**: ثيم فاتح فقط.
+- **بدون أنيميشن**: تفاعلات ساكنة، حالات ضغط عبر تغيّر الشفافية/اللون.
+- **الزوايا**: نصف قطر قياسي radius-12 للكروت والأزرار.
+- **الظلال**: elevation خفيف (opacity ≤ 0.06) لرفع الكروت فقط.
+
+## دليل تبنّي سريع (Adoption Guide)
+1) عرّف Design Tokens التالية في طبقة الثيم لديك.
+2) اربط المكونات الأساسية المذكورة أدناه بهذه التوكنز.
+3) ابدأ بالمكوّنات الأكثر استخدامًا والسيناريوهات المتكررة (نماذج/قوائم/لوحات معلومات عامة).
+4) اختبر التباين والهوامش على الأجهزة المختلفة.
+
+### قالب JSON مقترح للتوكنز
+```json
+{
+  "colors": {
+    "background": "#F3F4F6",
+    "surface": "#FFFFFF",
+    "border": "#E5E7EB",
+    "accent": "#2563EB",
+    "text_primary": "#374151",
+    "text_secondary": "#6B7280",
+    "success_bg": "#16A34A1A",
+    "success_fg": "#16A34A",
+    "warning_bg": "#F59E0B1A",
+    "warning_fg": "#F59E0B",
+    "info_bg": "#2563EB1A",
+    "info_fg": "#2563EB",
+    "danger_bg": "#EF44441A",
+    "danger_fg": "#EF4444",
+    "overlay": "#00000066",
+    "focus_ring": "#2563EB"
+  },
+  "spacing": {
+    "scale": [4, 8, 12, 16, 20, 24, 32, 40],
+    "spacing_16": 16,
+    "card_padding": 16,
+    "page_horizontal": 24
+  },
+  "radius": {
+    "radius_8": 8,
+    "radius_12": 12,
+    "radius_16": 16
+  },
+  "elevation": {
+    "e0": 0,
+    "e1": 1,
+    "e2": 2
+  },
+  "typography": {
+    "heading_1": {"size": 24, "weight": "semibold", "line_height": 30},
+    "heading_2": {"size": 20, "weight": "semibold", "line_height": 26},
+    "heading_3": {"size": 18, "weight": "medium", "line_height": 24},
+    "body": {"size": 16, "weight": "regular", "line_height": 22},
+    "caption": {"size": 12, "weight": "regular", "line_height": 16}
+  }
+}
+```
+
+## قاعدة التسمية للتوكنز
+- داخل النص: استخدم kebab-case مثل text-primary, page-horizontal.
+- داخل JSON/الكود المعجّم: استخدم snake_case مثل text_primary, page_horizontal.
+
+## Design Tokens (أسماء عامة)
+- Colors: background, surface, border, accent, text-primary, text-secondary, states (success/warning/info/danger), overlay, focus-ring.
+- Spacing: scale ثابت 4/8/12/16/20/24/32/40، مع قيم مختصرة مثل spacing-16, card-padding, page-horizontal.
+- Radius: radius-8/12/16.
+- Elevation: e0 (بدون ظل)، e1 (ظل خفيف)، e2 (ظل متوسط للمودال/الأوفرلاي).
+- Typography: heading-1/2/3, body, caption مع line-height كما في القالب أعلاه.
+
+## لوحة الألوان الدقيقة (Neutral Palette)
+- الرمادي (Gray Scale): gray-50/100/200/300/400/500/600/700 كما هو أعلاه.
+- اللون المميّز (Accent Blue): accent-50/100/200/400/600/700.
+- الحالات (States): success/warning/info/danger بنمط fg/bg.
+- الخرائط إلى التوكنز: background/surface/border/text-primary/text-secondary/accent.
+- التباين: نص أساسي ≥ 7:1، زر أساسي ≥ 4.5:1.
+
+### إضافات دقيقة (من صفحة Home)
+- accent-dark: #4DA2FC، accent-light: #8CBCFC (للتدرج عند الحاجة؛ الافتراضي لون مصمت accent-dark).
+- text-primary: #374151، text-secondary: #6B7280.
+- info-bg: #2563EB1A، info-fg: accent-dark.
+- card: radius-16، border 0.5pt، padding 16–20.
+- divider-soft: ارتفاع 1pt، عرض افتراضي 120–300 حسب السياق، opacity 0.35–0.70، متمركز داخليًا مع inset أفقي.
+
+## حالات وتفاصيل تفاعلية
+- focus-ring: لون focus-ring بسمك 2px؛ للحقول inset 1px.
+- overlay/scrim: overlay (مثال: #00000066).
+- disabled: نص gray-400، حدود gray-200، خلفية gray-50.
+- error feedback: border danger-fg + خلفية danger-bg + أيقونة اختيارية.
+- روابط: default accent-600، hover accent-700، disabled gray-400.
+- loading: skeleton gray-200/100؛ بدون أنيميشن أو شفافية بسيطة.
+
+## Component & Pattern Library (تفصيل المكوّنات)
+- Cards
+  - surface + border 0.5 + radius-16 + elevation e0.
+  - محتوى داخلي card-padding 16–20، عناوين heading-3، أوصاف body.
+  - حالات: default / selected (border accent-dark) / disabled (gray-50 + text gray-400).
+- StatsCard
+  - قيمة كبيرة (title2 semibold) + تسمية footnote؛ محاذاة مركزية؛ مقاس ارتفاع 96–104؛ تباعد 12؛ grid 3+2 شائع.
+- PermissionCard
+  - عنوان headline + وصف subheadline ثانوي + زر تفعيل أسفل يسار (leading) بارتفاع 36 وراديوس 10؛ أيقونة tint accent-dark.
+- Lists Container
+  - كارد واحد يجمع الصفوف؛ dividers داخلية "divider-soft" بعرض 120–300، opacity 0.35–0.70، inset أفقي 16؛ صف فعّال يمكن إبراز حده accent-dark.
+- ChallengesCard
+  - مثل StatsCard مع زر "+" صغير داخل الزاوية trailing (24px، radius 8، bg info-bg، tint accent-dark).
+- Share Button
+  - زر ممتد أسفل شبكة الكروت: ارتفاع 44، radius 12، لون accent-dark، نص Semibold.
+- Tab Bar
+  - لون محدد selected = accent-dark، غير محدد = text-secondary؛ hairline علوي 0.5pt/0.35؛ safe-area inset سفلي 12؛ عناوين ظاهرة مع أيقونات SF (sparkles/gearshape/house).
+- Buttons
+  - primary: accent-600 + نص أبيض؛ pressed: accent-700؛ أحجام 40/44/48؛ padding أفقي 16–20.
+  - secondary: إطار accent-600، خلفية شفافة؛ pressed: opacity 0.6.
+  - destructive: نص/إطار danger-fg؛ خلفية شفافة.
+- Inputs (TextField, TextArea, Select)
+  - surface، border 0.7، radius-12، padding 12.
+  - focus: focus-ring 2px؛ error: border danger-fg + رسالة caption.
+  - disabled: نص gray-400، خلفية gray-50.
+- Toggles / Switches
+  - tint accent-600؛ مساحة لمس ≥ 44×44؛ حالة disabled بالرمادي.
+- Dividers
+  - ارتفاع 1px، لون border، شفافية ~0.6، inset أفقي 2–8.
+- Tags / Badges
+  - info: info-bg + نص أبيض/غامق حسب التباين؛ success/warning/danger بنفس النمط.
+  - الحجم: Caption2، radius-4، padding 4×2.
+- Rows & Options Patterns
+  - ToggleRow: نص يسار + Toggle يمين.
+  - NavigationRow: نص يسار + سهم يمين text-secondary.
+  - LinkRow: نص accent-600 + سهم؛ hover accent-700.
+  - ValueRow: عنوان يسار + قيمة يمين text-secondary.
+- Pricing Card (اختياري)
+  - بطاقة مميزة: خلفية success-bg، إطار success-fg 0.2، سعر success-fg.
+  - بطاقة عادية: surface + border.
+- CTA Block
+  - زر ممتلئ primary يمتد بكامل العرض؛ وصف قصير أعلاه.
+- Empty States
+  - أيقونة نصية محايدة، عنوان heading-3، وصف body ثانوي، CTA اختياري.
+
+## ASCII Blueprints (رسومات مبسطة)
+- Card
+```
+┌──────────────────────────────┐
+│ Heading (H3)                 │
+│ body text wraps two lines... │
+│                              │
+│ [Action]        [Secondary]  │
+└──────────────────────────────┘
+```
+- Primary Button
+```
+[  LABEL  ]  (height: 44, radius: 12, bg: accent-600, text: white)
+```
+- Secondary Button
+```
+[  LABEL  ]  (height: 44, radius: 12, border: accent-600, bg: transparent)
+```
+- Input Field
+```
+┌──────────────────────────────┐  focus → ring 2px
+│ Placeholder / Value          │  error → border danger-fg + caption
+└──────────────────────────────┘
+```
+- Toggle Row
+```
+Label text                           [  ○ ]  (tint: accent)
+```
+- Navigation Row
+```
+Label text                      ›    (chevron color: text-secondary)
+```
+- Link Row
+```
+Action link text (accent-600)   ›    (hover: accent-700)
+```
+- Value Row
+```
+Label text                   Value (text-secondary)
+```
+- Tag / Badge
+```
+Operational Golden Rule (مرجع تشغيلي)
+- افهم أولًا، اشرح ثانيًا، نفّذ ثالثًا — الالتزام ببروتوكول Slow Mode: Study → Clarify (≥3) → Suggestions → Impact → Propose → Approval → Implement → Verify → Status → PR.
