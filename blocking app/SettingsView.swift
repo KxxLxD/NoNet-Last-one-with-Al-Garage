@@ -19,11 +19,10 @@ struct SettingsView: View {
                     VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
                         Text(lang.isArabicEffective ? "لغة التطبيق" : "App Language")
                             .font(.headline)
-                        Picker("", selection: Binding(
-                            get: { lang.selected },
+                        Picker("", selection: Binding<LanguageManager.LanguageOption>(
+                            get: { lang.isArabicEffective ? .arabic : .english },
                             set: { lang.updateLanguage($0) }
                         )) {
-                            Text(lang.isArabicEffective ? "لغة النظام" : "System").tag(LanguageManager.LanguageOption.system)
                             Text("العربية").tag(LanguageManager.LanguageOption.arabic)
                             Text("English").tag(LanguageManager.LanguageOption.english)
                         }

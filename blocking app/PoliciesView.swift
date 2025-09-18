@@ -15,7 +15,7 @@ struct PoliciesView: View {
                             .foregroundColor(AppColors.textSecondary)
                 }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(20)
+                    .padding(16)
                     .background(AppColors.uiSurface)
                     .cornerRadius(20)
                     .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
@@ -30,7 +30,7 @@ struct PoliciesView: View {
                             .foregroundColor(AppColors.textSecondary)
                 }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(20)
+                    .padding(16)
                     .background(AppColors.uiSurface)
                     .cornerRadius(20)
                     .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
@@ -45,11 +45,14 @@ struct PoliciesView: View {
 
 private struct SoftDivider: View {
     var body: some View {
-        Rectangle()
-            .fill(AppColors.uiBorder.opacity(0.6))
-            .frame(maxWidth: .infinity)
-            .frame(height: 1)
-            .padding(.vertical, 6)
+        HStack {
+            Spacer()
+            Rectangle()
+                .fill(AppColors.uiBorder.opacity(0.70))
+                .frame(width: 300, height: 1)
+            Spacer()
+        }
+        .padding(.vertical, 6)
     }
 }
 

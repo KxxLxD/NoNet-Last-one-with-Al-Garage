@@ -19,7 +19,7 @@ struct AboutView: View {
                         HStack { Text(isArabic ? "الاسم" : "Name").foregroundColor(AppColors.textPrimary); Spacer(); Text(appName).foregroundColor(AppColors.textSecondary) }
                         HStack { Text(isArabic ? "الإصدار" : "Version").foregroundColor(AppColors.textPrimary); Spacer(); Text(versionString).foregroundColor(AppColors.textSecondary) }
             }
-                    .padding(20)
+                    .padding(16)
                     .background(AppColors.uiSurface)
                     .cornerRadius(20)
                 .overlay(

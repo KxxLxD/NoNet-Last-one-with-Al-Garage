@@ -34,10 +34,28 @@ struct HomeView: View {
     private struct ScheduleSlot: Codable { let id: UUID; let day: Int; let fromMinutes: Int; let toMinutes: Int }
 
     private var activeLists: [ListEntity] {
-        lists.filter { isActiveNow($0) }
+        lists
+            .filter { isActiveNow($0) }
+            .sorted { a, b in
+                let ah = (a.protection == "hard")
+                let bh = (b.protection == "hard")
+                if ah != bh { return ah && !bh }
+                let ad = a.createdAt
+                let bd = b.createdAt
+                return ad > bd
+            }
     }
     private var nonActiveLists: [ListEntity] {
-        lists.filter { !isActiveNow($0) }
+        lists
+            .filter { !isActiveNow($0) }
+            .sorted { a, b in
+                let ah = (a.protection == "hard")
+                let bh = (b.protection == "hard")
+                if ah != bh { return ah && !bh }
+                let ad = a.createdAt
+                let bd = b.createdAt
+                return ad > bd
+            }
     }
 
     @State private var showFAQ: Bool = false
@@ -45,6 +63,7 @@ struct HomeView: View {
     // Permission states
     @State private var hasScreenTimePermission: Bool = false
     @State private var hasNotificationPermission: Bool = false
+    @State private var permissionsExpanded: Bool = false
 
     var body: some View {
         NavigationView {
@@ -73,6 +92,7 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.top, 24)
                     .padding(.bottom, 8)
+                    SoftDivider(width: 300, opacity: 0.70)
 
                                         // Stats cards
                     HStack(spacing: 12) {
@@ -80,11 +100,11 @@ struct HomeView: View {
                         StatsCard(value: "1", label: AppStrings.levelLabel(lang))
                         ChallengesSimpleCard(lang: lang, value: "7")
                     }
-                    SoftDivider(width: 280, opacity: 0.70)
+                    SoftDivider(width: 300, opacity: 0.70)
 
                                         // Share progress
                     Button(action: { /* share placeholder */ }) {
-                        Text(AppStrings.shareProgress(lang))
+                        Text(lang.isArabicEffective ? "مشاركة" : "Share")
                             .font(.subheadline.weight(.semibold))
                             .frame(maxWidth: .infinity)
                             .frame(height: 44)
@@ -92,7 +112,7 @@ struct HomeView: View {
                             .foregroundColor(.white)
                             .cornerRadius(12)
                     }
-                    SoftDivider(width: 280, opacity: 0.70)
+                    SoftDivider(width: 300, opacity: 0.70)
 
                     // Create Blocklist Card
                     CreateBlocklistCard(lang: lang, useGradientCTA: false) {
@@ -101,75 +121,104 @@ struct HomeView: View {
                     .sheet(isPresented: $showingCreate) {
                         CreateListSheet().environmentObject(lang)
                     }
-                    SoftDivider(width: 280, opacity: 0.70)
+                    SoftDivider(width: 300, opacity: 0.70)
 
-                    // Permissions (kept on Home)
-                    if !hasScreenTimePermission || !hasNotificationPermission {
-                        VStack(alignment: .leading, spacing: 12) {
+                    // Permissions (collapsed card)
+                    VStack(spacing: 0) {
+                        HStack(spacing: 12) {
                             Text(AppStrings.permissionsTitle(lang))
                                 .font(.system(size: 20, weight: .semibold))
                                 .foregroundColor(AppColors.textPrimary)
-
-                            // Screen Time
-                                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 8) {
-                                    HStack(spacing: 10) {
+                            Spacer()
+                            let requiredCount = (hasScreenTimePermission ? 0 : 1) + (hasNotificationPermission ? 0 : 1)
+                            let isAllSet = requiredCount == 0
+                            Text(isAllSet ? (lang.isArabicEffective ? "مكتملة" : "All set") : (lang.isArabicEffective ? "مطلوبة (\(requiredCount))" : "Required (\(requiredCount))"))
+                                .font(.footnote.weight(.semibold))
+                                .padding(.horizontal, 10)
+                                .frame(height: 26)
+                                .background(isAllSet ? Color.clear : AppColors.warningBg)
+                                .foregroundColor(isAllSet ? AppColors.textSecondary : AppColors.warningFg)
+                                .overlay(
+                                    Capsule().stroke(isAllSet ? AppColors.uiBorder : AppColors.warningFg.opacity(0.5), lineWidth: 0.5)
+                                )
+                                .clipShape(Capsule())
+                            Image(systemName: permissionsExpanded ? "chevron.up" : "chevron.down")
+                                .foregroundColor(AppColors.textSecondary)
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture { withAnimation(.easeInOut(duration: 0.2)) { permissionsExpanded.toggle() } }
+                        .padding(16)
+                        .background(AppColors.uiSurface)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: permissionsExpanded ? 0 : 20)
+                                .stroke(AppColors.uiBorder, lineWidth: 0.5)
+                        )
+                        if permissionsExpanded {
+                            VStack(spacing: 0) {
+                                // Screen Time row
+                                HStack(spacing: 12) {
                                     Image(systemName: "lock.iphone").foregroundColor(AppColors.accentDark)
-                                        Text(lang.isArabicEffective ? "صلاحيات Screen Time" : "Screen Time Permissions").font(.headline)
+                                    Text(lang.isArabicEffective ? "Screen Time" : "Screen Time")
+                                        .font(.subheadline)
+                                        .foregroundColor(AppColors.textPrimary)
+                                    Spacer()
+                                    if !hasScreenTimePermission {
+                                        Button(action: { requestScreenTimeAuth() }) {
+                                            Text(lang.isArabicEffective ? "منح" : "Grant")
+                                                .font(.footnote.weight(.semibold))
+                                                .padding(.horizontal, 12)
+                                                .frame(height: 30)
+                                                .background(AppColors.accentDark)
+                                                .foregroundColor(.white)
+                                                .cornerRadius(8)
+                                        }
+                                        .buttonStyle(.plain)
+                                    } else {
+                                        Text(lang.isArabicEffective ? "تم" : "Granted")
+                                            .font(.footnote)
+                                            .foregroundColor(AppColors.textSecondary)
                                     }
-                                    Text(lang.isArabicEffective ? "مطلوبة لحظر التطبيقات المشتتة بدقة." : "Required to precisely block distracting apps.")
-                                    .font(.subheadline).foregroundColor(AppColors.textSecondary)
-                                HStack { Button(action: { requestScreenTimeAuth() }) {
-                                    Text(lang.isArabicEffective ? "منح الصلاحية" : "Grant Access")
-                                                    .font(.subheadline.weight(.semibold))
-                                                    .frame(height: 36)
-                                                    .padding(.horizontal, 12)
-                                        .background(AppColors.accentDark)
-                                                    .foregroundColor(.white)
-                                                    .cornerRadius(10)
-                                }}
-                                .padding(.top, 8)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .padding(16)
+                                Divider().background(AppColors.uiBorder.opacity(0.35))
+                                // Notifications row
+                                HStack(spacing: 12) {
+                                    Image(systemName: "bell").foregroundColor(AppColors.accentDark)
+                                    Text(lang.isArabicEffective ? "الإشعارات" : "Notifications")
+                                        .font(.subheadline)
+                                        .foregroundColor(AppColors.textPrimary)
+                                    Spacer()
+                                    if !hasNotificationPermission {
+                                        Button(action: { /* request notifications */ }) {
+                                            Text(lang.isArabicEffective ? "تفعيل" : "Enable")
+                                                .font(.footnote.weight(.semibold))
+                                                .padding(.horizontal, 12)
+                                                .frame(height: 30)
+                                                .background(AppColors.accentDark)
+                                                .foregroundColor(.white)
+                                                .cornerRadius(8)
+                                        }
+                                        .buttonStyle(.plain)
+                                    } else {
+                                        Text(lang.isArabicEffective ? "تم" : "Enabled")
+                                            .font(.footnote)
+                                            .foregroundColor(AppColors.textSecondary)
+                                    }
+                                }
+                                .padding(16)
                             }
-                            .padding(20)
-                            .frame(maxWidth: .infinity)
                             .background(AppColors.uiSurface)
-                            .cornerRadius(20)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 20)
                                     .stroke(AppColors.uiBorder, lineWidth: 0.5)
                             )
-
-                            // Notifications
-                            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 8) {
-                                HStack(spacing: 10) {
-                                    Image(systemName: "bell").foregroundColor(AppColors.accentDark)
-                                    Text(lang.isArabicEffective ? "الإشعارات (اختياري)" : "Notifications (optional)").font(.headline)
-                                }
-                                Text(lang.isArabicEffective ? "لتنبيهات ودّية تساعدك على الاستمرار بالتركيز." : "For friendly nudges to keep you focused.")
-                                    .font(.subheadline).foregroundColor(AppColors.textSecondary)
-                                HStack { Button(action: { /* request notifications */ }) {
-                                    Text(AppStrings.enableNotifications(lang))
-                                                    .font(.subheadline.weight(.semibold))
-                                                    .frame(height: 36)
-                                                    .padding(.horizontal, 12)
-                                        .background(AppColors.accentDark)
-                                                    .foregroundColor(.white)
-                                                    .cornerRadius(10)
-                                }}
-                                .padding(.top, 8)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                            .padding(20)
-                            .background(AppColors.uiSurface)
-                            .cornerRadius(20)
-                                .overlay(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .stroke(AppColors.uiBorder, lineWidth: 0.5)
-                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 20))
                         }
-                        .padding(.top, 12)
                     }
-                    SoftDivider(width: 280, opacity: 0.70)
+                    .background(AppColors.uiSurface)
+                    .cornerRadius(20)
+
+                    SoftDivider(width: 300, opacity: 0.70)
 
                     // Lists
                     VStack(alignment: .leading, spacing: 16) {
@@ -191,7 +240,7 @@ struct HomeView: View {
                                             RealListRow(item: item, isActive: true)
                                     }
                                         if item.id != activeLists.last?.id || !nonActiveLists.isEmpty {
-                                            SoftDivider(width: 280, opacity: 0.70)
+                                            SoftDivider(width: 300, opacity: 0.70)
                                             }
                                         }
                                 // Non-active lists
@@ -200,7 +249,7 @@ struct HomeView: View {
                                             RealListRow(item: item, isActive: false)
                                     }
                                         if item.id != nonActiveLists.last?.id {
-                                            SoftDivider(width: 280, opacity: 0.70)
+                                            SoftDivider(width: 300, opacity: 0.70)
                                             }
                                     }
                                 }
@@ -335,30 +384,21 @@ private struct RealListRow: View {
 
     var body: some View {
         HStack(alignment: .center) {
-        VStack(alignment: layoutDirection == .rightToLeft ? .trailing : .leading, spacing: 8) {
+            VStack(alignment: layoutDirection == .rightToLeft ? .trailing : .leading, spacing: 8) {
                 Text(item.name)
                     .font(.headline)
                     .foregroundColor(AppColors.textPrimary)
                     .lineLimit(1)
                     .truncationMode(.tail)
-                if let sub = subtitleText() {
-                    Text(sub)
-                        .font(.footnote)
-                        .foregroundColor(AppColors.textSecondary)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-            }
-            HStack(spacing: 8) {
-                let isHard = item.protection == "hard"
-                    Label(isHard ? (layoutDirection == .rightToLeft ? "الوضع الصارم" : "Hard Mode") : (layoutDirection == .rightToLeft ? "بدون حماية" : "No Protection"), systemImage: isHard ? "lock.fill" : "lock.open")
-                    .font(.footnote)
-                        .foregroundColor(isHard ? AppColors.alertRed : AppColors.textSecondary)
-                    if let count = item.items?.count {
-                        Text("\(count) " + (layoutDirection == .rightToLeft ? "عناصر" : "items"))
-                            .font(.footnote)
-                            .foregroundColor(AppColors.textSecondary)
-            }
-        }
+                HStack(spacing: 8) {
+                    if let schedule = scheduleSummaryBadged() {
+                        Badge(icon: "calendar", text: schedule, style: .neutral)
+                    }
+                    ProtectionBadge(isHard: item.protection == "hard", isRTL: layoutDirection == .rightToLeft)
+                    if let c = item.items?.count {
+                        Badge(icon: "list.bullet", text: itemsCountText(c), style: .neutral)
+                    }
+                }
             }
             Spacer()
             if isActive {
@@ -376,15 +416,34 @@ private struct RealListRow: View {
         .background(Color.clear)
     }
 
-    private func subtitleText() -> String? {
-        // Show remaining time for active 'now' lists
+    private func itemsCountText(_ count: Int) -> String {
+        if layoutDirection == .rightToLeft {
+            return "\(arabicDigits(count)) عنصر"
+        } else {
+            return "\(count) items"
+        }
+    }
+
+    private func arabicDigits(_ n: Int) -> String {
+        let formatter = NumberFormatter()
+        formatter.locale = Locale(identifier: "ar")
+        return formatter.string(from: NSNumber(value: n)) ?? "\(n)"
+    }
+
+    private func scheduleSummaryBadged() -> String? {
+        if item.blockType == "scheduled", let data = item.scheduleSlots, let slots = try? JSONDecoder().decode([Slot].self, from: data), let summary = scheduleSummary(slots) {
+            return summary
+        }
+        return nil
+    }
+
+    private func subtitleText() -> String? { /* kept for potential future use */
         if item.blockType == "now" && isActive {
             let end = item.createdAt.addingTimeInterval(TimeInterval(item.durationSeconds))
             let remaining = Int(max(0, end.timeIntervalSince(Date())))
             if remaining <= 0 { return nil }
             return (layoutDirection == .rightToLeft ? "ينتهي خلال " : "Ends in ") + format(remaining)
         }
-        // Show slots count for scheduled lists
         if item.blockType == "scheduled", let data = item.scheduleSlots {
             if let slots = try? JSONDecoder().decode([Slot].self, from: data) {
                 if let summary = scheduleSummary(slots) { return summary }
@@ -397,7 +456,6 @@ private struct RealListRow: View {
 
     private func scheduleSummary(_ slots: [Slot]) -> String? {
         guard !slots.isEmpty else { return nil }
-        // Check if all slots share the same time range
         let uniqueTimes = Set(slots.map { "\($0.fromMinutes)-\($0.toMinutes)" })
         guard uniqueTimes.count == 1 else { return nil }
         let from = slots.first!.fromMinutes
@@ -422,7 +480,6 @@ private struct RealListRow: View {
     }
 
     private func dayShortName(_ d: Int) -> String {
-        // 0..6, Sunday=0
         if layoutDirection == .rightToLeft {
             let names = ["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"]
             return names[(d % 7 + 7) % 7]
@@ -435,7 +492,8 @@ private struct RealListRow: View {
     private func formatHM(_ minutes: Int) -> String {
         let h = minutes / 60
         let m = minutes % 60
-        return String(format: "%02d:%02d", h, m)
+        let s = String(format: "%02d:%02d", h, m)
+        return s
     }
 
     private func format(_ seconds: Int) -> String {
@@ -450,6 +508,63 @@ private struct RealListRow: View {
             if d > 0 { return "\(d)d \(h)h" }
             if h > 0 { return "\(h)h \(m)m" }
             return "\(m)m"
+        }
+    }
+}
+
+private enum BadgeStyle { case neutral, warning, danger }
+
+private struct Badge: View {
+    let icon: String
+    let text: String
+    let style: BadgeStyle
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 12, weight: .semibold))
+            Text(text)
+                .font(.caption.weight(.semibold))
+                .lineLimit(1)
+                .monospacedDigit()
+        }
+        .padding(.horizontal, 10)
+        .frame(height: 24)
+        .foregroundColor(fg)
+        .background(bg)
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(border, lineWidth: 0.5))
+        .cornerRadius(8)
+    }
+    private var fg: Color {
+        switch style {
+        case .neutral: return AppColors.textPrimary
+        case .warning: return AppColors.warningFg
+        case .danger: return AppColors.alertRed
+        }
+    }
+    private var bg: Color {
+        switch style {
+        case .neutral: return AppColors.uiSurface
+        case .warning: return AppColors.warningBg
+        case .danger: return AppColors.alertRed.opacity(0.10)
+        }
+    }
+    private var border: Color {
+        switch style {
+        case .neutral: return AppColors.uiBorder
+        case .warning: return AppColors.warningFg.opacity(0.6)
+        case .danger: return AppColors.alertRed
+        }
+    }
+}
+
+private struct ProtectionBadge: View {
+    let isHard: Bool
+    let isRTL: Bool
+    var body: some View {
+        if isHard {
+            Badge(icon: "lock.fill", text: isRTL ? "الوضع الصارم" : "Hard Mode", style: .danger)
+        } else {
+            Badge(icon: "lock.open", text: isRTL ? "بدون حماية" : "No Protection", style: .neutral)
         }
     }
 }
@@ -492,7 +607,7 @@ private struct StatsCard: View {
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity)
-        .padding(20)
+        .padding(16)
         .frame(height: 100)
         .background(AppColors.uiSurface)
         .cornerRadius(20)
@@ -521,9 +636,6 @@ private struct CreateBlocklistCard: View {
                     .background(AppColors.infoBg)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
-            Text(AppStrings.createBlocklistDesc(lang))
-                .font(.body)
-                .foregroundColor(AppColors.textSecondary)
             Button(action: onCreate) {
                 Text(lang.isArabicEffective ? "ابدأ" : "Get Started")
                     .font(.title3.weight(.semibold))
@@ -538,7 +650,7 @@ private struct CreateBlocklistCard: View {
         .cornerRadius(12)
             }
         }
-        .padding(20)
+        .padding(16)
         .background(AppColors.uiSurface)
         .cornerRadius(20)
         .overlay(
@@ -595,11 +707,11 @@ private struct ChallengesSimpleCard: View {
                     .monospacedDigit()
                     .foregroundColor(AppColors.textPrimary)
                 Text(AppStrings.challengesLabel(lang))
-                    .font(.footnote)
+                    .font(.caption)
                     .foregroundColor(AppColors.textSecondary)
             }
             .frame(maxWidth: .infinity)
-            .padding(20)
+            .padding(16)
             .frame(height: 100)
             .background(AppColors.uiSurface)
             .cornerRadius(20)
@@ -636,7 +748,7 @@ private struct SavedCycleCard: View {
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity)
-        .padding(20)
+        .padding(16)
         .frame(height: 100)
         .background(
             ZStack {
@@ -676,7 +788,11 @@ private struct SavedCycleCard: View {
     }
     private func combinedLabel() -> String {
         let saved = lang.isArabicEffective ? "تم توفيره" : "Saved"
-        return scopeText() + " " + saved
+        if lang.isArabicEffective {
+            return "\(saved) (\(scopeText()))"
+        } else {
+            return scopeText() + " " + saved
+        }
     }
 }
 
@@ -746,7 +862,7 @@ private extension HomeView {
             Task { _ = try? await AuthorizationCenter.shared.requestAuthorization(for: .individual) }
         }
     }
-} 
+}
 
 private struct SoftDivider: View {
     let width: CGFloat

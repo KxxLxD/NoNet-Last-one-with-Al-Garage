@@ -108,24 +108,43 @@ struct UpgradeView: View {
 
                 // Features Card (Hook + Benefits)
                 VStack(alignment: .leading, spacing: 12) {
+                    // Headline
                     Text(isArabic ? "حرّر تركيزك وغيّر عاداتك الرقمية" : "Unlock focus and change digital habits")
                         .font(.system(size: 20, weight: .semibold))
                         .foregroundColor(AppColors.textPrimary)
-                    Text(isArabic ? "خطط ذكية، حجب دقيق، وجدولة مرنة — كل ما تحتاجه لتلتزم بهدوء." : "Smart plans, precise blocking, flexible schedules — everything you need to stay on track.")
+                    Text(isArabic ? "كل ما تحتاجه لتبقى على المسار الصحيح." : "Everything you need to stay on track.")
                         .font(.subheadline)
                         .foregroundColor(AppColors.textSecondary)
 
-                    SoftDivider(width: 280, opacity: 0.7)
+                    SoftDivider(width: 300, opacity: 0.7)
 
+                    // Free tier summary
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(isArabic ? "مجاني" : "Free")
+                            .font(.headline)
+                            .foregroundColor(AppColors.textPrimary)
+                        availabilityRow(icon: "list.bullet", textAr: "حتى ٣ قوائم حجب", textEn: "Up to 3 blocklists", available: true)
+                        availabilityRow(icon: "lock.shield", textAr: "الوضع الصارم: ٣ مرات فقط", textEn: "Hard Mode: 3 uses only", available: true)
+                        availabilityRow(icon: "calendar", textAr: "الجدولة الذكية", textEn: "Smart scheduling", available: false)
+                        availabilityRow(icon: "clock", textAr: "جدولة الاستراحات", textEn: "Planned breaks", available: false)
+                        availabilityRow(icon: "sparkles", textAr: "مساعد NoNet الذكي (AI)", textEn: "NoNet AI Chatbot", available: false)
+                        availabilityRow(icon: "person.badge.shield.checkmark", textAr: "دعم أولوية", textEn: "Priority support", available: false)
+                    }
+
+                    SoftDivider(width: 300, opacity: 0.7)
+
+                    // Premium features (exactly 6)
                     VStack(alignment: .leading, spacing: 10) {
-                        featureRow(icon: "infinity", textAr: "غير محدود: أنشئ قوائم حجب بلا حدود", textEn: "Unlimited: create as many blocklists as you want")
-                        featureRow(icon: "calendar", textAr: "الجدولة الذكية: أوقات مخصّصة للحجب", textEn: "Smart scheduling by weekdays")
-                        featureRow(icon: "lock.shield", textAr: "الوضع الصارم: حماية أقوى من التراجع", textEn: "Hard Mode for stronger protection")
-                        featureRow(icon: "square.grid.2x2", textAr: "فئات جاهزة: حجب سريع للسوشال/الألعاب", textEn: "Ready categories for quick blocking")
-                        featureRow(icon: "cup.and.saucer", textAr: "فواصل مدروسة: تحكّم بعدد ومدة الاستراحات", textEn: "Planned breaks: control count and duration")
-                        featureRow(icon: "chart.line.uptrend.xyaxis", textAr: "إحصائيات وتركيز: اعرف تقدّمك", textEn: "Insights to track your progress")
-                        featureRow(icon: "sparkles", textAr: "اقتراحات سريعة: قوالب فعّالة بضغطة", textEn: "Quick suggestions and templates")
-                        featureRow(icon: "person.badge.shield.checkmark", textAr: "أولوية دعم: مساعدة أسرع", textEn: "Priority support")
+                        featureRow(icon: "infinity", textAr: "قوائم بلا حدود", textEn: "Unlimited blocklists")
+                        featureRow(icon: "lock.shield", textAr: "الوضع الصارم", textEn: "Hard Mode")
+                        featureRow(icon: "calendar", textAr: "الجدولة الذكية", textEn: "Smart scheduling")
+                        featureRow(icon: "clock", textAr: "جدولة الاستراحات", textEn: "Planned breaks")
+                        featureRow(icon: "sparkles", textAr: "مساعد NoNet الذكي (AI)", textEn: "NoNet AI Chatbot")
+                        featureRow(icon: "person.badge.shield.checkmark", textAr: "دعم أولوية", textEn: "Priority support")
+                        // Short description
+                        Text(isArabic ? "مزايا عملية تمنحك سيطرة هادئة ودائمة." : "Practical features that keep you calmly in control.")
+                            .font(.footnote)
+                            .foregroundColor(AppColors.textSecondary)
                     }
                 }
                 .padding(20)
@@ -133,19 +152,27 @@ struct UpgradeView: View {
                 .cornerRadius(20)
                 .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
 
-                // Golden Guarantee
+                // Golden Guarantee — prominent card
                 VStack(alignment: .leading, spacing: 8) {
-                    Label(isArabic ? "الضمان الذهبي" : "Golden Guarantee", systemImage: "shield.checkerboard")
-                        .font(.headline)
+                    let gold = Color(red: 212/255, green: 175/255, blue: 55/255)
+                    HStack(spacing: 8) {
+                        Image(systemName: "shield.checkerboard")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(gold)
+                        Text(isArabic ? "الضمان الذهبي" : "Golden Guarantee")
+                            .font(.headline)
+                            .foregroundColor(gold)
+                    }
                     Text(isArabic ? "استرداد كامل للمبلغ بدون أسئلة." : "Full refund, no questions asked.")
-                        .font(.subheadline)
-                    Text(isArabic ? "الشهري: خلال أسبوعين. السنوي: خلال شهرين." : "Monthly: within 14 days. Yearly: within 2 months.")
-                        .font(.footnote).foregroundColor(.secondary)
+                        .foregroundColor(AppColors.textPrimary)
+                    Text(isArabic ? "الشهري: خلال 14 يوم — السنوي: خلال شهر واحد." : "Monthly: within 14 days — Yearly: within 1 month.")
+                        .font(.footnote)
+                        .foregroundColor(AppColors.textSecondary)
                 }
-                .padding()
-                .background(AppColors.uiSurface)
-                .cornerRadius(20)
-                .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+                .padding(16)
+                .background(Color(red: 212/255, green: 175/255, blue: 55/255).opacity(0.08))
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(red: 212/255, green: 175/255, blue: 55/255), lineWidth: 1))
+                .cornerRadius(16)
 
                 // CTA inline moved to bottom safe-area inset
                 EmptyView()
@@ -250,7 +277,7 @@ struct UpgradeView: View {
         )
     }
 
-    // MARK: - Feature Row helper
+    // MARK: - Feature Row helpers
     @ViewBuilder
     private func featureRow(icon: String, textAr: String, textEn: String) -> some View {
         HStack(alignment: .top, spacing: 10) {
@@ -260,10 +287,22 @@ struct UpgradeView: View {
                 Text(isArabic ? textAr : textEn)
                     .font(.body)
                     .foregroundColor(AppColors.textPrimary)
-                Text(isArabic ? textEn : textAr)
-                    .font(.caption)
-                    .foregroundColor(AppColors.textSecondary)
             }
+        }
+    }
+
+    @ViewBuilder
+    private func availabilityRow(icon: String, textAr: String, textEn: String, available: Bool) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: available ? "checkmark.circle.fill" : "xmark.circle")
+                .foregroundColor(available ? AppColors.accentDark : AppColors.textSecondary)
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .foregroundColor(available ? AppColors.accentDark : AppColors.textSecondary)
+                Text(isArabic ? textAr : textEn)
+                    .foregroundColor(available ? AppColors.textPrimary : AppColors.textSecondary)
+            }
+            .font(.body)
         }
     }
 }

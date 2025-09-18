@@ -136,6 +136,8 @@ struct CustomTabBar: View {
         ]
     }
 
+    @State private var flashIndex: Int? = nil
+
     var body: some View {
         VStack(spacing: 0) {
             Rectangle()
@@ -144,19 +146,32 @@ struct CustomTabBar: View {
                 .edgesIgnoringSafeArea(.bottom)
             HStack(spacing: 0) {
                 ForEach(items) { item in
-                    Button(action: { withAnimation(.easeOut(duration: 0.15)) { selectedTab = item.id } }) {
-                        VStack(spacing: 4) {
-                            Image(systemName: item.systemImage)
-                                .symbolRenderingMode(.monochrome)
-                                .font(.system(size: 21, weight: .regular))
-                                .foregroundColor(selectedTab == item.id ? AppColors.accentDark : AppColors.textSecondary)
-                                .padding(.top, 14)
-                            Text(item.title)
-                                .font(.system(size: 12, weight: selectedTab == item.id ? .semibold : .regular))
-                                .foregroundColor(selectedTab == item.id ? AppColors.accentDark : AppColors.textSecondary)
-                                .lineLimit(1)
+                    Button(action: {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        withAnimation(.easeOut(duration: 0.2)) { flashIndex = item.id }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                            withAnimation(.easeIn(duration: 0.15)) { flashIndex = nil }
                         }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        withAnimation(.easeOut(duration: 0.15)) { selectedTab = item.id }
+                    }) {
+                        ZStack(alignment: .top) {
+                            VStack(spacing: 4) {
+                                Image(systemName: item.systemImage)
+                                    .symbolRenderingMode(.monochrome)
+                                    .font(.system(size: 21, weight: .regular))
+                                    .foregroundColor(selectedTab == item.id ? AppColors.accentDark : AppColors.textSecondary)
+                                    .padding(.top, 14)
+                                Text(item.title)
+                                    .font(.system(size: 12, weight: selectedTab == item.id ? .semibold : .regular))
+                                    .foregroundColor(selectedTab == item.id ? AppColors.accentDark : AppColors.textSecondary)
+                                    .lineLimit(1)
+                            }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                            if flashIndex == item.id {
+                                AppColors.accentDark.opacity(0.12)
+                                    .ignoresSafeArea()
+                            }
+                        }
                     }
                     .buttonStyle(.plain)
                 }

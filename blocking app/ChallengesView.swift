@@ -2,51 +2,74 @@ import SwiftUI
 
 struct ChallengesView: View {
     @EnvironmentObject var lang: LanguageManager
+    @Environment(\.dismiss) private var dismiss
     @State private var showFooter: Bool = false
     @State private var totalPoints: Int = 0
+    @State private var level: Int = 1
+    @State private var nextLevelPoints: Int = 200
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Text(lang.isArabicEffective ? "التحديات" : "Challenges")
-                    .font(.system(size: 22, weight: .semibold))
-                    .foregroundColor(AppColors.textPrimary)
-                Text(lang.isArabicEffective ? "اختر ما يناسبك واربح نقاطًا ترفع مستواك." : "Pick what suits you and earn points to level up.")
-                    .font(.body)
-                    .foregroundColor(AppColors.textSecondary)
+        VStack(spacing: 0) {
+            header()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    pointsCard()
+                    Text(lang.isArabicEffective ? "التحديات" : "Challenges")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundColor(AppColors.textPrimary)
+                    Text(lang.isArabicEffective ? "اختر تحديات تكسب بها نقاطًا ثم احفظ." : "Pick challenges to earn points, then save.")
+                        .font(.body)
+                        .foregroundColor(AppColors.textSecondary)
 
-                ChallengeChipsCard(title: lang.isArabicEffective ? "حظر المحتوى للبالغين والمواعدة والقمار" : "Adult/Dating/Gambling",
-                                     description: lang.isArabicEffective ? "إيقاف دائم" : "Block forever",
-                                     options: [.option(label: lang.isArabicEffective ? "حظر دائم" : "Block forever", points: 60)],
-                                     onChange: apply)
+                    ChallengeCardCompact(
+                        title: lang.isArabicEffective ? "حظر المحتوى للبالغين والمواعدة والقمار" : "Adult/Dating/Gambling",
+                        description: lang.isArabicEffective ? "إيقاف دائم" : "Block forever",
+                        options: simpleOptions([lang.isArabicEffective ? "حظر دائم" : "Block forever"], pts: [60]),
+                        onChange: apply
+                    )
 
-                ChallengeChipsCard(title: lang.isArabicEffective ? "التقليل من المقاطع القصيرة" : "Shorts/Video time",
-                                     description: lang.isArabicEffective ? "حدّد وقتك" : "Set your limit",
-                                     options: timeOptions(), onChange: apply)
+                    ChallengeCardCompact(
+                        title: lang.isArabicEffective ? "التقليل من المقاطع القصيرة" : "Shorts/Video time",
+                        description: lang.isArabicEffective ? "حدّد وقتك" : "Set your limit",
+                        options: timeOptions(), onChange: apply
+                    )
 
-                ChallengeChipsCard(title: lang.isArabicEffective ? "التقليل من شبكات التواصل" : "Social media time",
-                                     description: lang.isArabicEffective ? "حدّد وقتك" : "Set your limit",
-                                     options: timeOptions(), onChange: apply)
+                    ChallengeCardCompact(
+                        title: lang.isArabicEffective ? "التقليل من شبكات التواصل" : "Social media time",
+                        description: lang.isArabicEffective ? "حدّد وقتك" : "Set your limit",
+                        options: timeOptions(), onChange: apply
+                    )
 
-                SleepChallengeCard(lang: lang, onChange: apply)
+                    SoftDivider(width: 300, opacity: 0.70)
 
-                ChallengeChipsCard(title: lang.isArabicEffective ? "ألعاب" : "Games",
-                                     description: lang.isArabicEffective ? "حدّد وقتك" : "Set your limit",
-                                     options: timeOptions(), onChange: apply)
+                    SleepChallengeCard(lang: lang, onChange: apply)
 
-                ChallengeChipsCard(title: lang.isArabicEffective ? "تسوّق وتوصيل" : "Shopping & Delivery",
-                                     description: lang.isArabicEffective ? "حدّد وقتك/الأيام" : "Set time/days",
-                                     options: timeOptions(), onChange: apply)
+                    SoftDivider(width: 300, opacity: 0.70)
 
-                ChallengeChipsCard(title: lang.isArabicEffective ? "إشعارات أقل" : "Fewer notifications",
-                                     description: lang.isArabicEffective ? "أوقف المشتّتات في العمل" : "Mute distractors during work",
-                                     options: [.option(label: "4h", points: 10), .option(label: "8h", points: 20), .option(label: lang.isArabicEffective ? "أيام العمل" : "Workdays", points: 30), .option(label: lang.isArabicEffective ? "دائمًا" : "Always", points: 40)],
-                                     onChange: apply)
+                    ChallengeCardCompact(
+                        title: lang.isArabicEffective ? "ألعاب" : "Games",
+                        description: lang.isArabicEffective ? "حدّد وقتك" : "Set your limit",
+                        options: timeOptions(), onChange: apply
+                    )
+
+                    ChallengeCardCompact(
+                        title: lang.isArabicEffective ? "تسوّق وتوصيل" : "Shopping & Delivery",
+                        description: lang.isArabicEffective ? "حدّد وقتك/الأيام" : "Set time/days",
+                        options: timeOptions(), onChange: apply
+                    )
+
+                    ChallengeCardCompact(
+                        title: lang.isArabicEffective ? "إشعارات أقل" : "Fewer notifications",
+                        description: lang.isArabicEffective ? "اسكت المشتّتات" : "Mute distractors",
+                        options: simpleOptions(["4h","8h", lang.isArabicEffective ? "أيام العمل" : "Workdays", lang.isArabicEffective ? "دائمًا" : "Always"], pts: [10,20,30,40]),
+                        onChange: apply
+                    )
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 8)
+                .padding(.bottom, showFooter ? 120 : 28)
+                .background(AppColors.uiBackground)
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 16)
-            .padding(.bottom, showFooter ? 120 : 28)
-            .background(AppColors.uiBackground)
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
@@ -58,9 +81,58 @@ struct ChallengesView: View {
         }
     }
 
+    private func header() -> some View {
+        HStack {
+            Button(action: { dismiss() }) {
+                Text(lang.isArabicEffective ? "إغلاق" : "Close")
+                    .font(.subheadline)
+                    .foregroundColor(AppColors.accentDark)
+            }
+            Spacer()
+            Button(action: { dismiss() }) {
+                Text(lang.isArabicEffective ? "تم" : "Done")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(AppColors.accentDark)
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 12)
+        .background(AppColors.uiSurface)
+        .overlay(Rectangle().frame(height: 0.5).foregroundColor(AppColors.uiBorder), alignment: .bottom)
+    }
+
+    private func pointsCard() -> some View {
+        let progress = min(1.0, Double(totalPoints % nextLevelPoints) / Double(nextLevelPoints))
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text((lang.isArabicEffective ? "النقاط" : "Points") + ": \(totalPoints)")
+                        .font(.title3.weight(.semibold))
+                        .foregroundColor(AppColors.textPrimary)
+                    Text((lang.isArabicEffective ? "المستوى" : "Level") + ": \(level)")
+                        .font(.footnote)
+                        .foregroundColor(AppColors.textSecondary)
+                }
+                Spacer()
+                Text(String(format: "%.0f%%", progress * 100))
+                    .font(.subheadline)
+                    .foregroundColor(AppColors.textSecondary)
+            }
+            ZStack(alignment: .leading) {
+                Capsule().fill(AppColors.uiBorder.opacity(0.6)).frame(height: 8)
+                Capsule().fill(AppColors.accentDark).frame(width: CGFloat(progress) * UIScreen.main.bounds.width * 0.6, height: 8)
+            }
+        }
+        .padding(16)
+        .background(AppColors.uiSurface)
+        .cornerRadius(16)
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(AppColors.uiBorder, lineWidth: 0.5))
+    }
+
     private func apply(_ added: Int) {
         totalPoints = max(0, totalPoints + added)
-        if totalPoints > 0 { showFooter = true }
+        if totalPoints >= nextLevelPoints { level += 1; totalPoints = 0 }
+        if level >= 1 { showFooter = true }
     }
 
     private func timeOptions() -> [ChallengeOption] {
@@ -71,43 +143,24 @@ struct ChallengesView: View {
             .option(label: lang.isArabicEffective ? "حظر دائم" : "Block", points: 50)
         ]
     }
+
+    private func simpleOptions(_ labels: [String], pts: [Int]) -> [ChallengeOption] {
+        zip(labels, pts).map { .option(label: $0.0, points: $0.1) }
+    }
 }
 
-private struct Footer: View {
-    let totalPoints: Int
-    @ObservedObject var lang: LanguageManager
+private struct SoftDivider: View {
+    let width: CGFloat
+    let opacity: Double
     var body: some View {
-        VStack(spacing: 12) {
-            HStack {
-                Text((lang.isArabicEffective ? "النقاط: " : "Points: ") + "\(totalPoints)")
-                    .foregroundColor(AppColors.textPrimary)
-                Spacer()
-                Text(lang.isArabicEffective ? "Lv 1 → Lv 2" : "Lv 1 → Lv 2")
-                    .foregroundColor(AppColors.textSecondary)
-            }
-            Button(action: {}) {
-                Text(lang.isArabicEffective ? "تطبيق التغييرات" : "Apply changes")
-                    .font(.system(size: 16, weight: .semibold))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
-                    .background(AppColors.accentDark)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-            }
-        }
-        .padding(.horizontal, 24)
-        .padding(.top, 12)
-        .padding(.bottom, 24)
-        .background(AppColors.uiSurface)
-        .overlay(
-            Rectangle().frame(height: 0.5).foregroundColor(AppColors.uiBorder), alignment: .top
-        )
+        HStack { Spacer(); Rectangle().fill(AppColors.uiBorder.opacity(opacity)).frame(width: width, height: 1); Spacer() }
+            .padding(.vertical, 6)
     }
 }
 
 private enum ChallengeOption: Hashable { case option(label: String, points: Int) }
 
-private struct ChallengeChipsCard: View {
+private struct ChallengeCardCompact: View {
     let title: String
     let description: String
     let options: [ChallengeOption]
@@ -120,40 +173,39 @@ private struct ChallengeChipsCard: View {
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(AppColors.textPrimary)
             Text(description)
-                .font(.body)
+                .font(.footnote)
                 .foregroundColor(AppColors.textSecondary)
-            WrapChips(options: options, selected: $selected) { opt in
-                if case let .option(_, pts) = opt { onChange(pts) }
-            }
+                .lineLimit(1)
+            ChipGrid(options: options, selected: $selected) { opt in if case let .option(_, p) = opt { onChange(p) } }
         }
-        .padding(20)
+        .padding(16)
         .background(AppColors.uiSurface)
-        .cornerRadius(20)
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(AppColors.uiBorder, lineWidth: 0.5)
-        )
+        .cornerRadius(16)
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(AppColors.uiBorder, lineWidth: 0.5))
     }
 }
 
-private struct WrapChips<Option: Hashable>: View {
-    let options: [Option]
-    @Binding var selected: Option?
-    var onPick: (Option) -> Void
+private struct ChipGrid: View {
+    let options: [ChallengeOption]
+    @Binding var selected: ChallengeOption?
+    var onPick: (ChallengeOption) -> Void
+
+    private var columns: [GridItem] { [GridItem(.adaptive(minimum: 120), spacing: 8)] }
 
     var body: some View {
-        FlowLayout(alignment: .leading, spacing: 8) {
-            ForEach(options, id: \..self) { opt in
+        LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
+            ForEach(options, id: \.self) { opt in
+                let isSel = selected == opt
                 Button(action: { selected = opt; onPick(opt) }) {
                     Text(label(for: opt))
                         .font(.system(size: 14, weight: .semibold))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(selected == opt ? AppColors.accentDark : AppColors.uiSurface)
-                        .foregroundColor(selected == opt ? .white : AppColors.textPrimary)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10).stroke(AppColors.uiBorder, lineWidth: 0.5)
-                        )
+                        .background(isSel ? AppColors.accentDark : AppColors.uiSurface)
+                        .foregroundColor(isSel ? .white : AppColors.textPrimary)
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppColors.uiBorder, lineWidth: isSel ? 0 : 0.5))
                         .cornerRadius(10)
                 }
                 .buttonStyle(.plain)
@@ -161,11 +213,9 @@ private struct WrapChips<Option: Hashable>: View {
         }
     }
 
-    private func label(for opt: Option) -> String {
-        if let c = opt as? ChallengeOption {
-            switch c { case let .option(label, _): return label }
-        }
-        return "" // generic
+    private func label(for opt: ChallengeOption) -> String {
+        if case let .option(label, _) = opt { return label }
+        return ""
     }
 }
 
@@ -182,8 +232,9 @@ private struct SleepChallengeCard: View {
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(AppColors.textPrimary)
             Text(lang.isArabicEffective ? "اقتراح: 8م → 8ص (كل الأيام). يمكنك التعديل." : "Suggestion: 8pm → 8am (every day). You can edit.")
-                .font(.body)
+                .font(.footnote)
                 .foregroundColor(AppColors.textSecondary)
+                .lineLimit(1)
             HStack(spacing: 12) {
                 DatePicker(lang.isArabicEffective ? "من" : "From", selection: $from, displayedComponents: .hourAndMinute)
                 DatePicker(lang.isArabicEffective ? "إلى" : "To", selection: $to, displayedComponents: .hourAndMinute)
@@ -200,32 +251,53 @@ private struct SleepChallengeCard: View {
                     .cornerRadius(10)
             }
         }
-        .padding(20)
+        .padding(16)
         .background(AppColors.uiSurface)
-        .cornerRadius(20)
+        .cornerRadius(16)
         .overlay(
-            RoundedRectangle(cornerRadius: 20)
+            RoundedRectangle(cornerRadius: 16)
                 .stroke(AppColors.uiBorder, lineWidth: 0.5)
         )
     }
 }
 
-// Simple flow layout for chips
-private struct FlowLayout<Content: View>: View {
-    let alignment: HorizontalAlignment
-    let spacing: CGFloat
-    let content: () -> Content
-
-    init(alignment: HorizontalAlignment, spacing: CGFloat, @ViewBuilder content: @escaping () -> Content) {
-        self.alignment = alignment
-        self.spacing = spacing
-        self.content = content
-    }
-
+private struct Footer: View {
+    let totalPoints: Int
+    @ObservedObject var lang: LanguageManager
     var body: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 80), spacing: spacing)], alignment: alignment, spacing: spacing) {
-            content()
+        VStack(spacing: 12) {
+            HStack {
+                Text((lang.isArabicEffective ? "النقاط: " : "Points: ") + "\(totalPoints)")
+                    .foregroundColor(AppColors.textPrimary)
+                Spacer()
+                Text(lang.isArabicEffective ? "Lv 1 → Lv 2" : "Lv 1 → Lv 2")
+                    .foregroundColor(AppColors.textSecondary)
+            }
+            HStack(spacing: 8) {
+                Button(action: { /* cancel */ }) {
+                    Text(lang.isArabicEffective ? "إلغاء" : "Cancel")
+                        .font(.system(size: 16, weight: .semibold))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                        .foregroundColor(AppColors.accentDark)
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.accentDark, lineWidth: 1))
+                }
+                Button(action: { /* save */ }) {
+                    Text(lang.isArabicEffective ? "حفظ التغييرات" : "Save changes")
+                        .font(.system(size: 16, weight: .semibold))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                        .background(AppColors.accentDark)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                }
+            }
         }
+        .padding(.horizontal, 24)
+        .padding(.top, 12)
+        .padding(.bottom, 24)
+        .background(AppColors.uiSurface)
+        .overlay(Rectangle().frame(height: 0.5).foregroundColor(AppColors.uiBorder), alignment: .top)
     }
 }
 

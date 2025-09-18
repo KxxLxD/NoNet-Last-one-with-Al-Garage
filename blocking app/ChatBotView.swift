@@ -380,7 +380,7 @@ struct SuggestionsSheet: View {
         ZStack {
             AppColors.uiBackground.ignoresSafeArea()
         ScrollView {
-            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 16) {
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 24) {
                     HStack(spacing: 8) {
                         if lang.isArabicEffective { Spacer() }
                         Image(systemName: "sparkles")
@@ -394,9 +394,9 @@ struct SuggestionsSheet: View {
                     .frame(maxWidth: .infinity)
                     .padding(.top, 16)
 
-                    VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 16) {
+                    VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 24) {
                         section(title: lang.isArabicEffective ? "التنظيم والتركيز" : "Organization & Focus", items: org)
-                            .padding(20)
+                            .padding(16)
                             .background(AppColors.uiSurface)
                             .cornerRadius(20)
                             .overlay(
@@ -405,7 +405,7 @@ struct SuggestionsSheet: View {
                             )
                         SoftDivider(width: 300, opacity: 0.70)
                         section(title: lang.isArabicEffective ? "الإدمان والبدائل" : "Addiction & Alternatives", items: add)
-                            .padding(20)
+                            .padding(16)
                             .background(AppColors.uiSurface)
                             .cornerRadius(20)
                             .overlay(
@@ -414,7 +414,7 @@ struct SuggestionsSheet: View {
                             )
                         SoftDivider(width: 300, opacity: 0.70)
                         section(title: lang.isArabicEffective ? "أفكار وخطط جبارة" : "Powerful Plans", items: plans)
-                            .padding(20)
+                            .padding(16)
                             .background(AppColors.uiSurface)
                             .cornerRadius(20)
                             .overlay(
@@ -442,6 +442,8 @@ struct SuggestionsSheet: View {
                             .font(.subheadline)
                             .foregroundColor(AppColors.textPrimary)
                                         .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
                             .padding(.horizontal, 16)
                             .padding(.vertical, 12)
                             .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
