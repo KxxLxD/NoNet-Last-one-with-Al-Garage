@@ -30,8 +30,12 @@ struct BlockItemsEditorView: View {
     @State private var showAppPicker = false
     @State private var familySelection = FamilyActivitySelection()
 
-    private var categoryOptionsAr: [String] { ["وسائل التواصل الاجتماعي","الشورتس والريلز","الألعاب","تطبيقات التسوق","تطبيقات التوصيل","تطبيقات المواعدة","محتوى للبالغين"] }
-    private var categoryOptionsEn: [String] { ["Social Media","Shorts & Reels","Games","Shopping Apps","Delivery Apps","Dating Apps","Adult Content"] }
+    // Quick Apps in editor
+    private let quickApps: [QuickAppEditor] = QuickAppEditor.defaultSet
+    @State private var quickSelected: Set<String> = []
+
+    private var categoryOptionsAr: [String] { ["وسائل التواصل الاجتماعي","الشورتس والريلز","الألعاب","تطبيقات التسوق","تطبيقات التوصيل","تطبيقات المقامرة","تطبيقات المواعدة","محتوى للبالغين"] }
+    private var categoryOptionsEn: [String] { ["Social Media","Shorts & Reels","Games","Shopping Apps","Delivery Apps","Gambling Apps","Dating Apps","Adult Content"] }
 
     private var categoryOptions: [String] { lang.isArabicEffective ? categoryOptionsAr : categoryOptionsEn }
 
@@ -152,6 +156,57 @@ struct BlockItemsEditorView: View {
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
 
+                // Quick Apps after Apps
+                Section(header: HStack(spacing: 8) { Image(systemName: "bolt.fill").foregroundColor(AppColors.accentDark); Text(lang.isArabicEffective ? "Quick Apps Blocking" : "Quick Apps Blocking").font(.system(size: 20, weight: .semibold)) }) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(lang.isArabicEffective ? "اختر الأكثر إدمانًا أولًا — سيتم إضافة الحجب كمواقع وتطبيقات." : "Pick the most addictive first — we’ll add both website and app entries.")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                            .padding(.bottom, 4)
+                        // Recommended top
+                        Text(lang.isArabicEffective ? "مقترح" : "Recommended")
+                            .font(.caption.weight(.semibold))
+                            .foregroundColor(AppColors.textSecondary)
+                        VStack(spacing: 0) {
+                            ForEach(quickApps.prefix(6), id: \.key) { qa in
+                                VStack(spacing: 0) {
+                                    if qa.key != quickApps.prefix(6).first?.key { SoftDivider(width: 280, opacity: 0.7) }
+                                    Toggle(isOn: Binding(get: { quickSelected.contains(qa.key) }, set: { v in if v { quickSelected.insert(qa.key) } else { quickSelected.remove(qa.key) } })) {
+                                        HStack(spacing: 8) {
+                                            Image(systemName: qa.icon).foregroundColor(AppColors.accentDark)
+                                            Text(qa.title)
+                                        }
+                                    }
+                                    .padding(.vertical, 6)
+                                }
+                            }
+                        }
+
+                        // Others
+                        Text(lang.isArabicEffective ? "بقية التطبيقات" : "Others")
+                            .font(.caption.weight(.semibold))
+                            .foregroundColor(AppColors.textSecondary)
+                        VStack(spacing: 0) {
+                            ForEach(Array(quickApps.dropFirst(6)), id: \.key) { qa in
+                                VStack(spacing: 0) {
+                                    if qa.key != quickApps.dropFirst(6).first?.key { SoftDivider(width: 280, opacity: 0.7) }
+                                    Toggle(isOn: Binding(get: { quickSelected.contains(qa.key) }, set: { v in if v { quickSelected.insert(qa.key) } else { quickSelected.remove(qa.key) } })) {
+                                        HStack(spacing: 8) {
+                                            Image(systemName: qa.icon).foregroundColor(AppColors.accentDark)
+                                            Text(qa.title)
+                                        }
+                                    }
+                                    .padding(.vertical, 6)
+                                }
+                            }
+                        }
+                    }
+                    .padding(20)
+                    .background(AppColors.uiSurface)
+                    .cornerRadius(20)
+                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+                }
+
                 Section(header: HStack(spacing: 8) {
                     Image(systemName: "square.grid.2x2.fill")
                         .font(.system(size: 20, weight: .regular))
@@ -219,7 +274,6 @@ struct BlockItemsEditorView: View {
             }
             .onChange(of: familySelection) { _ in
                 if #available(iOS 16.0, *) {
-                    // نحفظ اختيارات التطبيقات بشكل مؤقت كعناصر عرض فقط دون خصائص داخلية للـ Token
                     let selectedCount = familySelection.applicationTokens.count
                     var newApps: [DraftBlockItem] = []
                     for idx in 1...selectedCount {
@@ -238,7 +292,7 @@ struct BlockItemsEditorView: View {
     }
 
     private func hasAtLeastOneItem() -> Bool {
-        !draft.websites.isEmpty || !draft.apps.isEmpty || !selectedCategories.isEmpty
+        !draft.websites.isEmpty || !draft.apps.isEmpty || !selectedCategories.isEmpty || !quickSelected.isEmpty
     }
 
     private func addWebsite() {
@@ -249,6 +303,15 @@ struct BlockItemsEditorView: View {
     }
 
     private func saveAndDismiss() {
+        // Apply quick selections to websites + app placeholders
+        for qa in quickApps where quickSelected.contains(qa.key) {
+            if !draft.websites.contains(where: { $0.value == qa.domain }) {
+                draft.websites.append(DraftBlockItem(kind: .website, value: qa.domain, displayName: qa.title))
+            }
+            if !draft.apps.contains(where: { ($0.displayName ?? $0.value).caseInsensitiveCompare(qa.title) == .orderedSame }) {
+                draft.apps.append(DraftBlockItem(kind: .app, value: "quickapp:\(qa.key)", displayName: qa.title))
+            }
+        }
         draft.categories = selectedCategories.map { DraftBlockItem(kind: .category, value: $0, displayName: $0) }
         onSave(draft)
         dismiss()
@@ -281,6 +344,37 @@ private struct SoftDivider: View {
         }
         .padding(.vertical, 8)
     }
+}
+
+private struct QuickAppEditor: Equatable {
+    let key: String
+    let title: String
+    let domain: String
+    let icon: String
+    static let defaultSet: [QuickAppEditor] = [
+        // Most addictive → less (approx.)
+        .init(key: "tiktok",     title: "TikTok",      domain: "tiktok.com",      icon: "play.rectangle"),
+        .init(key: "instagram",  title: "Instagram",   domain: "instagram.com",   icon: "camera"),
+        .init(key: "snapchat",   title: "Snapchat",    domain: "snapchat.com",    icon: "bolt"),
+        .init(key: "youtube",    title: "YouTube",     domain: "youtube.com",     icon: "play.circle"),
+        .init(key: "twitter",    title: "X (Twitter)", domain: "twitter.com",     icon: "bubble.left"),
+        .init(key: "facebook",   title: "Facebook",    domain: "facebook.com",    icon: "person.3"),
+        .init(key: "whatsapp",   title: "WhatsApp",    domain: "whatsapp.com",    icon: "phone.circle"),
+        .init(key: "messenger",  title: "Messenger",   domain: "messenger.com",   icon: "message"),
+        .init(key: "discord",    title: "Discord",     domain: "discord.com",     icon: "gamecontroller"),
+        .init(key: "telegram",   title: "Telegram",    domain: "telegram.org",    icon: "paperplane"),
+        .init(key: "wechat",     title: "WeChat",      domain: "wechat.com",      icon: "bubble.left.and.bubble.right"),
+        .init(key: "reddit",     title: "Reddit",      domain: "reddit.com",      icon: "bubble.right"),
+        .init(key: "twitch",     title: "Twitch",      domain: "twitch.tv",       icon: "gamecontroller.fill"),
+        // Entertainment services
+        .init(key: "netflix",    title: "Netflix",     domain: "netflix.com",     icon: "film"),
+        .init(key: "primevideo", title: "Prime Video",  domain: "primevideo.com",  icon: "film.stack"),
+        .init(key: "disneyplus", title: "Disney+",     domain: "disneyplus.com",  icon: "star"),
+        .init(key: "hbo",        title: "Max (HBO)",   domain: "max.com",         icon: "star.circle"),
+        .init(key: "hulu",       title: "Hulu",        domain: "hulu.com",        icon: "play.rectangle.on.rectangle"),
+        .init(key: "shahid",     title: "Shahid",      domain: "shahid.mbc.net",  icon: "rectangle.fill.on.rectangle.fill"),
+        .init(key: "osnplus",    title: "OSN+",        domain: "osnplus.com",     icon: "tv"),
+    ]
 }
 
 #Preview {

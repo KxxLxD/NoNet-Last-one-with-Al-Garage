@@ -57,6 +57,8 @@ struct AppColors {
     static let infoFg = Color(red: 37/255, green: 99/255, blue: 235/255) // #2563EB
     static let warningBg = Color(red: 245/255, green: 158/255, blue: 11/255).opacity(0.1) // #F59E0B1A
     static let warningFg = Color(red: 245/255, green: 158/255, blue: 11/255) // #F59E0B
+    // Calm trophy gold for achievements
+    static let trophyGold = Color(red: 212/255, green: 175/255, blue: 55/255) // #D4AF37
 }
 
 struct AppStrings {

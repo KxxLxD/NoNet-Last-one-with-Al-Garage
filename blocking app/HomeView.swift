@@ -20,6 +20,8 @@ struct HomeView: View {
     @AppStorage("isPremium") private var isPremium: Bool = false
     @AppStorage("trialStartTs") private var trialStartTs: Double = 0
     @AppStorage("selectedTab") private var selectedTab: Int = 0
+    @State private var refreshTick: Int = 0
+    @State private var selectedListId: UUID? = nil
     private let trialDuration: TimeInterval = 7 * 24 * 3600
     private var isTrialActive: Bool {
         trialStartTs > 0 && Date().timeIntervalSince1970 < trialStartTs + trialDuration
@@ -58,8 +60,6 @@ struct HomeView: View {
             }
     }
 
-    @State private var showFAQ: Bool = false
-    
     // Permission states
     @State private var hasScreenTimePermission: Bool = false
     @State private var hasNotificationPermission: Bool = false
@@ -92,29 +92,28 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.top, 24)
                     .padding(.bottom, 8)
-                    SoftDivider(width: 300, opacity: 0.70)
-
-                                        // Stats cards
-                    HStack(spacing: 12) {
-                        SavedCycleCard(lang: lang)
-                        StatsCard(value: "1", label: AppStrings.levelLabel(lang))
-                        ChallengesSimpleCard(lang: lang, value: "7")
+                    
+ 
+                     // Motivational stats
+                     HStack(spacing: 12) {
+                         SavedCycleCard(lang: lang)
+                         LevelCard(lang: lang, value: "1")
+                         ChallengesSimpleCard(lang: lang, value: "add")
+                     }
+                    if !lists.isEmpty || !activeLists.isEmpty {
+                        Button(action: { /* share placeholder */ }) {
+                            Text(lang.isArabicEffective ? "مشاركة" : "Share")
+                                .font(.subheadline.weight(.semibold))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 44)
+                                .background(AppColors.accentDark)
+                                .foregroundColor(.white)
+                                .cornerRadius(12)
+                        }
                     }
                     SoftDivider(width: 300, opacity: 0.70)
 
-                                        // Share progress
-                    Button(action: { /* share placeholder */ }) {
-                        Text(lang.isArabicEffective ? "مشاركة" : "Share")
-                            .font(.subheadline.weight(.semibold))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 44)
-                            .background(AppColors.accentDark)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
-                    }
-                    SoftDivider(width: 300, opacity: 0.70)
-
-                    // Create Blocklist Card
+                    // Primary CTA — Create Blocklist
                     CreateBlocklistCard(lang: lang, useGradientCTA: false) {
                         showingCreate = true
                     }
@@ -123,102 +122,109 @@ struct HomeView: View {
                     }
                     SoftDivider(width: 300, opacity: 0.70)
 
-                    // Permissions (collapsed card)
-                    VStack(spacing: 0) {
-                        HStack(spacing: 12) {
-                            Text(AppStrings.permissionsTitle(lang))
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundColor(AppColors.textPrimary)
-                            Spacer()
-                            let requiredCount = (hasScreenTimePermission ? 0 : 1) + (hasNotificationPermission ? 0 : 1)
-                            let isAllSet = requiredCount == 0
-                            Text(isAllSet ? (lang.isArabicEffective ? "مكتملة" : "All set") : (lang.isArabicEffective ? "مطلوبة (\(requiredCount))" : "Required (\(requiredCount))"))
-                                .font(.footnote.weight(.semibold))
-                                .padding(.horizontal, 10)
-                                .frame(height: 26)
-                                .background(isAllSet ? Color.clear : AppColors.warningBg)
-                                .foregroundColor(isAllSet ? AppColors.textSecondary : AppColors.warningFg)
-                                .overlay(
-                                    Capsule().stroke(isAllSet ? AppColors.uiBorder : AppColors.warningFg.opacity(0.5), lineWidth: 0.5)
-                                )
-                                .clipShape(Capsule())
-                            Image(systemName: permissionsExpanded ? "chevron.up" : "chevron.down")
-                                .foregroundColor(AppColors.textSecondary)
-                        }
-                        .contentShape(Rectangle())
-                        .onTapGesture { withAnimation(.easeInOut(duration: 0.2)) { permissionsExpanded.toggle() } }
-                        .padding(16)
-                        .background(AppColors.uiSurface)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: permissionsExpanded ? 0 : 20)
-                                .stroke(AppColors.uiBorder, lineWidth: 0.5)
-                        )
-                        if permissionsExpanded {
-                            VStack(spacing: 0) {
-                                // Screen Time row
-                                HStack(spacing: 12) {
-                                    Image(systemName: "lock.iphone").foregroundColor(AppColors.accentDark)
-                                    Text(lang.isArabicEffective ? "Screen Time" : "Screen Time")
-                                        .font(.subheadline)
-                                        .foregroundColor(AppColors.textPrimary)
-                                    Spacer()
-                                    if !hasScreenTimePermission {
-                                        Button(action: { requestScreenTimeAuth() }) {
-                                            Text(lang.isArabicEffective ? "منح" : "Grant")
-                                                .font(.footnote.weight(.semibold))
-                                                .padding(.horizontal, 12)
-                                                .frame(height: 30)
-                                                .background(AppColors.accentDark)
-                                                .foregroundColor(.white)
-                                                .cornerRadius(8)
-                                        }
-                                        .buttonStyle(.plain)
-                                    } else {
-                                        Text(lang.isArabicEffective ? "تم" : "Granted")
-                                            .font(.footnote)
-                                            .foregroundColor(AppColors.textSecondary)
-                                    }
-                                }
-                                .padding(16)
-                                Divider().background(AppColors.uiBorder.opacity(0.35))
-                                // Notifications row
-                                HStack(spacing: 12) {
-                                    Image(systemName: "bell").foregroundColor(AppColors.accentDark)
-                                    Text(lang.isArabicEffective ? "الإشعارات" : "Notifications")
-                                        .font(.subheadline)
-                                        .foregroundColor(AppColors.textPrimary)
-                                    Spacer()
-                                    if !hasNotificationPermission {
-                                        Button(action: { /* request notifications */ }) {
-                                            Text(lang.isArabicEffective ? "تفعيل" : "Enable")
-                                                .font(.footnote.weight(.semibold))
-                                                .padding(.horizontal, 12)
-                                                .frame(height: 30)
-                                                .background(AppColors.accentDark)
-                                                .foregroundColor(.white)
-                                                .cornerRadius(8)
-                                        }
-                                        .buttonStyle(.plain)
-                                    } else {
-                                        Text(lang.isArabicEffective ? "تم" : "Enabled")
-                                            .font(.footnote)
-                                            .foregroundColor(AppColors.textSecondary)
-                                    }
-                                }
-                                .padding(16)
+                    // Permissions (render only if missing)
+                    if !(hasScreenTimePermission && hasNotificationPermission) {
+                        VStack(spacing: 0) {
+                            HStack(spacing: 12) {
+                                Text(AppStrings.permissionsTitle(lang))
+                                    .font(.system(size: 20, weight: .semibold))
+                                    .foregroundColor(AppColors.textPrimary)
+                                Spacer()
+                                let requiredCount = (hasScreenTimePermission ? 0 : 1) + (hasNotificationPermission ? 0 : 1)
+                                let isAllSet = requiredCount == 0
+                                Text(isAllSet ? (lang.isArabicEffective ? "مكتملة" : "All set") : (lang.isArabicEffective ? "مطلوبة (\(requiredCount))" : "Required (\(requiredCount))"))
+                                    .font(.footnote.weight(.semibold))
+                                    .padding(.horizontal, 10)
+                                    .frame(height: 26)
+                                    .background(isAllSet ? Color.clear : AppColors.warningBg)
+                                    .foregroundColor(isAllSet ? AppColors.textSecondary : AppColors.warningFg)
+                                    .overlay(
+                                        Capsule().stroke(isAllSet ? AppColors.uiBorder : AppColors.warningFg.opacity(0.5), lineWidth: 0.5)
+                                    )
+                                    .clipShape(Capsule())
+                                Image(systemName: permissionsExpanded ? "chevron.up" : "chevron.down")
+                                    .foregroundColor(AppColors.textSecondary)
                             }
+                            .contentShape(Rectangle())
+                            .onTapGesture { withAnimation(.easeInOut(duration: 0.2)) { permissionsExpanded.toggle() } }
+                            .padding(16)
                             .background(AppColors.uiSurface)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 20)
+                                RoundedRectangle(cornerRadius: permissionsExpanded ? 0 : 20)
                                     .stroke(AppColors.uiBorder, lineWidth: 0.5)
                             )
-                            .clipShape(RoundedRectangle(cornerRadius: 20))
+                            if permissionsExpanded {
+                                VStack(spacing: 0) {
+                                    // Screen Time row
+                                    HStack(spacing: 12) {
+                                        Image(systemName: "lock.iphone").foregroundColor(AppColors.accentDark)
+                                        Text(lang.isArabicEffective ? "Screen Time" : "Screen Time")
+                                            .font(.subheadline)
+                                            .foregroundColor(AppColors.textPrimary)
+                                        Spacer()
+                                        if !hasScreenTimePermission {
+                                            Button(action: { requestScreenTimeAuth() }) {
+                                                Text(lang.isArabicEffective ? "منح" : "Grant")
+                                                    .font(.footnote.weight(.semibold))
+                                                    .padding(.horizontal, 12)
+                                                    .frame(height: 30)
+                                                    .background(AppColors.accentDark)
+                                                    .foregroundColor(.white)
+                                                    .cornerRadius(8)
+                                            }
+                                            .buttonStyle(.plain)
+                                        } else {
+                                            Text(lang.isArabicEffective ? "تم" : "Granted")
+                                                .font(.footnote)
+                                                .foregroundColor(AppColors.textSecondary)
+                                        }
+                                    }
+                                    .padding(16)
+                                    Divider().background(AppColors.uiBorder.opacity(0.35))
+                                    // Notifications row
+                                    HStack(spacing: 12) {
+                                        Image(systemName: "bell").foregroundColor(AppColors.accentDark)
+                                        Text(lang.isArabicEffective ? "الإشعارات" : "Notifications")
+                                            .font(.subheadline)
+                                            .foregroundColor(AppColors.textPrimary)
+                                        Spacer()
+                                        if !hasNotificationPermission {
+                                            Button(action: { /* request notifications */ }) {
+                                                Text(lang.isArabicEffective ? "تفعيل" : "Enable")
+                                                    .font(.footnote.weight(.semibold))
+                                                    .padding(.horizontal, 12)
+                                                    .frame(height: 30)
+                                                    .background(AppColors.accentDark)
+                                                    .foregroundColor(.white)
+                                                    .cornerRadius(8)
+                                            }
+                                            .buttonStyle(.plain)
+                                        } else {
+                                            Text(lang.isArabicEffective ? "تم" : "Enabled")
+                                                .font(.footnote)
+                                                .foregroundColor(AppColors.textSecondary)
+                                        }
+                                    }
+                                    .padding(16)
+                                }
+                                .background(AppColors.uiSurface)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .stroke(AppColors.uiBorder, lineWidth: 0.5)
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 20))
+                            }
                         }
+                        .background(AppColors.uiSurface)
+                        .cornerRadius(20)
+                        SoftDivider(width: 300, opacity: 0.70)
                     }
-                    .background(AppColors.uiSurface)
-                    .cornerRadius(20)
 
-                    SoftDivider(width: 300, opacity: 0.70)
+                    // Share progress
+                    // [Removed from here to reduce visual noise when completed]
+
+                    // Permissions (moved above)
+                    // [Removed from here to reduce visual noise when completed]
 
                     // Lists
                     VStack(alignment: .leading, spacing: 16) {
@@ -227,30 +233,102 @@ struct HomeView: View {
                                 .font(.system(size: 22, weight: .semibold))
                                 .foregroundColor(AppColors.textPrimary)
                             Spacer()
+                            Button(action: { showingCreate = true }) {
+                                Image(systemName: "plus")
+                                    .foregroundColor(AppColors.accentDark)
+                                    .frame(width: 28, height: 28)
+                                    .background(AppColors.infoBg)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                            }
+                            .buttonStyle(.plain)
                         }
 
                         if lists.isEmpty {
                             EmptyStateView(isArabic: lang.isArabicEffective)
                         } else {
                             VStack(spacing: 0) {
-                                VStack(spacing: 0) {
-                                // Active lists first
-                                ForEach(activeLists) { item in
-                                    NavigationLink(destination: ListDetailView(list: item)) {
-                                            RealListRow(item: item, isActive: true)
+                                VStack(alignment: .leading, spacing: 8) {
+                                    if !activeLists.isEmpty {
+                                        Text(lang.isArabicEffective ? "القوائم النشطة" : "Active Lists")
+                                            .font(.caption)
+                                            .foregroundColor(AppColors.textSecondary)
+                                            .padding(.horizontal, 16)
+                                            .padding(.top, 12)
                                     }
-                                        if item.id != activeLists.last?.id || !nonActiveLists.isEmpty {
-                                            SoftDivider(width: 300, opacity: 0.70)
+                                    // Active lists first
+                                    ForEach(activeLists) { item in
+                                        HStack(spacing: 12) {
+                                            if !lang.isArabicEffective && item.protection != "hard" {
+                                                Button(action: { toggleManual(for: item) }) {
+                                                    Image(systemName: isActiveNow(item) ? "pause.fill" : "play.fill")
+                                                        .font(.system(size: 14, weight: .semibold))
+                                                        .foregroundColor(AppColors.accentDark)
+                                                        .frame(width: 32, height: 32)
+                                                        .background(AppColors.infoBg)
+                                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                                }
+                                                .buttonStyle(.plain)
+                                            }
+                                            NavigationLink(destination: ListDetailView(list: item)) {
+                                                ListRowCore(item: item, isActive: true)
+                                            }
+                                            if lang.isArabicEffective && item.protection != "hard" {
+                                                Button(action: { toggleManual(for: item) }) {
+                                                    Image(systemName: isActiveNow(item) ? "pause.fill" : "play.fill")
+                                                        .font(.system(size: 14, weight: .semibold))
+                                                        .foregroundColor(AppColors.accentDark)
+                                                        .frame(width: 32, height: 32)
+                                                        .background(AppColors.infoBg)
+                                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                                }
+                                                .buttonStyle(.plain)
                                             }
                                         }
-                                // Non-active lists
-                                ForEach(nonActiveLists) { item in
-                                    NavigationLink(destination: ListDetailView(list: item)) {
-                                            RealListRow(item: item, isActive: false)
+                                        .padding(.horizontal, 16)
+                                        if item.id != activeLists.last?.id || !nonActiveLists.isEmpty {
+                                            Divider().background(AppColors.uiBorder.opacity(0.6)).padding(.horizontal, 16)
+                                        }
                                     }
-                                        if item.id != nonActiveLists.last?.id {
-                                            SoftDivider(width: 300, opacity: 0.70)
+                                    if !nonActiveLists.isEmpty {
+                                        Text(lang.isArabicEffective ? "قوائم أخرى" : "Other Lists")
+                                            .font(.caption)
+                                            .foregroundColor(AppColors.textSecondary)
+                                            .padding(.horizontal, 16)
+                                            .padding(.top, 12)
+                                    }
+                                    // Non-active lists
+                                    ForEach(nonActiveLists) { item in
+                                        HStack(spacing: 12) {
+                                            if !lang.isArabicEffective && item.protection != "hard" {
+                                                Button(action: { toggleManual(for: item) }) {
+                                                    Image(systemName: isActiveNow(item) ? "pause.fill" : "play.fill")
+                                                        .font(.system(size: 14, weight: .semibold))
+                                                        .foregroundColor(AppColors.accentDark)
+                                                        .frame(width: 32, height: 32)
+                                                        .background(AppColors.infoBg)
+                                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                                }
+                                                .buttonStyle(.plain)
                                             }
+                                            NavigationLink(destination: ListDetailView(list: item)) {
+                                                ListRowCore(item: item, isActive: false)
+                                            }
+                                            if lang.isArabicEffective && item.protection != "hard" {
+                                                Button(action: { toggleManual(for: item) }) {
+                                                    Image(systemName: isActiveNow(item) ? "pause.fill" : "play.fill")
+                                                        .font(.system(size: 14, weight: .semibold))
+                                                        .foregroundColor(AppColors.accentDark)
+                                                        .frame(width: 32, height: 32)
+                                                        .background(AppColors.infoBg)
+                                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                                }
+                                                .buttonStyle(.plain)
+                                            }
+                                        }
+                                        .padding(.horizontal, 16)
+                                        if item.id != nonActiveLists.last?.id {
+                                            Divider().background(AppColors.uiBorder.opacity(0.6)).padding(.horizontal, 16)
+                                        }
                                     }
                                 }
                                 .background(AppColors.uiSurface)
@@ -289,9 +367,6 @@ struct HomeView: View {
                     }
                 )
             }
-            .sheet(isPresented: $showFAQ) {
-                FAQView().environmentObject(lang)
-            }
             .onAppear {
                 checkPermissions()
             }
@@ -302,9 +377,15 @@ struct HomeView: View {
         // Check Screen Time permission
         if #available(iOS 16.0, *) {
             Task {
-                let status = await AuthorizationCenter.shared.authorizationStatus
+                let status: AuthorizationStatus
+                if #available(iOS 17.0, *) {
+                    status = AuthorizationCenter.shared.authorizationStatus
+                } else {
+                    status = await AuthorizationCenter.shared.authorizationStatus
+                }
                 await MainActor.run {
                     hasScreenTimePermission = (status == .approved)
+                    updatePermissionsExpanded()
                 }
             }
         }
@@ -313,11 +394,14 @@ struct HomeView: View {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             DispatchQueue.main.async {
                 hasNotificationPermission = (settings.authorizationStatus == .authorized)
+                updatePermissionsExpanded()
             }
         }
     }
 
     private func isActiveNow(_ l: ListEntity) -> Bool {
+        // Manual override takes precedence (UserDefaults-backed)
+        if ManualStateStore.isActive(for: l.id) { return true }
         let now = Date()
         if l.blockType == "now" {
             let end = l.createdAt.addingTimeInterval(TimeInterval(l.durationSeconds))
@@ -335,6 +419,15 @@ struct HomeView: View {
         return false
     }
 }
+
+private extension HomeView {
+    func toggleManual(for list: ListEntity) {
+        guard list.protection != "hard" else { return }
+        ManualStateStore.toggle(for: list.id)
+        refreshTick += 1 // Force UI refresh
+    }
+}
+
 
 private struct PermissionCard: View {
     let title: String
@@ -375,6 +468,7 @@ private struct PermissionCard: View {
 private struct RealListRow: View {
     let item: ListEntity
     let isActive: Bool
+    let onToggle: () -> Void
 
     @Environment(\.layoutDirection) private var layoutDirection
     @EnvironmentObject private var lang: LanguageManager
@@ -384,25 +478,46 @@ private struct RealListRow: View {
 
     var body: some View {
         HStack(alignment: .center) {
-            VStack(alignment: layoutDirection == .rightToLeft ? .trailing : .leading, spacing: 8) {
+            if item.protection != "hard" {
+                if !lang.isArabicEffective { // LTR → button on left
+                    Button(action: { onToggle() }) {
+                        Image(systemName: isActive ? "pause.fill" : "play.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(AppColors.accentDark)
+                            .frame(width: 32, height: 32)
+                            .background(AppColors.infoBg)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            VStack(alignment: layoutDirection == .rightToLeft ? .trailing : .leading, spacing: 6) {
                 Text(item.name)
                     .font(.headline)
                     .foregroundColor(AppColors.textPrimary)
                     .lineLimit(1)
                     .truncationMode(.tail)
                 HStack(spacing: 8) {
-                    if let schedule = scheduleSummaryBadged() {
-                        Badge(icon: "calendar", text: schedule, style: .neutral)
-                    }
                     ProtectionBadge(isHard: item.protection == "hard", isRTL: layoutDirection == .rightToLeft)
-                    if let c = item.items?.count {
-                        Badge(icon: "list.bullet", text: itemsCountText(c), style: .neutral)
-                    }
                 }
             }
             Spacer()
-            if isActive {
-                Text(layoutDirection == .rightToLeft ? "استئناف" : "Resume")
+
+            if item.protection != "hard" {
+                if lang.isArabicEffective { // RTL → button on right
+                    Button(action: { onToggle() }) {
+                        Image(systemName: isActive ? "pause.fill" : "play.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(AppColors.accentDark)
+                            .frame(width: 32, height: 32)
+                            .background(AppColors.infoBg)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                    .buttonStyle(.plain)
+                }
+            } else if isActive {
+                Text(layoutDirection == .rightToLeft ? "مفعّلة الآن" : "Active")
                     .font(.footnote.weight(.semibold))
                     .foregroundColor(AppColors.infoFg)
                     .padding(.vertical, 6)
@@ -411,7 +526,8 @@ private struct RealListRow: View {
                     .cornerRadius(8)
             }
         }
-        .padding(20)
+        .padding(.vertical, 16)
+        .padding(.horizontal, 20)
         .frame(maxWidth: .infinity, alignment: layoutDirection == .rightToLeft ? .trailing : .leading)
         .background(Color.clear)
     }
@@ -608,7 +724,7 @@ private struct StatsCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding(16)
-        .frame(height: 100)
+        .frame(height: 112)
         .background(AppColors.uiSurface)
         .cornerRadius(20)
         .overlay(
@@ -701,32 +817,32 @@ private struct ChallengesSimpleCard: View {
     let value: String
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            VStack(spacing: 8) {
-                Text(value)
-                    .font(.title2.weight(.semibold))
-                    .monospacedDigit()
-                    .foregroundColor(AppColors.textPrimary)
-                Text(AppStrings.challengesLabel(lang))
-                    .font(.caption)
-                    .foregroundColor(AppColors.textSecondary)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(16)
-            .frame(height: 100)
-            .background(AppColors.uiSurface)
-            .cornerRadius(20)
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(AppColors.uiBorder, lineWidth: 0.5)
-            )
             NavigationLink(destination: ChallengesView().environmentObject(lang)) {
-                Image(systemName: "plus")
-                    .foregroundColor(AppColors.accentDark)
-                    .frame(width: 24, height: 24)
-                    .background(AppColors.infoBg)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                VStack(spacing: 8) {
+                    Image(systemName: "trophy.fill")
+                        .font(.system(size: 28, weight: .semibold))
+                        .foregroundColor(AppColors.trophyGold)
+                    Text(lang.isArabicEffective ? "أضف تحدّي" : "Add Challenge")
+                        .font(.caption)
+                        .foregroundColor(AppColors.textSecondary)
+                        .lineLimit(1)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(16)
+                .frame(height: 112)
+                .background(AppColors.uiSurface)
+                .cornerRadius(20)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(AppColors.uiBorder, lineWidth: 0.5)
+                )
             }
-            .padding(10)
+            Image(systemName: "plus")
+                .foregroundColor(AppColors.accentDark)
+                .frame(width: 24, height: 24)
+                .background(AppColors.infoBg)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .padding(10)
         }
     }
 }
@@ -749,7 +865,7 @@ private struct SavedCycleCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding(16)
-        .frame(height: 100)
+        .frame(height: 112)
         .background(
             ZStack {
                 AppColors.uiSurface
@@ -796,56 +912,238 @@ private struct SavedCycleCard: View {
     }
 }
 
+private struct LevelCard: View {
+    @ObservedObject var lang: LanguageManager
+    let value: String
+    @State private var showInfo: Bool = false
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            VStack(spacing: 8) {
+                Text(value)
+                    .font(.title2.weight(.semibold))
+                    .monospacedDigit()
+                    .foregroundColor(AppColors.textPrimary)
+                Text(AppStrings.levelLabel(lang))
+                    .font(.caption)
+                    .foregroundColor(AppColors.textSecondary)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(16)
+            .frame(height: 112)
+            .background(AppColors.uiSurface)
+            .cornerRadius(20)
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(AppColors.uiBorder, lineWidth: 0.5)
+            )
+            Button(action: { showInfo = true }) {
+                Image(systemName: "exclamationmark.circle")
+                    .foregroundColor(AppColors.accentDark)
+                    .frame(width: 24, height: 24)
+                    .background(AppColors.infoBg)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+            .padding(10)
+        }
+        .alert(isPresented: $showInfo) {
+            Alert(
+                title: Text(lang.isArabicEffective ? "كيف يعمل المستوى؟" : "How do levels work?"),
+                message: Text(lang.isArabicEffective ? "نظام النقاط يعتمد على التحديات المكتملة والساعات التي تم توفيرها." : "Your points grow with completed challenges and hours saved."),
+                dismissButton: .default(Text(lang.isArabicEffective ? "حسنًا" : "OK"))
+            )
+        }
+    }
+}
+
 struct ListDetailView: View {
     let list: ListEntity
     @EnvironmentObject var lang: LanguageManager
     @State private var showEditSheet = false
     @State private var showHardAlert = false
+    @Environment(\.dismiss) private var dismiss
+
+    private struct Slot: Codable { let id: UUID; let day: Int; let fromMinutes: Int; let toMinutes: Int }
+    private let stableListId: UUID
+
+    init(list: ListEntity) {
+        self.list = list
+        self.stableListId = list.id
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(list.name)
-                .font(.system(size: 22, weight: .semibold))
-                .foregroundColor(AppColors.textPrimary)
-
-            HStack(spacing: 12) {
-                Text((lang.isArabicEffective ? "النوع:" : "Type:") + " \(list.blockType)")
-                    .foregroundColor(AppColors.textSecondary)
-                Text((lang.isArabicEffective ? "الحماية:" : "Protection:") + " \(list.protection)")
-                    .foregroundColor(AppColors.textSecondary)
-            }
-            if list.blockType == "now" {
-                Text((lang.isArabicEffective ? "المدة:" : "Duration:") + " \(list.durationSeconds/60) min")
-                    .foregroundColor(AppColors.textSecondary)
-            }
-
-            Spacer(minLength: 0)
-
-            Button(action: {
-                if list.protection == "hard" { showHardAlert = true } else { showEditSheet = true }
-            }) {
-                Text(lang.isArabicEffective ? "تحرير القائمة" : "Edit List")
-                    .font(.subheadline.weight(.semibold))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
-                    .background(AppColors.accentDark)
-                    .foregroundColor(.white)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                // Hard mode banner
+                if list.protection == "hard" {
+                    HStack(alignment: .top, spacing: 12) {
+                        Image(systemName: "lock.fill").foregroundColor(AppColors.alertRed)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(lang.isArabicEffective ? "الوضع الصارم مفعل" : "Hard Mode Enabled")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundColor(AppColors.alertRed)
+                            Text(lang.isArabicEffective ? "لا يمكن التعديل أو الحذف أثناء تفعيل الوضع الصارم." : "Editing and deleting are disabled while Hard Mode is active.")
+                                .font(.caption)
+                                .foregroundColor(AppColors.textSecondary)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .padding(12)
+                    .background(AppColors.alertRed.opacity(0.10))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.alertRed, lineWidth: 0.5))
                     .cornerRadius(12)
+                }
+
+                // Header
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 12) {
+                        Text(list.name)
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundColor(AppColors.textPrimary)
+                            .lineLimit(2)
+                            .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                        Spacer()
+                        ProtectionBadge(isHard: list.protection == "hard", isRTL: lang.isArabicEffective)
+                    }
+                    if isActiveNowDetail() {
+                        Text(lang.isArabicEffective ? "مفعّلة الآن" : "Active")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundColor(AppColors.infoFg)
+                            .padding(.vertical, 6)
+                            .padding(.horizontal, 10)
+                            .background(AppColors.infoBg)
+                            .cornerRadius(8)
+                    } else {
+                        Text(lang.isArabicEffective ? "غير نشطة" : "Inactive")
+                            .font(.footnote)
+                            .foregroundColor(AppColors.textSecondary)
+                    }
+                }
+
+                // Overview card
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(lang.isArabicEffective ? "نظرة عامة" : "Overview")
+                        .font(.caption.weight(.semibold))
+                        .foregroundColor(AppColors.textSecondary)
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack { Text(lang.isArabicEffective ? "النوع" : "Type").foregroundColor(AppColors.textSecondary); Spacer(); Text(list.blockType).foregroundColor(AppColors.textPrimary) }
+                        HStack { Text(lang.isArabicEffective ? "الحماية" : "Protection").foregroundColor(AppColors.textSecondary); Spacer(); Text(list.protection).foregroundColor(AppColors.textPrimary) }
+                        HStack { Text(lang.isArabicEffective ? "الحالة" : "Status").foregroundColor(AppColors.textSecondary); Spacer(); Text(isActiveNowDetail() ? (lang.isArabicEffective ? "مفعّلة" : "Active") : (lang.isArabicEffective ? "غير نشطة" : "Inactive")).foregroundColor(AppColors.textPrimary) }
+                        if let cnt = list.items?.count {
+                            HStack { Text(lang.isArabicEffective ? "العناصر" : "Items").foregroundColor(AppColors.textSecondary); Spacer(); Text("\(cnt)").foregroundColor(AppColors.textPrimary) }
+                        }
+                    }
+                    .padding(16)
+                    .background(AppColors.uiSurface)
+                    .cornerRadius(12)
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.uiBorder, lineWidth: 0.5))
+                }
+
+                // Timing card
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(lang.isArabicEffective ? "الوقت" : "Timing")
+                        .font(.caption.weight(.semibold))
+                        .foregroundColor(AppColors.textSecondary)
+                    VStack(alignment: .leading, spacing: 10) {
+                        if list.blockType == "now" {
+                            HStack { Text(lang.isArabicEffective ? "المدة" : "Duration").foregroundColor(AppColors.textSecondary); Spacer(); Text("\(list.durationSeconds/60) min").foregroundColor(AppColors.textPrimary) }
+                        }
+                        if let summary = scheduleSummaryText() {
+                            HStack { Text(lang.isArabicEffective ? "الجدولة" : "Schedule").foregroundColor(AppColors.textSecondary); Spacer(); Text(summary).foregroundColor(AppColors.textPrimary) }
+                        }
+                        if let b = BreaksStore.load(for: stableListId) {
+                            HStack { Text(lang.isArabicEffective ? "الاستراحات" : "Breaks").foregroundColor(AppColors.textSecondary); Spacer(); Text("\(b.count) × \(b.duration)m").foregroundColor(AppColors.textPrimary) }
+                        }
+                    }
+                    .padding(16)
+                    .background(AppColors.uiSurface)
+                    .cornerRadius(12)
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.uiBorder, lineWidth: 0.5))
+                }
+
+                // Actions
+                if list.protection != "hard" {
+                    HStack(spacing: 12) {
+                        Button(action: { showEditSheet = true }) {
+                            Text(lang.isArabicEffective ? "تحرير" : "Edit")
+                                .font(.subheadline.weight(.semibold))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 44)
+                                .background(AppColors.accentDark)
+                                .foregroundColor(.white)
+                                .cornerRadius(12)
+                        }
+                        Button(role: .destructive, action: {
+                            if let ctx = list.managedObjectContext { ctx.delete(list); try? ctx.save() }
+                            dismiss()
+                        }) {
+                            Text(lang.isArabicEffective ? "حذف" : "Delete")
+                                .font(.subheadline.weight(.semibold))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 44)
+                                .background(Color.clear)
+                                .foregroundColor(AppColors.alertRed)
+                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.alertRed, lineWidth: 1))
+                        }
+                    }
+                }
+
+                Spacer(minLength: 0)
             }
+            .padding(24)
+            .background(AppColors.uiBackground)
         }
-        .padding(24)
         .background(AppColors.uiBackground)
         .navigationTitle(lang.isArabicEffective ? "التفاصيل" : "Details")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showEditSheet) {
-            NavigationView { CreateListSheet().environmentObject(lang) }
-                .padding(16)
+            CreateListSheet().environmentObject(lang)
         }
-        .alert(lang.isArabicEffective ? "غير مسموح" : "Not Allowed", isPresented: $showHardAlert) {
-            Button(lang.isArabicEffective ? "حسنًا" : "OK", role: .cancel) {}
-        } message: {
-            Text(lang.isArabicEffective ? "هذه القائمة في الوضع الصارم — لا يمكن تعديلها أو حذفها الآن." : "This list is in Hard Mode — editing is disabled.")
+        .onChange(of: showEditSheet) { _ in }
+        .onDisappear { }
+    }
+
+    private func isActiveNowDetail() -> Bool {
+        // Use stable id to avoid touching list.id after deletion
+        if ManualStateStore.isActive(for: stableListId) { return true }
+        // If the Core Data object is being deleted, avoid dereferencing its properties
+        if list.isDeleted { return false }
+        let now = Date()
+        if list.blockType == "now" {
+            let end = list.createdAt.addingTimeInterval(TimeInterval(list.durationSeconds))
+            return now < end
         }
+        if list.blockType == "scheduled" {
+            guard let data = list.scheduleSlots, let slots = try? JSONDecoder().decode([Slot].self, from: data) else { return false }
+            let cal = Calendar.current
+            let comps = cal.dateComponents([.weekday, .hour, .minute], from: now)
+            guard let weekday = comps.weekday, let h = comps.hour, let m = comps.minute else { return false }
+            let dayIndex = (weekday - 1) % 7
+            let minutesNow = h * 60 + m
+            return slots.contains { $0.day == dayIndex && minutesNow >= $0.fromMinutes && minutesNow < $0.toMinutes }
+        }
+        return false
+    }
+
+    private func scheduleSummaryText() -> String? {
+        guard list.blockType == "scheduled", let data = list.scheduleSlots, let slots = try? JSONDecoder().decode([Slot].self, from: data), !slots.isEmpty else { return nil }
+        let uniqueTimes = Set(slots.map { "\($0.fromMinutes)-\($0.toMinutes)" })
+        guard uniqueTimes.count == 1 else { return nil }
+        let from = slots.first!.fromMinutes
+        let to = slots.first!.toMinutes
+        let days = Array(Set(slots.map { $0.day })).sorted()
+        func dayName(_ d: Int) -> String {
+            if lang.isArabicEffective { return ["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"][ (d % 7 + 7) % 7 ] }
+            return ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][ (d % 7 + 7) % 7 ]
+        }
+        let daysDesc: String
+        if days.count >= 2 && zip(days.dropFirst(), days).allSatisfy({ $0.0 == $0.1 + 1 }) {
+            daysDesc = dayName(days.first!) + "–" + dayName(days.last!)
+        } else if days.count <= 3 {
+            daysDesc = days.map { dayName($0) }.joined(separator: lang.isArabicEffective ? "، " : ", ")
+        } else { return nil }
+        let time = String(format: "%02d:%02d", from/60, from%60) + "–" + String(format: "%02d:%02d", to/60, to%60)
+        return daysDesc + " " + time
     }
 }
 
@@ -862,6 +1160,11 @@ private extension HomeView {
             Task { _ = try? await AuthorizationCenter.shared.requestAuthorization(for: .individual) }
         }
     }
+    
+    func updatePermissionsExpanded() {
+        let allSet = hasScreenTimePermission && hasNotificationPermission
+        permissionsExpanded = !allSet
+    }
 }
 
 private struct SoftDivider: View {
@@ -876,5 +1179,36 @@ private struct SoftDivider: View {
             Spacer()
         }
         .padding(.vertical, 8)
+    }
+} 
+
+private struct ListRowCore: View {
+    let item: ListEntity
+    let isActive: Bool
+    @Environment(\.layoutDirection) private var layoutDirection
+    var body: some View {
+        HStack(alignment: .center) {
+            VStack(alignment: layoutDirection == .rightToLeft ? .trailing : .leading, spacing: 6) {
+                Text(item.name)
+                    .font(.headline)
+                    .foregroundColor(AppColors.textPrimary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                HStack(spacing: 8) {
+                    ProtectionBadge(isHard: item.protection == "hard", isRTL: layoutDirection == .rightToLeft)
+                }
+            }
+            Spacer()
+            if item.protection == "hard" && isActive {
+                Text(layoutDirection == .rightToLeft ? "مفعّلة الآن" : "Active")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundColor(AppColors.infoFg)
+                    .padding(.vertical, 6)
+                    .padding(.horizontal, 10)
+                    .background(AppColors.infoBg)
+                    .cornerRadius(8)
+            }
+        }
+        .padding(.vertical, 16)
     }
 } 

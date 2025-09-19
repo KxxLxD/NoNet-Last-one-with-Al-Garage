@@ -1,137 +1,278 @@
 ---
 alwaysApply: true
 ---
+# 🐢 Slow-Mode — Execution Protocol (Golden Edition)
+
+### **Overview / Introduction**
+
+The **Slow-Mode Protocol** is designed for slow and precise execution on all project tasks. It is tailored for technical teams and engineers to ensure uniform execution, immediate review, and full control over every step. This protocol is **always active** before any changes inside the Cursor or similar execution tools. It includes breakpoints, initial tests, and an interactive feedback loop after each step.
+
+**Quick Summary:** The Slow-Mode protocol ensures disciplined execution. It focuses on small, precise steps, building independent units with immediate verification, and using interactive feedback loops to maintain full control. It integrates the principles of establishing a roadmap, building one module at a time, and contextual verification to ensure execution accuracy.
 
 
+## ⚡ Purpose
 
-@slow-mode
+- Ensure slow, disciplined execution through small, precise steps to prevent errors.
 
-Purpose:
-- تشغيل وضع التنفيذ البطيء المنضبط: خطوة صغيرة محكمة في كل مرة، بدون أخطاء.
+## **⚡ Rules (Core Principles)**
 
-Rules:
-- طرح 3 أسئلة إيضاحية (على الأقل) قبل أي تعديل على الملفات أو إضافة قدرات/اعتمادات.
-- تأكيد النطاق والاعتمادات والتضاربات قبل التنفيذ.
-- تنفيذ edits صغيرة ومتماسكة فقط، مع الحفاظ على تنسيق المشروع كما هو.
-- البناء المحلي والتحقق بعد كل edit؛ وإن ظهر خطأ يُصلَح فورًا قبل الانتقال.
-- طلب موافقة صريحة قبل: إضافة SDKs، تمكين iCloud/CloudKit، Network Extensions، Screen Time/Family Controls، إعدادات VPN/DNS.
-- استخدام قائمة مهام (TODOs) لتتبع التقدم، لكن عدم تنفيذ edits جديدة دون موافقة.
-- تلخيص مختصر قبل/بعد كل خطوة، والالتزام باللغة العربية.
+| Rule | Description | Clarifying Questions (Examples) |
+| --- | --- | --- |
+| **Clarifying Questions** | Ask at least **3 clarifying questions (≥3)** before any file modifications or adding new capabilities/credentials. | What is the goal of this change? Are there any known dependencies or conflicts? What is the expected output? |
+| **Confirm Scope** | Confirm the scope, dependencies, and conflicts before execution. | Is this task strictly `UI-only`? Are there any API changes required? |
+| **Small Edits** | Execute only small, cohesive edits while maintaining project formatting. | Is this a single-line fix or a multi-file refactor? Can this be broken down further? |
+| **Build & Verify** | Perform a local build and verify immediately after each edit. If an error appears, fix it immediately before proceeding. | Does the project build successfully? Does the new feature work as expected? Are there any new warnings or errors? |
+| **Explicit Approvals** | Request explicit approval before adding new SDKs, iCloud/CloudKit, Network Extensions, Screen Time/Family Controls, or VPN/DNS capabilities. | Who needs to approve this? What is the rationale for adding this capability? |
+| **Task List** | Use a task list (TODOs) to track progress, without executing new edits without approval. | Have all TODOs from the previous step been completed? What is the next item on the list? |
+| **Summary** | Provide a brief summary before and after each step, adhering to the specified language. | What is the planned change? What was the outcome of the last action? |
+| **Foundation First ⚡** | Prepare a small unit roadmap before any implementation (`Foundation Map Step`). | What are the main components of this unit? What are its dependencies? |
+| **Module-based Execution ⚡** | Build one unit at a time, only after approval. | What is the current module being built? Has it been approved? |
+| **Safe-Edit Protocol ⚡** | Read the file, think, then modify to avoid errors, using a small checklist inside each `Implement/Verify` step. | Did I read the entire file? Do I understand the context? Am I sure this is the right change? |
+| **Tool-Aware Context ⚡** | Verify the project structure and tools before any execution. | Does the project's folder structure support this change? Are the current tools compatible? |
+| **Intuition-First Principle ⚡** | Follow familiar UI design patterns and avoid random experimentation. | Does this UI pattern align with the rest of the app? Is there an established component I can reuse? |
+| **Granularity ⚡** | Work in very small, clear steps to minimize errors. | Is this step small enough to be verified immediately? Can I make it even smaller? |
 
-Definition of Ready (DoR):
-- المهمة جاهزة للبدء فقط إذا:
-  - هدف واضح ومُقاس.
-  - Scope Mode محدّد + WIP Policy محددة للجلسة.
-  - Key States رئيسية معروفة (empty/loading/error/success) + Edge-case Matrix محسوبة.
-  - تبعيات وقيود معلومة ولا تضارب معروف.
-  - موافقات/وصول مطلوب مُتاح (Credentials/Keys/Access).
+## **⚡ Definition of Ready (DoR)**
 
-Activation:
-- فعّل هذا الوضع دائما 
+A task is ready to start only if:
 
-Study the Page (Context First):
-- تنطبق على جميع المهام (Frontend/Backend).
-- المخرجات داخل المحادثة فقط.
-- قبل البدء: أسأل عن مستوى الدراسة: مختصر أم مفصّل.
+- The goal is clear and measurable.
+- The `Scope Mode` and `WIP Policy` are defined for the session.
+- The main `Key States` (`empty`/`loading`/`error`/`success`) and `Edge-case Matrix` are identified.
+- Dependencies and constraints are known, and there are no known conflicts.
+- Required approvals and access (`Credentials`/`Keys`/`Access`) are available.
 
-Workflow (ملخّص):
-- 1) Study the Page → 2) Clarify (≥3 أسئلة) → 3) Suggestions (اقتراحات) → 4) Impact (أثر القرار) → 5) Propose Before Build → 6) Approval Gate (موافقة صريحة للوحدة) → 7) Implement (edits صغيرة) → 8) Verify (بناء محلي فوري) → 9) Status + Summary → 10) Commit/PR → 11) إدارة التعطّل والتضارب.
+## ⚡ Activation
 
-Template — Study the Page
-```markdown
-Study the Page — Context First
-- Purpose & Audience: …
-- Structure & Hierarchy: sections/components → …
-- Key States: empty/loading/error/success → …
-- Edge-case Matrix: نص طويل/ترجمة وRTL/شبكات بطيئة/أحجام بيانات/حالات خطأ
-- Constraints & Dependencies: …
-- Scope Mode: UI-only | Backend-only | API-only | DB-only | Full‑stack | Other(…)
-- WIP Policy: WIP=1 | 1 عميقة + 1 صغيرة (اختر الآن)
-- Suggestions (اقتراحات): …
-- Impact (أثر القرار): …
-- Quick Wins (حسب النطاق مثلا : UI-Only او حسب النطاق): 1) … 2) … 3) …
-- Open Questions (≥3): 1) … 2) … 3) …
-- Risks & Assumptions: …
-``` 
+- Always activate this mode
 
-Scope Mode (نطاق التنفيذ):
-- ممنوع الافتراض — يجب سؤالك دائمًا عن النطاق قبل أي تنفيذ.
-- UI-only:
-  - المسموح: SwiftUI/Layout/Styles/Assets/Localization UI.
-  - الممنوع: Business Logic/Services/API/DB/Entitlements.
-- Backend-only:
-  - المسموح: Services/UseCases/Business Rules/Integrations.
-  - الممنوع: Views/Styles/Theme/UI Layout.
-- API-only:
-  - المسموح: Endpoints/Routing/DTOs/Validation/Auth Middleware.
-  - الممنوع: DB Schema/Views/UI.
-- DB-only:
-  - المسموح: Schema/Migrations/Indexes/Core Data Models.
-  - الممنوع: Endpoints/Views/Business Logic.
-- Full‑stack:
-  - عبر الطبقات لنفس الميزة، بتجزئة TODOs لكل طبقة وموافقة صريحة.
-- Other(…):
-  - يتم تعريفه بدقة قبل البدء.
+## ⚡ Study the Page (Context First)
 
-قاعدة إلزامية:
-- عند الحاجة للخروج من النطاق المتفق: إيقاف التنفيذ فورًا وطلب موافقة صريحة.
+- Applies to all tasks (Frontend/Backend)
+- Output inside conversation only
+- Before starting: ask study level — brief or detailed
 
-WIP Policy (Work In Progress):
-- ممنوع الافتراض — يجب سؤالك دائمًا قبل البدء: تختار إما WIP=1 دائمًا أو 1 عميقة + 1 صغيرة.
-- WIP=1 دائمًا: مهمة واحدة فقط قيد التنفيذ حتى الاكتمال أو التعليق رسميًا.
-- 1 عميقة + 1 صغيرة: مهمة أساسية عميقة + مهمة صغيرة واحدة فقط أثناء انتظار بناء/مراجعة؛ العودة للمهمة الأساسية فور انتهاء الانتظار.
-- إن تغيّر قرار WIP أثناء المهمة: أوقف التنفيذ وأطلب موافقة صريحة على التبديل.
+### ⚡ Workflow (Summary & Templates)
 
-SLAs (Service Level Agreements — اتفاقات زمنية):
-- Study the Page: مختصر 3–5 دقائق | مفصّل 10–15 دقيقة (أسأل كل مرة أيهما تفضّل).
-- Clarify: ≤ 5 دقائق.
-- Suggestions: ≤ 5 دقائق.
-- Impact: ≤ 5 دقائق.
-- Propose: UI لكل صفحة ≤ 10 دقائق | Backend تغيير صغير ≤ 5–10 دقائق.
-- Implement (لكل edit صغير): ≤ 25 دقيقة.
-- Verify (بعد كل edit): ≤ 3 دقائق.
-- Blocked Escalation: طرح سؤال محدد بعد 15 دقيقة تعلّق.
+| Step | Action | Implement/Verify Checklist | Feedback Loop |
+| --- | --- | --- | --- |
+| 1. Study the Page | Identify key states + edge cases. | - | `I have studied the page and am ready to clarify.` |
+| 2. Clarify (≥3 Questions) | Ask clarifying questions. | `Template: Clarifying Questions` | `I have clarified the task and am ready to proceed.` |
+| 3. Foundation Map ⚡ | Prepare a roadmap for the current unit + notes/possible changes. Request approval before implementation. | `Template: Foundation Map` | `Foundation Map prepared. Shall we continue?` |
+| 4. Suggestions |  | Provide practical, small suggestions. | `Template: Proposal` |
+| **5.** Impact | Assess the impact of each decision. | - | `Impact assessed. Ready to propose.` |
+| **6.** Propose Before Build | Prepare a proposal before implementation. | - | `Proposal ready. Awaiting approval.` |
+| **7.** Approval Gate | Receive explicit unit approval. | - | `Approval received. Proceeding to implementation.` |
+| **8.** Implement | Build one unit only. Verify Safe-Edit Protocol + Tool-Aware Context. ⚡ Test-First: Draft 1-2 integration tests before risky features. | `Template: Status Update` | `Unit implemented. Shall we continue?` |
+| **9.** Verify | Immediate local build. Confirm Safe-Edit + Tool-Aware Context Checklist. | `Template: Status Update` | `Verification successful. Shall we continue?` |
+| **10.** Status + Summary | Provide a quick status update. | - | `Status update: [Done/Next/Risks]. Ready to commit.` |
+| **11.** Document & Propose | **Propose content for `MEMORY.md` or `README.md` and await explicit approval.** | `MEMORY.md` or `README.md` updated. | `Proposed documentation update. Awaiting approval.` |
+| 12. Commit/PR | Use standard commit messages. | `Template: Commit Message`, `Template: PR` | `Commit complete. PR submitted.` |
+| 13. Block & Conflict Management | Request approval or clarification if execution stops. | - | `Blocked on [issue]. Requesting clarification.` |
 
-Pacing Guidelines (إرشادات الإيقاع):
-- لا مؤقتات صارمة. التركيز على تدفق صغير/سريع.
-- Verify فوري بعد كل edit.
-- Blocked Escalation: إن علِقنا > 15 دقيقة نطرح سؤالًا محددًا وننتظر القرار.
-- Status Update نبضي عند العمل الطويل (كل 30–60 دقيقة): Done/Next/Risks.
+## ⚡ Scope Mode
 
-ملاحظة: SLAs أدناه إرشادية، وليست إلزامية.
+| Mode | Allowed | Not Allowed |
+| --- | --- | --- |
+| UI-only | SwiftUI/Layout/Styles/Assets/Localization UI | Business Logic/Services/API/DB/Entitlements |
+| Backend-only | Services/UseCases/Business Rules/Integrations | Views/Styles/Theme/UI Layout |
+| API-only | Endpoints/Routing/DTOs/Validation/Auth Middleware | DB Schema/Views/UI |
+| DB-only | Schema/Migrations/Indexes/Core Data Models | Endpoints/Views/Business Logic |
+| Full-stack | Across layers for same feature, TODOs per layer, explicit approval | - |
+| Other | Precisely defined before start | - |
 
-Commit Messages (نماذج رسائل الكومِت):
-- الصيغ: feat/ui, fix/ui, chore, refactor, docs, test, feat/api, fix/backend, chore/db
-- مثال:
-  - feat/ui: settings screen — flat spacing 16–24pt, rounded 12pt, no shadows
+**Mandatory:** Stop execution and request explicit approval if leaving agreed scope
 
-Appendix — Templates:
-- Clarifying Questions (≥3):
-  1) …
-  2) …
-  3) …
-- Status Update:
-  - Done: …
-  - Next: …
-  - Risks/Blocks: …
-- PR Template (مختصر):
-  - Summary: …
-  - Scope Mode: UI-only | Backend-only | API-only | DB-only | Full‑stack | Other(…)
-  - WIP Policy: WIP=1 | 1 عميقة + 1 صغيرة
-  - Recommendations (اقتراحات) — إلزامي: …
-  - Impact (الأثر) — إلزامي: …
-  - Owner: …
-  - Approver (الموافق): …
-  - Change Log Mapping: [التغيير] → [الوحدة/العنصر]
-  - Rollback/Mitigation: كيف نرجع بسرعة أو نخفف المخاطر؟
-  - DoD: بناء نظيف، لا تحذيرات، لقطات UI (إن وجدت)
+## ⚡ WIP Policy
 
-Acronyms (اختصارات):
-- WIP (Work In Progress): عدد المهام التي تعمل عليها بالتوازي في نفس الوقت.
-- SLA (Service Level Agreement): سقف زمني متفق عليه لكل خطوة قبل الانتقال/التصعيد.
-- PR (Pull Request): طلب دمج التغييرات وفتح مراجعة الكود قبل الدمج إلى الفرع الرئيسي.
-- DoR (Definition of Ready): معايير الجاهزية لبدء المهمة (هدف/Scope/States/Deps/Access).
+| Option | Description |
+| --- | --- |
+| WIP=1 Always | Only one task active until complete or officially paused |
+| 1 Large + 1 Small | Main task + one small task during build/review wait; return to main task immediately after |
+| Change WIP | Pause execution and request explicit approval before switching |
 
+## ⚡ SLAs
 
-References (مراجع):
+| Step | Duration | Practical Tip |
+| --- | --- | --- |
+| Study the Page | Brief 3–5 min | Read page and identify key states + edge cases |
+| Clarify | ≤ 5 min | Ask ≥3 clear questions |
+| Foundation Map ⚡ | ≤ 5 min | Prepare unit roadmap |
+| Suggestions | ≤ 5 min | Provide practical suggestions |
+| Impact | ≤ 5 min | Assess decision impact |
+| Propose | UI ≤ 10 min / Backend small change ≤ 5–10 min | Prepare proposal before implementation |
+| Implement | ≤ 25 min | One step/unit at a time, verify Safe-Edit Checklist + Test-First ⚡ |
+| Verify | ≤ 3 min | Immediate local check, Safe-Edit + Tool-Aware Context Checklist |
+| Blocked Escalation | Specific question after 15 min | Request quick approval or clarification |
+
+## ⚡ Pacing Guidelines
+
+- No strict timers; focus on small/fast flow
+- Immediate verification after each edit
+- Blocked Escalation: If stuck >15 min, ask a specific question and wait for a decision
+- Status Update: Done/Next/Risks every 30–60 min
+
+### ⚡ Commit Messages
+
+The following standard must be used for all commit messages to ensure a clear and consistent project history.
+
+| Type | Example |
+| --- | --- |
+| `feat/ui` | `feat/ui: settings screen — flat spacing 16–24pt, rounded 12pt, no shadows` |
+| `fix/ui` | `fix/ui: correct layout bug on profile page` |
+| `chore` | `chore/db: add migration for user table` |
+| `refactor` | `refactor/core: extract authentication logic into a separate service` |
+| `docs` | `docs: update README with API usage instructions` |
+| `test` | `test: add unit tests for login functionality` |
+| `feat/api` | `feat/api: add new endpoint for user registration` |
+| `fix/backend` | `fix/backend: resolve an issue with failed user authentication` |
+| `chore/db` | `chore/db: optimize index for faster query performance` |
+
+---
+
+### 
+
+### ⚡ Appendix — Templates
+
+### 1. Clarifying Questions Template
+
+```
+[Task Name] - Clarification
+
+Is my understanding correct that the task requires [restate the task in your own words]?
+Are there any other dependencies (APIs, Assets, etc.) I should be aware of before starting?
+Is the Scope Mode for this task [UI-only, Backend-only, etc.]?
+
+```
+
+### 2. Foundation Map Template ⚡
+
+```
+[Unit/Feature Name] - Foundation Map
+
+Goal: [Briefly describe the unit's goal].
+Components:
+- [Component 1 Name] - Description
+- [Component 2 Name] - Description
+Dependencies:
+- [Service/API Name] - Type of dependency (e.g., Network, Database)
+Potential Changes/Risks:
+- [Identify any potential issues or challenges].
+
+```
+
+### 3. Proposal Template
+
+```
+[Task Name] - Implementation Proposal
+
+Summary: [A short description of the proposal].
+Proposed Steps:
+- [First step].
+- [Second step].
+Expected Impact: [Positive/Negative] on [UI/Performance/Code].
+
+```
+
+### 4. Status Update Template
+
+```
+[Task Name] - Status Update
+
+Done: [Summary of what was just completed].
+Next: [The next step in the workflow].
+Risks: [Any potential issues or challenges].
+
+```
+
+---
+
+### **5. Commit Message Template**
+
+Follow this standard for all commits to ensure a clear and consistent project history.
+
+| Type | Example |
+| --- | --- |
+| `feat/ui` | `feat/ui: settings screen — flat spacing 16–24pt, rounded 12pt, no shadows` |
+| `fix/ui` | `fix/ui: correct layout bug on profile page` |
+| `chore/db` | `chore/db: add migration for user table` |
+| `refactor/core` | `refactor/core: rename functions for clarity` |
+| `docs` | `docs: add comments to authentication service` |
+| `test` | `test: add unit tests for login functionality` |
+| `feat/api` | `feat/api: add new endpoint for user registration` |
+| `fix/backend` | `fix/backend: resolve an issue with failed user authentication` |
+| `chore/db` | `chore/db: optimize index for faster query performance` |
+
+---
+
+### 6. Pull Request (PR) Template
+
+```
+Summary: [Comprehensive description of changes].
+Scope Mode: [e.g., UI-only].
+WIP Policy: [e.g., 1 Large + 1 Small].
+Recommendations: [Any specific notes for the reviewer].
+Impact: [Positive/Negative] on [Performance/UI].
+Owner: [Your Name].
+Rollback/Mitigation: [How to revert if an issue occurs].
+DoD (Definition of Done):
+- The build is clean with no warnings.
+- UI screenshots or video are included.
+- All tests pass.
+
+```
+
+### 7. README.md Template
+
+```
+# [Project Name]
+
+## Overview
+[A brief, high-level description of the project and its purpose.]
+
+## Getting Started
+[Instructions on how to set up the project locally. Include dependencies, installation commands, and how to run the application.]
+
+## Contribution
+[Guidelines for contributing to the project, e.g., code style, pull request process.]
+
+## License
+[Information about the project's license.]
+
+```
+
+### 8. MEMORY.md Template
+
+```
+# Project Memory Log
+
+## ⚡ Current Tasks
+- [Task 1]: [Brief description]
+- [Task 2]: [Brief description]
+
+## ⚡ Completed Tasks
+### [Date, e.g., 2023-10-27]
+- [Task 1]: [Summary of work completed and outcome.]
+- [Task 2]: [Summary of work completed and outcome.]
+
+## ⚡ Architectural Decisions
+- [Date, e.g., 2023-10-27]: [Decision made and rationale.]
+
+## ⚡ Future Vision
+[Long-term goals and a roadmap for the project.]
+
+```
+
+## Acronyms
+
+| Acronym | Meaning |
+| --- | --- |
+| WIP | Work In Progress: number of parallel tasks |
+| SLA | Service Level Agreement: agreed max time per step |
+| PR | Pull Request: merge request and code review |
+| DoR | Definition of Ready: task readiness criteria |
+
+## References
+
 - UI Mode Rules: .cursor/rules/UI-Mode.mdc
+

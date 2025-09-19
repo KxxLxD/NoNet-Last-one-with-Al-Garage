@@ -32,6 +32,8 @@ struct CreateListSheet: View {
 
     // Confirm sheet
     @State private var showConfirmSheet = false
+    @State private var startImmediately: Bool = false
+    @State private var showSuccessToast: Bool = false
 
     // Alerts
     @State private var showLimitAlert = false
@@ -65,6 +67,7 @@ struct CreateListSheet: View {
         let s5 = attachAlerts(s4)
         let s6 = attachDoneBar(s5)
         return s6
+            .successToast(isPresented: $showSuccessToast, message: lang.isArabicEffective ? "تم إنشاء القائمة" : "List created")
     }
 
     // MARK: - Attach helpers to reduce type-checking cost
@@ -116,7 +119,8 @@ struct CreateListSheet: View {
                         } else {
                             save(totalSeconds: totalSeconds, baseName: trimmedName)
                         }
-                    }
+                    },
+                    startImmediately: $startImmediately
                 )
                 .padding(16)
                 .presentationDetents([.medium, .large])
@@ -244,7 +248,7 @@ struct CreateListSheet: View {
         .listRowBackground(Color.clear)
     }
 
-    // MARK: - Cards (omitted for brevity in this restoration)
+    // MARK: - Cards (unchanged)
     private func timeToBlockCard() -> some View {
         Section(header: HStack(spacing: 8) {
             Image(systemName: "clock")
@@ -282,6 +286,12 @@ struct CreateListSheet: View {
                 }
 
                 if blockType == "scheduled" && isPremium {
+                    if !slots.isEmpty {
+                        Text(scheduleSummary(slots))
+                            .font(.footnote)
+                            .foregroundColor(AppColors.textSecondary)
+                            .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+                    }
                     if slots.isEmpty {
                         Text(lang.isArabicEffective ? "لا توجد فترات مجدولة بعد" : "No schedule slots yet")
                             .font(.footnote)
@@ -309,6 +319,7 @@ struct CreateListSheet: View {
         }
         .listRowBackground(Color.clear)
     }
+
     private func durationCard() -> some View {
         Section(header: HStack(spacing: 8) {
             Image(systemName: "hourglass")
@@ -355,6 +366,7 @@ struct CreateListSheet: View {
         }
         .listRowBackground(Color.clear)
     }
+
     private func protectionCard() -> some View {
         Section(header: HStack(spacing: 8) {
             Image(systemName: "shield.checkered")
@@ -388,6 +400,7 @@ struct CreateListSheet: View {
         }
         .listRowBackground(Color.clear)
     }
+
     private func breaksCard() -> some View {
         Section(header: HStack(spacing: 8) {
             Image(systemName: "cup.and.saucer")
@@ -435,7 +448,7 @@ struct CreateListSheet: View {
         }
         .listRowBackground(Color.clear)
     }
-
+    
     private func websitesListCard() -> some View {
         VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 8) {
             HStack(spacing: 8) {
@@ -567,22 +580,131 @@ struct CreateListSheet: View {
             }
         }
     }
-    
-    // Logic helpers (unchanged from backup)
-    private var itemsCountSummary: String { "" }
+
+    // Logic helpers
+    private var itemsCountSummary: String {
+        draft.websites.count + draft.apps.count + draft.categories.count > 0 ? "ok" : "empty"
+    }
     private func openEditor() { draft.name = name; showingEditor = true }
-    private func attemptConfirm() {}
-    private func save(totalSeconds: Int64, baseName: String) {}
-    private func currentListsCount() -> Int { 0 }
-    private func uniqueName(from base: String) -> String { base }
-    private func nameExists(_ n: String) -> Bool { false }
-    private var isNameValid: Bool { true }
-    private var hasAtLeastOneItem: Bool { true }
-    private var isDurationValid: Bool { true }
-    private var isFormValid: Bool { true }
-    private func dayName(_ d: Int) -> String { "" }
-    private func timeRangeLabel(_ s: ScheduleSlot) -> String { "" }
-    private func encodeSlots() -> Data? { nil }
+    private func attemptConfirm() {
+        // Validation
+        if blockType == "scheduled" && isPremium && slots.isEmpty {
+            validationMessage = lang.isArabicEffective ? "أضف فترة جدولة واحدة على الأقل" : "Add at least one schedule slot"
+            showValidationAlert = true
+            return
+        }
+        guard isFormValid else {
+            validationMessage = lang.isArabicEffective ? "تحقق من الاسم والعناصر والمدة" : "Check name, items and duration"
+            showValidationAlert = true
+            return
+        }
+        showConfirmSheet = true
+    }
+    private func save(totalSeconds: Int64, baseName: String) {
+        let finalName = uniqueName(from: baseName)
+        let entity = ListEntity(context: context)
+        entity.id = UUID()
+        entity.name = finalName
+        entity.protection = protection
+        entity.blockType = blockType
+        entity.durationSeconds = totalSeconds
+        entity.scheduleSlots = encodeSlots()
+        entity.createdAt = Date()
+        entity.updatedAt = Date()
+        // Persist items
+        var itemsSet: Set<BlockItemEntity> = []
+        for w in draft.websites {
+            let it = BlockItemEntity(context: context)
+            it.id = UUID(); it.kind = "website"; it.value = w.value; it.displayName = w.displayName; it.list = entity
+            itemsSet.insert(it)
+        }
+        for a in draft.apps {
+            let it = BlockItemEntity(context: context)
+            it.id = UUID(); it.kind = "app"; it.value = a.value; it.displayName = a.displayName; it.list = entity
+            itemsSet.insert(it)
+        }
+        for c in draft.categories {
+            let it = BlockItemEntity(context: context)
+            it.id = UUID(); it.kind = "category"; it.value = c.value; it.displayName = c.displayName; it.list = entity
+            itemsSet.insert(it)
+        }
+        entity.items = itemsSet
+        // Persist breaks (UserDefaults store by list id)
+        BreaksStore.save(for: entity.id, count: breaksCount, durationMinutes: breakDurationMinutes)
+        do { try context.save() } catch { print("Save error: \(error)") }
+        // Start immediately for Block Now when chosen and not hard
+        if blockType == "now" && protection != "hard" && startImmediately {
+            ManualStateStore.toggle(for: entity.id)
+        }
+        showSuccessToast = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { dismiss() }
+    }
+    private func currentListsCount() -> Int {
+        let req: NSFetchRequest<ListEntity> = ListEntity.fetchRequest()
+        return (try? context.count(for: req)) ?? 0
+    }
+    private func uniqueName(from base: String) -> String {
+        let trimmed = base.isEmpty ? (lang.isArabicEffective ? "قائمة جديدة" : "New List") : base
+        if !nameExists(trimmed) { return trimmed }
+        var idx = 2
+        while nameExists("\(trimmed) (\(idx))") { idx += 1 }
+        return "\(trimmed) (\(idx))"
+    }
+    private func nameExists(_ n: String) -> Bool {
+        let req: NSFetchRequest<ListEntity> = ListEntity.fetchRequest()
+        req.predicate = NSPredicate(format: "name ==[c] %@", n)
+        req.fetchLimit = 1
+        let count = (try? context.count(for: req)) ?? 0
+        return count > 0
+    }
+    private var isNameValid: Bool {
+        name.trimmingCharacters(in: .whitespacesAndNewlines).count >= 2
+    }
+    private var hasAtLeastOneItem: Bool {
+        !draft.websites.isEmpty || !draft.apps.isEmpty || !draft.categories.isEmpty
+    }
+    private var isDurationValid: Bool {
+        if blockType == "now" {
+            let total = days * 86400 + hours * 3600 + minutes * 60
+            return total >= 300 // >= 5 minutes
+        }
+        return true
+    }
+    private var isFormValid: Bool {
+        isNameValid && hasAtLeastOneItem && isDurationValid
+    }
+    private func dayName(_ d: Int) -> String {
+        let ar = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"]
+        let en = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
+        return lang.isArabicEffective ? ar[d] : en[d]
+    }
+    private func timeRangeLabel(_ s: ScheduleSlot) -> String {
+        func fmt(_ m: Int) -> String { String(format: "%02d:%02d", m/60, m%60) }
+        return "\(fmt(s.fromMinutes)) - \(fmt(s.toMinutes))"
+    }
+    private func encodeSlots() -> Data? {
+        guard blockType == "scheduled", !slots.isEmpty else { return nil }
+        return try? JSONEncoder().encode(slots)
+    }
+    private func scheduleSummary(_ list: [ScheduleSlot]) -> String {
+        let uniqueTimes = Set(list.map { "\($0.fromMinutes)-\($0.toMinutes)" })
+        func fmt(_ m: Int) -> String { String(format: "%02d:%02d", m/60, m%60) }
+        if uniqueTimes.count == 1, let first = list.first {
+            let from = first.fromMinutes, to = first.toMinutes
+            let days = Array(Set(list.map { $0.day })).sorted()
+            func contiguous(_ ds: [Int]) -> Bool { guard ds.count >= 2 else { return false }; for i in 1..<ds.count { if ds[i] != ds[i-1]+1 { return false } } ; return true }
+            let daysDesc: String
+            if contiguous(days) && days.count >= 2 {
+                daysDesc = dayName(days.first!) + "–" + dayName(days.last!)
+            } else if days.count <= 3 {
+                daysDesc = days.map { dayName($0) }.joined(separator: lang.isArabicEffective ? "، " : ", ")
+            } else {
+                return lang.isArabicEffective ? "\(days.count) أيام مجدولة" : "\(days.count) scheduled days"
+            }
+            return daysDesc + " " + fmt(from) + "–" + fmt(to)
+        }
+        return lang.isArabicEffective ? "\(list.count) فترات" : "\(list.count) slots"
+    }
 }
 
 private struct SoftDivider: View {
@@ -603,4 +725,28 @@ private struct SoftDivider: View {
 #Preview {
     CreateListSheet()
         .environmentObject(LanguageManager.shared)
+}
+
+// MARK: - Toast Overlay
+extension View {
+    func successToast(isPresented: Binding<Bool>, message: String) -> some View {
+        ZStack {
+            self
+            if isPresented.wrappedValue {
+                VStack {
+                    Spacer()
+                    Text(message)
+                        .font(.subheadline.weight(.semibold))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .background(Color.black.opacity(0.8))
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                        .padding(.bottom, 24)
+                }
+                .transition(.opacity)
+                .animation(.easeInOut(duration: 0.2), value: isPresented.wrappedValue)
+            }
+        }
+    }
 } 

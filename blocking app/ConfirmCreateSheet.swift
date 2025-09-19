@@ -14,6 +14,8 @@ struct ConfirmCreateSheet: View {
     var onBack: () -> Void
     var onConfirm: () -> Void
 
+    @Binding var startImmediately: Bool
+
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -33,6 +35,7 @@ struct ConfirmCreateSheet: View {
                 Section(header: Text(isArabic ? "وقت الحجب" : "Time to block")) {
                     if blockType == "now" {
                         Text(durationLabel).frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
+                        Toggle(isArabic ? "تشغيل مباشرة بعد الإنشاء" : "Start immediately", isOn: $startImmediately)
                     } else {
                         if slots.isEmpty {
                             Text(isArabic ? "لا توجد فترات" : "No slots").frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading).foregroundColor(.secondary)
