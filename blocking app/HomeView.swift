@@ -15,11 +15,13 @@ struct HomeView: View {
     // حالة حذف
     @State private var showDeleteConfirm = false
     @State private var listToDelete: ListEntity?
+    // حالة خطأ الحفظ
+    @State private var saveErrorMessage: String? = nil
 
     // حالة الاشتراك/التجربة
-    @AppStorage("isPremium") private var isPremium: Bool = false
-    @AppStorage("trialStartTs") private var trialStartTs: Double = 0
-    @AppStorage("selectedTab") private var selectedTab: Int = 0
+    @AppStorage(AppStorageKeys.isPremium) private var isPremium: Bool = false
+    @AppStorage(AppStorageKeys.trialStartTs) private var trialStartTs: Double = 0
+    @AppStorage(AppStorageKeys.selectedTab) private var selectedTab: Int = 0
     @State private var refreshTick: Int = 0
     @State private var selectedListId: UUID? = nil
     private let trialDuration: TimeInterval = 7 * 24 * 3600
@@ -60,10 +62,43 @@ struct HomeView: View {
             }
     }
 
-    // Permission states
-    @State private var hasScreenTimePermission: Bool = false
-    @State private var hasNotificationPermission: Bool = false
-    @State private var permissionsExpanded: Bool = false
+    /// Delete a list and clean up its UserDefaults-backed companion data (breaks/manual state, family selection, shields).
+    private func deleteList(_ list: ListEntity) {
+        if BlockingEngine.shared.isHardLocked(list: list) {
+            saveErrorMessage = lang.isArabicEffective
+                ? "لا يمكن حذف قائمة بوضع صارم حتى انتهاء المدة."
+                : "Can't delete a Hard-Mode list until its duration ends."
+            return
+        }
+        let id = list.id
+        BlockingEngine.shared.purge(listId: id)
+        context.delete(list)
+        switch context.saveIfNeeded() {
+        case .success:
+            BreaksStore.clear(for: id)
+            ManualStateStore.clear(for: id)
+        case .failure(let error):
+            saveErrorMessage = lang.isArabicEffective
+                ? "تعذّر حذف القائمة: \(error.localizedDescription)"
+                : "Couldn't delete the list: \(error.localizedDescription)"
+        }
+    }
+
+    private var shareMessage: String {
+        let activeCount = activeLists.count
+        let totalCount = lists.count
+        if lang.isArabicEffective {
+            return "أستخدم تطبيق NoNet لحجب الإلهاءات وزيادة تركيزي — \(activeCount) قائمة فعّالة من أصل \(totalCount). جرّبه معي!"
+        } else {
+            return "I'm using NoNet to block distractions and stay focused — \(activeCount) active list(s) out of \(totalCount). Join me!"
+        }
+    }
+
+    // Permission states (centralized)
+    @StateObject private var permissions = PermissionsManager.shared
+    @AppStorage(AppStorageKeys.permissionsExpanded) private var permissionsExpanded: Bool = false
+    private var hasScreenTimePermission: Bool { permissions.isScreenTimeGranted }
+    private var hasNotificationPermission: Bool { permissions.isNotificationsGranted }
 
     var body: some View {
         NavigationView {
@@ -101,7 +136,7 @@ struct HomeView: View {
                          ChallengesSimpleCard(lang: lang, value: "add")
                      }
                     if !lists.isEmpty || !activeLists.isEmpty {
-                        Button(action: { /* share placeholder */ }) {
+                        ShareLink(item: shareMessage) {
                             Text(lang.isArabicEffective ? "مشاركة" : "Share")
                                 .font(.subheadline.weight(.semibold))
                                 .frame(maxWidth: .infinity)
@@ -189,7 +224,7 @@ struct HomeView: View {
                                             .foregroundColor(AppColors.textPrimary)
                                         Spacer()
                                         if !hasNotificationPermission {
-                                            Button(action: { /* request notifications */ }) {
+                                            Button(action: { requestNotificationsAuth() }) {
                                                 Text(lang.isArabicEffective ? "تفعيل" : "Enable")
                                                     .font(.footnote.weight(.semibold))
                                                     .padding(.horizontal, 12)
@@ -357,8 +392,7 @@ struct HomeView: View {
                     message: Text(lang.isArabicEffective ? "هل أنت متأكد من حذف هذه القائمة؟" : "Are you sure you want to delete this list?"),
                     primaryButton: .destructive(Text(lang.isArabicEffective ? "حذف" : "Delete")) {
                         if let toDelete = listToDelete {
-                            context.delete(toDelete)
-                            try? context.save()
+                            deleteList(toDelete)
                         }
                         listToDelete = nil
                     },
@@ -367,6 +401,14 @@ struct HomeView: View {
                     }
                 )
             }
+            .alert(
+                lang.isArabicEffective ? "تعذّر الحفظ" : "Save failed",
+                isPresented: Binding(get: { saveErrorMessage != nil }, set: { if !$0 { saveErrorMessage = nil } })
+            ) {
+                Button(lang.isArabicEffective ? "حسناً" : "OK", role: .cancel) { saveErrorMessage = nil }
+            } message: {
+                Text(saveErrorMessage ?? "")
+            }
             .onAppear {
                 checkPermissions()
             }
@@ -374,29 +416,7 @@ struct HomeView: View {
     }
     
     private func checkPermissions() {
-        // Check Screen Time permission
-        if #available(iOS 16.0, *) {
-            Task {
-                let status: AuthorizationStatus
-                if #available(iOS 17.0, *) {
-                    status = AuthorizationCenter.shared.authorizationStatus
-                } else {
-                    status = await AuthorizationCenter.shared.authorizationStatus
-                }
-                await MainActor.run {
-                    hasScreenTimePermission = (status == .approved)
-                    updatePermissionsExpanded()
-                }
-            }
-        }
-        
-        // Check Notification permission
-        UNUserNotificationCenter.current().getNotificationSettings { settings in
-            DispatchQueue.main.async {
-                hasNotificationPermission = (settings.authorizationStatus == .authorized)
-                updatePermissionsExpanded()
-            }
-        }
+        permissions.bootstrap()
     }
 
     private func isActiveNow(_ l: ListEntity) -> Bool {
@@ -408,7 +428,10 @@ struct HomeView: View {
             return now < end
         }
         if l.blockType == "scheduled" {
-            guard let data = l.scheduleSlots, let slots = try? JSONDecoder().decode([ScheduleSlot].self, from: data) else { return false }
+            guard let data = l.scheduleSlots else { return false }
+            let decoded = SchedulePersistence.decode(data)
+            if decoded.isEmpty { return false }
+            let slots = decoded.map { ScheduleSlot(id: $0.id, day: $0.day, fromMinutes: $0.fromMinutes, toMinutes: $0.toMinutes) }
             let cal = Calendar.current
             let comps = cal.dateComponents([.weekday, .hour, .minute], from: now)
             guard let weekday = comps.weekday, let h = comps.hour, let m = comps.minute else { return false }
@@ -423,7 +446,13 @@ struct HomeView: View {
 private extension HomeView {
     func toggleManual(for list: ListEntity) {
         guard list.protection != "hard" else { return }
+        let wasActive = ManualStateStore.isActive(for: list.id)
         ManualStateStore.toggle(for: list.id)
+        if wasActive {
+            BlockingEngine.shared.deactivate(list: list)
+        } else {
+            BlockingEngine.shared.activate(list: list)
+        }
         refreshTick += 1 // Force UI refresh
     }
 }
@@ -546,11 +575,16 @@ private struct RealListRow: View {
         return formatter.string(from: NSNumber(value: n)) ?? "\(n)"
     }
 
+    private func decodedSlots() -> [Slot] {
+        guard let data = item.scheduleSlots else { return [] }
+        return SchedulePersistence.decode(data).map { Slot(id: $0.id, day: $0.day, fromMinutes: $0.fromMinutes, toMinutes: $0.toMinutes) }
+    }
+
     private func scheduleSummaryBadged() -> String? {
-        if item.blockType == "scheduled", let data = item.scheduleSlots, let slots = try? JSONDecoder().decode([Slot].self, from: data), let summary = scheduleSummary(slots) {
-            return summary
-        }
-        return nil
+        guard item.blockType == "scheduled" else { return nil }
+        let slots = decodedSlots()
+        guard !slots.isEmpty, let summary = scheduleSummary(slots) else { return nil }
+        return summary
     }
 
     private func subtitleText() -> String? { /* kept for potential future use */
@@ -560,8 +594,9 @@ private struct RealListRow: View {
             if remaining <= 0 { return nil }
             return (layoutDirection == .rightToLeft ? "ينتهي خلال " : "Ends in ") + format(remaining)
         }
-        if item.blockType == "scheduled", let data = item.scheduleSlots {
-            if let slots = try? JSONDecoder().decode([Slot].self, from: data) {
+        if item.blockType == "scheduled" {
+            let slots = decodedSlots()
+            if !slots.isEmpty {
                 if let summary = scheduleSummary(slots) { return summary }
                 let cnt = slots.count
                 return layoutDirection == .rightToLeft ? "جدولة: \(cnt) فترات" : "Scheduled: \(cnt) slots"
@@ -571,15 +606,16 @@ private struct RealListRow: View {
     }
 
     private func scheduleSummary(_ slots: [Slot]) -> String? {
-        guard !slots.isEmpty else { return nil }
+        guard let firstSlot = slots.first else { return nil }
         let uniqueTimes = Set(slots.map { "\($0.fromMinutes)-\($0.toMinutes)" })
         guard uniqueTimes.count == 1 else { return nil }
-        let from = slots.first!.fromMinutes
-        let to = slots.first!.toMinutes
+        let from = firstSlot.fromMinutes
+        let to = firstSlot.toMinutes
         let days = Array(Set(slots.map { $0.day })).sorted()
+        guard let firstDay = days.first, let lastDay = days.last else { return nil }
         let daysDesc: String
         if isContiguous(days) && days.count >= 2 {
-            daysDesc = dayShortName(days.first!) + "–" + dayShortName(days.last!)
+            daysDesc = dayShortName(firstDay) + "–" + dayShortName(lastDay)
         } else if days.count <= 3 {
             daysDesc = days.map { dayShortName($0) }.joined(separator: layoutDirection == .rightToLeft ? "، " : ", ")
         } else {
@@ -1074,7 +1110,14 @@ struct ListDetailView: View {
                                 .cornerRadius(12)
                         }
                         Button(role: .destructive, action: {
-                            if let ctx = list.managedObjectContext { ctx.delete(list); try? ctx.save() }
+                            if let ctx = list.managedObjectContext {
+                                let id = list.id
+                                BlockingEngine.shared.purge(listId: id)
+                                ctx.delete(list)
+                                _ = ctx.saveIfNeeded()
+                                BreaksStore.clear(for: id)
+                                ManualStateStore.clear(for: id)
+                            }
                             dismiss()
                         }) {
                             Text(lang.isArabicEffective ? "حذف" : "Delete")
@@ -1114,31 +1157,38 @@ struct ListDetailView: View {
             return now < end
         }
         if list.blockType == "scheduled" {
-            guard let data = list.scheduleSlots, let slots = try? JSONDecoder().decode([Slot].self, from: data) else { return false }
+            guard let data = list.scheduleSlots else { return false }
+            let decoded = SchedulePersistence.decode(data)
+            if decoded.isEmpty { return false }
             let cal = Calendar.current
             let comps = cal.dateComponents([.weekday, .hour, .minute], from: now)
             guard let weekday = comps.weekday, let h = comps.hour, let m = comps.minute else { return false }
             let dayIndex = (weekday - 1) % 7
             let minutesNow = h * 60 + m
-            return slots.contains { $0.day == dayIndex && minutesNow >= $0.fromMinutes && minutesNow < $0.toMinutes }
+            return decoded.contains { $0.day == dayIndex && minutesNow >= $0.fromMinutes && minutesNow < $0.toMinutes }
         }
         return false
     }
 
     private func scheduleSummaryText() -> String? {
-        guard list.blockType == "scheduled", let data = list.scheduleSlots, let slots = try? JSONDecoder().decode([Slot].self, from: data), !slots.isEmpty else { return nil }
+        guard list.blockType == "scheduled",
+              let data = list.scheduleSlots else { return nil }
+        let decoded = SchedulePersistence.decode(data)
+        let slots = decoded.map { Slot(id: $0.id, day: $0.day, fromMinutes: $0.fromMinutes, toMinutes: $0.toMinutes) }
+        guard let firstSlot = slots.first else { return nil }
         let uniqueTimes = Set(slots.map { "\($0.fromMinutes)-\($0.toMinutes)" })
         guard uniqueTimes.count == 1 else { return nil }
-        let from = slots.first!.fromMinutes
-        let to = slots.first!.toMinutes
+        let from = firstSlot.fromMinutes
+        let to = firstSlot.toMinutes
         let days = Array(Set(slots.map { $0.day })).sorted()
+        guard let firstDay = days.first, let lastDay = days.last else { return nil }
         func dayName(_ d: Int) -> String {
             if lang.isArabicEffective { return ["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"][ (d % 7 + 7) % 7 ] }
             return ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][ (d % 7 + 7) % 7 ]
         }
         let daysDesc: String
         if days.count >= 2 && zip(days.dropFirst(), days).allSatisfy({ $0.0 == $0.1 + 1 }) {
-            daysDesc = dayName(days.first!) + "–" + dayName(days.last!)
+            daysDesc = dayName(firstDay) + "–" + dayName(lastDay)
         } else if days.count <= 3 {
             daysDesc = days.map { dayName($0) }.joined(separator: lang.isArabicEffective ? "، " : ", ")
         } else { return nil }
@@ -1156,14 +1206,11 @@ extension ListEntity: Identifiable {}
 // MARK: - Actions
 private extension HomeView {
     func requestScreenTimeAuth() {
-        if #available(iOS 16.0, *) {
-            Task { _ = try? await AuthorizationCenter.shared.requestAuthorization(for: .individual) }
-        }
+        Task { await permissions.requestScreenTime() }
     }
-    
-    func updatePermissionsExpanded() {
-        let allSet = hasScreenTimePermission && hasNotificationPermission
-        permissionsExpanded = !allSet
+
+    func requestNotificationsAuth() {
+        Task { await permissions.requestNotifications() }
     }
 }
 

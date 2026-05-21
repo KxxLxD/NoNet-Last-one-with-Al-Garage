@@ -2,8 +2,9 @@ import SwiftUI
 
 struct ChatBotView: View {
     @EnvironmentObject var lang: LanguageManager
-    @AppStorage("isPremium") private var isPremium: Bool = false
-    @AppStorage("selectedTab") private var selectedTab: Int = 0
+    @AppStorage(AppStorageKeys.isPremium) private var isPremium: Bool = false
+    @AppStorage(AppStorageKeys.selectedTab) private var selectedTab: Int = 0
+    private let responder: ChatResponder = LocalChatResponder()
 
     struct ChatMessage: Identifiable {
         let id = UUID()
@@ -292,57 +293,13 @@ struct ChatBotView: View {
         inputText = ""
         isTyping = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-            let reply = generateBotReply(for: trimmed)
+            let reply = responder.reply(to: trimmed, isArabic: lang.isArabicEffective)
             messages.append(ChatMessage(isUser: false, text: reply, timestamp: Date()))
             isTyping = false
         }
     }
 
     private func selectSuggestion(_ text: String) { inputText = text }
-
-    private func generateBotReply(for text: String) -> String {
-        let lowercased = text.lowercased()
-        
-        if lang.isArabicEffective {
-            // Arabic responses
-            if lowercased.contains("أرتب") || lowercased.contains("تنظيم") || lowercased.contains("حياتي") {
-                return "🎯 لترتيب حياتك:\n• ابدأ بحجب المشتتات الأساسية (تيك توك، إنستغرام) لمدة ساعة\n• حدد 3 أهداف يومية واضحة\n• اختر وقت ثابت للمراجعة كل مساء"
-            } else if lowercased.contains("ريلز") || lowercased.contains("إدمان") || lowercased.contains("مضار") {
-                return "⚠️ مضار إدمان الريلز:\n• تشتت الانتباه وضعف التركيز\n• مقارنات اجتماعية مؤذية\n• إضاعة ساعات ثمينة\n\n💡 الحل: ابدأ بحجب 30 دقيقة يوميًا وزِد تدريجيًا"
-            } else if lowercased.contains("ألعاب") || lowercased.contains("قيمز") || lowercased.contains("gaming") {
-                return "🎮 لتقليل وقت الألعاب:\n• حدد ساعة واحدة يوميًا للألعاب\n• احجب التطبيقات خارج هذا الوقت\n• استبدل الألعاب بأنشطة حركية أو قراءة"
-            } else if lowercased.contains("سوشيال") || lowercased.contains("تواصل") || lowercased.contains("فيسبوك") {
-                return "📱 للتخلص من عادة السوشيال:\n• احذف التطبيقات من الشاشة الرئيسية\n• فعّل إشعارات محدودة فقط\n• خصص أوقات معينة للتصفح (مثل 7-8 مساء)"
-            } else if lowercased.contains("خطة") || lowercased.contains("7 أيام") || lowercased.contains("تركيز") {
-                return "📅 خطة التركيز 7 أيام:\n\nاليوم 1-2: حجب 30 دقيقة صباحًا\nاليوم 3-4: حجب ساعة كاملة\nاليوم 5-7: حجب 2-3 ساعات مع فترات راحة\n\n🎯 الهدف: بناء عادة تدريجية مستدامة"
-            } else if lowercased.contains("جدول") || lowercased.contains("60") || lowercased.contains("حظر") {
-                return "⏰ جدول حظر 60 دقيقة مقترح:\n• 9-10 صباحًا: تركيز عمل عميق\n• 2-3 ظهرًا: مهام مهمة\n• 8-9 مساء: وقت عائلي أو قراءة\n\nاختر الوقت الأنسب لك!"
-            } else if lowercased.contains("بدائل") || lowercased.contains("صحية") || lowercased.contains("هاتف") {
-                return "🌱 بدائل صحية للهاتف:\n• اقرأ كتابًا ورقيًا\n• امشِ في الطبيعة أو مارس الرياضة\n• تعلم مهارة جديدة (طبخ، رسم، موسيقى)\n• اقض وقتًا مع الأصدقاء والعائلة"
-            } else {
-                return "💡 أنا هنا لمساعدتك في رحلة التركيز! جرب الضغط على زر اللمبة 💡 لاقتراحات سريعة، أو اسأل عن:\n• ترتيب الحياة\n• مضار الإدمان الرقمي\n• خطط التركيز\n• بدائل صحية"
-            }
-        } else {
-            // English responses  
-            if lowercased.contains("organize") || lowercased.contains("life") || lowercased.contains("help me") {
-                return "🎯 To organize your life:\n• Start by blocking main distractions (TikTok, Instagram) for 1 hour\n• Set 3 clear daily goals\n• Choose a fixed time for evening review"
-            } else if lowercased.contains("reels") || lowercased.contains("addiction") || lowercased.contains("harms") {
-                return "⚠️ Harms of Reels addiction:\n• Attention fragmentation & poor focus\n• Harmful social comparisons\n• Wasted precious hours\n\n💡 Solution: Start with 30-min daily blocks, increase gradually"
-            } else if lowercased.contains("gaming") || lowercased.contains("games") || lowercased.contains("reduce") {
-                return "🎮 To reduce gaming time:\n• Limit to 1 hour daily\n• Block gaming apps outside this window\n• Replace with physical activities or reading"
-            } else if lowercased.contains("social") || lowercased.contains("media") || lowercased.contains("quit") {
-                return "📱 To quit social media habit:\n• Remove apps from home screen\n• Enable limited notifications only\n• Set specific browsing windows (e.g., 7-8 PM)"
-            } else if lowercased.contains("plan") || lowercased.contains("7") || lowercased.contains("focus") {
-                return "📅 7-day Focus Plan:\n\nDay 1-2: Block 30 min in morning\nDay 3-4: Block 1 full hour\nDay 5-7: Block 2-3 hours with breaks\n\n🎯 Goal: Build sustainable habit gradually"
-            } else if lowercased.contains("schedule") || lowercased.contains("60") || lowercased.contains("suggest") {
-                return "⏰ Suggested 60-min block schedule:\n• 9-10 AM: Deep work focus\n• 2-3 PM: Important tasks\n• 8-9 PM: Family time or reading\n\nChoose what fits your routine best!"
-            } else if lowercased.contains("alternatives") || lowercased.contains("healthy") || lowercased.contains("phone") {
-                return "🌱 Healthy phone alternatives:\n• Read a physical book\n• Walk in nature or exercise\n• Learn new skills (cooking, art, music)\n• Spend quality time with friends/family"
-            } else {
-                return "💡 I'm here to help your focus journey! Try the bulb button 💡 for quick suggestions, or ask about:\n• Life organization\n• Digital addiction harms\n• Focus plans\n• Healthy alternatives"
-            }
-        }
-    }
 
     private func seedIfFirstTime() {
         if messages.isEmpty && isPremium {

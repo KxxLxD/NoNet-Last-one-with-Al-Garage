@@ -10,12 +10,12 @@ import UIKit
 
 struct ContentView: View {
     @StateObject private var lang = LanguageManager.shared
-    @AppStorage("isAuthenticated") private var isAuthenticated: Bool = false
-    @AppStorage("showOnboardingAfterLogin") private var showOnboardingAfterLogin: Bool = false
-    @AppStorage("selectedTab") private var selectedTab: Int = 0
-    @AppStorage("isPremium") private var isPremium: Bool = false
-    @AppStorage("trialStartTs") private var trialStartTs: Double = 0
-    @AppStorage("hasShownTrialExpiredAlert") private var hasShownTrialExpiredAlert: Bool = false
+    @AppStorage(AppStorageKeys.isAuthenticated) private var isAuthenticated: Bool = false
+    @AppStorage(AppStorageKeys.showOnboardingAfterLogin) private var showOnboardingAfterLogin: Bool = false
+    @AppStorage(AppStorageKeys.selectedTab) private var selectedTab: Int = 0
+    @AppStorage(AppStorageKeys.isPremium) private var isPremium: Bool = false
+    @AppStorage(AppStorageKeys.trialStartTs) private var trialStartTs: Double = 0
+    @AppStorage(AppStorageKeys.hasShownTrialExpiredAlert) private var hasShownTrialExpiredAlert: Bool = false
 
     @State private var showTrialExpiredAlert: Bool = false
 
@@ -81,9 +81,8 @@ struct ContentView: View {
     private func expireTrialIfNeeded() {
         guard isPremium else { return }
         guard trialStartTs > 0 else { return }
-        let trialDuration: TimeInterval = 7 * 24 * 3600
         let start = Date(timeIntervalSince1970: trialStartTs)
-        if Date().timeIntervalSince(start) >= trialDuration {
+        if Date().timeIntervalSince(start) >= BlockingConstants.trialDurationSeconds {
             isPremium = false
             trialStartTs = 0
             if !hasShownTrialExpiredAlert {

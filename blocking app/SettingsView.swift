@@ -3,7 +3,7 @@ import SwiftUI
 @available(iOS 17.0, *)
 struct SettingsView: View {
     @EnvironmentObject var lang: LanguageManager
-    @AppStorage("isPremium") private var isPremium: Bool = false
+    @AppStorage(AppStorageKeys.isPremium) private var isPremium: Bool = false
     @State private var showBlockPreview = false
     @State private var navigateToUpgrade = false
     
@@ -392,8 +392,8 @@ struct FAQItem: View {
 struct LogoutButton: View {
     @EnvironmentObject var lang: LanguageManager
     @State private var showConfirm = false
-    @AppStorage("isAuthenticated") private var isAuthenticated: Bool = true
-    @AppStorage("selectedTab") private var selectedTab: Int = 0
+    @AppStorage(AppStorageKeys.isAuthenticated) private var isAuthenticated: Bool = true
+    @AppStorage(AppStorageKeys.selectedTab) private var selectedTab: Int = 0
     
     var body: some View {
         Button(action: { showConfirm = true }) {
@@ -407,6 +407,7 @@ struct LogoutButton: View {
         }
         .alert(lang.isArabicEffective ? "تأكيد" : "Confirm", isPresented: $showConfirm) {
             Button(role: .destructive) {
+                AppleSignInCoordinator.shared.signOut()
                 isAuthenticated = false
                 selectedTab = 0
             } label: {

@@ -2,18 +2,18 @@ import SwiftUI
 
 struct OnboardingView: View {
     @EnvironmentObject var lang: LanguageManager
-    @AppStorage("showOnboardingAfterLogin") private var showOnboardingAfterLogin: Bool = false
+    @AppStorage(AppStorageKeys.showOnboardingAfterLogin) private var showOnboardingAfterLogin: Bool = false
 
     // Collected data (UI-only for now)
-    @AppStorage("ob_name") private var obName: String = ""
-    @AppStorage("ob_gender") private var obGender: String = "male" // male|female
-    @AppStorage("ob_age_group") private var obAgeGroup: String = "" // 13-17, 18-24, 25-34, 35-44, 45+
-    @AppStorage("ob_apps") private var obApps: String = "" // comma-separated ids
-    @AppStorage("ob_apps_other") private var obAppsOther: String = ""
-    @AppStorage("ob_cats") private var obCats: String = "" // comma-separated ids
-    @AppStorage("ob_cats_other") private var obCatsOther: String = ""
-    @AppStorage("ob_goals") private var obGoals: String = "" // comma-separated ids
-    @AppStorage("ob_goals_other") private var obGoalsOther: String = ""
+    @AppStorage(AppStorageKeys.obName) private var obName: String = ""
+    @AppStorage(AppStorageKeys.obGender) private var obGender: String = "male" // male|female
+    @AppStorage(AppStorageKeys.obAgeGroup) private var obAgeGroup: String = "" // 13-17, 18-24, 25-34, 35-44, 45+
+    @AppStorage(AppStorageKeys.obApps) private var obApps: String = "" // comma-separated ids
+    @AppStorage(AppStorageKeys.obAppsOther) private var obAppsOther: String = ""
+    @AppStorage(AppStorageKeys.obCats) private var obCats: String = "" // comma-separated ids
+    @AppStorage(AppStorageKeys.obCatsOther) private var obCatsOther: String = ""
+    @AppStorage(AppStorageKeys.obGoals) private var obGoals: String = "" // comma-separated ids
+    @AppStorage(AppStorageKeys.obGoalsOther) private var obGoalsOther: String = ""
 
     @State private var page: Int = 0
 

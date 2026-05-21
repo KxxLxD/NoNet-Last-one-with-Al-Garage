@@ -1,15 +1,18 @@
 import SwiftUI
+import AuthenticationServices
 
 struct AuthView: View {
     @EnvironmentObject var lang: LanguageManager
-    @AppStorage("isAuthenticated") private var isAuthenticated: Bool = false
-    @AppStorage("showOnboardingAfterLogin") private var showOnboardingAfterLogin: Bool = false
+    @AppStorage(AppStorageKeys.isAuthenticated) private var isAuthenticated: Bool = false
+    @AppStorage(AppStorageKeys.showOnboardingAfterLogin) private var showOnboardingAfterLogin: Bool = false
+    @StateObject private var appleSignIn = AppleSignInCoordinator.shared
 
     @State private var mode: Int = 0 // 0=Sign in, 1=Sign up
     @State private var email: String = ""
     @State private var password: String = ""
     @State private var showPassword: Bool = false
     @State private var errorMessage: String? = nil
+    @State private var showForgotPasswordAlert: Bool = false
 
     var body: some View {
         NavigationView {
@@ -91,7 +94,7 @@ struct AuthView: View {
                         }
 
                         if mode == 0 {
-                            Button(action: { /* forgot password action */ }) {
+                            Button(action: { showForgotPasswordAlert = true }) {
                                 Text(lang.isArabicEffective ? "نسيت كلمة المرور؟" : "Forgot password?")
                                     .font(.footnote)
                                     .foregroundColor(AppColors.accentDark)
@@ -123,65 +126,75 @@ struct AuthView: View {
 
                 // Social buttons
                 VStack(spacing: 12) {
-                    Button(action: { handleSocial(provider: "apple") }) {
-                        HStack {
-                            Image(systemName: "apple.logo")
-                            Text(lang.isArabicEffective ? "تابع عبر Apple" : "Continue with Apple")
-                                .fontWeight(.semibold)
+                    SignInWithAppleButton(.continue,
+                        onRequest: { request in
+                            appleSignIn.configure(request: request)
+                        },
+                        onCompletion: { result in
+                            if appleSignIn.handle(result: result) {
+                                isAuthenticated = true
+                                showOnboardingAfterLogin = true
+                                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                            }
                         }
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 48)
-                        .background(Color.black)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                    }
-
-                    Button(action: { handleSocial(provider: "google") }) {
-                        HStack {
-                            Image(systemName: "globe")
-                            Text(lang.isArabicEffective ? "تابع عبر Google" : "Continue with Google")
-                                .fontWeight(.semibold)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 48)
-                        .background(Color(.systemBackground))
-                        .foregroundColor(.primary)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.black.opacity(0.06), lineWidth: 1)
-                        )
-                        .cornerRadius(12)
-                    }
+                    )
+                    .signInWithAppleButtonStyle(.black)
+                    .frame(height: 48)
+                    .cornerRadius(12)
                 }
                 .padding(.horizontal, 24)
+
+                // Local-only mode notice
+                Text(lang.isArabicEffective
+                     ? "ملاحظة: إنشاء الحساب بالبريد محلي فقط — لربط حساب فعلي استخدم Apple."
+                     : "Note: email accounts are stored locally only. For a real account, sign in with Apple.")
+                    .font(.caption)
+                    .foregroundColor(AppColors.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
 
                 Spacer(minLength: 12)
             }
             .navigationTitle(lang.isArabicEffective ? "مرحبًا" : "Welcome")
             .background(AppColors.uiBackground)
+            .alert(
+                lang.isArabicEffective ? "استعادة كلمة المرور" : "Password recovery",
+                isPresented: $showForgotPasswordAlert
+            ) {
+                Button(lang.isArabicEffective ? "تواصل مع الدعم" : "Contact support") {
+                    if let url = URL(string: "mailto:support@nonet.app?subject=Password%20Recovery") {
+                        UIApplication.shared.open(url)
+                    }
+                }
+                Button(lang.isArabicEffective ? "إلغاء" : "Cancel", role: .cancel) {}
+            } message: {
+                Text(lang.isArabicEffective
+                     ? "راسل فريق الدعم لاستعادة كلمة المرور."
+                     : "Contact our support team to recover your password.")
+            }
         }
     }
 
     private func primaryAction() {
         errorMessage = nil
-        let isValidEmail = email.contains("@") && email.contains(".")
-        let isValidPassword = password.count >= 6
-        if !isValidEmail {
+        if !isValidEmail(email) {
             errorMessage = lang.isArabicEffective ? "صيغة البريد غير صحيحة." : "Invalid email format."
             return
         }
-        if !isValidPassword {
+        if password.count < 6 {
             errorMessage = lang.isArabicEffective ? "كلمة المرور 6 أحرف على الأقل." : "Password must be at least 6 characters."
             return
         }
-        handleSocial(provider: mode == 0 ? "signin" : "signup")
+        // Local-only auth: persist state. Future iterations should call a real backend.
+        isAuthenticated = true
+        showOnboardingAfterLogin = (mode == 1) // only on sign-up
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
 
-    private func handleSocial(provider: String) {
-        // Mock auth for MVP
-        isAuthenticated = true
-        showOnboardingAfterLogin = true
-        UINotificationFeedbackGenerator().notificationOccurred(.success)
+    /// Stricter than the previous `contains("@") && contains(".")` check.
+    private func isValidEmail(_ s: String) -> Bool {
+        let pattern = #"^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#
+        return s.range(of: pattern, options: .regularExpression) != nil
     }
 }
 

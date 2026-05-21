@@ -2,60 +2,52 @@ import SwiftUI
 
 struct PoliciesView: View {
     @EnvironmentObject var lang: LanguageManager
+    @State private var selectedTab: Int = 0
     private var isArabic: Bool { lang.isArabicEffective }
 
     var body: some View {
         ZStack {
             AppColors.uiBackground.ignoresSafeArea()
-        ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                VStack(alignment: .leading, spacing: 8) {
-                        Text(isArabic ? "الشروط والأحكام" : "Terms & Conditions").font(.headline).foregroundColor(AppColors.textPrimary)
-                    Text(isArabic ? "نص تجريبي – سيتم تحديث المحتوى لاحقًا." : "Placeholder text – content to be updated later.")
-                            .foregroundColor(AppColors.textSecondary)
+            VStack(spacing: 0) {
+                Picker("", selection: $selectedTab) {
+                    Text(isArabic ? "الشروط" : "Terms").tag(0)
+                    Text(isArabic ? "الخصوصية" : "Privacy").tag(1)
                 }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                .pickerStyle(.segmented)
+                .padding(.horizontal, 24)
+                .padding(.top, 12)
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(currentText)
+                            .font(.body)
+                            .foregroundColor(AppColors.textPrimary)
+                            .multilineTextAlignment(isArabic ? .trailing : .leading)
+                            .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
+                            .textSelection(.enabled)
+                    }
                     .padding(16)
                     .background(AppColors.uiSurface)
                     .cornerRadius(20)
                     .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
                     .padding(.horizontal, 24)
-
-                    SoftDivider()
-                        .padding(.horizontal, 24)
-
-                VStack(alignment: .leading, spacing: 8) {
-                        Text(isArabic ? "سياسة الخصوصية" : "Privacy Policy").font(.headline).foregroundColor(AppColors.textPrimary)
-                    Text(isArabic ? "نص تجريبي – سيتم تحديث المحتوى لاحقًا." : "Placeholder text – content to be updated later.")
-                            .foregroundColor(AppColors.textSecondary)
+                    .padding(.top, 16)
+                    .padding(.bottom, 24)
                 }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(16)
-                    .background(AppColors.uiSurface)
-                    .cornerRadius(20)
-                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
-                    .padding(.horizontal, 24)
-            }
-                .padding(.top, 16)
             }
         }
         .navigationTitle(isArabic ? "السياسات والشروط" : "Policies & Terms")
     }
-}
 
-private struct SoftDivider: View {
-    var body: some View {
-        HStack {
-            Spacer()
-            Rectangle()
-                .fill(AppColors.uiBorder.opacity(0.70))
-                .frame(width: 300, height: 1)
-            Spacer()
+    private var currentText: String {
+        if selectedTab == 0 {
+            return isArabic ? LegalContent.termsArabic : LegalContent.termsEnglish
+        } else {
+            return isArabic ? LegalContent.privacyArabic : LegalContent.privacyEnglish
         }
-        .padding(.vertical, 6)
     }
 }
 
 #Preview {
     NavigationView { PoliciesView().environmentObject(LanguageManager.shared) }
-} 
+}

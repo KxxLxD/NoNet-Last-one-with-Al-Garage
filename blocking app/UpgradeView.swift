@@ -1,26 +1,21 @@
 import SwiftUI
+import StoreKit
 
 struct UpgradeView: View {
     @EnvironmentObject var lang: LanguageManager
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("isPremium") private var isPremium: Bool = false
-    @AppStorage("trialStartTs") private var trialStartTs: Double = 0
+    @AppStorage(AppStorageKeys.isPremium) private var isPremium: Bool = false
+    @AppStorage(AppStorageKeys.trialStartTs) private var trialStartTs: Double = 0
+    @StateObject private var store = StoreManager.shared
 
-    @State private var discountCode: String = ""
-    @State private var isCodeApplied: Bool = false
     @State private var selectedPlan: String? = nil // "monthly" or "yearly"
+    @State private var purchaseErrorMessage: String? = nil
 
     private var isArabic: Bool { lang.isArabicEffective }
-
-    // Prices (SAR)
-    private let monthlyBase = 30
-    private let monthlyWithCode = 20 // with code nonet
-
-    private let yearlyOriginal = 360
-    private let yearlyAfterDeal = 300 // two months free (360 -> 300)
-    private let yearlyWithCode = 200 // with code nonet
-
     private let trialDuration: TimeInterval = 7 * 24 * 3600
+
+    private var monthlyProduct: Product? { store.products.first { $0.id == ProductIDs.monthly } }
+    private var yearlyProduct: Product? { store.products.first { $0.id == ProductIDs.yearly } }
 
     private var isTrialActive: Bool {
         guard trialStartTs > 0 else { return false }
@@ -28,154 +23,60 @@ struct UpgradeView: View {
         return Date().timeIntervalSince(start) < trialDuration
     }
 
-    private var trialDaysLeft: Int {
-        guard trialStartTs > 0 else { return 0 }
-        let start = Date(timeIntervalSince1970: trialStartTs)
-        let remaining = max(0, trialDuration - Date().timeIntervalSince(start))
-        return Int(ceil(remaining / 86400))
-    }
-
-    private var codeHint: String {
-        isArabic ? "ادخل كود الخصم" : "Enter discount code"
-    }
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                // Pricing
                 Text(isArabic ? "الاشتراك المميز" : "Premium Pricing")
                     .font(.title2).bold()
 
-                // Bilingual note about discount code
                 Text(isArabic
-                     ? "استخدم الكود nonet لتحصل على خصم الثلث.\nUse code nonet to get one‑third off."
-                     : "Use code nonet to get one‑third off.\nاستخدم الكود nonet لتحصل على خصم الثلث.")
+                     ? "اشتراك يُدار عبر App Store. يمكنك إلغاء الاشتراك في أي وقت من إعدادات Apple."
+                     : "Subscription managed via the App Store. Cancel anytime in your Apple Settings.")
                     .font(.footnote)
                     .foregroundColor(.secondary)
 
-                // Discount code input
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(isArabic ? "كود الخصم" : "Discount Code").font(.subheadline)
-                    HStack(spacing: 12) {
-                        TextField(codeHint, text: $discountCode)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled(true)
-                            .padding(12)
-                            .background(AppColors.uiSurface)
-                            .cornerRadius(12)
-                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.uiBorder, lineWidth: 0.5))
-                        Button(action: applyCode) {
-                            Text(isArabic ? "تطبيق" : "Apply")
-                                .font(.subheadline.weight(.semibold))
-                                .padding(.horizontal, 16)
-                                .frame(height: 44)
-                                .background(AppColors.accentDark)
-                                .foregroundColor(.white)
-                                .cornerRadius(12)
-                        }
-                    }
-                    if isCodeApplied {
-                        Text(isArabic ? "تم تطبيق خصم الثلث (كود nonet)" : "One-third discount applied (code: nonet)")
-                            .font(.footnote).foregroundColor(.secondary)
-                    }
-                }
-
-                // Monthly plan
+                // Plans (load asynchronously; placeholders show until products fetched)
                 planCard(
                     title: isArabic ? "شهري" : "Monthly",
-                    original: monthlyBase,
-                    crossed: nil,
-                    finalPrice: isCodeApplied ? monthlyWithCode : monthlyBase,
-                    note: isArabic ? "باستخدام الكود nonet يصبح: 20 ريال" : "Use code nonet → 20 SAR",
-                    showDiscountNote: isCodeApplied,
+                    product: monthlyProduct,
                     planKey: "monthly",
                     isSelected: selectedPlan == "monthly",
                     onSelect: { selectedPlan = "monthly" }
                 )
 
-                // Yearly plan with savings
                 planCard(
                     title: isArabic ? "سنوي" : "Yearly",
-                    original: yearlyOriginal,
-                    crossed: yearlyAfterDeal,
-                    finalPrice: isCodeApplied ? yearlyWithCode : yearlyAfterDeal,
-                    note: isArabic ? "توفير شهرين (360 → 300). مع الكود nonet: 200 ريال" : "Two months free (360 → 300). With code nonet: 200 SAR",
-                    showDiscountNote: isCodeApplied,
+                    product: yearlyProduct,
                     planKey: "yearly",
                     isSelected: selectedPlan == "yearly",
                     onSelect: { selectedPlan = "yearly" }
                 )
 
-                // Features Card (Hook + Benefits)
-                VStack(alignment: .leading, spacing: 12) {
-                    // Headline
-                    Text(isArabic ? "حرّر تركيزك وغيّر عاداتك الرقمية" : "Unlock focus and change digital habits")
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundColor(AppColors.textPrimary)
-                    Text(isArabic ? "كل ما تحتاجه لتبقى على المسار الصحيح." : "Everything you need to stay on track.")
-                        .font(.subheadline)
-                        .foregroundColor(AppColors.textSecondary)
-
-                    SoftDivider(width: 300, opacity: 0.7)
-
-                    // Free tier summary
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(isArabic ? "مجاني" : "Free")
-                            .font(.headline)
-                            .foregroundColor(AppColors.textPrimary)
-                        availabilityRow(icon: "list.bullet", textAr: "حتى ٣ قوائم حجب", textEn: "Up to 3 blocklists", available: true)
-                        availabilityRow(icon: "lock.shield", textAr: "الوضع الصارم: ٣ مرات فقط", textEn: "Hard Mode: 3 uses only", available: true)
-                        availabilityRow(icon: "calendar", textAr: "الجدولة الذكية", textEn: "Smart scheduling", available: false)
-                        availabilityRow(icon: "clock", textAr: "جدولة الاستراحات", textEn: "Planned breaks", available: false)
-                        availabilityRow(icon: "sparkles", textAr: "مساعد NoNet الذكي (AI)", textEn: "NoNet AI Chatbot", available: false)
-                        availabilityRow(icon: "person.badge.shield.checkmark", textAr: "دعم أولوية", textEn: "Priority support", available: false)
+                // Redeem code (uses Apple's secure offer-code redemption — no hard-coded codes).
+                Button(action: { Task { await store.presentRedeemSheet() } }) {
+                    HStack {
+                        Image(systemName: "ticket")
+                        Text(isArabic ? "لديك كود؟ استرداده" : "Have a code? Redeem")
+                            .font(.subheadline.weight(.semibold))
                     }
-
-                    SoftDivider(width: 300, opacity: 0.7)
-
-                    // Premium features (exactly 6)
-                    VStack(alignment: .leading, spacing: 10) {
-                        featureRow(icon: "infinity", textAr: "قوائم بلا حدود", textEn: "Unlimited blocklists")
-                        featureRow(icon: "lock.shield", textAr: "الوضع الصارم", textEn: "Hard Mode")
-                        featureRow(icon: "calendar", textAr: "الجدولة الذكية", textEn: "Smart scheduling")
-                        featureRow(icon: "clock", textAr: "جدولة الاستراحات", textEn: "Planned breaks")
-                        featureRow(icon: "sparkles", textAr: "مساعد NoNet الذكي (AI)", textEn: "NoNet AI Chatbot")
-                        featureRow(icon: "person.badge.shield.checkmark", textAr: "دعم أولوية", textEn: "Priority support")
-                        // Short description
-                        Text(isArabic ? "مزايا عملية تمنحك سيطرة هادئة ودائمة." : "Practical features that keep you calmly in control.")
-                            .font(.footnote)
-                            .foregroundColor(AppColors.textSecondary)
-                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 44)
+                    .background(AppColors.infoBg)
+                    .foregroundColor(AppColors.accentDark)
+                    .cornerRadius(12)
                 }
-                .padding(20)
-                .background(AppColors.uiSurface)
-                .cornerRadius(20)
-                .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
 
-                // Golden Guarantee — prominent card
-                VStack(alignment: .leading, spacing: 8) {
-                    let gold = Color(red: 212/255, green: 175/255, blue: 55/255)
-                    HStack(spacing: 8) {
-                        Image(systemName: "shield.checkerboard")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(gold)
-                        Text(isArabic ? "الضمان الذهبي" : "Golden Guarantee")
-                            .font(.headline)
-                            .foregroundColor(gold)
-                    }
-                    Text(isArabic ? "استرداد كامل للمبلغ بدون أسئلة." : "Full refund, no questions asked.")
-                        .foregroundColor(AppColors.textPrimary)
-                    Text(isArabic ? "الشهري: خلال 14 يوم — السنوي: خلال شهر واحد." : "Monthly: within 14 days — Yearly: within 1 month.")
-                        .font(.footnote)
-                        .foregroundColor(AppColors.textSecondary)
+                featuresCard
+
+                goldenGuaranteeCard
+
+                Button(action: { Task { await store.restorePurchases() } }) {
+                    Text(isArabic ? "استعادة المشتريات" : "Restore Purchases")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundColor(AppColors.accentDark)
+                        .frame(maxWidth: .infinity)
                 }
-                .padding(16)
-                .background(Color(red: 212/255, green: 175/255, blue: 55/255).opacity(0.08))
-                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(red: 212/255, green: 175/255, blue: 55/255), lineWidth: 1))
-                .cornerRadius(16)
-
-                // CTA inline moved to bottom safe-area inset
-                EmptyView()
+                .padding(.top, 4)
             }
             .padding(.horizontal, 24)
             .padding(.top, 16)
@@ -184,22 +85,16 @@ struct UpgradeView: View {
         .background(AppColors.uiBackground)
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
-                Button(action: activatePremium) {
-                    Text(
-                        selectedPlan == "monthly"
-                        ? (isArabic ? "ابدأ الشهرية الآن" : "Start Monthly")
-                        : selectedPlan == "yearly"
-                        ? (isArabic ? "ابدأ السنوية الآن" : "Start Yearly")
-                        : (isArabic ? "اختر خطة للمتابعة" : "Select a plan to continue")
-                    )
-                    .font(.subheadline.weight(.semibold))
+                Button(action: { Task { await activatePremium() } }) {
+                    Text(ctaLabel)
+                        .font(.subheadline.weight(.semibold))
                         .frame(maxWidth: .infinity)
-                    .frame(height: 44)
-                    .background(AppColors.accentDark)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
+                        .frame(height: 44)
+                        .background(AppColors.accentDark)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
                 }
-                .disabled(selectedPlan == nil)
+                .disabled(selectedPlan == nil || store.state == .purchasing)
             }
             .padding(.horizontal, 16)
             .padding(.top, 8)
@@ -210,49 +105,72 @@ struct UpgradeView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(AppColors.uiBackground, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
+        .task { await store.loadProducts() }
+        .onChange(of: store.purchasedProductIDs) { ids in
+            if !ids.isEmpty { isPremium = true }
+        }
+        .alert(
+            isArabic ? "تعذّر الشراء" : "Purchase failed",
+            isPresented: Binding(get: { purchaseErrorMessage != nil }, set: { if !$0 { purchaseErrorMessage = nil } })
+        ) {
+            Button(isArabic ? "حسناً" : "OK", role: .cancel) { purchaseErrorMessage = nil }
+        } message: {
+            Text(purchaseErrorMessage ?? "")
+        }
     }
 
-    private func startTrial() {
-        guard trialStartTs == 0 else { return }
-        trialStartTs = Date().timeIntervalSince1970
-        isPremium = true
-        UINotificationFeedbackGenerator().notificationOccurred(.success)
-        dismiss()
+    private var ctaLabel: String {
+        switch store.state {
+        case .purchasing: return isArabic ? "جارٍ الشراء..." : "Purchasing..."
+        default: break
+        }
+        if selectedPlan == "monthly" { return isArabic ? "ابدأ الشهرية الآن" : "Start Monthly" }
+        if selectedPlan == "yearly" { return isArabic ? "ابدأ السنوية الآن" : "Start Yearly" }
+        return isArabic ? "اختر خطة للمتابعة" : "Select a plan to continue"
     }
 
-    private func applyCode() {
-        let code = discountCode.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        isCodeApplied = (code == "nonet")
-        UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+    private func activatePremium() async {
+        let product: Product?
+        switch selectedPlan {
+        case "monthly": product = monthlyProduct
+        case "yearly": product = yearlyProduct
+        default: return
+        }
+        guard let product else {
+            purchaseErrorMessage = isArabic
+                ? "تعذّر تحميل الباقة من App Store. يرجى المحاولة لاحقاً."
+                : "Couldn't load the plan from App Store. Please try again later."
+            return
+        }
+        await store.purchase(product)
+        if case .failed(let msg) = store.state {
+            purchaseErrorMessage = msg
+        } else if store.hasActiveSubscription {
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            dismiss()
+        }
     }
 
-    private func activatePremium() {
-        isPremium = true
-        UINotificationFeedbackGenerator().notificationOccurred(.success)
-        dismiss()
-    }
-
-    private func planCard(title: String, original: Int, crossed: Int?, finalPrice: Int, note: String, showDiscountNote: Bool, planKey: String, isSelected: Bool, onSelect: @escaping () -> Void) -> some View {
+    private func planCard(title: String, product: Product?, planKey: String, isSelected: Bool, onSelect: @escaping () -> Void) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundColor(AppColors.textPrimary)
             HStack(alignment: .firstTextBaseline, spacing: 12) {
-                Text("\(original) \(isArabic ? "ريال" : "SAR")")
-                    .foregroundColor(.secondary)
-                    .strikethrough(crossed != nil, color: .secondary)
-                if let crossed = crossed {
-                    Text("\(crossed) \(isArabic ? "ريال" : "SAR")")
+                if let product {
+                    Text(product.displayPrice)
+                        .font(.title3).bold()
+                        .foregroundColor(AppColors.accentDark)
+                    if let period = product.subscription?.subscriptionPeriod {
+                        Text("/ \(periodLabel(period))")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
+                } else {
+                    Text(isArabic ? "جاري التحميل..." : "Loading...")
                         .foregroundColor(.secondary)
-                        .strikethrough(false)
                 }
                 Spacer()
-                Text("\(finalPrice) \(isArabic ? "ريال" : "SAR")")
-                    .font(.title3).bold()
-                    .foregroundColor(AppColors.accentDark)
-            }
-            if showDiscountNote {
-                Text(note).font(.footnote).foregroundColor(.secondary)
             }
             HStack {
                 Spacer()
@@ -266,6 +184,7 @@ struct UpgradeView: View {
                         .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppColors.accentDark, lineWidth: 1.5))
                         .cornerRadius(10)
                 }
+                .disabled(product == nil)
             }
         }
         .padding(20)
@@ -277,17 +196,98 @@ struct UpgradeView: View {
         )
     }
 
-    // MARK: - Feature Row helpers
+    private func periodLabel(_ period: Product.SubscriptionPeriod) -> String {
+        let unit: String = {
+            switch period.unit {
+            case .day: return isArabic ? "يوم" : "day"
+            case .week: return isArabic ? "أسبوع" : "week"
+            case .month: return isArabic ? "شهر" : "month"
+            case .year: return isArabic ? "سنة" : "year"
+            @unknown default: return ""
+            }
+        }()
+        return period.value == 1 ? unit : "\(period.value) \(unit)"
+    }
+
+    private var featuresCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(isArabic ? "حرّر تركيزك وغيّر عاداتك الرقمية" : "Unlock focus and change digital habits")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundColor(AppColors.textPrimary)
+            Text(isArabic ? "كل ما تحتاجه لتبقى على المسار الصحيح." : "Everything you need to stay on track.")
+                .font(.subheadline)
+                .foregroundColor(AppColors.textSecondary)
+
+            SoftDivider(width: 300, opacity: 0.7)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text(isArabic ? "مجاني" : "Free")
+                    .font(.headline)
+                    .foregroundColor(AppColors.textPrimary)
+                availabilityRow(icon: "list.bullet", textAr: "حتى ٣ قوائم حجب", textEn: "Up to 3 blocklists", available: true)
+                availabilityRow(icon: "lock.shield", textAr: "الوضع الصارم: ٣ مرات فقط", textEn: "Hard Mode: 3 uses only", available: true)
+                availabilityRow(icon: "calendar", textAr: "الجدولة الذكية", textEn: "Smart scheduling", available: false)
+                availabilityRow(icon: "clock", textAr: "جدولة الاستراحات", textEn: "Planned breaks", available: false)
+                availabilityRow(icon: "sparkles", textAr: "مساعد NoNet", textEn: "NoNet Assistant", available: false)
+                availabilityRow(icon: "person.badge.shield.checkmark", textAr: "دعم أولوية", textEn: "Priority support", available: false)
+            }
+
+            SoftDivider(width: 300, opacity: 0.7)
+
+            VStack(alignment: .leading, spacing: 10) {
+                featureRow(icon: "infinity", textAr: "قوائم بلا حدود", textEn: "Unlimited blocklists")
+                featureRow(icon: "lock.shield", textAr: "الوضع الصارم", textEn: "Hard Mode")
+                featureRow(icon: "calendar", textAr: "الجدولة الذكية", textEn: "Smart scheduling")
+                featureRow(icon: "clock", textAr: "جدولة الاستراحات", textEn: "Planned breaks")
+                featureRow(icon: "sparkles", textAr: "مساعد NoNet", textEn: "NoNet Assistant")
+                featureRow(icon: "person.badge.shield.checkmark", textAr: "دعم أولوية", textEn: "Priority support")
+                Text(isArabic ? "مزايا عملية تمنحك سيطرة هادئة ودائمة." : "Practical features that keep you calmly in control.")
+                    .font(.footnote)
+                    .foregroundColor(AppColors.textSecondary)
+            }
+        }
+        .padding(20)
+        .background(AppColors.uiSurface)
+        .cornerRadius(20)
+        .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+    }
+
+    private var goldenGuaranteeCard: some View {
+        let gold = Color(red: 212/255, green: 175/255, blue: 55/255)
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: "shield.checkerboard")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(gold)
+                Text(isArabic ? "الضمان الذهبي" : "Golden Guarantee")
+                    .font(.headline)
+                    .foregroundColor(gold)
+            }
+            Text(isArabic ? "استرداد كامل للمبلغ بدون أسئلة." : "Full refund, no questions asked.")
+                .foregroundColor(AppColors.textPrimary)
+            Text(isArabic ? "الشهري: خلال 14 يوم — السنوي: خلال شهر واحد." : "Monthly: within 14 days — Yearly: within 1 month.")
+                .font(.footnote)
+                .foregroundColor(AppColors.textSecondary)
+            Text(isArabic
+                 ? "الاسترداد يُطلب من Apple مباشرة من خلال تطبيق App Store."
+                 : "Refunds are requested directly from Apple via the App Store.")
+                .font(.caption)
+                .foregroundColor(AppColors.textSecondary)
+        }
+        .padding(16)
+        .background(gold.opacity(0.08))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(gold, lineWidth: 1))
+        .cornerRadius(16)
+    }
+
     @ViewBuilder
     private func featureRow(icon: String, textAr: String, textEn: String) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: icon)
                 .foregroundColor(AppColors.accentDark)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(isArabic ? textAr : textEn)
-                    .font(.body)
-                    .foregroundColor(AppColors.textPrimary)
-            }
+            Text(isArabic ? textAr : textEn)
+                .font(.body)
+                .foregroundColor(AppColors.textPrimary)
         }
     }
 
@@ -324,4 +324,4 @@ private struct SoftDivider: View {
 
 #Preview {
     NavigationView { UpgradeView().environmentObject(LanguageManager.shared) }
-} 
+}

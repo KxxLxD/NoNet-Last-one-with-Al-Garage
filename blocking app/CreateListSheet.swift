@@ -6,7 +6,7 @@ struct CreateListSheet: View {
     @Environment(\.managedObjectContext) private var context
     @Environment(\.dismiss) private var dismiss
 
-    @AppStorage("isPremium") private var isPremium: Bool = false
+    @AppStorage(AppStorageKeys.isPremium) private var isPremium: Bool = false
 
     @State private var name: String = ""
     @State private var protection: String = "noProtection" // hard | noProtection
@@ -42,6 +42,7 @@ struct CreateListSheet: View {
     @State private var showHardConfirmAlert = false
     @State private var pendingSeconds: Int64 = 0
     @State private var pendingBaseName: String = ""
+    @State private var saveErrorMessage: String? = nil
 
     // Upgrade sheet
     @State private var showUpgradeSheet = false
@@ -144,6 +145,14 @@ struct CreateListSheet: View {
                 Button(lang.isArabicEffective ? "رجوع" : "Back", role: .cancel) {}
             } message: {
                 Text(lang.isArabicEffective ? "سيتم إنشاء قائمة بوضع صارم (Hard Mode). لن تتمكن من تعديلها أو حذفها خلال المدة." : "This list will be created in Hard Mode. You won’t be able to edit or delete it during the duration.")
+            }
+            .alert(
+                lang.isArabicEffective ? "تعذّر إنشاء القائمة" : "Couldn't create list",
+                isPresented: Binding(get: { saveErrorMessage != nil }, set: { if !$0 { saveErrorMessage = nil } })
+            ) {
+                Button(lang.isArabicEffective ? "حسناً" : "OK", role: .cancel) { saveErrorMessage = nil }
+            } message: {
+                Text(saveErrorMessage ?? "")
             }
     }
     private func attachDoneBar<V: View>(_ v: V) -> some View {
@@ -631,10 +640,28 @@ struct CreateListSheet: View {
         entity.items = itemsSet
         // Persist breaks (UserDefaults store by list id)
         BreaksStore.save(for: entity.id, count: breaksCount, durationMinutes: breakDurationMinutes)
-        do { try context.save() } catch { print("Save error: \(error)") }
-        // Start immediately for Block Now when chosen and not hard
-        if blockType == "now" && protection != "hard" && startImmediately {
-            ManualStateStore.toggle(for: entity.id)
+        // Persist the FamilyActivitySelection (apps/categories/web tokens chosen via picker).
+        FamilySelectionStore.save(draft.familySelection, for: entity.id)
+        switch context.saveIfNeeded() {
+        case .failure(let error):
+            saveErrorMessage = lang.isArabicEffective
+                ? "حدث خطأ أثناء الحفظ: \(error.localizedDescription)"
+                : "An error occurred while saving: \(error.localizedDescription)"
+            return
+        case .success:
+            break
+        }
+        // Apply blocking immediately when appropriate.
+        let shouldStartNow = blockType == "now" && (startImmediately || protection == "hard")
+        if shouldStartNow {
+            if protection != "hard" {
+                ManualStateStore.toggle(for: entity.id)
+            }
+            BlockingEngine.shared.activate(list: entity)
+        }
+        // For scheduled lists, register the schedule (shields apply only inside the window).
+        if blockType == "scheduled" {
+            BlockingEngine.shared.activate(list: entity)
         }
         showSuccessToast = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { dismiss() }
@@ -684,7 +711,8 @@ struct CreateListSheet: View {
     }
     private func encodeSlots() -> Data? {
         guard blockType == "scheduled", !slots.isEmpty else { return nil }
-        return try? JSONEncoder().encode(slots)
+        let payload = slots.map { ScheduleSlotV1(id: $0.id, day: $0.day, fromMinutes: $0.fromMinutes, toMinutes: $0.toMinutes) }
+        return SchedulePersistence.encode(payload)
     }
     private func scheduleSummary(_ list: [ScheduleSlot]) -> String {
         let uniqueTimes = Set(list.map { "\($0.fromMinutes)-\($0.toMinutes)" })
@@ -694,8 +722,8 @@ struct CreateListSheet: View {
             let days = Array(Set(list.map { $0.day })).sorted()
             func contiguous(_ ds: [Int]) -> Bool { guard ds.count >= 2 else { return false }; for i in 1..<ds.count { if ds[i] != ds[i-1]+1 { return false } } ; return true }
             let daysDesc: String
-            if contiguous(days) && days.count >= 2 {
-                daysDesc = dayName(days.first!) + "–" + dayName(days.last!)
+            if contiguous(days) && days.count >= 2, let firstDay = days.first, let lastDay = days.last {
+                daysDesc = dayName(firstDay) + "–" + dayName(lastDay)
             } else if days.count <= 3 {
                 daysDesc = days.map { dayName($0) }.joined(separator: lang.isArabicEffective ? "، " : ", ")
             } else {

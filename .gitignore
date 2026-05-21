@@ -1,0 +1,53 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xcuserdatad/
+xcuserdata/
+*.xccheckout
+*.xcscmblueprint
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.swiftpm/
+.build/
+Packages/
+Package.resolved
+
+# CocoaPods (إن وُجد لاحقاً)
+Pods/
+
+# Carthage (إن وُجد لاحقاً)
+Carthage/Build/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Backup / scratch files
+*.backup
+*.tmp
+*.bak
+*.orig
+temp_*
+*~
+
+# Logs
+*.log
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+
+# Local secrets (لا تلتزم بمفاتيح API)
+*.secret
+secrets.plist
+GoogleService-Info.plist

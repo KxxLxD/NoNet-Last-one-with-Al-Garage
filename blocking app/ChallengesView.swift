@@ -76,7 +76,7 @@ struct ChallengesView: View {
         .toolbar(.hidden, for: .navigationBar)
         .safeAreaInset(edge: .bottom) {
             if showFooter {
-                Footer(totalPoints: totalPoints, lang: lang)
+                Footer(totalPoints: totalPoints, onDone: { dismiss() }, lang: lang)
             }
         }
     }
@@ -263,6 +263,7 @@ private struct SleepChallengeCard: View {
 
 private struct Footer: View {
     let totalPoints: Int
+    let onDone: () -> Void
     @ObservedObject var lang: LanguageManager
     var body: some View {
         VStack(spacing: 12) {
@@ -273,24 +274,14 @@ private struct Footer: View {
                 Text(lang.isArabicEffective ? "Lv 1 → Lv 2" : "Lv 1 → Lv 2")
                     .foregroundColor(AppColors.textSecondary)
             }
-            HStack(spacing: 8) {
-                Button(action: { /* cancel */ }) {
-                    Text(lang.isArabicEffective ? "إلغاء" : "Cancel")
-                        .font(.system(size: 16, weight: .semibold))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 44)
-                        .foregroundColor(AppColors.accentDark)
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.accentDark, lineWidth: 1))
-                }
-                Button(action: { /* save */ }) {
-                    Text(lang.isArabicEffective ? "حفظ التغييرات" : "Save changes")
-                        .font(.system(size: 16, weight: .semibold))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 44)
-                        .background(AppColors.accentDark)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                }
+            Button(action: onDone) {
+                Text(lang.isArabicEffective ? "حفظ وإغلاق" : "Save & close")
+                    .font(.system(size: 16, weight: .semibold))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 44)
+                    .background(AppColors.accentDark)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
             }
         }
         .padding(.horizontal, 24)

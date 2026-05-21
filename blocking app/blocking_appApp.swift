@@ -127,6 +127,10 @@ final class CoreDataStack {
 struct blocking_appApp: App {
     private let core = CoreDataStack.shared
 
+    init() {
+        PersistenceMigration.runIfNeeded()
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -138,7 +142,7 @@ struct blocking_appApp: App {
     }
 
     private func seedIfNeeded() {
-        let key = "seed_v1_done"
+        let key = AppStorageKeys.seedV1Done
         if UserDefaults.standard.bool(forKey: key) { return }
         let context = core.viewContext
         let names = ["Focus Time", "Sleep Time", "Deep Work"]
@@ -152,8 +156,12 @@ struct blocking_appApp: App {
             e.createdAt = Date().addingTimeInterval(-Double(idx) * 3600)
             e.updatedAt = Date()
         }
-        do { try context.save(); UserDefaults.standard.set(true, forKey: key) } catch {
-            print("Seed error: \(error)")
+        switch context.saveIfNeeded() {
+        case .success:
+            UserDefaults.standard.set(true, forKey: key)
+        case .failure:
+            // Seed failure is non-fatal; user starts with empty list and can add manually.
+            break
         }
     }
 }

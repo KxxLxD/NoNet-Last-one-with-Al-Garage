@@ -15,6 +15,8 @@ struct BlockItemsDraft {
     var websites: [DraftBlockItem] = []
     var apps: [DraftBlockItem] = []
     var categories: [DraftBlockItem] = []
+    /// FamilyControls picker selection — must be passed to BlockingEngine via FamilySelectionStore.
+    var familySelection: FamilyActivitySelection = FamilyActivitySelection()
 }
 
 struct BlockItemsEditorView: View {
@@ -24,11 +26,17 @@ struct BlockItemsEditorView: View {
     @State var draft: BlockItemsDraft
     var onSave: (BlockItemsDraft) -> Void
 
+    init(draft: BlockItemsDraft, onSave: @escaping (BlockItemsDraft) -> Void) {
+        self._draft = State(initialValue: draft)
+        self.onSave = onSave
+        self._familySelection = State(initialValue: draft.familySelection)
+    }
+
     @State private var websiteInput: String = ""
     @State private var selectedCategories: Set<String> = []
 
     @State private var showAppPicker = false
-    @State private var familySelection = FamilyActivitySelection()
+    @State private var familySelection: FamilyActivitySelection
 
     // Quick Apps in editor
     private let quickApps: [QuickAppEditor] = QuickAppEditor.defaultSet
@@ -313,21 +321,36 @@ struct BlockItemsEditorView: View {
             }
         }
         draft.categories = selectedCategories.map { DraftBlockItem(kind: .category, value: $0, displayName: $0) }
+        draft.familySelection = familySelection
         onSave(draft)
         dismiss()
     }
 
     private func isValidDomain(_ s: String) -> Bool {
-        let trimmed = s.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard trimmed.contains(".") else { return false }
-        let invalid = trimmed.contains(" ") || trimmed.contains("http://") || trimmed.contains("https://")
-        return !invalid
+        return BlockItemsEditorView.isValidDomainStrict(s)
     }
 
     private func requestFamilyControlsPermission() {
-        if #available(iOS 16.0, *) {
-            Task { _ = try? await AuthorizationCenter.shared.requestAuthorization(for: .individual) }
+        Task { await PermissionsManager.shared.requestScreenTime() }
+    }
+
+    /// Stricter domain validation than the previous `contains(".")` check.
+    /// Allows e.g. "example.com", "sub.example.co.uk"; rejects "a.b" with single-char labels,
+    /// URLs, spaces, or trailing slashes.
+    fileprivate static func isValidDomainStrict(_ s: String) -> Bool {
+        let trimmed = s.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !trimmed.isEmpty, trimmed.count <= 253 else { return false }
+        if trimmed.contains(" ") || trimmed.contains("://") || trimmed.contains("/") { return false }
+        let labels = trimmed.split(separator: ".")
+        guard labels.count >= 2 else { return false }
+        let labelRegex = #"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$"#
+        for label in labels {
+            if String(label).range(of: labelRegex, options: .regularExpression) == nil { return false }
         }
+        // Require TLD to be at least 2 chars and letters-only.
+        guard let tld = labels.last, tld.count >= 2,
+              tld.allSatisfy({ $0.isLetter }) else { return false }
+        return true
     }
 }
 
