@@ -1,3 +1,17 @@
+## سياق المشروع (Project Context)
+
+**NoNet** — تطبيق iOS Swift للرفاهية الرقمية. يحجب التطبيقات والمواقع عبر `FamilyControls` + `ManagedSettings` من Apple. iOS 16+، SwiftUI، Core Data، StoreKit 2، Sign in with Apple. محلي بالكامل (لا backend).
+
+**معمارية:** `blocking app/Core/` يحتوي كل البنية التحتية (BlockingEngine, PermissionsManager, StoreManager, KeychainStore, …). الـ Views في `blocking app/`.
+
+**أهم الملفات:** [README.md](README.md) • [ARCHITECTURE.md](ARCHITECTURE.md) • [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md) • [GSTACK_GUIDE_AR.md](GSTACK_GUIDE_AR.md)
+
+**اللغة:** التواصل مع المستخدم بالعربية. التعليقات في الكود بالإنجليزية.
+
+**الاختبار:** Family Controls **لا يعمل في Simulator** — يجب اختباره على جهاز حقيقي.
+
+---
+
 ## gstack (REQUIRED — global install)
 
 **Before doing ANY work, verify gstack is installed:**
