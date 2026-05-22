@@ -42,6 +42,12 @@ enum LegalContent {
 ٥) المساعد المحلي (Chat)
 - يعمل بنظام محلي يطابق الكلمات المفتاحية. لا تُرسل رسائلك إلى أي خادم.
 
+٥.١) شريك التعافي (CloudKit) — اختياري
+- عند تفعيل ميزة "شريك التعافي" لقائمة بوضع الحماية الصارم (Hard Mode)، يُنشأ سجل مشاركة في حساب iCloud الخاص بك عبر CloudKit الخاص بشركة Apple.
+- البيانات المُشاركة مع الشريك المختار من قِبَلك: معرّف Apple المجهول (recordName)، الاسم الذي اخترته لنفسك، اسم القائمة، ومحاولات كسر الحجب (نوع المحاولة + الوقت).
+- البيانات تبقى داخل iCloud الخاص بك وداخل iCloud الخاص بالشريك بعد قبوله الدعوة. لا تمر عبر خوادمنا.
+- يمكنك إلغاء الشراكة في أي وقت من شاشة تفاصيل القائمة.
+
 ٦) عدم التتبع
 - لا نستخدم Google Analytics ولا Firebase ولا أي أداة تتبع أو تحليلات لجهة خارجية.
 - لا نستخدم ملفات ارتباط (Cookies) ولا معرفات إعلانية.
@@ -90,6 +96,12 @@ At NoNet we value your privacy. This app is designed to operate locally on your 
 
 5) Local assistant (Chat)
 - Operates with a local keyword-matching engine. Your messages are not sent to any server.
+
+5.1) Recovery Partner (CloudKit) — optional
+- When you activate the "Recovery Partner" feature for a Hard-Mode list, a sharing record is created in your iCloud account via Apple's CloudKit.
+- Data shared with the partner you choose: anonymized Apple user identifier (recordName), the display name you set for yourself, the list name, and break-attempt records (attempt type + timestamp).
+- Data stays inside your iCloud and inside your partner's iCloud after they accept the invitation. It never passes through our servers.
+- You can revoke the partnership at any time from the list-detail screen.
 
 6) No tracking
 - We do not use Google Analytics, Firebase, or any third-party analytics/tracking SDKs.
