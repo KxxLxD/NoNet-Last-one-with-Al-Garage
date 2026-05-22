@@ -17,6 +17,11 @@
 //  - For `blockType == "forever"` we apply shields permanently with no expiry — `durationSeconds`
 //    is unused. Hard Mode + Forever cannot be deactivated by the user at all (only via purge,
 //    which is itself blocked in the UI for Hard Mode lists).
+//  - For `blockType == "timeLimit"` we register a daily DeviceActivitySchedule (00:00 → 23:59,
+//    repeating) plus a `DeviceActivityEvent` with `threshold = durationSeconds/60 minutes`.
+//    `BlockingMonitor.eventDidReachThreshold` applies the shield once the user has consumed
+//    the daily quota; `intervalDidStart` clears it at midnight so the next day starts fresh.
+//    Shields are NOT applied immediately on activate — usage is allowed up to the threshold.
 //
 
 import Foundation
@@ -45,6 +50,13 @@ final class BlockingEngine {
             return
         }
 
+        // Time-Limit starts with no shield — usage is allowed until the daily threshold.
+        // The monitor extension applies the shield when the threshold is reached.
+        if list.blockType == "timeLimit" {
+            scheduleTimeLimit(for: list)
+            return
+        }
+
         let store = store(for: list.id)
         applyShields(for: list, in: store)
 
@@ -68,10 +80,11 @@ final class BlockingEngine {
     }
 
     /// Convenience helper used by the UI: returns true if the list is locked by Hard Mode and
-    /// the configured duration hasn't elapsed yet. Forever + Hard is locked indefinitely.
+    /// the configured duration hasn't elapsed yet. Forever + Hard and TimeLimit + Hard are
+    /// locked indefinitely (no natural end date).
     func isHardLocked(list: ListEntity) -> Bool {
         guard list.protection == "hard" else { return false }
-        if list.blockType == "forever" { return true }
+        if list.blockType == "forever" || list.blockType == "timeLimit" { return true }
         guard list.blockType == "now" else { return false }
         let end = list.createdAt.addingTimeInterval(TimeInterval(list.durationSeconds))
         return Date() < end
@@ -85,7 +98,9 @@ final class BlockingEngine {
             // Recreate to make sure no settings linger
             ManagedSettingsStore(named: storeName(id)).clearAllSettings()
         }
-        center.stopMonitoring([activityName(for: id)])
+        // Stop both schedule kinds — only the one that was registered actually exists,
+        // but stopMonitoring tolerates unknown names.
+        center.stopMonitoring([activityName(for: id), limitActivityName(for: id)])
         FamilySelectionStore.clear(for: id)
     }
 
@@ -104,6 +119,13 @@ final class BlockingEngine {
 
     private func activityName(for id: UUID) -> DeviceActivityName {
         DeviceActivityName(rawValue: "schedule.\(id.uuidString)")
+    }
+
+    /// Separate name prefix so the monitor extension can tell scheduled-window
+    /// activities (apply shield on start) from time-limit activities (apply shield
+    /// only after the threshold event fires).
+    private func limitActivityName(for id: UUID) -> DeviceActivityName {
+        DeviceActivityName(rawValue: "limit.\(id.uuidString)")
     }
 
     private func applyShields(for list: ListEntity, in store: ManagedSettingsStore) {
@@ -132,6 +154,42 @@ final class BlockingEngine {
             .map { $0.value }
         if !typedDomains.isEmpty {
             log.notice("List \(list.id, privacy: .public) has \(typedDomains.count) typed domains; tokens-only shielding will not cover them until they're picked via FamilyActivityPicker.")
+        }
+    }
+
+    private func scheduleTimeLimit(for list: ListEntity) {
+        let limitMinutes = Int(list.durationSeconds / 60)
+        guard limitMinutes > 0 else {
+            log.notice("scheduleTimeLimit(\(list.id, privacy: .public)) skipped: zero-minute limit")
+            return
+        }
+        guard let selection = FamilySelectionStore.load(for: list.id) else {
+            log.notice("scheduleTimeLimit(\(list.id, privacy: .public)) skipped: no FamilyActivitySelection")
+            return
+        }
+
+        // Daily window, repeating every day. Apple measures usage of the selected
+        // apps/categories/web-domains inside this window and fires the threshold event.
+        let schedule = DeviceActivitySchedule(
+            intervalStart: DateComponents(hour: 0, minute: 0),
+            intervalEnd: DateComponents(hour: 23, minute: 59),
+            repeats: true
+        )
+        let event = DeviceActivityEvent(
+            applications: selection.applicationTokens,
+            categories: selection.categoryTokens,
+            webDomains: selection.webDomainTokens,
+            threshold: DateComponents(minute: limitMinutes)
+        )
+        let eventName = DeviceActivityEvent.Name(rawValue: "threshold.\(list.id.uuidString)")
+        do {
+            try center.startMonitoring(
+                limitActivityName(for: list.id),
+                during: schedule,
+                events: [eventName: event]
+            )
+        } catch {
+            log.error("scheduleTimeLimit failed for \(list.id, privacy: .public): \(error.localizedDescription, privacy: .public)")
         }
     }
 

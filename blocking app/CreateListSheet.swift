@@ -13,12 +13,14 @@ struct CreateListSheet: View {
 
     @State private var name: String = ""
     @State private var protection: String = "noProtection" // hard | noProtection
-    @State private var blockType: String = "now" // now | scheduled | forever
+    @State private var blockType: String = "now" // now | scheduled | timeLimit | forever
 
     // Wheel pickers (step 5 minutes)
     @State private var days: Int = 0
     @State private var hours: Int = 0
     @State private var minutes: Int = 15
+    // Time-Limit (daily quota, in minutes)
+    @State private var timeLimitMinutes: Int = 60
     // Breaks UI (UI only)
     @State private var breaksCount: Int = 0
     @State private var breakDurationMinutes: Int = 5
@@ -271,6 +273,7 @@ struct CreateListSheet: View {
             timeToBlockCard()
 
             if blockType == "now" { durationCard() }
+            if blockType == "timeLimit" { timeLimitCard() }
 
             protectionCard()
             breaksCard()
@@ -317,12 +320,13 @@ struct CreateListSheet: View {
         }) {
             VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
                 Picker("Time", selection: $blockType) {
-                    Text(lang.isArabicEffective ? "حظر فوري" : "Block Now").tag("now")
+                    Text(lang.isArabicEffective ? "فوري" : "Now").tag("now")
                     Text(lang.isArabicEffective ? "مجدول" : "Scheduled").tag("scheduled")
+                    Text(lang.isArabicEffective ? "حد يومي" : "Daily Limit").tag("timeLimit")
                     Text(lang.isArabicEffective ? "دائم ♾️" : "Forever ♾️").tag("forever")
                 }
                 .pickerStyle(.segmented)
-                .frame(maxWidth: 360, alignment: .center)
+                .frame(maxWidth: 420, alignment: .center)
                 .onChange(of: blockType) { newVal in
                     if newVal == "scheduled" && !isPremium {
                         blockType = "now"
@@ -451,6 +455,44 @@ struct CreateListSheet: View {
                 }
             }
             .frame(maxWidth: .infinity)
+            .padding(20)
+            .background(AppColors.uiSurface)
+            .cornerRadius(20)
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+        }
+        .listRowBackground(Color.clear)
+    }
+
+    private func timeLimitCard() -> some View {
+        Section(header: HStack(spacing: 8) {
+            Image(systemName: "hourglass.bottomhalf.filled")
+                .font(.system(size: 20, weight: .regular))
+                .foregroundColor(AppColors.accentDark)
+            Text(lang.isArabicEffective ? "الحد اليومي" : "Daily Limit")
+                .font(.system(size: 20, weight: .semibold))
+        },
+        footer: Text(lang.isArabicEffective
+                     ? "يبدأ كل يوم بدون حجب. بعد استخدام التطبيقات/المواقع للمدة المحددة، يتفعّل الحجب حتى منتصف الليل."
+                     : "Each day starts with no block. After using the selected apps/sites for this many minutes, the block kicks in until midnight.")
+            .font(.footnote)
+            .foregroundColor(.secondary)
+            .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+        ) {
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
+                Picker("DailyLimit", selection: $timeLimitMinutes) {
+                    ForEach(BlockingConstants.timeLimitOptions, id: \.self) { v in
+                        Text(lang.isArabicEffective ? "\(v) دقيقة" : "\(v) min").tag(v)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                let summaryAr = "سيسمح بـ \(timeLimitMinutes) دقيقة يومياً قبل تفعيل الحجب."
+                let summaryEn = "Allows \(timeLimitMinutes) minute(s) per day before the block kicks in."
+                Text(lang.isArabicEffective ? summaryAr : summaryEn)
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
             .padding(20)
             .background(AppColors.uiSurface)
             .cornerRadius(20)
@@ -724,6 +766,19 @@ struct CreateListSheet: View {
             showForeverConfirmAlert = true
             return
         }
+        // Time-Limit stores the daily quota in durationSeconds; skip the confirm sheet
+        // (its duration display assumes a contiguous block, not a daily quota).
+        if blockType == "timeLimit" {
+            let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            pendingBaseName = trimmed
+            pendingSeconds = Int64(timeLimitMinutes * 60)
+            if protection == "hard" {
+                showHardConfirmAlert = true
+            } else {
+                save(totalSeconds: pendingSeconds, baseName: trimmed)
+            }
+            return
+        }
         showConfirmSheet = true
     }
     private func save(totalSeconds: Int64, baseName: String) {
@@ -784,6 +839,11 @@ struct CreateListSheet: View {
         if blockType == "forever" {
             BlockingEngine.shared.activate(list: entity)
         }
+        // Time-Limit registers the daily quota monitor; the monitor extension applies
+        // the shield only after the user crosses the threshold.
+        if blockType == "timeLimit" {
+            BlockingEngine.shared.activate(list: entity)
+        }
         showSuccessToast = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { dismiss() }
     }
@@ -815,6 +875,9 @@ struct CreateListSheet: View {
         if blockType == "now" {
             let total = days * 86400 + hours * 3600 + minutes * 60
             return total >= 300 // >= 5 minutes
+        }
+        if blockType == "timeLimit" {
+            return timeLimitMinutes >= 5
         }
         return true
     }

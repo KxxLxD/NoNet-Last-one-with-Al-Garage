@@ -434,6 +434,9 @@ struct HomeView: View {
         if ManualStateStore.isActive(for: l.id) { return true }
         // Forever blocks are always active until the list is purged.
         if l.blockType == "forever" { return true }
+        // Time-Limit is always "active" (monitoring runs daily); the shield itself only
+        // kicks in once the user crosses the daily threshold.
+        if l.blockType == "timeLimit" { return true }
         let now = Date()
         if l.blockType == "now" {
             let end = l.createdAt.addingTimeInterval(TimeInterval(l.durationSeconds))
@@ -602,6 +605,10 @@ private struct RealListRow: View {
     private func subtitleText() -> String? { /* kept for potential future use */
         if item.blockType == "forever" {
             return layoutDirection == .rightToLeft ? "حجب دائم" : "Permanent block"
+        }
+        if item.blockType == "timeLimit" {
+            let minutes = Int(item.durationSeconds / 60)
+            return layoutDirection == .rightToLeft ? "حد يومي \(minutes) دقيقة" : "Daily limit: \(minutes) min"
         }
         if item.blockType == "now" && isActive {
             let end = item.createdAt.addingTimeInterval(TimeInterval(item.durationSeconds))
@@ -1102,6 +1109,9 @@ struct ListDetailView: View {
                         if list.blockType == "forever" {
                             HStack { Text(lang.isArabicEffective ? "المدة" : "Duration").foregroundColor(AppColors.textSecondary); Spacer(); Text(lang.isArabicEffective ? "♾️ دائم" : "♾️ Permanent").foregroundColor(AppColors.alertRed) }
                         }
+                        if list.blockType == "timeLimit" {
+                            HStack { Text(lang.isArabicEffective ? "الحد اليومي" : "Daily Limit").foregroundColor(AppColors.textSecondary); Spacer(); Text(lang.isArabicEffective ? "\(list.durationSeconds/60) دقيقة/يوم" : "\(list.durationSeconds/60) min/day").foregroundColor(AppColors.textPrimary) }
+                        }
                         if let summary = scheduleSummaryText() {
                             HStack { Text(lang.isArabicEffective ? "الجدولة" : "Schedule").foregroundColor(AppColors.textSecondary); Spacer(); Text(summary).foregroundColor(AppColors.textPrimary) }
                         }
@@ -1171,6 +1181,8 @@ struct ListDetailView: View {
         if list.isDeleted { return false }
         // Forever blocks are always active until purged.
         if list.blockType == "forever" { return true }
+        // Time-Limit always monitoring (shield kicks in after daily threshold).
+        if list.blockType == "timeLimit" { return true }
         let now = Date()
         if list.blockType == "now" {
             let end = list.createdAt.addingTimeInterval(TimeInterval(list.durationSeconds))
@@ -1192,8 +1204,9 @@ struct ListDetailView: View {
 
     private func localizedBlockTypeLabel(_ type: String) -> String {
         switch type {
-        case "now":      return lang.isArabicEffective ? "فوري" : "Now"
+        case "now":       return lang.isArabicEffective ? "فوري" : "Now"
         case "scheduled": return lang.isArabicEffective ? "مجدول" : "Scheduled"
+        case "timeLimit": return lang.isArabicEffective ? "حد يومي" : "Daily Limit"
         case "forever":   return lang.isArabicEffective ? "دائم ♾️" : "Forever ♾️"
         default:          return type
         }

@@ -25,4 +25,8 @@ enum BlockingConstants {
 
     /// Free trial duration (7 days, in seconds).
     static let trialDurationSeconds: TimeInterval = 7 * 24 * 3600
+
+    /// Allowed daily Time-Limit choices, in minutes. After the user has used the
+    /// blocked apps/sites for this many minutes in a day, shields apply until midnight.
+    static let timeLimitOptions: [Int] = [15, 30, 60, 90, 120]
 }
