@@ -22,6 +22,10 @@ import os
 
 private let log = Logger(subsystem: "app.nonet.blocking", category: "Monitor")
 
+/// Must match the App Group ID in both .entitlements files and the main app's FamilySelectionStore.
+private let kSharedAppGroup = "group.com.nonetapp.shared"
+private let sharedDefaults: UserDefaults = UserDefaults(suiteName: kSharedAppGroup) ?? .standard
+
 class BlockingMonitor: DeviceActivityMonitor {
     override func intervalDidStart(for activity: DeviceActivityName) {
         super.intervalDidStart(for: activity)
@@ -30,9 +34,9 @@ class BlockingMonitor: DeviceActivityMonitor {
         guard let id = parseListId(from: activity) else { return }
         let store = ManagedSettingsStore(named: .init(rawValue: "blocklist.\(id.uuidString)"))
 
-        // Re-read the persisted FamilyActivitySelection (same UserDefaults key as the main app
-        // via the App Group — see SETUP note in BlockingEngine.swift).
-        if let data = UserDefaults.standard.data(forKey: "v1:familySelection:\(id.uuidString)"),
+        // Read the persisted FamilyActivitySelection from the shared App Group defaults
+        // (same key the main app's FamilySelectionStore writes to).
+        if let data = sharedDefaults.data(forKey: "v1:familySelection:\(id.uuidString)"),
            let selection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
             if !selection.applicationTokens.isEmpty {
                 store.shield.applications = selection.applicationTokens

@@ -1,0 +1,51 @@
+# Auto-deploy docs/web/ to GitHub Pages
+#
+# After enabling Pages in repo Settings → Pages → Source: "GitHub Actions",
+# every push to NoNet-App branch publishes:
+#   - /         → docs/web/index.html (landing)
+#   - /privacy  → docs/web/privacy.html
+#   - /terms    → docs/web/terms.html
+#   - /support  → docs/web/support.html
+#
+# URLs become: https://<username>.github.io/<repo>/
+# (or your custom domain if configured under Pages settings)
+
+name: Deploy legal & landing pages to GitHub Pages
+
+on:
+  push:
+    branches: [NoNet-App, main]
+    paths:
+      - 'docs/web/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/web
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
