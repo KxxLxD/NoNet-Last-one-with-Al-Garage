@@ -11,6 +11,17 @@
 
 ### الإصدار الثاني — شريك التعافي وأنواع الحجب الجديدة
 
+#### المُصلح (Bug Fixes / Monetization)
+
+- **حدّ القوائم للنسخة المجانية (3 قوائم)** كان معرَّفاً في
+  `BlockingConstants.freeTierListLimit` لكن غير مُفعَّل في الـ UI —
+  مفعَّل الآن في `CreateListSheet.attemptConfirm()`.
+- **حدّ Hard Mode الواحد للنسخة المجانية** — لم يكن موجوداً أصلاً.
+  مع Forever block type كان المستخدم المجاني يقدر يحجب دائماً بلا حدود
+  (يُلغي قيمة Premium). أُضيف `freeTierHardLimit = 1` constant + فحص في
+  `CreateListSheet.attemptConfirm()`. النسخة المجانية الآن تستطيع قائمة
+  Hard Mode واحدة فقط.
+
 #### المضاف
 
 - **شريك التعافي (Recovery Partner)** عبر CloudKit + Apple ID — دعوة شريك تعافي

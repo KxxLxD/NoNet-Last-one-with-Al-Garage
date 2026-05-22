@@ -15,19 +15,21 @@
 
 | التصنيف | العدد | النسبة |
 |---------|------|--------|
-| ✅ **مطابق بالكامل** | 18 | 67% |
-| 🟡 **مطابق جزئياً** | 2 | 7% |
-| ❌ **فجوة حقيقية مكتشفة** | 2 | 7% |
+| ✅ **مطابق بالكامل** | 20 | 74% |
+| 🟡 **مطابق جزئياً (بقرار معماري)** | 2 | 7% |
 | 🚫 **مستبعد عمداً (Apple/سياسات)** | 5 | 19% |
 | **الإجمالي** | **27** | 100% |
 
 **أبرز النتيجة:**
 
-ميزتان متبقّيتان من v1.0.0 الأصلي ينقصهما **التطبيق الفعلي في الـ UI**:
-- حدّ القوائم الـ 3 للنسخة المجانية (مُعرَّف في الكود، غير مفعَّل).
-- حدّ Hard Mode الواحد للنسخة المجانية (موجود في الـ spec، غير مُنفَّذ).
+✅ **كل ميزات v1.1.0 الجديدة مطابقة للمواصفات.**
+✅ **الفجوتان المكتشفتان أُصلحتا في commit `3a5d3da`** —
+  `fix(monetization): enforce free-tier list and Hard-Mode limits`.
+✅ التطبيق الآن **96% مطابق للـ Web spec** (بعد استبعاد 5 ميزات
+  مستحيلة على iOS بحقّ).
 
-كل ميزات v1.1.0 التي نفّذناها (Forever, Time-Limit, Recovery Partner, Resources, Personalization, iCloud banner) — مطابقة للمواصفات.
+> **ملاحظة:** هذا الـ report لا يزال يحفظ التفاصيل الأصلية للفجوتين (Gap 1
+> + Gap 2) للسجل التاريخي. الجدول أدناه يعكس الحالة بعد الإصلاح.
 
 ---
 
@@ -74,8 +76,8 @@
 
 | # | الميزة (من Web spec) | iOS | Reference | ملاحظات |
 |---|----------------------|-----|-----------|---------|
-| 21 | **حدّ النسخة المجانية: 3 قوائم** | ❌ | `Core/BlockingConstants.swift:24` (`freeTierListLimit = 3`) معرَّف لكن غير مُستخدم | **فجوة فعلية!** الـ constant موجود، لكن `currentListsCount()` في `CreateListSheet.swift:858` لا تُستدعى من أي مكان. النسخة المجانية تستطيع إنشاء عدد غير محدود من القوائم. |
-| 22 | **حدّ Hard Mode للمجاني: 1 قائمة** | ❌ | — | **فجوة فعلية!** لا constant، لا فحص. المستخدم المجاني يقدر ينشئ أي عدد من قوائم Hard Mode. |
+| 21 | **حدّ النسخة المجانية: 3 قوائم** | ✅ | `BlockingConstants.freeTierListLimit = 3` + `CreateListSheet.attemptConfirm` يفحص قبل save (commit `3a5d3da`) | أُصلحت. النسخة المجانية تستطيع إنشاء حتى 3 قوائم فقط. |
+| 22 | **حدّ Hard Mode للمجاني: 1 قائمة** | ✅ | `BlockingConstants.freeTierHardLimit = 1` + `currentHardListsCount()` helper + check في `attemptConfirm` (commit `3a5d3da`) | أُصلحت. النسخة المجانية تستطيع قائمة Hard Mode واحدة فقط. |
 | 23 | StoreKit 2 (monthly + yearly) | ✅ | `Core/StoreManager.swift` + `Core/ProductIDs.swift` + `Products.storekit` | `com.nonetapp.monthly` + `com.nonetapp.yearly`. |
 | 24 | Promo code | ✅ | `UpgradeView.swift:56` — `presentRedeemSheet()` | Apple's standard redemption — لا نظام promo خاص. |
 | 25 | Sign in with Apple | ✅ | `Core/AppleSignInCoordinator.swift` + `Core/KeychainStore.swift` | مع nonce + SHA256، حفظ آمن في Keychain. Logout موجود في `SettingsView.swift:363` (LogoutButton). |
@@ -94,9 +96,12 @@
 
 ---
 
-## الفجوات الفعلية المكتشفة (يحتاج قرار)
+## الفجوات الفعلية — تم إصلاحها ✅
 
-### Gap 1: `freeTierListLimit = 3` غير مُفعَّل
+> **التحديث:** الفجوتان أُصلحتا في commit `3a5d3da` قبل دمج الـ PR. القسم
+> التالي يحفظ التفاصيل الأصلية للمرجع التاريخي.
+
+### Gap 1: `freeTierListLimit = 3` غير مُفعَّل (مُصلَح)
 
 **التفاصيل:**
 - `BlockingConstants.swift:24` يعرّف `freeTierListLimit: Int = 3`.
@@ -119,7 +124,7 @@ if !isPremium && currentListsCount() >= BlockingConstants.freeTierListLimit {
 
 ---
 
-### Gap 2: حدّ Hard Mode الواحد للمجاني غير مُفعَّل
+### Gap 2: حدّ Hard Mode الواحد للمجاني غير مُفعَّل (مُصلَح)
 
 **التفاصيل:**
 - الـ Web spec يقول: "حد أقصى لـ Hard Mode للمجاني (1 قائمة)".
@@ -164,17 +169,15 @@ if !isPremium && currentListsCount() >= BlockingConstants.freeTierListLimit {
 
 ## التوصيات النهائية
 
-### مُلزم قبل الإطلاق التجاري (سدّ business gaps)
+### ✅ تم — جاهز للإطلاق
 
-1. **سدّ Gap 1 + Gap 2** — الحدّان (3 قوائم + 1 Hard Mode للمجاني). الجهد: ~50 دقيقة.
-   - بدونهما، الترقية للـ Premium بلا قيمة عملية (الميزة الوحيدة المحصورة حالياً هي Scheduled).
-   - السهلة: إضافة فحصين في `attemptConfirm` + constants.
-   - تستحق commit منفصل: `fix(monetization): enforce free-tier list and hard-mode limits`.
+- ✅ **Gap 1 + Gap 2** — أُصلحا في commit `3a5d3da`. النسخة المجانية الآن
+  محدودة بـ 3 قوائم و قائمة Hard Mode واحدة، تماماً كما يصف الـ Web spec.
 
 ### اختياري (تحسينات v1.2 أو لاحقاً)
 
-2. **ChatBot LLM:** البنية معدّة (`ChatResponder` protocol). يمكن إضافة `RemoteChatResponder` كخيار مدفوع. الجهد: ~يومين.
-3. **Resources videos:** v1.1.0 فيها بطاقات static فقط. إضافة فيديوهات تحتاج استضافة + UI لـ video player. الجهد: يوم.
+1. **ChatBot LLM:** البنية معدّة (`ChatResponder` protocol). يمكن إضافة `RemoteChatResponder` كخيار مدفوع. الجهد: ~يومين.
+2. **Resources videos:** v1.1.0 فيها بطاقات static فقط. إضافة فيديوهات تحتاج استضافة + UI لـ video player. الجهد: يوم.
 
 ---
 
@@ -184,9 +187,12 @@ if !isPremium && currentListsCount() >= BlockingConstants.freeTierListLimit {
 |------|------|
 | الميزات المتفق على استبعادها (Apple/سياسات) | ✅ كلها موثّقة بدقّة |
 | الميزات الـ 21 القابلة للتنفيذ | ✅ كلها مُنفَّذة |
-| business gaps قديمة من v1.0.0 | ❌ 2 (الحدّان للمجاني) |
+| business gaps من v1.0.0 (الحدّان للمجاني) | ✅ أُصلحت (commit `3a5d3da`) |
 | ميزات v1.1.0 الجديدة (Recovery Partner + Forever + Time-Limit + Resources + Personalization + iCloud banner) | ✅ كلها مطابقة |
 | التوافق المعماري (offline-first, CloudKit وحده، لا backend) | ✅ |
 | التوافق مع Apple App Review Guidelines | ✅ |
 
-**النتيجة:** التطبيق **مطابق للـ Web spec إلى حد كبير** (89% بعد استبعاد الـ 5 ميزات المستبعدة بحق). الفجوتان المكتشفتان `freeTierListLimit` enforcement و Hard Mode limit للمجاني، وهما من المهام المتبقّية من v1.0.0 — لم تكن جزءاً من نطاق v1.1.0 لكنها مكشوفة الآن وتحتاج قراراً منفصلاً.
+**النتيجة:** التطبيق **مطابق للـ Web spec بنسبة 96%** (بعد استبعاد 5 ميزات
+مستحيلة تقنياً على iOS). الميزات الـ 22 القابلة للتنفيذ — كلها مُنفَّذة
+ومُختبَرة compile-clean. جاهز للإطلاق على App Store بعد الـ manual setup
+الموثّق في [TODO_FOR_KHALID.md](../TODO_FOR_KHALID.md) قسم v1.1.0.
