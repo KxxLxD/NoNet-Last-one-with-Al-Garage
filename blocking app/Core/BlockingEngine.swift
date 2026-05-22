@@ -14,6 +14,9 @@
 //    a `DeviceActivitySchedule` per slot via `DeviceActivityCenter`. The actual start/stop
 //    callbacks live in a `DeviceActivityMonitor` extension — adding that target requires
 //    creating it in Xcode (see TODO at bottom of this file).
+//  - For `blockType == "forever"` we apply shields permanently with no expiry — `durationSeconds`
+//    is unused. Hard Mode + Forever cannot be deactivated by the user at all (only via purge,
+//    which is itself blocked in the UI for Hard Mode lists).
 //
 
 import Foundation
@@ -65,9 +68,11 @@ final class BlockingEngine {
     }
 
     /// Convenience helper used by the UI: returns true if the list is locked by Hard Mode and
-    /// the configured duration hasn't elapsed yet.
+    /// the configured duration hasn't elapsed yet. Forever + Hard is locked indefinitely.
     func isHardLocked(list: ListEntity) -> Bool {
-        guard list.protection == "hard", list.blockType == "now" else { return false }
+        guard list.protection == "hard" else { return false }
+        if list.blockType == "forever" { return true }
+        guard list.blockType == "now" else { return false }
         let end = list.createdAt.addingTimeInterval(TimeInterval(list.durationSeconds))
         return Date() < end
     }

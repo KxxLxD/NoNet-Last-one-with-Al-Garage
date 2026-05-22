@@ -10,7 +10,7 @@ struct CreateListSheet: View {
 
     @State private var name: String = ""
     @State private var protection: String = "noProtection" // hard | noProtection
-    @State private var blockType: String = "now" // now | scheduled
+    @State private var blockType: String = "now" // now | scheduled | forever
 
     // Wheel pickers (step 5 minutes)
     @State private var days: Int = 0
@@ -40,6 +40,8 @@ struct CreateListSheet: View {
     @State private var showValidationAlert = false
     @State private var validationMessage = ""
     @State private var showHardConfirmAlert = false
+    @State private var showForeverFirstAlert = false   // First warning when user picks "Forever"
+    @State private var showForeverConfirmAlert = false // Second warning before saving Forever
     @State private var pendingSeconds: Int64 = 0
     @State private var pendingBaseName: String = ""
     @State private var saveErrorMessage: String? = nil
@@ -145,6 +147,29 @@ struct CreateListSheet: View {
                 Button(lang.isArabicEffective ? "رجوع" : "Back", role: .cancel) {}
             } message: {
                 Text(lang.isArabicEffective ? "سيتم إنشاء قائمة بوضع صارم (Hard Mode). لن تتمكن من تعديلها أو حذفها خلال المدة." : "This list will be created in Hard Mode. You won’t be able to edit or delete it during the duration.")
+            }
+            .alert(lang.isArabicEffective ? "حجب دائم — هل أنت متأكد؟" : "Permanent Block — are you sure?", isPresented: $showForeverFirstAlert) {
+                Button(lang.isArabicEffective ? "متابعة" : "Continue") { /* keep blockType = forever */ }
+                Button(lang.isArabicEffective ? "إلغاء" : "Cancel", role: .cancel) { blockType = "now" }
+            } message: {
+                Text(lang.isArabicEffective
+                     ? "الحجب الدائم يبقى فعالاً حتى تحذف القائمة. إذا اخترت الوضع الصارم أيضاً، لن تتمكن من حذفها إطلاقاً."
+                     : "A permanent block stays active until you delete the list. With Hard Mode you cannot delete it at all.")
+            }
+            .alert(lang.isArabicEffective ? "تأكيد نهائي" : "Final Confirmation", isPresented: $showForeverConfirmAlert) {
+                Button(lang.isArabicEffective ? "أؤكد، أنشئ الحجب" : "I confirm — create block", role: .destructive) {
+                    if protection == "hard" {
+                        showForeverConfirmAlert = false
+                        showHardConfirmAlert = true
+                    } else {
+                        save(totalSeconds: 0, baseName: pendingBaseName)
+                    }
+                }
+                Button(lang.isArabicEffective ? "تراجع" : "Back", role: .cancel) {}
+            } message: {
+                Text(lang.isArabicEffective
+                     ? "هذه آخر فرصة. الحجب الدائم يعني أن التطبيقات والمواقع المختارة لن تعمل أبداً حتى تحذف هذه القائمة."
+                     : "This is your last chance. A permanent block means the selected apps/sites will be blocked forever until you delete this list.")
             }
             .alert(
                 lang.isArabicEffective ? "تعذّر إنشاء القائمة" : "Couldn't create list",
@@ -269,10 +294,11 @@ struct CreateListSheet: View {
             VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
                 Picker("Time", selection: $blockType) {
                     Text(lang.isArabicEffective ? "حظر فوري" : "Block Now").tag("now")
-                    Text("Scheduled").tag("scheduled")
+                    Text(lang.isArabicEffective ? "مجدول" : "Scheduled").tag("scheduled")
+                    Text(lang.isArabicEffective ? "دائم ♾️" : "Forever ♾️").tag("forever")
                 }
                 .pickerStyle(.segmented)
-                .frame(maxWidth: 320, alignment: .center)
+                .frame(maxWidth: 360, alignment: .center)
                 .onChange(of: blockType) { newVal in
                     if newVal == "scheduled" && !isPremium {
                         blockType = "now"
@@ -280,8 +306,41 @@ struct CreateListSheet: View {
                         showUpgradeSheet = true
                     } else if newVal == "scheduled" && isPremium {
                         showScheduleEditor = true
-                            }
+                    } else if newVal == "forever" {
+                        // First warning fires immediately on selection so the user can revert
+                        showForeverFirstAlert = true
+                    }
+                }
+
+                if blockType == "forever" {
+                    VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 8) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(AppColors.alertRed)
+                            Text(lang.isArabicEffective ? "حجب دائم — لا نهاية" : "Permanent block — no end")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundColor(AppColors.alertRed)
                         }
+                        Text(lang.isArabicEffective
+                             ? "يبقى الحجب فعالاً إلى أن تحذف القائمة. ينصح به للمحتوى الإباحي وتطبيقات القمار."
+                             : "Block stays active until you delete the list. Recommended for adult content and gambling apps.")
+                            .font(.footnote)
+                            .foregroundColor(AppColors.textSecondary)
+                            .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                        if protection == "hard" {
+                            Text(lang.isArabicEffective
+                                 ? "⚠️ مع الوضع الصارم لا يمكن حذف القائمة إلا عبر الدعم."
+                                 : "⚠️ With Hard Mode you cannot delete this list except via support.")
+                                .font(.footnote.weight(.semibold))
+                                .foregroundColor(AppColors.alertRed)
+                                .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                        }
+                    }
+                    .padding(12)
+                    .background(AppColors.alertRed.opacity(0.08))
+                    .cornerRadius(12)
+                    .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+                }
 
                 if !isPremium {
                     Text(lang.isArabicEffective ? "الجدولة ضمن الترقية." : "Scheduling is in Upgrade.")
@@ -607,6 +666,13 @@ struct CreateListSheet: View {
             showValidationAlert = true
             return
         }
+        // Forever skips the duration step but still goes through a hard confirm dialog before save.
+        if blockType == "forever" {
+            pendingBaseName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            pendingSeconds = 0
+            showForeverConfirmAlert = true
+            return
+        }
         showConfirmSheet = true
     }
     private func save(totalSeconds: Int64, baseName: String) {
@@ -661,6 +727,10 @@ struct CreateListSheet: View {
         }
         // For scheduled lists, register the schedule (shields apply only inside the window).
         if blockType == "scheduled" {
+            BlockingEngine.shared.activate(list: entity)
+        }
+        // Forever blocks always activate immediately and stay until the list is purged.
+        if blockType == "forever" {
             BlockingEngine.shared.activate(list: entity)
         }
         showSuccessToast = true

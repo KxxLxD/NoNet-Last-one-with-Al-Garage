@@ -422,6 +422,8 @@ struct HomeView: View {
     private func isActiveNow(_ l: ListEntity) -> Bool {
         // Manual override takes precedence (UserDefaults-backed)
         if ManualStateStore.isActive(for: l.id) { return true }
+        // Forever blocks are always active until the list is purged.
+        if l.blockType == "forever" { return true }
         let now = Date()
         if l.blockType == "now" {
             let end = l.createdAt.addingTimeInterval(TimeInterval(l.durationSeconds))
@@ -588,6 +590,9 @@ private struct RealListRow: View {
     }
 
     private func subtitleText() -> String? { /* kept for potential future use */
+        if item.blockType == "forever" {
+            return layoutDirection == .rightToLeft ? "حجب دائم" : "Permanent block"
+        }
         if item.blockType == "now" && isActive {
             let end = item.createdAt.addingTimeInterval(TimeInterval(item.durationSeconds))
             let remaining = Int(max(0, end.timeIntervalSince(Date())))
@@ -1062,7 +1067,7 @@ struct ListDetailView: View {
                         .font(.caption.weight(.semibold))
                         .foregroundColor(AppColors.textSecondary)
                     VStack(alignment: .leading, spacing: 10) {
-                        HStack { Text(lang.isArabicEffective ? "النوع" : "Type").foregroundColor(AppColors.textSecondary); Spacer(); Text(list.blockType).foregroundColor(AppColors.textPrimary) }
+                        HStack { Text(lang.isArabicEffective ? "النوع" : "Type").foregroundColor(AppColors.textSecondary); Spacer(); Text(localizedBlockTypeLabel(list.blockType)).foregroundColor(AppColors.textPrimary) }
                         HStack { Text(lang.isArabicEffective ? "الحماية" : "Protection").foregroundColor(AppColors.textSecondary); Spacer(); Text(list.protection).foregroundColor(AppColors.textPrimary) }
                         HStack { Text(lang.isArabicEffective ? "الحالة" : "Status").foregroundColor(AppColors.textSecondary); Spacer(); Text(isActiveNowDetail() ? (lang.isArabicEffective ? "مفعّلة" : "Active") : (lang.isArabicEffective ? "غير نشطة" : "Inactive")).foregroundColor(AppColors.textPrimary) }
                         if let cnt = list.items?.count {
@@ -1083,6 +1088,9 @@ struct ListDetailView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         if list.blockType == "now" {
                             HStack { Text(lang.isArabicEffective ? "المدة" : "Duration").foregroundColor(AppColors.textSecondary); Spacer(); Text("\(list.durationSeconds/60) min").foregroundColor(AppColors.textPrimary) }
+                        }
+                        if list.blockType == "forever" {
+                            HStack { Text(lang.isArabicEffective ? "المدة" : "Duration").foregroundColor(AppColors.textSecondary); Spacer(); Text(lang.isArabicEffective ? "♾️ دائم" : "♾️ Permanent").foregroundColor(AppColors.alertRed) }
                         }
                         if let summary = scheduleSummaryText() {
                             HStack { Text(lang.isArabicEffective ? "الجدولة" : "Schedule").foregroundColor(AppColors.textSecondary); Spacer(); Text(summary).foregroundColor(AppColors.textPrimary) }
@@ -1151,6 +1159,8 @@ struct ListDetailView: View {
         if ManualStateStore.isActive(for: stableListId) { return true }
         // If the Core Data object is being deleted, avoid dereferencing its properties
         if list.isDeleted { return false }
+        // Forever blocks are always active until purged.
+        if list.blockType == "forever" { return true }
         let now = Date()
         if list.blockType == "now" {
             let end = list.createdAt.addingTimeInterval(TimeInterval(list.durationSeconds))
@@ -1168,6 +1178,15 @@ struct ListDetailView: View {
             return decoded.contains { $0.day == dayIndex && minutesNow >= $0.fromMinutes && minutesNow < $0.toMinutes }
         }
         return false
+    }
+
+    private func localizedBlockTypeLabel(_ type: String) -> String {
+        switch type {
+        case "now":      return lang.isArabicEffective ? "فوري" : "Now"
+        case "scheduled": return lang.isArabicEffective ? "مجدول" : "Scheduled"
+        case "forever":   return lang.isArabicEffective ? "دائم ♾️" : "Forever ♾️"
+        default:          return type
+        }
     }
 
     private func scheduleSummaryText() -> String? {
