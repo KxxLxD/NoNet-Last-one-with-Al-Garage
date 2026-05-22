@@ -71,6 +71,20 @@ struct HomeView: View {
             saveErrorMessage = lang.isArabicEffective
                 ? "لا يمكن حذف قائمة بوضع صارم حتى انتهاء المدة."
                 : "Can't delete a Hard-Mode list until its duration ends."
+            // Notify the recovery partner (if any) that a delete attempt was made.
+            if let partnership = CloudKitPartnerStore.shared.partnership(for: list.id) {
+                let id = list.id
+                let name = list.name
+                Task {
+                    await CloudKitPartnerStore.shared.recordBreakAttempt(
+                        partnershipID: partnership.id,
+                        listID: id,
+                        listName: name,
+                        type: .delete,
+                        reachedThrough: "home_delete_button"
+                    )
+                }
+            }
             return
         }
         let id = list.id
@@ -1025,6 +1039,8 @@ struct ListDetailView: View {
     @State private var pendingShare: CKShare?
     @State private var partnerError: String?
     @State private var isCreatingPartnership = false
+    @State private var breakAttempts: [BreakAttempt] = []
+    @State private var isLoadingAttempts = false
     @Environment(\.dismiss) private var dismiss
 
     private struct Slot: Codable { let id: UUID; let day: Int; let fromMinutes: Int; let toMinutes: Int }
@@ -1197,40 +1213,17 @@ struct ListDetailView: View {
             }
 
             VStack(alignment: .leading, spacing: 10) {
-                Text(lang.isArabicEffective
-                     ? "ادعُ شخصاً تثق به ليُبلَّغ عند محاولاتك كسر الحجب — حماية إضافية لوضع التعافي."
-                     : "Invite someone you trust to be notified of break attempts — extra accountability for recovery mode.")
-                    .font(.footnote)
-                    .foregroundColor(AppColors.textSecondary)
-                    .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
-                    .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
-
-                if let reason = partnerStore.accountUnavailableReason(isArabic: lang.isArabicEffective) {
+                if let existing = partnerStore.partnership(for: stableListId) {
+                    partnerActiveView(existing)
+                } else if let reason = partnerStore.accountUnavailableReason(isArabic: lang.isArabicEffective) {
+                    partnerRationaleText()
                     Text(reason)
                         .font(.footnote)
                         .foregroundColor(AppColors.alertRed)
                         .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
                 } else {
-                    Button(action: invitePartner) {
-                        HStack {
-                            if isCreatingPartnership {
-                                ProgressView()
-                                    .progressViewStyle(.circular)
-                                    .tint(.white)
-                            } else {
-                                Image(systemName: "envelope.fill")
-                            }
-                            Text(lang.isArabicEffective ? "دعوة شريك" : "Invite Partner")
-                        }
-                        .font(.subheadline.weight(.semibold))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 44)
-                        .background(AppColors.accentDark)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(isCreatingPartnership)
+                    partnerRationaleText()
+                    partnerInviteButton()
                 }
             }
             .padding(16)
@@ -1244,7 +1237,10 @@ struct ListDetailView: View {
                     share: share,
                     container: partnerStore.container,
                     isArabic: lang.isArabicEffective,
-                    onCompletion: { showPartnerInvite = false }
+                    onCompletion: {
+                        showPartnerInvite = false
+                        Task { await partnerStore.fetchPartnerships() }
+                    }
                 )
                 .ignoresSafeArea()
             }
@@ -1257,6 +1253,129 @@ struct ListDetailView: View {
         } message: {
             Text(partnerError ?? "")
         }
+        .onAppear {
+            Task { await partnerStore.fetchPartnerships() }
+        }
+    }
+
+    private func partnerRationaleText() -> some View {
+        Text(lang.isArabicEffective
+             ? "ادعُ شخصاً تثق به ليُبلَّغ عند محاولاتك كسر الحجب — حماية إضافية لوضع التعافي."
+             : "Invite someone you trust to be notified of break attempts — extra accountability for recovery mode.")
+            .font(.footnote)
+            .foregroundColor(AppColors.textSecondary)
+            .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+            .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+    }
+
+    private func partnerInviteButton() -> some View {
+        Button(action: invitePartner) {
+            HStack {
+                if isCreatingPartnership {
+                    ProgressView().progressViewStyle(.circular).tint(.white)
+                } else {
+                    Image(systemName: "envelope.fill")
+                }
+                Text(lang.isArabicEffective ? "دعوة شريك" : "Invite Partner")
+            }
+            .font(.subheadline.weight(.semibold))
+            .frame(maxWidth: .infinity)
+            .frame(height: 44)
+            .background(AppColors.accentDark)
+            .foregroundColor(.white)
+            .cornerRadius(12)
+        }
+        .buttonStyle(.plain)
+        .disabled(isCreatingPartnership)
+    }
+
+    @ViewBuilder
+    private func partnerActiveView(_ partnership: Partnership) -> some View {
+        // Owner sees the partner's display name (if accepted); partner sees the owner's.
+        // partnerUserID is filled only after acceptance, so it's a good "accepted" signal.
+        let isOwnerView = partnership.partnerUserID == nil || partnership.partnerUserID != "<self>"
+        let displayName = isOwnerView
+            ? (partnership.partnerDisplayName ?? (lang.isArabicEffective ? "بانتظار قبول الشريك…" : "Waiting for partner to accept…"))
+            : partnership.ownerDisplayName
+
+        HStack(spacing: 8) {
+            Image(systemName: partnership.status == .accepted ? "checkmark.seal.fill" : "clock.fill")
+                .foregroundColor(partnership.status == .accepted ? AppColors.successGreen : AppColors.textSecondary)
+            Text(displayName)
+                .font(.subheadline.weight(.semibold))
+                .foregroundColor(AppColors.textPrimary)
+            Spacer()
+        }
+
+        if !breakAttempts.isEmpty {
+            Text(lang.isArabicEffective ? "آخر المحاولات" : "Recent attempts")
+                .font(.caption.weight(.semibold))
+                .foregroundColor(AppColors.textSecondary)
+                .padding(.top, 4)
+            ForEach(breakAttempts.prefix(5)) { attempt in
+                HStack {
+                    Text(attemptTypeLabel(attempt.type))
+                        .font(.footnote)
+                        .foregroundColor(AppColors.textPrimary)
+                    Spacer()
+                    Text(relativeTime(attempt.attemptedAt))
+                        .font(.footnote)
+                        .foregroundColor(AppColors.textSecondary)
+                }
+            }
+        } else if !isLoadingAttempts {
+            Text(lang.isArabicEffective ? "لا محاولات كسر مسجّلة — أحسنت." : "No break attempts logged — well done.")
+                .font(.footnote)
+                .foregroundColor(AppColors.successGreen)
+                .padding(.top, 4)
+        }
+
+        Button(action: {
+            isLoadingAttempts = true
+            Task {
+                let attempts = await partnerStore.fetchBreakAttempts(partnershipID: partnership.id)
+                await MainActor.run {
+                    breakAttempts = attempts
+                    isLoadingAttempts = false
+                }
+            }
+        }) {
+            HStack {
+                if isLoadingAttempts { ProgressView().progressViewStyle(.circular) }
+                Text(lang.isArabicEffective ? "تحديث" : "Refresh")
+                    .font(.footnote)
+            }
+            .foregroundColor(AppColors.accentDark)
+        }
+        .buttonStyle(.plain)
+        .padding(.top, 4)
+        .onAppear {
+            if breakAttempts.isEmpty {
+                isLoadingAttempts = true
+                Task {
+                    let attempts = await partnerStore.fetchBreakAttempts(partnershipID: partnership.id)
+                    await MainActor.run {
+                        breakAttempts = attempts
+                        isLoadingAttempts = false
+                    }
+                }
+            }
+        }
+    }
+
+    private func attemptTypeLabel(_ type: BreakAttemptType) -> String {
+        switch type {
+        case .disable:          return lang.isArabicEffective ? "محاولة إيقاف" : "Disable attempt"
+        case .delete:           return lang.isArabicEffective ? "محاولة حذف" : "Delete attempt"
+        case .modify:           return lang.isArabicEffective ? "محاولة تعديل" : "Modify attempt"
+        case .uninstallAttempt: return lang.isArabicEffective ? "محاولة إزالة التطبيق" : "Uninstall attempt"
+        }
+    }
+
+    private func relativeTime(_ date: Date) -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.locale = Locale(identifier: lang.isArabicEffective ? "ar" : "en")
+        return formatter.localizedString(for: date, relativeTo: Date())
     }
 
     private func invitePartner() {

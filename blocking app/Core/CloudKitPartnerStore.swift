@@ -194,6 +194,68 @@ final class CloudKitPartnerStore: ObservableObject {
         }
     }
 
+    // MARK: - Break attempts
+
+    /// Log a break-attempt to CloudKit. The partner gets a push via the CKQuerySubscription
+    /// the partnership owner sets up on first save. Best-effort: errors are logged but not
+    /// rethrown to the caller, so a failed CloudKit write never blocks the user-facing
+    /// "you can't break Hard Mode" experience.
+    func recordBreakAttempt(partnershipID: String,
+                            listID: UUID,
+                            listName: String,
+                            type: BreakAttemptType,
+                            reachedThrough: String? = nil) async {
+        let recordID = CKRecord.ID(recordName: UUID().uuidString)
+        let record = CKRecord(recordType: PartnerRecordTypes.breakAttempt, recordID: recordID)
+        let partnershipRecordID = CKRecord.ID(recordName: partnershipID)
+        record["partnershipID"] = CKRecord.Reference(recordID: partnershipRecordID, action: .deleteSelf)
+        record["listID"] = listID.uuidString as CKRecordValue
+        record["listName"] = listName as CKRecordValue
+        record["attemptedAt"] = Date() as CKRecordValue
+        record["attemptType"] = type.rawValue as CKRecordValue
+        if let r = reachedThrough { record["reachedThrough"] = r as CKRecordValue }
+
+        do {
+            try await save(records: [record])
+            log.notice("recordBreakAttempt: \(type.rawValue, privacy: .public) on list \(listID, privacy: .public)")
+        } catch {
+            log.error("recordBreakAttempt failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    /// Fetch all break attempts for a given partnership, newest first.
+    func fetchBreakAttempts(partnershipID: String) async -> [BreakAttempt] {
+        let partnershipRecordID = CKRecord.ID(recordName: partnershipID)
+        let ref = CKRecord.Reference(recordID: partnershipRecordID, action: .none)
+        let query = CKQuery(
+            recordType: PartnerRecordTypes.breakAttempt,
+            predicate: NSPredicate(format: "partnershipID == %@", ref)
+        )
+        query.sortDescriptors = [NSSortDescriptor(key: "attemptedAt", ascending: false)]
+
+        var attempts: [BreakAttempt] = []
+        for db in [privateDB, sharedDB] {
+            do {
+                let (results, _) = try await db.records(matching: query)
+                let parsed = results.compactMap { _, result -> BreakAttempt? in
+                    guard case .success(let record) = result else { return nil }
+                    return BreakAttempt(from: record)
+                }
+                attempts.append(contentsOf: parsed)
+            } catch {
+                log.error("fetchBreakAttempts in \(db.databaseScope.rawValue, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
+            }
+        }
+        return attempts.sorted { $0.attemptedAt > $1.attemptedAt }
+    }
+
+    /// Returns the first partnership that has the given list in its associatedListIDs,
+    /// or nil if none. Used to look up "is this list watched by a partner?" before
+    /// recording a break attempt.
+    func partnership(for listID: UUID) -> Partnership? {
+        partnerships.first { $0.associatedListIDs.contains(listID) }
+    }
+
     // MARK: - Invitee side
 
     /// Accept a share whose metadata was delivered via
@@ -272,5 +334,24 @@ extension Partnership {
         self.acceptedAt = record["acceptedAt"] as? Date
         let listIDStrings = (record["associatedListIDs"] as? [String]) ?? []
         self.associatedListIDs = listIDStrings.compactMap(UUID.init)
+    }
+}
+
+extension BreakAttempt {
+    init?(from record: CKRecord) {
+        guard let ref = record["partnershipID"] as? CKRecord.Reference,
+              let listIDStr = record["listID"] as? String,
+              let listID = UUID(uuidString: listIDStr),
+              let listName = record["listName"] as? String,
+              let attemptedAt = record["attemptedAt"] as? Date,
+              let typeRaw = record["attemptType"] as? String,
+              let type = BreakAttemptType(rawValue: typeRaw) else { return nil }
+        self.id = record.recordID.recordName
+        self.partnershipID = ref.recordID.recordName
+        self.listID = listID
+        self.listName = listName
+        self.attemptedAt = attemptedAt
+        self.type = type
+        self.reachedThrough = record["reachedThrough"] as? String
     }
 }
