@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UIKit
+import CloudKit
 
 struct ContentView: View {
     @StateObject private var lang = LanguageManager.shared
@@ -62,6 +63,10 @@ struct ContentView: View {
             applySemanticDirection(isArabic: lang.isArabicEffective)
             expireTrialIfNeeded()
             configureTabBarAppearance()
+            Task { await CloudKitPartnerStore.shared.refreshAccountStatus() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .CKAccountChanged)) { _ in
+            Task { await CloudKitPartnerStore.shared.refreshAccountStatus() }
         }
         .onChange(of: lang.isArabicEffective) { isArabic in
             applySemanticDirection(isArabic: isArabic)

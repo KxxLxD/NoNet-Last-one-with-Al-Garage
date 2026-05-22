@@ -14,5 +14,15 @@
 	<array>
 		<string>group.com.nonetapp.shared</string>
 	</array>
+	<key>com.apple.developer.icloud-services</key>
+	<array>
+		<string>CloudKit</string>
+	</array>
+	<key>com.apple.developer.icloud-container-identifiers</key>
+	<array>
+		<string>iCloud.com.nonetapp</string>
+	</array>
+	<key>aps-environment</key>
+	<string>production</string>
 </dict>
 </plist>
