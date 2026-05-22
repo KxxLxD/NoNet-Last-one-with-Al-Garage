@@ -230,6 +230,22 @@ cd "/Users/khalidkhamis/Desktop/مشروعي/blocking app الاصلي"
 
 ---
 
+## 🌐 اختياري — إضافة Community Links
+
+تم **إخفاء** قسم Community (WhatsApp / Telegram) من SettingsView في v1.0 لأن:
+- الروابط placeholders (`example.com`)
+- App Store يرفض روابط لا تعمل
+
+### لإعادة تفعيلها لاحقاً:
+1. أنشئ مجموعة WhatsApp واحصل على invite link (`https://chat.whatsapp.com/XXXXXX`)
+2. أنشئ قناة Telegram واحصل على رابطها (`https://t.me/your_channel`)
+3. افتح [`blocking app/SettingsView.swift`](blocking app/SettingsView.swift)
+4. ابحث عن التعليق `// Community section is hidden for v1.0`
+5. استبدله بـ block جديد فيه الروابط الحقيقية
+6. أعد البناء واختبر
+
+---
+
 ## 📊 المتابعة بعد الإطلاق
 
 ### الأسبوع الأول:

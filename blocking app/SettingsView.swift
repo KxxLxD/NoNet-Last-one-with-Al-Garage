@@ -129,38 +129,9 @@ struct SettingsView: View {
                     )
                     .padding(.horizontal, 24)
                 
-                    // Community
-                    HStack { Text(lang.isArabicEffective ? "المجتمع" : "Community").font(.system(size: 22, weight: .semibold)).foregroundColor(AppColors.textPrimary); Spacer() }
-                        .padding(.horizontal, 24)
-                    VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
-                        Link(destination: URL(string: "https://example.com/whatsapp")!) {
-                            HStack {
-                                Image(systemName: "person.2.fill").foregroundColor(AppColors.accentDark)
-                                    .font(.system(size: 20, weight: .regular))
-                                Text(lang.isArabicEffective ? "مجموعة واتساب" : "WhatsApp Community")
-                                Spacer()
-                            }
-                        }
-                        .simultaneousGesture(TapGesture().onEnded { hapticLight() })
-                        SoftDivider(width: 280, opacity: 0.70)
-                        Link(destination: URL(string: "https://example.com/telegram")!) {
-                            HStack {
-                                Image(systemName: "paperplane.fill").foregroundColor(AppColors.accentDark)
-                                    .font(.system(size: 20, weight: .regular))
-                                Text(lang.isArabicEffective ? "قناة تيليجرام" : "Telegram Channel")
-                                Spacer()
-                            }
-                        }
-                        .simultaneousGesture(TapGesture().onEnded { hapticLight() })
-                    }
-                    .padding(20)
-                    .background(AppColors.uiSurface)
-                    .cornerRadius(20)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(AppColors.uiBorder, lineWidth: 0.5)
-                    )
-                    .padding(.horizontal, 24)
+                    // Community section is hidden for v1.0 — real WhatsApp/Telegram
+                    // links not yet provisioned. App Store rejects placeholder URLs.
+                    // To re-enable: add real URLs and unhide this block.
 
                     // Legal
                     HStack { Text(lang.isArabicEffective ? "القانوني" : "Legal").font(.system(size: 22, weight: .semibold)).foregroundColor(AppColors.textPrimary); Spacer() }
