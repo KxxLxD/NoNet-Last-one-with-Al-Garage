@@ -125,6 +125,9 @@ final class CoreDataStack {
 
 @main
 struct blocking_appApp: App {
+    // Adopts UIApplicationDelegate solely so iOS routes CloudKit share-acceptance
+    // through PartnerSceneDelegate.windowScene(_:userDidAcceptCloudKitShareWith:).
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     private let core = CoreDataStack.shared
 
     init() {

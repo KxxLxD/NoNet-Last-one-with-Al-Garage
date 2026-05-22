@@ -193,4 +193,84 @@ final class CloudKitPartnerStore: ObservableObject {
             self.privateDB.add(operation)
         }
     }
+
+    // MARK: - Invitee side
+
+    /// Accept a share whose metadata was delivered via
+    /// `windowScene(_:userDidAcceptCloudKitShareWith:)`. Apple completes the
+    /// cross-account hand-off; after this resolves, the shared records become
+    /// visible via `sharedDB`.
+    func acceptInvitation(metadata: CKShare.Metadata) async {
+        do {
+            _ = try await container.accept(metadata)
+            log.notice("accepted share \(metadata.share.recordID.recordName, privacy: .public)")
+            await fetchPartnerships()
+            await markPartnershipAccepted(rootRecordID: metadata.hierarchicalRootRecordID)
+        } catch {
+            log.error("accept share failed: \(error.localizedDescription, privacy: .public)")
+            self.lastError = error.localizedDescription
+        }
+    }
+
+    /// Update the shared Partnership's status to accepted and stamp acceptedAt.
+    /// Called on the invitee side after the share hand-off completes.
+    private func markPartnershipAccepted(rootRecordID: CKRecord.ID?) async {
+        guard let recordID = rootRecordID else { return }
+        do {
+            let record = try await sharedDB.record(for: recordID)
+            record["status"] = PartnershipStatus.accepted.rawValue as CKRecordValue
+            record["acceptedAt"] = Date() as CKRecordValue
+            let partnerUserID = try await container.userRecordID().recordName
+            record["partnerUserID"] = partnerUserID as CKRecordValue
+            _ = try await sharedDB.save(record)
+            await fetchPartnerships()
+        } catch {
+            log.error("markPartnershipAccepted failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    /// Refresh `partnerships` from both the user's private DB (where they own the
+    /// share) and the shared DB (where they've accepted someone else's share).
+    func fetchPartnerships() async {
+        var all: [Partnership] = []
+        all.append(contentsOf: await fetchPartnerships(from: privateDB))
+        all.append(contentsOf: await fetchPartnerships(from: sharedDB))
+        self.partnerships = all
+    }
+
+    private func fetchPartnerships(from db: CKDatabase) async -> [Partnership] {
+        let query = CKQuery(recordType: PartnerRecordTypes.partnership, predicate: NSPredicate(value: true))
+        do {
+            let (matchResults, _) = try await db.records(matching: query)
+            return matchResults.compactMap { _, result in
+                guard case .success(let record) = result else { return nil }
+                return Partnership(from: record)
+            }
+        } catch {
+            log.error("fetchPartnerships from \(db.databaseScope.rawValue, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
+            return []
+        }
+    }
+}
+
+// MARK: - Partnership <-> CKRecord bridging
+
+extension Partnership {
+    init?(from record: CKRecord) {
+        guard let ownerUserID = record["ownerUserID"] as? String,
+              let ownerDisplayName = record["ownerDisplayName"] as? String,
+              let statusRaw = record["status"] as? String,
+              let status = PartnershipStatus(rawValue: statusRaw),
+              let createdAt = record["createdAt"] as? Date else { return nil }
+        self.id = record.recordID.recordName
+        self.ownerUserID = ownerUserID
+        self.partnerUserID = record["partnerUserID"] as? String
+        self.ownerDisplayName = ownerDisplayName
+        self.partnerDisplayName = record["partnerDisplayName"] as? String
+        self.status = status
+        self.createdAt = createdAt
+        self.acceptedAt = record["acceptedAt"] as? Date
+        let listIDStrings = (record["associatedListIDs"] as? [String]) ?? []
+        self.associatedListIDs = listIDStrings.compactMap(UUID.init)
+    }
 }
