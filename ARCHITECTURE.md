@@ -147,13 +147,51 @@ extension NSManagedObjectContext {
 
 ---
 
+## BlockingMonitor Extension (DeviceActivity)
+
+عند `BlockingEngine.scheduleMonitoring(for:)`، يُسجَّل `DeviceActivitySchedule` مع iOS. عند بداية/نهاية النافذة الزمنية، iOS يستدعي callbacks في extension منفصل:
+
+```
+BlockingEngine.scheduleMonitoring(for: list)
+   │
+   ▼
+DeviceActivityCenter.startMonitoring(name: "schedule.<UUID>", during: schedule)
+   │
+   ▼
+[iOS تنتظر حتى يحين الوقت]
+   │
+   ▼
+BlockingMonitor (extension process) — intervalDidStart
+   │
+   ├──→ يفك FamilyActivitySelection من UserDefaults (عبر App Group)
+   │
+   ├──→ ManagedSettingsStore(named: "blocklist.<UUID>")
+   │    .shield.applications = selection.applicationTokens
+   │    .shield.applicationCategories = .specific(...)
+   │
+   └──→ ✅ shields مطبَّقة
+   
+[عند نهاية النافذة]
+   │
+   ▼
+BlockingMonitor — intervalDidEnd
+   │
+   └──→ store.clearAllSettings()
+        ✅ shields مرفوعة
+```
+
+الـ Extension تحتاج إضافة Target من Xcode UI + App Group لمشاركة UserDefaults. التفاصيل في `BlockingMonitor/README.md`.
+
+---
+
 ## الديون التقنية المعروفة
 
-1. **لا توجد اختبارات (Tests)** — لا XCTest target.
-2. **DeviceActivityMonitor Extension غير موجود** — الجدولة تُسجَّل لكن الـ shields لا تُطبَّق تلقائياً في الوقت المحدد (يحتاج Extension target في Xcode).
+1. **Tests Target يحتاج إضافة من Xcode UI** — ملفات الاختبار موجودة لكن inert حتى تضاف للـ target.
+2. **BlockingMonitor Target يحتاج إضافة من Xcode UI** — السكافولد جاهز.
 3. **Apple Sign In لا backend** — يحفظ في Keychain فقط، لا verification مع خادم.
 4. **Onboarding data** — تُجمع في AppStorage لكن لا تُستخدم.
 5. **Family Controls على Simulator** — لا يعمل، يحتاج جهاز حقيقي.
+6. **Auto-deactivation للقوائم المنتهية** — يحدث عند فتح التطبيق فقط، لا في الخلفية. (الحجب يُحرَّر منطقياً عبر isActiveNow، لكن الـ shield يبقى مطبَّق حتى opens.)
 
 ---
 

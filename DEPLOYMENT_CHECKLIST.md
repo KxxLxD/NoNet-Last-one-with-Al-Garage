@@ -19,6 +19,13 @@
 - [x] StoreKit 2 integration كامل (purchase/restore/redeem)
 - [x] سياسة خصوصية وشروط استخدام احترافية (PDPL + GDPR compliant)
 - [x] AppIcons موجودة (1024 + كل المقاسات)
+- [x] `PrivacyInfo.xcprivacy` — Privacy Manifest (iOS 17+ compliant)
+- [x] `VERSION` + `CHANGELOG.md` (Keep-a-Changelog)
+- [x] 32 Unit tests في `blocking appTests/`
+- [x] `BlockingMonitor/` scaffold للـ DeviceActivityMonitor extension
+- [x] App Store Listing نصوص جاهزة (`docs/APP_STORE_LISTING.md`)
+- [x] صفحات HTML للاستضافة في `docs/web/`
+- [x] Engineering Review + Security Audit reports
 
 ---
 
@@ -122,17 +129,41 @@ doesn't work in Simulator). Test on iPad/iPhone:
      - Sign in with Apple
      - In-App Purchase
      - App Attest (Production)
+     - App Groups (لمشاركة UserDefaults مع BlockingMonitor — راجع أدناه)
 
 2. **Edit Scheme → Run → Options**:
    - StoreKit Configuration: `Products.storekit` (للاختبار المحلي)
    - **مهم**: لا تنسى تعطيلها قبل Archive للنشر
 
-3. **إضافة Privacy Manifest** (مطلوب من iOS 17+):
-   - File → New → File → Privacy → PrivacyInfo.xcprivacy
-   - Add Required Reason API entries (إن استخدمت أي):
-     - `UserDefaults` → `CA92.1`
-     - `FileTimestamp` → غير مستخدم
-     - `SystemBootTime` → غير مستخدم
+3. **Privacy Manifest** (موجود بالفعل):
+   - الملف موجود: `blocking app/PrivacyInfo.xcprivacy`
+   - تأكد أنه ضمن "Copy Bundle Resources" build phase
+
+4. **إضافة Tests Target** (لمرة واحدة، 10 ثوانٍ):
+   - File → New → Target → Unit Testing Bundle
+   - Product Name: `blocking appTests`
+   - Target to be Tested: `blocking app`
+   - احذف الملف الافتراضي `blocking_appTests.swift`
+   - الملفات الموجودة في `blocking appTests/` ستُلتقط تلقائياً
+   - راجع `blocking appTests/README.md`
+
+5. **إضافة BlockingMonitor Target** (لمرة واحدة، 30 ثانية):
+   - File → New → Target → Device Activity Monitor Extension
+   - Product Name: `BlockingMonitor`
+   - Bundle Identifier: `com.nonetapp.BlockingMonitor`
+   - Embed in: `blocking app`
+   - احذف ملف `DeviceActivityMonitor.swift` الافتراضي
+   - أضف Family Controls capability للـ extension target
+   - راجع `BlockingMonitor/README.md`
+
+6. **إنشاء App Group** (لمشاركة UserDefaults مع BlockingMonitor):
+   - https://developer.apple.com/account/resources/identifiers/list/applicationGroup
+   - Identifier: `group.com.nonetapp.shared`
+   - فعّل App Groups capability في كلا الـ targets (التطبيق + BlockingMonitor)
+   - حدّث `FamilySelectionStore.swift` ليستخدم:
+     ```swift
+     UserDefaults(suiteName: "group.com.nonetapp.shared")
+     ```
 
 ---
 
@@ -177,6 +208,38 @@ doesn't work in Simulator). Test on iPad/iPhone:
 4. **منتج اشتراك بدون مزايا واضحة**: ✅ مزايا Premium مذكورة في UpgradeView.
 5. **Subscription بدون Restore Purchases**: ✅ زر Restore موجود.
 6. **عدم وجود Cancel Anytime واضح**: ✅ مذكور في الشروط.
+
+---
+
+## 🌐 استضافة صفحات HTML (للـ Privacy/Terms/Support URLs)
+
+App Store Connect يطلب URL لـ Privacy Policy. الصفحات جاهزة في `docs/web/`. اختر طريقة استضافة:
+
+### الخيار 1: GitHub Pages (مجاناً، يدعم نطاق فرعي)
+```bash
+# في مستودع جديد أو الـ docs branch:
+git checkout -b gh-pages
+git add docs/web/
+git commit -m "Add legal pages"
+git push origin gh-pages
+
+# اذهب إلى Settings → Pages → Source: gh-pages branch، /docs/web folder
+# الـ URL: https://<username>.github.io/<repo>/
+```
+
+### الخيار 2: Vercel (مجاناً، أسرع)
+```bash
+cd docs/web
+npx vercel
+# اتبع التعليمات
+```
+
+### الخيار 3: نطاق مخصص (nonetapp.com)
+1. اشترِ نطاق من Namecheap/Google Domains
+2. اربطه بـ Vercel أو GitHub Pages
+3. حدّث `https://nonetapp.com/privacy` في App Store Connect
+
+**ملاحظة:** بعد الاستضافة، حدّث URLs في `LegalContent.swift` إن لزم.
 
 ---
 

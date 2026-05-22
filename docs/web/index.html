@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NoNet — استعد تركيزك</title>
+<meta name="description" content="NoNet تطبيق iOS للحجب الذكي للتطبيقات والمواقع. خصوصية كاملة، تعمل محلياً على جهازك.">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: linear-gradient(180deg, #f5f5f7 0%, #e8eefb 100%); color: #1d1d1f; min-height: 100vh; }
+  .container { max-width: 960px; margin: 0 auto; padding: 60px 24px; }
+  header { text-align: center; padding: 80px 0 40px; }
+  h1 { font-size: 3.5rem; font-weight: 800; margin-bottom: 1rem; background: linear-gradient(135deg, #2563eb, #4DA2FC); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .tagline { font-size: 1.5rem; color: #4b5563; margin-bottom: 2rem; }
+  .cta-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 2rem; }
+  .cta { padding: 16px 32px; border-radius: 14px; font-weight: 700; text-decoration: none; transition: transform 0.15s; display: inline-block; }
+  .cta:hover { transform: translateY(-2px); }
+  .cta-primary { background: #1d1d1f; color: white; }
+  .cta-secondary { background: white; color: #2563eb; border: 2px solid #2563eb; }
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; padding: 60px 0; }
+  .feature { background: white; padding: 28px; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+  .feature h3 { color: #2563eb; margin-bottom: 0.5rem; font-size: 1.25rem; }
+  .feature p { color: #4b5563; line-height: 1.7; }
+  .emoji { font-size: 2.5rem; margin-bottom: 12px; display: block; }
+  footer { text-align: center; padding: 40px 0; border-top: 1px solid #d1d5db; color: #6b7280; font-size: 0.9rem; margin-top: 40px; }
+  footer a { color: #2563eb; text-decoration: none; margin: 0 12px; }
+  .lang-switch { text-align: end; }
+  .lang-switch a { color: #2563eb; text-decoration: none; font-weight: 600; }
+  .privacy-badge { display: inline-block; background: #fef3c7; color: #92400e; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-top: 1rem; }
+  @media (max-width: 600px) {
+    h1 { font-size: 2.5rem; }
+    .tagline { font-size: 1.2rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="lang-switch"><a href="#english">English ↓</a></div>
+
+  <header>
+    <h1>NoNet</h1>
+    <p class="tagline">استعد تركيزك. تخلّص من الإلهاءات.</p>
+    <span class="privacy-badge">🔒 خصوصية 100% — محلي على جهازك</span>
+    <div class="cta-row">
+      <a href="#app-store" class="cta cta-primary">حمّل من App Store</a>
+      <a href="support.html" class="cta cta-secondary">الدعم</a>
+    </div>
+  </header>
+
+  <section class="features">
+    <div class="feature">
+      <span class="emoji">🛡️</span>
+      <h3>الوضع الصارم (Hard Mode)</h3>
+      <p>اختر التزامك. لا يمكنك تجاوز الحجب حتى ينتهي وقته. لا حلول التفاف.</p>
+    </div>
+    <div class="feature">
+      <span class="emoji">📅</span>
+      <h3>جدولة ذكية</h3>
+      <p>قوائم متعددة بأوقات وأيام مختلفة. وقت العمل، وقت النوم، الإجازات.</p>
+    </div>
+    <div class="feature">
+      <span class="emoji">🇸🇦</span>
+      <h3>عربي وإنجليزي</h3>
+      <p>دعم RTL كامل. واجهة طبيعية للقارئ العربي.</p>
+    </div>
+    <div class="feature">
+      <span class="emoji">🔐</span>
+      <h3>خصوصية مطلقة</h3>
+      <p>لا تتبع، لا تحليلات، لا backend. كل بياناتك تبقى على جهازك.</p>
+    </div>
+    <div class="feature">
+      <span class="emoji">⚡</span>
+      <h3>حجب حقيقي عبر Apple</h3>
+      <p>يستخدم Screen Time API الرسمي. حجب على مستوى النظام.</p>
+    </div>
+    <div class="feature">
+      <span class="emoji">💎</span>
+      <h3>تجربة مجانية 7 أيام</h3>
+      <p>جرّب كل المزايا المميزة بدون التزام. ألغِ متى شئت.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>
+      <a href="privacy.html">سياسة الخصوصية</a>
+      <a href="terms.html">الشروط</a>
+      <a href="support.html">الدعم</a>
+      <a href="mailto:support@nonet.app">تواصل</a>
+    </p>
+    <p style="margin-top: 12px;">© 2026 NoNet App. جميع الحقوق محفوظة.</p>
+  </footer>
+
+  <div id="english" style="direction: ltr; text-align: left; padding: 60px 0 0;">
+    <h1 style="text-align: center;">NoNet</h1>
+    <p class="tagline" style="text-align: center;">Reclaim your focus. Remove the distractions.</p>
+    <p style="text-align: center; color: #4b5563; max-width: 600px; margin: 20px auto;">
+      A digital wellness app for iOS that blocks distracting apps and websites using Apple's Screen Time.
+      100% local. Zero tracking. Real focus.
+    </p>
+  </div>
+
+</div>
+
+</body>
+</html>

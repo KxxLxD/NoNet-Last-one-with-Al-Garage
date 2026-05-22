@@ -117,12 +117,48 @@ blocking app/
 
 ---
 
+## 🧪 الاختبارات
+
+اختبارات Unit موجودة في `blocking appTests/` — 32 اختبار يغطون:
+- `SchedulePersistence` (encode/decode + migration)
+- `BlockingConstants`، `LocalChatResponder`
+- `BreaksStore` / `ManualStateStore` / `KeychainStore`
+- `BlockingEngine.isHardLocked`
+
+> ⚠️ Target الـ Tests يحتاج إضافة من Xcode UI لمرة واحدة. اقرأ `blocking appTests/README.md`.
+
+```bash
+# بعد إضافة الـ Tests Target من Xcode:
+xcodebuild test \
+  -project "blocking app.xcodeproj" \
+  -scheme "blocking app" \
+  -destination "platform=iOS Simulator,name=iPhone 15"
+```
+
+---
+
+## 🔒 الخصوصية و Privacy Manifest
+
+`PrivacyInfo.xcprivacy` يصرّح:
+- `NSPrivacyTracking`: false
+- `NSPrivacyTrackingDomains`: []
+- `NSPrivacyCollectedDataTypes`: [] (لا جمع بيانات شخصية)
+- استخدام UserDefaults مع reason code `CA92.1` (Functional use)
+
+---
+
 ## 📚 وثائق إضافية
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — تفاصيل البنية والتدفقات
 - [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md) — قائمة مراجعة قبل النشر
 - [GSTACK_GUIDE_AR.md](GSTACK_GUIDE_AR.md) — دليل gstack الشامل بالعربية
-- [docs/RETRO_2026-05-22.md](docs/RETRO_2026-05-22.md) — Retrospective
+- [docs/APP_STORE_LISTING.md](docs/APP_STORE_LISTING.md) — كل نصوص App Store جاهزة
+- [docs/REVIEW_2026-05-22.md](docs/REVIEW_2026-05-22.md) — Engineering Review
+- [docs/SECURITY_AUDIT_2026-05-22.md](docs/SECURITY_AUDIT_2026-05-22.md) — Security Audit
+- [docs/RETRO_2026-05-22-v2.md](docs/RETRO_2026-05-22-v2.md) — Retrospective النهائي
+- [docs/web/](docs/web/) — صفحات HTML للاستضافة (privacy, terms, support, index)
+- [CHANGELOG.md](CHANGELOG.md) — سجل التغييرات
+- [BlockingMonitor/README.md](BlockingMonitor/README.md) — DeviceActivity Extension
 
 ---
 
