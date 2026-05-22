@@ -22,6 +22,8 @@ struct HomeView: View {
     @AppStorage(AppStorageKeys.isPremium) private var isPremium: Bool = false
     @AppStorage(AppStorageKeys.trialStartTs) private var trialStartTs: Double = 0
     @AppStorage(AppStorageKeys.selectedTab) private var selectedTab: Int = 0
+    // Personalization from onboarding
+    @AppStorage(AppStorageKeys.obName) private var obName: String = ""
     @State private var refreshTick: Int = 0
     @State private var selectedListId: UUID? = nil
     private let trialDuration: TimeInterval = 7 * 24 * 3600
@@ -106,6 +108,14 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     // Hero
                     VStack(spacing: 12) {
+                        let trimmedName = obName.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if !trimmedName.isEmpty {
+                            Text(lang.isArabicEffective ? "أهلاً، \(trimmedName) 👋" : "Welcome, \(trimmedName) 👋")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(AppColors.textSecondary)
+                                .frame(maxWidth: .infinity)
+                                .multilineTextAlignment(.center)
+                        }
                         ZStack {
                             Circle()
                                 .fill(AppColors.infoBg)

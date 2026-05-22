@@ -7,6 +7,9 @@ struct CreateListSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     @AppStorage(AppStorageKeys.isPremium) private var isPremium: Bool = false
+    // Personalization from onboarding (read-only, used to surface suggestions)
+    @AppStorage(AppStorageKeys.obApps) private var obApps: String = ""
+    @AppStorage(AppStorageKeys.obCats) private var obCats: String = ""
 
     @State private var name: String = ""
     @State private var protection: String = "noProtection" // hard | noProtection
@@ -216,6 +219,27 @@ struct CreateListSheet: View {
                     .font(.system(size: 20, weight: .semibold))
             }) {
                 VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 16) {
+                    if let suggestion = onboardingSuggestionText() {
+                        HStack(alignment: .top, spacing: 10) {
+                            Image(systemName: "sparkles")
+                                .foregroundColor(AppColors.accentDark)
+                                .font(.system(size: 16, weight: .regular))
+                            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 4) {
+                                Text(lang.isArabicEffective ? "اقتراحات بناءً على تفضيلاتك" : "Based on your preferences")
+                                    .font(.footnote.weight(.semibold))
+                                    .foregroundColor(AppColors.accentDark)
+                                Text(suggestion)
+                                    .font(.footnote)
+                                    .foregroundColor(AppColors.textSecondary)
+                                    .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                            }
+                            Spacer(minLength: 0)
+                        }
+                        .padding(12)
+                        .background(AppColors.infoBg)
+                        .cornerRadius(10)
+                    }
+
                     Button(action: { openEditor() }) {
                         Text(lang.isArabicEffective ? "أضف عناصر الحجب" : "Add items to block")
                             .font(.subheadline.weight(.semibold))
@@ -654,6 +678,33 @@ struct CreateListSheet: View {
         draft.websites.count + draft.apps.count + draft.categories.count > 0 ? "ok" : "empty"
     }
     private func openEditor() { draft.name = name; showingEditor = true }
+
+    /// Build a localized list of categories+apps the user selected during onboarding,
+    /// so we can hint at relevant blocking targets when they create their first list.
+    /// Returns nil when the user skipped onboarding or selected nothing actionable.
+    private func onboardingSuggestionText() -> String? {
+        let catIDs = obCats.split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty && $0 != "other" }
+        let appIDs = obApps.split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty && $0 != "other" }
+        var labels: [String] = []
+        labels.append(contentsOf: catIDs.compactMap { localizedCategoryLabel(for: $0) })
+        labels.append(contentsOf: appIDs.compactMap { localizedAppLabel(for: $0) })
+        guard !labels.isEmpty else { return nil }
+        let joined = labels.joined(separator: lang.isArabicEffective ? "، " : ", ")
+        return lang.isArabicEffective
+            ? "اخترت سابقاً: \(joined). افتح \"أضف عناصر\" وحدّدها من المختار."
+            : "You previously chose: \(joined). Open \"Add items\" to select them in the picker."
+    }
+
+    private func localizedCategoryLabel(for id: String) -> String? {
+        let ar: [String: String] = ["social": "السوشيال", "short_videos": "المقاطع القصيرة", "gaming": "الألعاب", "adult": "الإباحية", "gambling": "القمار", "shopping": "التسوق", "news": "الأخبار"]
+        let en: [String: String] = ["social": "Social", "short_videos": "Short Videos", "gaming": "Gaming", "adult": "Adult", "gambling": "Gambling", "shopping": "Shopping", "news": "News"]
+        return lang.isArabicEffective ? ar[id] : en[id]
+    }
+
+    private func localizedAppLabel(for id: String) -> String? {
+        let labels: [String: String] = ["tiktok": "TikTok", "youtube": "YouTube", "instagram": "Instagram", "snapchat": "Snapchat", "x": "X", "games": lang.isArabicEffective ? "الألعاب" : "Games"]
+        return labels[id]
+    }
     private func attemptConfirm() {
         // Validation
         if blockType == "scheduled" && isPremium && slots.isEmpty {
