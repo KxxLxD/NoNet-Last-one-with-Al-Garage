@@ -63,10 +63,24 @@ struct ContentView: View {
             applySemanticDirection(isArabic: lang.isArabicEffective)
             expireTrialIfNeeded()
             configureTabBarAppearance()
-            Task { await CloudKitPartnerStore.shared.refreshAccountStatus() }
+            Task {
+                let store = CloudKitPartnerStore.shared
+                await store.refreshAccountStatus()
+                if store.isAccountAvailable {
+                    await store.setupSubscriptions()
+                    await store.fetchPartnerships()
+                }
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .CKAccountChanged)) { _ in
-            Task { await CloudKitPartnerStore.shared.refreshAccountStatus() }
+            Task {
+                let store = CloudKitPartnerStore.shared
+                await store.refreshAccountStatus()
+                if store.isAccountAvailable {
+                    await store.setupSubscriptions()
+                    await store.fetchPartnerships()
+                }
+            }
         }
         .onChange(of: lang.isArabicEffective) { isArabic in
             applySemanticDirection(isArabic: isArabic)

@@ -25,6 +25,8 @@ struct HomeView: View {
     @AppStorage(AppStorageKeys.selectedTab) private var selectedTab: Int = 0
     // Personalization from onboarding
     @AppStorage(AppStorageKeys.obName) private var obName: String = ""
+    // Surfaces iCloud-unavailable banners when Hard-Mode lists exist
+    @ObservedObject private var partnerStore = CloudKitPartnerStore.shared
     @State private var refreshTick: Int = 0
     @State private var selectedListId: UUID? = nil
     private let trialDuration: TimeInterval = 7 * 24 * 3600
@@ -117,6 +119,32 @@ struct HomeView: View {
     private var hasScreenTimePermission: Bool { permissions.isScreenTimeGranted }
     private var hasNotificationPermission: Bool { permissions.isNotificationsGranted }
 
+    /// Only worth nagging about iCloud when at least one Hard-Mode list exists —
+    /// otherwise the recovery-partner feature isn't reachable anyway.
+    @ViewBuilder
+    private func iCloudBannerIfNeeded() -> some View {
+        let hasHardList = lists.contains { $0.protection == "hard" }
+        if hasHardList, let reason = partnerStore.accountUnavailableReason(isArabic: lang.isArabicEffective) {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "exclamationmark.icloud.fill")
+                    .foregroundColor(AppColors.alertRed)
+                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 4) {
+                    Text(lang.isArabicEffective ? "تنبيه iCloud" : "iCloud Notice")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundColor(AppColors.alertRed)
+                    Text(reason)
+                        .font(.footnote)
+                        .foregroundColor(AppColors.textSecondary)
+                        .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(12)
+            .background(AppColors.alertRed.opacity(0.08))
+            .cornerRadius(10)
+        }
+    }
+
     var body: some View {
         NavigationView {
             ScrollView {
@@ -171,6 +199,7 @@ struct HomeView: View {
                                 .cornerRadius(12)
                         }
                     }
+                    iCloudBannerIfNeeded()
                     SoftDivider(width: 300, opacity: 0.70)
 
                     // Primary CTA — Create Blocklist

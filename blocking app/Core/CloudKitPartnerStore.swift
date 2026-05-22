@@ -256,6 +256,57 @@ final class CloudKitPartnerStore: ObservableObject {
         partnerships.first { $0.associatedListIDs.contains(listID) }
     }
 
+    /// Delete a Partnership record. Best-effort: tries the private DB first
+    /// (the owner side), falls back to shared DB (the partner side, who can only
+    /// "leave" their side of the share).
+    func revokePartnership(id: String) async {
+        let recordID = CKRecord.ID(recordName: id)
+        do {
+            _ = try await privateDB.deleteRecord(withID: recordID)
+        } catch {
+            do { _ = try await sharedDB.deleteRecord(withID: recordID) }
+            catch {
+                log.error("revokePartnership failed: \(error.localizedDescription, privacy: .public)")
+                self.lastError = error.localizedDescription
+            }
+        }
+        await fetchPartnerships()
+    }
+
+    // MARK: - Push subscriptions
+
+    /// Register a CKQuerySubscription so iOS pushes a notification to the partner
+    /// whenever a new BreakAttempt is inserted in the shared zone. Idempotent —
+    /// re-running just no-ops once the subscription exists.
+    func setupSubscriptions() async {
+        let subID = "v1.breakAttempt.notify"
+        let predicate = NSPredicate(value: true)
+        let subscription = CKQuerySubscription(
+            recordType: PartnerRecordTypes.breakAttempt,
+            predicate: predicate,
+            subscriptionID: subID,
+            options: [.firesOnRecordCreation]
+        )
+
+        let info = CKSubscription.NotificationInfo()
+        info.titleLocalizationKey = "PARTNER_BREAK_TITLE"
+        info.alertLocalizationKey = "PARTNER_BREAK_BODY"
+        info.alertLocalizationArgs = ["listName"]
+        info.shouldSendContentAvailable = true
+        info.soundName = "default"
+        subscription.notificationInfo = info
+
+        do {
+            _ = try await sharedDB.save(subscription)
+            log.notice("subscription \(subID, privacy: .public) installed")
+        } catch let error as CKError where error.code == .serverRejectedRequest {
+            // Already exists — that's fine.
+            log.notice("subscription \(subID, privacy: .public) already present")
+        } catch {
+            log.error("subscription install failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
     // MARK: - Invitee side
 
     /// Accept a share whose metadata was delivered via
