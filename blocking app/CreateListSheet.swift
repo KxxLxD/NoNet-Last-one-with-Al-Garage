@@ -756,6 +756,22 @@ struct CreateListSheet: View {
         return labels[id]
     }
     private func attemptConfirm() {
+        // Free-tier monetization gates — enforced here so the user never reaches
+        // the confirm sheet or save() without the upgrade alert when they've hit
+        // their limit. Premium users skip both checks.
+        if !isPremium {
+            if currentListsCount() >= BlockingConstants.freeTierListLimit {
+                showLimitAlert = true
+                showUpgradeSheet = true
+                return
+            }
+            if protection == "hard" && currentHardListsCount() >= BlockingConstants.freeTierHardLimit {
+                showLimitAlert = true
+                showUpgradeSheet = true
+                return
+            }
+        }
+
         // Validation
         if blockType == "scheduled" && isPremium && slots.isEmpty {
             validationMessage = lang.isArabicEffective ? "أضف فترة جدولة واحدة على الأقل" : "Add at least one schedule slot"
@@ -857,6 +873,11 @@ struct CreateListSheet: View {
     }
     private func currentListsCount() -> Int {
         let req: NSFetchRequest<ListEntity> = ListEntity.fetchRequest()
+        return (try? context.count(for: req)) ?? 0
+    }
+    private func currentHardListsCount() -> Int {
+        let req: NSFetchRequest<ListEntity> = ListEntity.fetchRequest()
+        req.predicate = NSPredicate(format: "protection ==[c] %@", "hard")
         return (try? context.count(for: req)) ?? 0
     }
     private func uniqueName(from base: String) -> String {

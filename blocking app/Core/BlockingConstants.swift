@@ -23,6 +23,10 @@ enum BlockingConstants {
     /// Free-tier maximum number of lists.
     static let freeTierListLimit: Int = 3
 
+    /// Free-tier maximum number of Hard-Mode lists. Combined with Forever block
+    /// type, an unbounded count would collapse the value of upgrading.
+    static let freeTierHardLimit: Int = 1
+
     /// Free trial duration (7 days, in seconds).
     static let trialDurationSeconds: TimeInterval = 7 * 24 * 3600
 
