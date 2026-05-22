@@ -255,8 +255,8 @@
 				DEVELOPMENT_TEAM = L2T9STCPA5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_CFBundleDisplayName = NoNet;
+				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_NSFamilyControlsUsageDescription = "يستخدم التطبيق Screen Time محلياً على جهازك فقط لحجب التطبيقات والمواقع التي تختارها. لا تُرسل أي بيانات إلى خوادمنا.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -288,8 +288,8 @@
 				DEVELOPMENT_TEAM = L2T9STCPA5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_CFBundleDisplayName = NoNet;
+				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_NSFamilyControlsUsageDescription = "يستخدم التطبيق Screen Time محلياً على جهازك فقط لحجب التطبيقات والمواقع التي تختارها. لا تُرسل أي بيانات إلى خوادمنا.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
