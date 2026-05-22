@@ -7,6 +7,70 @@
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-05-22
+
+### الإصدار الثاني — شريك التعافي وأنواع الحجب الجديدة
+
+#### المضاف
+
+- **شريك التعافي (Recovery Partner)** عبر CloudKit + Apple ID — دعوة شريك تعافي
+  لقوائم Hard Mode، استلام push notifications عند محاولات الكسر، عرض سجل
+  المحاولات الكامل. لا backend خاص، لا OTP — verification حقيقي عبر Apple ID.
+- **نوع حظر "للأبد" (Forever)** — حجب دائم بدون نهاية، مع تحذيرات ثلاثية قبل
+  التفعيل (banner أحمر + alert أول + alert تأكيد نهائي). مناسب للمحتوى الإباحي
+  وتطبيقات القمار.
+- **نوع حظر "الحد اليومي" (Time-Limit)** — حصة يومية بالدقائق (15/30/60/90/120)،
+  shield يتفعّل تلقائياً بعد تجاوز الحصة ويُرفع منتصف الليل. يعتمد على
+  `DeviceActivityEvent` threshold.
+- **صفحة الموارد (Resources)** في الإعدادات → 3 بطاقات تعليمية static
+  (إحصائيات إدمان الشاشات، فوائد التخلص الرقمي، كيف يعمل NoNet).
+- **شخصنة Onboarding** — تحية باسم المستخدم في الـ Home + اقتراحات للفئات
+  والتطبيقات في `CreateListSheet` بناءً على ما اختاره في Onboarding.
+- **iCloud-unavailable banner** في Home عند وجود قوائم Hard Mode وفقدان iCloud.
+
+#### المحسَّن
+
+- `BlockingEngine.isHardLocked()` يدعم الآن Forever + TimeLimit (لا نهاية طبيعية).
+- `BlockingMonitor` extension يميّز بين schedule/limit activities ويعالج
+  `eventDidReachThreshold` للـ Time-Limit.
+- `ListDetailView` يعرض نوع الحظر بنص محلَّى (`localizedBlockTypeLabel`) بدلاً
+  من الـ raw string.
+- `BlockingEngine.purge()` يوقف monitoring لكلا prefix الأنشطة
+  (`schedule.<UUID>` + `limit.<UUID>`).
+
+#### المعمارية
+
+- `CloudKitPartnerStore.swift` (جديد) — singleton wrapper لكل عمليات CloudKit
+  (account status, createPartnership, acceptInvitation, fetchPartnerships,
+  recordBreakAttempt, fetchBreakAttempts, revokePartnership, setupSubscriptions).
+- `PartnerInviteView.swift` (جديد) — UIViewControllerRepresentable حول
+  `UICloudSharingController`.
+- `AppDelegate.swift` + `PartnerSceneDelegate` (جديد) — يستلمان
+  `windowScene(_:userDidAcceptCloudKitShareWith:)`.
+- `ResourcesView.swift` (جديد) — صفحة static بـ SwiftUI، لا أصول صور.
+- 3 entitlements جديدة في Debug + Release: `iCloud-services` (CloudKit)،
+  `iCloud-container-identifiers` (`iCloud.com.nonetapp`)، `aps-environment`.
+
+#### الوثائق
+
+- `docs/FEATURE_REFERENCE_FROM_WEB_AR.md` — مرجع نسخة NoNet Web الكامل (1038 سطر).
+- `docs/FEATURE_GAP_ANALYSIS_AR.md` — مقارنة منهجية بين 27 ميزة (78% منها
+  ممكن، 22% مستحيل على iOS بدون MDM).
+- `docs/PARTNER_FEATURE_DESIGN_AR.md` — التصميم المعتمد لشريك التعافي
+  (CloudKit + Apple ID) مع 6 خيارات بديلة موزونة و 8 حالات حافة.
+- `CLAUDE.md` موسَّع بـ build commands و architecture conventions و عَلاقات
+  multi-file (الـ blocking flow).
+
+#### يحتاج إعداد يدوي بعد الـ merge
+
+- Xcode → Signing & Capabilities → إضافة iCloud (CloudKit) + Push Notifications.
+- App Store Connect → CloudKit Dashboard → إنشاء container `iCloud.com.nonetapp`
+  والـ schema (`Partnership`, `BreakAttempt`).
+- `Localizable.strings` → إضافة `PARTNER_BREAK_TITLE` و `PARTNER_BREAK_BODY`
+  (نصوص الـ push notifications).
+- اختبار يدوي على جهازين iPhone حقيقيين (Family Controls و CloudKit لا يعملان
+  بشكل كامل في Simulator).
+
 ## [1.0.0] — 2026-05-22
 
 ### الإصدار الأول الجاهز للنشر على App Store
@@ -58,5 +122,6 @@
 - `NSFamilyControlsUsageDescription` مع رسالة بالعربية
 - Family Controls + Sign in with Apple capabilities في الـ entitlements
 
-[Unreleased]: https://github.com/khalidnonet/blocking-app/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/khalidnonet/blocking-app/releases/tag/v1.0.0
+[Unreleased]: https://github.com/KxxLxD/NoNet-Last-one-with-Al-Garage/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/KxxLxD/NoNet-Last-one-with-Al-Garage/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/KxxLxD/NoNet-Last-one-with-Al-Garage/releases/tag/v1.0.0
