@@ -110,6 +110,16 @@ struct SettingsView: View {
                         }
                         .simultaneousGesture(TapGesture().onEnded { hapticLight() })
                         SoftDivider(width: 280, opacity: 0.70)
+                        NavigationLink(destination: ResourcesView().environmentObject(lang)) {
+                            HStack {
+                                Image(systemName: "book.fill").foregroundColor(AppColors.accentDark)
+                                    .font(.system(size: 20, weight: .regular))
+                                Text(lang.isArabicEffective ? "الموارد" : "Resources")
+                                Spacer()
+                            }
+                        }
+                        .simultaneousGesture(TapGesture().onEnded { hapticLight() })
+                        SoftDivider(width: 280, opacity: 0.70)
                         Button(action: { hapticLight(); showBlockPreview = true }) {
                             HStack {
                                 Image(systemName: "eye").foregroundColor(AppColors.accentDark)
