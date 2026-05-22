@@ -2,6 +2,7 @@ import SwiftUI
 import FamilyControls
 import CoreData
 import UserNotifications
+import CloudKit
 
 struct HomeView: View {
     @EnvironmentObject var lang: LanguageManager
@@ -1017,8 +1018,13 @@ private struct LevelCard: View {
 struct ListDetailView: View {
     let list: ListEntity
     @EnvironmentObject var lang: LanguageManager
+    @ObservedObject private var partnerStore = CloudKitPartnerStore.shared
     @State private var showEditSheet = false
     @State private var showHardAlert = false
+    @State private var showPartnerInvite = false
+    @State private var pendingShare: CKShare?
+    @State private var partnerError: String?
+    @State private var isCreatingPartnership = false
     @Environment(\.dismiss) private var dismiss
 
     private struct Slot: Codable { let id: UUID; let day: Int; let fromMinutes: Int; let toMinutes: Int }
@@ -1125,6 +1131,11 @@ struct ListDetailView: View {
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.uiBorder, lineWidth: 0.5))
                 }
 
+                // Recovery Partner (Hard Mode only — see docs/PARTNER_FEATURE_DESIGN_AR.md)
+                if list.protection == "hard" {
+                    partnerSection()
+                }
+
                 // Actions
                 if list.protection != "hard" {
                     HStack(spacing: 12) {
@@ -1172,6 +1183,104 @@ struct ListDetailView: View {
         }
         .onChange(of: showEditSheet) { _ in }
         .onDisappear { }
+    }
+
+    @ViewBuilder
+    private func partnerSection() -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "person.2.fill")
+                    .foregroundColor(AppColors.accentDark)
+                Text(lang.isArabicEffective ? "شريك التعافي" : "Recovery Partner")
+                    .font(.caption.weight(.semibold))
+                    .foregroundColor(AppColors.textSecondary)
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                Text(lang.isArabicEffective
+                     ? "ادعُ شخصاً تثق به ليُبلَّغ عند محاولاتك كسر الحجب — حماية إضافية لوضع التعافي."
+                     : "Invite someone you trust to be notified of break attempts — extra accountability for recovery mode.")
+                    .font(.footnote)
+                    .foregroundColor(AppColors.textSecondary)
+                    .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                    .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+
+                if let reason = partnerStore.accountUnavailableReason(isArabic: lang.isArabicEffective) {
+                    Text(reason)
+                        .font(.footnote)
+                        .foregroundColor(AppColors.alertRed)
+                        .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+                } else {
+                    Button(action: invitePartner) {
+                        HStack {
+                            if isCreatingPartnership {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                                    .tint(.white)
+                            } else {
+                                Image(systemName: "envelope.fill")
+                            }
+                            Text(lang.isArabicEffective ? "دعوة شريك" : "Invite Partner")
+                        }
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                        .background(AppColors.accentDark)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isCreatingPartnership)
+                }
+            }
+            .padding(16)
+            .background(AppColors.uiSurface)
+            .cornerRadius(12)
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.uiBorder, lineWidth: 0.5))
+        }
+        .sheet(isPresented: $showPartnerInvite) {
+            if let share = pendingShare {
+                PartnerInviteView(
+                    share: share,
+                    container: partnerStore.container,
+                    isArabic: lang.isArabicEffective,
+                    onCompletion: { showPartnerInvite = false }
+                )
+                .ignoresSafeArea()
+            }
+        }
+        .alert(
+            lang.isArabicEffective ? "تعذّر دعوة شريك" : "Couldn't invite partner",
+            isPresented: Binding(get: { partnerError != nil }, set: { if !$0 { partnerError = nil } })
+        ) {
+            Button(lang.isArabicEffective ? "حسناً" : "OK", role: .cancel) { partnerError = nil }
+        } message: {
+            Text(partnerError ?? "")
+        }
+    }
+
+    private func invitePartner() {
+        isCreatingPartnership = true
+        let listID = stableListId
+        let displayName = list.name
+        Task {
+            do {
+                let (share, _) = try await CloudKitPartnerStore.shared.createPartnership(
+                    ownerDisplayName: displayName,
+                    associatedListID: listID
+                )
+                await MainActor.run {
+                    pendingShare = share
+                    isCreatingPartnership = false
+                    showPartnerInvite = true
+                }
+            } catch {
+                await MainActor.run {
+                    partnerError = error.localizedDescription
+                    isCreatingPartnership = false
+                }
+            }
+        }
     }
 
     private func isActiveNowDetail() -> Bool {

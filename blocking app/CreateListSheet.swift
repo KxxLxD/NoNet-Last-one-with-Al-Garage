@@ -523,6 +523,14 @@ struct CreateListSheet: View {
                     Text(lang.isArabicEffective ? "الوضع الصارم: صعب الإيقاف أثناء المدة." : "Hard Mode: Hard to stop during duration.")
                         .font(.footnote)
                         .foregroundColor(.secondary)
+                    if protection == "hard" {
+                        Text(lang.isArabicEffective
+                             ? "💡 بعد الإنشاء يمكنك دعوة شريك تعافي من تفاصيل القائمة."
+                             : "💡 After creating, invite a recovery partner from the list details.")
+                            .font(.footnote)
+                            .foregroundColor(AppColors.accentDark)
+                            .padding(.top, 4)
+                    }
                 }
                 .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
                     }

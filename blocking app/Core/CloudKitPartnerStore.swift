@@ -136,4 +136,61 @@ final class CloudKitPartnerStore: ObservableObject {
         @unknown default: return "unknown"
         }
     }
+
+    // MARK: - Invitation (Inviter side)
+
+    enum PartnerStoreError: LocalizedError {
+        case accountUnavailable
+        case noUserRecord
+
+        var errorDescription: String? {
+            switch self {
+            case .accountUnavailable: return "iCloud account is not available."
+            case .noUserRecord: return "Could not fetch the current iCloud user record."
+            }
+        }
+    }
+
+    /// Create a pending Partnership record + CKShare. The caller hands the returned
+    /// CKShare to UICloudSharingController to deliver the invitation via Messages/Mail/etc.
+    ///
+    /// The record is saved in the user's private database; the CKShare moves it into a
+    /// shared zone once the invitee accepts. associatedListIDs starts with the single list
+    /// that triggered the invite — additional lists can be added later via fetch+update.
+    func createPartnership(ownerDisplayName: String, associatedListID: UUID) async throws -> (CKShare, CKRecord) {
+        guard isAccountAvailable else { throw PartnerStoreError.accountUnavailable }
+
+        let ownerID = try await container.userRecordID()
+
+        let recordID = CKRecord.ID(recordName: UUID().uuidString)
+        let record = CKRecord(recordType: PartnerRecordTypes.partnership, recordID: recordID)
+        record["ownerUserID"] = ownerID.recordName as CKRecordValue
+        record["ownerDisplayName"] = ownerDisplayName as CKRecordValue
+        record["status"] = PartnershipStatus.pending.rawValue as CKRecordValue
+        record["createdAt"] = Date() as CKRecordValue
+        record["associatedListIDs"] = [associatedListID.uuidString] as CKRecordValue
+
+        let share = CKShare(rootRecord: record)
+        share[CKShare.SystemFieldKey.title] = "Recovery Partner — \(ownerDisplayName)" as CKRecordValue
+        share.publicPermission = .none
+
+        try await save(records: [record, share])
+        log.notice("createPartnership: saved \(recordID.recordName, privacy: .public) for list \(associatedListID, privacy: .public)")
+        return (share, record)
+    }
+
+    /// Persist multiple records (record + share) in a single transaction.
+    private func save(records: [CKRecord]) async throws {
+        let operation = CKModifyRecordsOperation(recordsToSave: records, recordIDsToDelete: nil)
+        operation.savePolicy = .ifServerRecordUnchanged
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            operation.modifyRecordsResultBlock = { result in
+                switch result {
+                case .success: continuation.resume()
+                case .failure(let error): continuation.resume(throwing: error)
+                }
+            }
+            self.privateDB.add(operation)
+        }
+    }
 }
