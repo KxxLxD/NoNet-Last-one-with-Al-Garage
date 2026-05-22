@@ -6,6 +6,107 @@
 
 ---
 
+## 🆕 v1.1.0 — إعداد ميزات الإصدار الثاني (~20 دقيقة)
+
+> **متى:** بعد ميرج الـ PR رقم 1 (`feat: v1.1.0`). 4 إجراءات يدوية لتفعيل
+> شريك التعافي (CloudKit) و push notifications. الكود جاهز بالكامل، هذه فقط
+> capabilities + container + سلاسل ترجمة.
+
+### 1.1️⃣ Xcode — تفعيل CloudKit + Push (~2 دقيقة)
+
+**لماذا؟** ميزة شريك التعافي تعتمد على CloudKit، والإشعارات للشريك تعتمد
+على Push Notifications. الـ entitlements XML محدَّث لكن Xcode يحتاج
+ربطها بالـ Capability في UI.
+
+**كيف؟**
+1. افتح Xcode → اختر هدف **blocking app** → تبويب **Signing & Capabilities**.
+2. اضغط `+ Capability` → اختر **iCloud** → فعّل خانة **CloudKit** →
+   في قسم Containers ستجد `iCloud.com.nonetapp` (اضغط `+` لتُنشئها إن
+   لم تكن موجودة).
+3. اضغط `+ Capability` → اختر **Push Notifications**.
+4. اضغط `+ Capability` → اختر **Background Modes** → فعّل
+   **Remote notifications**.
+
+⏱️ **الوقت:** دقيقتان.
+
+---
+
+### 1.2️⃣ App Store Connect — إنشاء CloudKit Container (~5 دقائق)
+
+**لماذا؟** Container هو "قاعدة البيانات" التي تستضيف سجلات الشراكات. بدونه
+الـ store لا يستطيع الكتابة. مجاني تماماً ضمن حصة CloudKit المجانية.
+
+**كيف؟**
+1. افتح https://icloud.developer.apple.com/dashboard/
+2. سجّل دخول بـ Apple Developer Account.
+3. Containers → `+` → اكتب `iCloud.com.nonetapp` → Create.
+4. داخل الـ container → Schema → Record Types → أنشئ نوعين:
+   - **Partnership** (الحقول موثّقة في
+     [docs/PARTNER_FEATURE_DESIGN_AR.md](docs/PARTNER_FEATURE_DESIGN_AR.md)
+     قسم "PartnershipRecord").
+   - **BreakAttempt** (الحقول في نفس الوثيقة، قسم "BreakAttemptRecord").
+5. Deploy Schema to Production (زر في أعلى الـ dashboard) قبل الإطلاق.
+
+⏱️ **الوقت:** 5 دقائق.
+
+---
+
+### 1.3️⃣ Localizable.strings — نصوص إشعارات الـ Push (~2 دقيقة)
+
+**لماذا؟** الـ push notification body يستخدم localization keys (هذا أفضل
+ممارسة من Apple — النصوص تظهر بلغة جهاز الشريك تلقائياً). بدون هذه
+السطور، الـ push يعرض المفاتيح كنص خام.
+
+**كيف؟**
+
+في كل من `en.lproj/Localizable.strings` و `ar.lproj/Localizable.strings` (أنشئها إذا لم تكن موجودة)، أضف:
+
+```
+"PARTNER_BREAK_TITLE" = "Break attempt logged";
+"PARTNER_BREAK_BODY"  = "%@ tried to break a Hard Mode block.";
+```
+
+(والنسخة العربية في `ar.lproj`):
+
+```
+"PARTNER_BREAK_TITLE" = "تم تسجيل محاولة كسر";
+"PARTNER_BREAK_BODY"  = "%@ حاول كسر حجب بوضع صارم.";
+```
+
+⏱️ **الوقت:** دقيقتان.
+
+---
+
+### 1.4️⃣ اختبار يدوي على جهازين iPhone (~10 دقائق)
+
+**لماذا؟** Family Controls و CloudKit Sharing لا يعملان بشكل كامل في
+Simulator. تحتاج جهازين بـ Apple ID مختلفين لاختبار end-to-end.
+
+**سيناريوهات الاختبار:**
+
+- [ ] **Forever:** إنشاء قائمة Forever → تأكّد من شاشة التحذير الثلاثية
+      (banner أحمر + alert أول + alert تأكيد نهائي).
+- [ ] **Time-Limit:** إنشاء قائمة بـ 5 دقائق → استخدم تطبيقاً 5 دقائق →
+      تأكّد من ظهور الـ shield بقية اليوم → جرّب reset عند منتصف الليل.
+- [ ] **Partner invitation:** من جهاز A، أرسل دعوة → استلمها على جهاز B →
+      اقبلها بـ Apple ID مختلف → تأكّد أن الشراكة تظهر في الـ Detail.
+- [ ] **Break attempt:** على جهاز A حاول حذف قائمة Hard Mode → تأكّد من
+      أن الجهاز B استلم push notification خلال 5 ثوان.
+
+⏱️ **الوقت:** 10 دقائق (مع زمن انتظار الـ push).
+
+---
+
+> **تذكير بعد ميرج الـ PR:**
+> ```bash
+> git checkout NoNet-Garage && git pull
+> git tag -a v1.1.0 -m "Recovery Partner + Forever/Time-Limit + Resources"
+> git push origin v1.1.0
+> ```
+> الـ tag على merge commit، ليس على الـ feature branch (مقاوم لـ rebase/squash).
+
+---
+
 ## ⚡ الأولوية القصوى — افعلها اليوم
 
 > هذه الثلاثة تأخذ وقتاً (Apple تنتظر)، فابدأها فوراً.
