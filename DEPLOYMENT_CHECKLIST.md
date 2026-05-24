@@ -21,11 +21,26 @@
 - [x] AppIcons موجودة (1024 + كل المقاسات)
 - [x] `PrivacyInfo.xcprivacy` — Privacy Manifest (iOS 17+ compliant)
 - [x] `VERSION` + `CHANGELOG.md` (Keep-a-Changelog)
-- [x] 32 Unit tests في `blocking appTests/`
+- [x] 46 Unit tests في `blocking appTests/` (32 من v1.0.0 + 14 لميزات v1.1.0)
 - [x] `BlockingMonitor/` scaffold للـ DeviceActivityMonitor extension
 - [x] App Store Listing نصوص جاهزة (`docs/APP_STORE_LISTING.md`)
 - [x] صفحات HTML للاستضافة في `docs/web/`
 - [x] Engineering Review + Security Audit reports
+
+### 🆕 v1.1.0 — جاهز في الكود
+
+- [x] Forever block type مع تحذيرات ثلاثية
+- [x] Time-Limit block type عبر `DeviceActivityEvent` threshold
+- [x] Recovery Partner كامل (CloudKit + Apple ID + Push subscription)
+- [x] Resources page (3 بطاقات تعليمية static)
+- [x] Onboarding personalization (تحية + اقتراحات للقوائم)
+- [x] iCloud-unavailable banner في Home
+- [x] Monetization gates مُفعَّلة (3 قوائم + 1 Hard Mode للمجاني)
+- [x] Privacy Manifest محدَّث بـ CloudKit data types
+- [x] Privacy Policy AR + EN فيها قسم 5.1 لشريك التعافي
+- [x] Community section في Settings (Coming Soon — لا روابط مكسورة)
+- [x] iCloud + Push capabilities مضافة في الـ entitlements XML
+- [x] `docs/VERIFICATION_v1.1.0_AR.md` — 96% spec parity audit
 
 ---
 
@@ -243,8 +258,24 @@ npx vercel
 
 ---
 
+## 🆕 v1.1.0 — خطوات يدوية إضافية
+
+قبل إرسال v1.1.0 لـ App Store، تأكّد من:
+
+- [ ] **Xcode capabilities** — اضغط `+ Capability` وأضف: **iCloud (CloudKit)** + **Push Notifications** + **Background Modes → Remote notifications**. الـ entitlements XML محدَّث، Xcode يحتاج ربطها يدوياً.
+- [ ] **App Store Connect → CloudKit Dashboard** — أنشئ container `iCloud.com.nonetapp` ونوعَي السجلات `Partnership` و `BreakAttempt` (الـ schema في [docs/PARTNER_FEATURE_DESIGN_AR.md](docs/PARTNER_FEATURE_DESIGN_AR.md)). اضغط **Deploy to Production** قبل الإطلاق.
+- [ ] **Localizable.strings** — أضف مفتاحَي push: `PARTNER_BREAK_TITLE` و `PARTNER_BREAK_BODY` (مع `%@`) في `en.lproj` و `ar.lproj`.
+- [ ] **روابط المجتمع** — استبدل `url: nil` في `SettingsView.swift` بروابط WhatsApp/Telegram الحقيقية لما توفّر (التفاصيل في [TODO_FOR_KHALID.md](TODO_FOR_KHALID.md) قسم 1.4️⃣).
+- [ ] **اختبار يدوي على جهازين** — Family Controls و CloudKit Sharing لا يعملان كاملاً في Simulator.
+- [ ] **App Store Connect → Privacy Nutrition Label** — صرِّح بـ User ID + Name + Product Interaction (Linked, Not for tracking, App Functionality) — يطابق `PrivacyInfo.xcprivacy`.
+
+تفاصيل كل خطوة في [TODO_FOR_KHALID.md](TODO_FOR_KHALID.md) قسم "v1.1.0".
+
+---
+
 ## 📞 جهات اتصال مفيدة
 
 - Apple Developer Support: https://developer.apple.com/contact
 - App Review Status: https://developer.apple.com/contact/app-store/?topic=expedite
 - Family Controls Request: https://developer.apple.com/contact/request/family-controls-distribution
+- CloudKit Dashboard: https://icloud.developer.apple.com/dashboard/

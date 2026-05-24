@@ -8,16 +8,27 @@
 - محلي بالكامل (لا backend، لا تتبع، لا analytics خارجي)
 
 ![Status](https://img.shields.io/badge/status-App%20Store%20Submission%20Ready-success)
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
-![Tests](https://img.shields.io/badge/tests-32%20unit-brightgreen)
-![Privacy](https://img.shields.io/badge/privacy-zero%20data%20collected-blueviolet)
+![Version](https://img.shields.io/badge/version-1.1.0-blue)
+![Tests](https://img.shields.io/badge/tests-46%20unit-brightgreen)
+![Privacy](https://img.shields.io/badge/privacy-CloudKit%20only-blueviolet)
 ![Build](https://img.shields.io/badge/build-0%20errors%200%20warnings-success)
 
 > ## 🎯 إطلاق App Store جاهز
 >
-> الكود جاهز بنسبة 100% ✅ — تبقّت 9 إجراءات إدارية تحتاج Apple ID الشخصي.
+> الكود جاهز بنسبة 100% ✅ — تبقّت إجراءات إدارية تحتاج Apple ID الشخصي.
 >
 > **➡️ افتح [TODO_FOR_KHALID.md](TODO_FOR_KHALID.md) للقائمة الكاملة.**
+
+### 🆕 ما الجديد في v1.1.0
+
+- **شريك التعافي (Recovery Partner)** عبر CloudKit + Apple ID — دعوة شريك،
+  استلام إشعارات محاولات كسر Hard Mode، عرض السجل الكامل. بدون backend.
+- **نوع حظر "للأبد" (Forever)** — حجب دائم بدون نهاية مع تحذيرات ثلاثية.
+- **نوع حظر "حد يومي" (Time-Limit)** — حصة يومية تعيد نفسها منتصف الليل
+  (يستخدم `DeviceActivityEvent` threshold).
+- **صفحة الموارد (Resources)** + **شخصنة Onboarding** (تحية + اقتراحات).
+- **96% مطابقة لمواصفات الـ Web** — تفاصيل في
+  [docs/VERIFICATION_v1.1.0_AR.md](docs/VERIFICATION_v1.1.0_AR.md).
 >
 > الإجراءات تأخذ ~3-4 ساعات موزعة على 1-2 أسبوع (انتظار Apple).
 
@@ -77,8 +88,8 @@ blocking app/
 │
 ├── Core/                           # ⭐ البنية التحتية
 │   ├── AppStorageKeys.swift        # كل مفاتيح @AppStorage موحّدة
-│   ├── BlockingConstants.swift     # ثوابت (مدد، حدود)
-│   ├── BlockingEngine.swift        # ManagedSettings + DeviceActivity
+│   ├── BlockingConstants.swift     # ثوابت (مدد، حدود، حد المجاني)
+│   ├── BlockingEngine.swift        # ManagedSettings + DeviceActivity (4 block types)
 │   ├── PermissionsManager.swift    # Screen Time + Notifications
 │   ├── FamilySelectionStore.swift  # حفظ FamilyActivitySelection
 │   ├── SchedulePersistence.swift   # تشفير JSON مع versioning
@@ -89,7 +100,12 @@ blocking app/
 │   ├── AppleSignInCoordinator.swift # Sign in with Apple + nonce
 │   ├── KeychainStore.swift         # تخزين معرفات Apple بأمان
 │   ├── ChatResponder.swift         # protocol + LocalChatResponder
+│   ├── CloudKitPartnerStore.swift  # 🆕 Recovery Partner (CloudKit + Apple ID)
 │   └── LegalContent.swift          # سياسة الخصوصية + الشروط
+│
+│   AppDelegate.swift                # 🆕 يستقبل CloudKit share-acceptance
+│   PartnerInviteView.swift          # 🆕 UICloudSharingController wrapper
+│   ResourcesView.swift              # 🆕 صفحة موارد تعليمية static
 │
 ├── Models/
 │   └── ListEntity.swift            # ListEntity + BlockItemEntity
@@ -156,7 +172,8 @@ xcodebuild test \
 `PrivacyInfo.xcprivacy` يصرّح:
 - `NSPrivacyTracking`: false
 - `NSPrivacyTrackingDomains`: []
-- `NSPrivacyCollectedDataTypes`: [] (لا جمع بيانات شخصية)
+- `NSPrivacyCollectedDataTypes`: User ID + Name + Product Interaction
+  (CloudKit Recovery Partner فقط، Purpose = AppFunctionality، لا tracking)
 - استخدام UserDefaults مع reason code `CA92.1` (Functional use)
 
 ---
@@ -170,6 +187,10 @@ xcodebuild test \
 - [docs/REVIEW_2026-05-22.md](docs/REVIEW_2026-05-22.md) — Engineering Review
 - [docs/SECURITY_AUDIT_2026-05-22.md](docs/SECURITY_AUDIT_2026-05-22.md) — Security Audit
 - [docs/RETRO_2026-05-22-v2.md](docs/RETRO_2026-05-22-v2.md) — Retrospective النهائي
+- 🆕 [docs/FEATURE_REFERENCE_FROM_WEB_AR.md](docs/FEATURE_REFERENCE_FROM_WEB_AR.md) — مرجع ميزات نسخة الويب
+- 🆕 [docs/FEATURE_GAP_ANALYSIS_AR.md](docs/FEATURE_GAP_ANALYSIS_AR.md) — مقارنة 27 ميزة (78% ممكن)
+- 🆕 [docs/PARTNER_FEATURE_DESIGN_AR.md](docs/PARTNER_FEATURE_DESIGN_AR.md) — تصميم Recovery Partner
+- 🆕 [docs/VERIFICATION_v1.1.0_AR.md](docs/VERIFICATION_v1.1.0_AR.md) — تحقّق v1.1.0 (96%)
 - [docs/web/](docs/web/) — صفحات HTML للاستضافة (privacy, terms, support, index)
 - [CHANGELOG.md](CHANGELOG.md) — سجل التغييرات
 - [BlockingMonitor/README.md](BlockingMonitor/README.md) — DeviceActivity Extension

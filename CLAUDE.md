@@ -43,13 +43,21 @@ xcodebuild test \
 2. `PermissionsManager.requestScreenTime()` يطلب إذن Family Controls.
 3. `FamilyActivityPicker` (UI من Apple) يُرجع `FamilyActivitySelection` تحتوي على opaque tokens.
 4. عند الحفظ: `ListEntity` + `BlockItemEntity` في Core Data، و `FamilySelectionStore.save(...)` يخزّن الرموز في App Group UserDefaults كـ JSON.
-5. `BlockingEngine.shared.activate(list)`:
+5. `BlockingEngine.shared.activate(list)` — أربعة فروع حسب `blockType`:
    - **فوري (now):** ينشئ `ManagedSettingsStore(named: "blocklist.<UUID>")` لكل قائمة (وليس store عام واحد — هذا متعمّد للسماح بحجب قوائم متعددة بشكل مستقل) ويطبّق `shield.applications/webDomains` فوراً.
-   - **مجدول (scheduled):** يسجّل `DeviceActivitySchedule` في `DeviceActivityCenter`. عند بدء النافذة الزمنية، iOS تستدعي `BlockingMonitor` extension الذي يقرأ الرموز من App Group ويطبّق الـ shields. عند النهاية يستدعي `clearAllSettings()`.
+   - **مجدول (scheduled):** يسجّل `DeviceActivitySchedule` في `DeviceActivityCenter` باسم `schedule.<UUID>`. عند بدء النافذة الزمنية، iOS تستدعي `BlockingMonitor` extension الذي يقرأ الرموز من App Group ويطبّق الـ shields. عند النهاية يستدعي `clearAllSettings()`.
+   - **حد يومي (timeLimit):** يسجّل schedule يومي (`00:00→23:59 repeats`) باسم `limit.<UUID>` مع `DeviceActivityEvent(threshold: durationSeconds/60 min)`. الـ shield لا يُطبّق فوراً — `eventDidReachThreshold` في الـ extension يطبّقه بعد استهلاك الحصة، و `intervalDidStart` (منتصف الليل) ينظّفه. **يعيد استخدام `durationSeconds`** كحامل لحصة الدقائق بدل إضافة حقل جديد.
+   - **للأبد (forever):** `applyShields` فوراً، لا scheduling. `isHardLocked` يُرجع `true` دائماً عند الجمع مع Hard Mode.
 
 **نقطة مهمة:** auto-deactivation للقوائم المنتهية يحدث عند فتح التطبيق فقط، لا في الخلفية. الحجب يُحرَّر منطقياً عبر `isActiveNow` لكن الـ shield الفعلي يبقى مطبَّقاً حتى يفتح المستخدم التطبيق (يُحلّ مع تفعيل extension).
 
 **ContentView routing:** `isAuthenticated` → AuthView، ثم `showOnboardingAfterLogin` → OnboardingView، وإلا TabView (Home/Chat/Settings).
+
+**Recovery Partner (v1.1.0)** — تدفق منفصل عن الحجب نفسه:
+- `CloudKitPartnerStore.shared` singleton @MainActor — كل ما يتعلق بـ CloudKit (account status, createPartnership, acceptInvitation, recordBreakAttempt, setupSubscriptions).
+- DTOs `Partnership`/`BreakAttempt` تفصل SwiftUI عن CKRecord. failable inits تتعامل مع schema-drift بأمان (status راو غير معروف → nil بدل crash).
+- `AppDelegate` + `PartnerSceneDelegate` يستلمان `windowScene(_:userDidAcceptCloudKitShareWith:)` ويُمرّرانها لـ `acceptInvitation`. لازم `@UIApplicationDelegateAdaptor` في `blocking_appApp` لأن SwiftUI lifecycle لا يكشف الـ scene callback مباشرة.
+- Push notifications عبر `CKQuerySubscription` على Shared DB — Apple ترسل push كل ما يُحفظ `BreakAttempt` جديد.
 
 ## اصطلاحات مهمة (Code Conventions)
 
@@ -64,12 +72,17 @@ xcodebuild test \
 
 ## الـ Capabilities المطلوبة
 
-في `blocking app/blocking app.entitlements`:
+في `blocking app/blocking app.entitlements` (و `Release.entitlements`):
 - `com.apple.developer.family-controls` — للوصول لـ Screen Time API
 - `com.apple.developer.applesignin` — Sign in with Apple
 - `com.apple.security.application-groups` = `group.com.nonetapp.shared` — لمشاركة UserDefaults مع الـ extension
+- 🆕 `com.apple.developer.icloud-services` = `[CloudKit]` — Recovery Partner
+- 🆕 `com.apple.developer.icloud-container-identifiers` = `[iCloud.com.nonetapp]`
+- 🆕 `aps-environment` = `development`/`production` — Push للشريك
 
 Family Controls entitlement يحتاج موافقة Apple يدوية (Request Form). بدونها التطبيق يعمل في dev signing فقط.
+
+iCloud + Push capabilities موجودة في الـ XML لكن Xcode يحتاج أيضاً ربطها في Signing & Capabilities UI (manual setup — موثّق في `TODO_FOR_KHALID.md` قسم v1.1.0).
 
 ## تعديلات UI (Design System)
 
