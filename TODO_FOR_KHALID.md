@@ -77,7 +77,40 @@
 
 ---
 
-### 1.4️⃣ اختبار يدوي على جهازين iPhone (~10 دقائق)
+### 1.4️⃣ روابط المجتمع — WhatsApp + Telegram (~3 دقائق)
+
+**لماذا؟** قسم "المجتمع" في الإعدادات يعرض الآن صفّين (WhatsApp + Telegram)
+بـ شارة "قريباً". لما توفّر الروابط الحقيقية، استبدل الـ `nil` في
+`SettingsView.swift` بـ URL وستفعّل المرشدات.
+
+**كيف؟**
+
+افتح [`blocking app/SettingsView.swift`](blocking app/SettingsView.swift)،
+ابحث عن `TODO(v1.2)`، استبدل السطرين:
+
+```swift
+url: nil  // TODO(v1.2): replace with real WhatsApp invite link
+// ↓
+url: URL(string: "https://chat.whatsapp.com/YOUR_INVITE_CODE")
+```
+
+```swift
+url: nil  // TODO(v1.2): replace with real Telegram link
+// ↓
+url: URL(string: "https://t.me/YOUR_CHANNEL_NAME")
+```
+
+> ⚠️ **مهم:** Apple App Review تفتح الروابط فعلياً. تأكّد:
+> - الـ WhatsApp link شغّال (`chat.whatsapp.com/...` للمجموعات، أو
+>   `wa.me/<رقم>` للأرقام).
+> - الـ Telegram link شغّال (`t.me/<username>` أو invite hash).
+> - **لا** تستخدم روابط منتهية أو خاصة فقط لك.
+
+⏱️ **الوقت:** 3 دقائق (تعديل سطرين + commit).
+
+---
+
+### 1.5️⃣ اختبار يدوي على جهازين iPhone (~10 دقائق)
 
 **لماذا؟** Family Controls و CloudKit Sharing لا يعملان بشكل كامل في
 Simulator. تحتاج جهازين بـ Apple ID مختلفين لاختبار end-to-end.

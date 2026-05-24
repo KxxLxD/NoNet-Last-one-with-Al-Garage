@@ -6,8 +6,48 @@ struct SettingsView: View {
     @AppStorage(AppStorageKeys.isPremium) private var isPremium: Bool = false
     @State private var showBlockPreview = false
     @State private var navigateToUpgrade = false
-    
+    @State private var showComingSoonAlert = false
+
     private func hapticLight() { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
+
+    /// Renders a community-channel row. Pass a `URL` to make it tappable (opens the
+    /// destination), or `nil` to show a "Soon" badge that triggers `showComingSoonAlert`.
+    /// The nil branch is intentional: Apple App Review rejects placeholder URLs
+    /// (`example.com/...`), so we ship the section visible with no broken external links.
+    @ViewBuilder
+    private func communityRow(icon: String, label: String, url: URL?) -> some View {
+        if let url = url {
+            Link(destination: url) {
+                HStack {
+                    Image(systemName: icon)
+                        .foregroundColor(AppColors.accentDark)
+                        .font(.system(size: 20, weight: .regular))
+                    Text(label)
+                    Spacer()
+                }
+            }
+            .simultaneousGesture(TapGesture().onEnded { hapticLight() })
+        } else {
+            Button(action: { hapticLight(); showComingSoonAlert = true }) {
+                HStack {
+                    Image(systemName: icon)
+                        .foregroundColor(AppColors.accentDark)
+                        .font(.system(size: 20, weight: .regular))
+                    Text(label)
+                        .foregroundColor(AppColors.textPrimary)
+                    Spacer()
+                    Text(lang.isArabicEffective ? "قريباً" : "Soon")
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(AppColors.infoBg)
+                        .foregroundColor(AppColors.accentDark)
+                        .cornerRadius(6)
+                }
+            }
+            .buttonStyle(.plain)
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -139,9 +179,33 @@ struct SettingsView: View {
                     )
                     .padding(.horizontal, 24)
                 
-                    // Community section is hidden for v1.0 — real WhatsApp/Telegram
-                    // links not yet provisioned. App Store rejects placeholder URLs.
-                    // To re-enable: add real URLs and unhide this block.
+                    // Community — placeholders shown with "Soon" badge until real URLs
+                    // are provisioned. Replace `url: nil` with `url: URL(string: "...")`
+                    // once the WhatsApp/Telegram channels go live (see TODO_FOR_KHALID.md
+                    // section v1.1.0 → "روابط المجتمع").
+                    HStack { Text(lang.isArabicEffective ? "المجتمع" : "Community").font(.system(size: 22, weight: .semibold)).foregroundColor(AppColors.textPrimary); Spacer() }
+                        .padding(.horizontal, 24)
+                    VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
+                        communityRow(
+                            icon: "message.fill",
+                            label: lang.isArabicEffective ? "مجموعة واتساب" : "WhatsApp Community",
+                            url: nil  // TODO(v1.2): replace with real WhatsApp invite link
+                        )
+                        SoftDivider(width: 280, opacity: 0.70)
+                        communityRow(
+                            icon: "paperplane.fill",
+                            label: lang.isArabicEffective ? "قناة تيليجرام" : "Telegram Channel",
+                            url: nil  // TODO(v1.2): replace with real Telegram link
+                        )
+                    }
+                    .padding(20)
+                    .background(AppColors.uiSurface)
+                    .cornerRadius(20)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(AppColors.uiBorder, lineWidth: 0.5)
+                    )
+                    .padding(.horizontal, 24)
 
                     // Legal
                     HStack { Text(lang.isArabicEffective ? "القانوني" : "Legal").font(.system(size: 22, weight: .semibold)).foregroundColor(AppColors.textPrimary); Spacer() }
@@ -221,6 +285,13 @@ struct SettingsView: View {
             )
                 .environmentObject(lang)
                 .padding(16)
+        }
+        .alert(lang.isArabicEffective ? "قريباً" : "Coming Soon", isPresented: $showComingSoonAlert) {
+            Button(lang.isArabicEffective ? "حسناً" : "OK", role: .cancel) {}
+        } message: {
+            Text(lang.isArabicEffective
+                 ? "ستفتح هذه القناة قريباً. شكراً لصبرك!"
+                 : "This channel will open soon. Thanks for your patience!")
         }
     }
 }
