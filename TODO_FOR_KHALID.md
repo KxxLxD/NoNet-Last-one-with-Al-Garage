@@ -1,6 +1,66 @@
 # 📋 قائمتك الشخصية — ما عليك فعله بنفسك
 
 > **الملخّص:** كل الكود جاهز ✅. تبقّى **9 إجراءات** تحتاج تسجيل دخولك الشخصي على Apple أو فتح Xcode UI. لا يستطيع أي AI تنفيذها نيابة عنك.
+
+---
+
+## 🆕 v1.3.x — مراجعة الأذونات (Engineering Review)
+
+تمّت مراجعة هندسيّة شاملة (commit `96f8777` وما بعده). الحالة:
+
+### ✅ مُصلَح أوتوماتيكياً
+1. **Push notifications wiring** — أضيفت `registerForRemoteNotifications()` +
+   APNs handlers + CloudKit silent-push handoff في `AppDelegate.swift`.
+2. **`UIBackgroundModes = remote-notification`** — أُضيف في
+   `project.pbxproj` (Debug + Release).
+3. **App Attest entitlement محذوف** — كان مُعلَن لكن غير مستخدم. Apple
+   Review قد تسأل عن أيّ capability غير مستخدمة.
+
+### 🔴 لا يزال يحتاج تدخّل يدوي منك في Xcode
+
+#### A. إضافة هدف BlockingMonitor كـ App Extension (~10 دقائق — ضروري)
+
+**لماذا؟** الجدولة الزمنيّة (Scheduled blocking) والحدّ اليومي (Time Limit)
+**لن يطبّقا الـ shields في الخلفية** بدون هذا الـ target. الكود موجود في
+`BlockingMonitor/BlockingMonitor.swift` لكن Xcode ما يعرف يبنيه كـ
+`.appex` separate bundle.
+
+**كيف؟**
+1. افتح Xcode → File → New → Target → **Device Activity Monitor Extension**
+2. سمّه `BlockingMonitor` ، بـ bundle ID `com.nonetapp.BlockingMonitor`
+3. Xcode ينشئ مجلّد جديد مع scaffolding — **احذف** الـ scaffolding
+   واستخدم الـ `BlockingMonitor/BlockingMonitor.swift` و
+   `BlockingMonitor/Info.plist` الموجودين أصلاً
+4. في Signing & Capabilities لهدف BlockingMonitor:
+   - أضف **App Groups** → `group.com.nonetapp.shared`
+   - أضف **Family Controls** capability
+5. تأكّد إنّ الهدف الجديد في "Embed App Extensions" build phase
+   للـ main `blocking app` target
+
+**كيف تتأكّد إنّه شغّال؟**
+- شغّل تطبيق على جهاز فعلي
+- أنشئ قائمة بـ "حد يومي" (Time-Limit) بدقيقة واحدة
+- شغّل تطبيقاً محجوباً
+- بعد دقيقة، الـ shield يطبَّق تلقائياً (يعني الـ extension استلم
+  `eventDidReachThreshold` callback)
+
+#### B. تفعيل CloudKit + Push في Signing & Capabilities (~2 دقيقة)
+
+الـ entitlements XML محدَّث لكن Xcode UI يحتاج ربطها explicit:
+- iCloud (CloudKit) ✓ container `iCloud.com.nonetapp`
+- Push Notifications ✓
+- Background Modes → Remote notifications ✓
+- Sign in with Apple ✓
+- App Groups ✓ `group.com.nonetapp.shared`
+- Family Controls ✓
+
+#### C. تأكيد container `iCloud.com.nonetapp` في App Store Connect
+
+لا أستطيع التحقّق منه من الكود — لكن لو الـ container ما موجود في
+App Store Connect → CloudKit Dashboard، ميزة شريك التعافي راح تفشل
+بصمت. أنشئه قبل النشر للـ App Store.
+
+---
 >
 > **الزمن المتوقع للإجراءات اليدوية:** ~3-4 ساعات موزعة على 1-2 أسبوع (الانتظار من Apple).
 
