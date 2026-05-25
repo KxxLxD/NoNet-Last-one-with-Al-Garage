@@ -421,59 +421,54 @@ struct HomeView: View {
 
     // ─── View helpers (extracted to keep the body readable) ───
 
-    /// Brand mark in the navigation bar. Personalization moved to the
-    /// welcomeCard() at the top of the ScrollView so the nav title stays
-    /// stable and the greeting only appears once.
-    private var homeNavTitle: String { "NoNet" }
+    /// Empty nav title — the hero below the title carries the brand. Keeping
+    /// the nav bar empty avoids duplicating "حرر نفسك" / "NoNet" between the
+    /// title bar and the hero card.
+    private var homeNavTitle: String { "" }
 
-    /// Compact welcome card at the top of the ScrollView — re-introduces the
-    /// logo at a smaller scale than the removed 204pt hero. Layout:
-    ///   [⊙ 50×50 logo in 56pt infoBg circle]  Greeting (.headline)
-    ///                                          Sub-line (.subheadline)
-    /// RTL-safe (HStack auto-flips). ~88pt total (vs. old 204pt hero).
+    /// Top hero: large centered logo + tagline. Replaces the earlier
+    /// horizontal welcomeCard (50×50 logo with greeting beside it) after
+    /// user feedback — they wanted the icon big with "حرر نفسك" underneath
+    /// in a clear vertical stack. Sized at ~150pt to stay well under the
+    /// original v1.2.0 hero (204pt) while still feeling prominent.
+    ///
+    /// Layout:
+    ///   ┌─ 96×96 infoBg circle ─┐
+    ///   │      72×72 logo       │
+    ///   └───────────────────────┘
+    ///         حرر نفسك           ← .title.weight(.semibold)
+    ///       أهلاً، [Name]        ← optional, only when name is set
     @ViewBuilder
     private func welcomeCard() -> some View {
-        HStack(spacing: NNSpacing.sm) {
+        VStack(spacing: NNSpacing.sm) {
             ZStack {
                 Circle()
                     .fill(AppColors.infoBg)
-                    .frame(width: 56, height: 56)
+                    .frame(width: 96, height: 96)
                 Image("nonet_logo")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 40, height: 40)
+                    .frame(width: 72, height: 72)
                     .accessibilityHidden(true)
             }
 
-            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 2) {
-                Text(welcomeGreeting)
-                    .font(.headline)
-                    .foregroundColor(AppColors.textPrimary)
-                    .lineLimit(1)
-                Text(lang.isArabicEffective ? "جاهز للتركيز؟" : "Ready to focus?")
+            Text(AppStrings.heroTitle(lang))
+                .font(.title.weight(.semibold))
+                .foregroundColor(AppColors.textPrimary)
+                .multilineTextAlignment(.center)
+
+            let trimmedName = obName.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmedName.isEmpty {
+                Text(lang.isArabicEffective ? "أهلاً، \(trimmedName)" : "Welcome, \(trimmedName)")
                     .font(.subheadline)
                     .foregroundColor(AppColors.textSecondary)
+                    .multilineTextAlignment(.center)
                     .lineLimit(1)
             }
-            .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
         }
-        .padding(NNSpacing.md)
-        .background(AppColors.uiSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(AppColors.uiBorder, lineWidth: 0.5)
-        )
-    }
-
-    /// Personalized greeting line for the welcome card. Falls back to a
-    /// brand welcome when no onboarding name is set.
-    private var welcomeGreeting: String {
-        let trimmedName = obName.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmedName.isEmpty {
-            return lang.isArabicEffective ? "أهلاً، \(trimmedName)" : "Welcome, \(trimmedName)"
-        }
-        return lang.isArabicEffective ? "أهلاً بك في NoNet" : "Welcome to NoNet"
+        .frame(maxWidth: .infinity)
+        .padding(.top, NNSpacing.xs)
+        .padding(.bottom, NNSpacing.xs)
     }
 
     /// Slim 44pt warning banner used by the consolidated alerts strip. Matches
