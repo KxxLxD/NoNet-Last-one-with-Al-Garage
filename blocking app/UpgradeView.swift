@@ -274,8 +274,8 @@ struct UpgradeView: View {
                 .foregroundColor(AppColors.textSecondary)
         }
         .padding(16)
-        .background(gold.opacity(0.08))
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(gold, lineWidth: 1))
+        .background(AppColors.trophyGold.opacity(0.08))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(AppColors.trophyGold, lineWidth: 1))
         .cornerRadius(16)
     }
 
