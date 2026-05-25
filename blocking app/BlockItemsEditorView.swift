@@ -50,212 +50,42 @@ struct BlockItemsEditorView: View {
 
     private var categoryOptions: [String] { lang.isArabicEffective ? categoryOptionsAr : categoryOptionsEn }
 
+    /// Tracks whether the user has made any changes since opening the editor —
+    /// used to prompt "discard changes?" when they tap Back without saving.
+    @State private var hasUnsavedChanges: Bool = false
+    /// "Are you sure you want to discard?" confirmation when backing out
+    /// after touching anything.
+    @State private var showDiscardAlert: Bool = false
+
     var body: some View {
         NavigationStack {
             Form {
-                Section(header: HStack(spacing: 8) {
-                    Image(systemName: "globe")
-                        .font(.nnCardBody)
-                        .foregroundColor(AppColors.accent)
-                    Text(lang.isArabicEffective ? "إضافة موقع للحجب" : "Add Website to Block")
-                        .font(.nnCardTitle)
-                }) {
-                    VStack(spacing: 12) {
-                    HStack {
-                        TextField(lang.isArabicEffective ? "مثال: youtube.com" : "e.g., youtube.com", text: $websiteInput)
-                            .textInputAutocapitalization(.never)
-                                .disableAutocorrection(true)
-                                .padding(12)
-                                .background(AppColors.uiSurface)
-                                .cornerRadius(12)
-                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.uiBorder, lineWidth: 0.5))
-
-                            Button(action: addWebsite) {
-                                Text(lang.isArabicEffective ? "إضافة" : "Add")
-                                    .font(.subheadline.weight(.semibold))
-                                    .padding(.horizontal, 16)
-                                    .frame(height: 44)
-                                    .background(isValidDomain(websiteInput) ? AppColors.accent : AppColors.accent.opacity(0.5))
-                                    .foregroundColor(.white)
-                                    .cornerRadius(12)
-                        }
-                        .disabled(!isValidDomain(websiteInput))
-                    }
-
-                    if !draft.websites.isEmpty {
-                            ForEach(Array(draft.websites.enumerated()), id: \.element.id) { idx, item in
-                                VStack(spacing: 0) {
-                                    if idx > 0 {
-                                        SoftDivider(width: 280, opacity: 0.7)
-                                    }
-                            HStack {
-                                Image(systemName: "globe")
-                                Text(item.value)
-                                            .lineLimit(1)
-                                            .truncationMode(.tail)
-                                Spacer()
-                            }
-                                    .padding(.vertical, 4)
-                                }
-                        }
-                        .onDelete { indexSet in
-                            draft.websites.remove(atOffsets: indexSet)
-                        }
-                    }
-                }
-                    .padding(20)
-                    .background(AppColors.uiSurface)
-                    .cornerRadius(20)
-                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
-                }
-                .listRowInsets(EdgeInsets())
-                .listRowBackground(Color.clear)
-
-                Section(header: HStack(spacing: 8) {
-                    Image(systemName: "app.fill")
-                        .font(.nnCardBody)
-                        .foregroundColor(AppColors.accent)
-                    Text(lang.isArabicEffective ? "إضافة تطبيقات للحجب" : "Add Apps to Block")
-                        .font(.nnCardTitle)
-                }) {
-                    VStack(spacing: 12) {
-                    if #available(iOS 16.0, *) {
-                        Button(action: {
-                            handleAppsButtonTap()
-                        }) {
-                            HStack {
-                                    Image(systemName: "square.stack.3d.up.fill")
-                                    Text(lang.isArabicEffective ? "اختر التطبيقات من الجهاز" : "Pick Apps from Device")
-                                }
-                                .font(.subheadline.weight(.semibold))
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 44)
-                                .foregroundColor(AppColors.accent)
-                                .background(Color.clear)
-                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.accent, lineWidth: 1.5))
-                            }
-                            .cornerRadius(12)
-                    }
-                        
-                    if !draft.apps.isEmpty {
-                            ForEach(Array(draft.apps.enumerated()), id: \.element.id) { idx, item in
-                                VStack(spacing: 0) {
-                                    if idx > 0 {
-                                        SoftDivider(width: 280, opacity: 0.7)
-                                    }
-                            HStack {
-                                Image(systemName: "app")
-                                Text(item.displayName ?? item.value)
-                                            .lineLimit(1)
-                                            .truncationMode(.tail)
-                                Spacer()
-                            }
-                                    .padding(.vertical, 4)
-                                }
-                        }
-                        .onDelete { indexSet in
-                            draft.apps.remove(atOffsets: indexSet)
-                        }
-                    }
-                }
-                    .padding(20)
-                    .background(AppColors.uiSurface)
-                    .cornerRadius(20)
-                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
-                }
-                .listRowInsets(EdgeInsets())
-                .listRowBackground(Color.clear)
-
-                // Quick Apps after Apps
-                Section(header: HStack(spacing: 8) { Image(systemName: "bolt.fill").foregroundColor(AppColors.accent); Text(lang.isArabicEffective ? "Quick Apps Blocking" : "Quick Apps Blocking").font(.nnCardTitle) }) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(lang.isArabicEffective ? "اختر الأكثر إدماناً أولاً — سيتم إضافة الحجب كمواقع وتطبيقات." : "Pick the most addictive first — we’ll add both website and app entries.")
-                            .font(.footnote)
-                            .foregroundColor(AppColors.textSecondary)
-                            .padding(.bottom, 4)
-                        // Recommended top
-                        Text(lang.isArabicEffective ? "مقترح" : "Recommended")
-                            .font(.caption.weight(.semibold))
-                            .foregroundColor(AppColors.textSecondary)
-                        VStack(spacing: 0) {
-                            ForEach(quickApps.prefix(6), id: \.key) { qa in
-                                VStack(spacing: 0) {
-                                    if qa.key != quickApps.prefix(6).first?.key { SoftDivider(width: 280, opacity: 0.7) }
-                                    Toggle(isOn: Binding(get: { quickSelected.contains(qa.key) }, set: { v in if v { quickSelected.insert(qa.key) } else { quickSelected.remove(qa.key) } })) {
-                                        HStack(spacing: 8) {
-                                            Image(systemName: qa.icon).foregroundColor(AppColors.accent)
-                                            Text(qa.title)
-                                        }
-                                    }
-                                    .padding(.vertical, 6)
-                                }
-                            }
-                        }
-
-                        // Others
-                        Text(lang.isArabicEffective ? "بقية التطبيقات" : "Others")
-                            .font(.caption.weight(.semibold))
-                            .foregroundColor(AppColors.textSecondary)
-                        VStack(spacing: 0) {
-                            ForEach(Array(quickApps.dropFirst(6)), id: \.key) { qa in
-                                VStack(spacing: 0) {
-                                    if qa.key != quickApps.dropFirst(6).first?.key { SoftDivider(width: 280, opacity: 0.7) }
-                                    Toggle(isOn: Binding(get: { quickSelected.contains(qa.key) }, set: { v in if v { quickSelected.insert(qa.key) } else { quickSelected.remove(qa.key) } })) {
-                                        HStack(spacing: 8) {
-                                            Image(systemName: qa.icon).foregroundColor(AppColors.accent)
-                                            Text(qa.title)
-                                        }
-                                    }
-                                    .padding(.vertical, 6)
-                                }
-                            }
-                        }
-                    }
-                    .padding(20)
-                    .background(AppColors.uiSurface)
-                    .cornerRadius(20)
-                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
-                }
-
-                Section(header: HStack(spacing: 8) {
-                    Image(systemName: "square.grid.2x2.fill")
-                        .font(.nnCardBody)
-                        .foregroundColor(AppColors.accent)
-                    Text(lang.isArabicEffective ? "إضافة فئات للحجب" : "Add Categories to Block")
-                        .font(.nnCardTitle)
-                }) {
-                    VStack(alignment: .leading, spacing: 0) {
-                        ForEach(Array(categoryOptions.enumerated()), id: \.element) { idx, cat in
-                            VStack(spacing: 0) {
-                                if idx > 0 {
-                                    SoftDivider(width: 280, opacity: 0.7)
-                                }
-                        Toggle(isOn: Binding(get: { selectedCategories.contains(cat) }, set: { newVal in
-                            if newVal { selectedCategories.insert(cat) } else { selectedCategories.remove(cat) }
-                        })) {
-                            Text(cat)
-                                        .lineLimit(1)
-                                        .truncationMode(.tail)
-                                }
-                                .padding(.vertical, 8)
-                            }
-                        }
-                    }
-                    .padding(20)
-                    .background(AppColors.uiSurface)
-                    .cornerRadius(20)
-                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
-                }
-                .listRowInsets(EdgeInsets())
-                .listRowBackground(Color.clear)
+                // Order intentionally goes fast → specific:
+                //   1. Categories     — broadest, fastest selection (8 toggles)
+                //   2. Quick Apps     — popular shortcuts (one flat list, no
+                //                       Recommended/Others split)
+                //   3. Specific Apps  — Family Activity Picker for fine control
+                //   4. Websites       — manual URL entry (slowest path)
+                // Previous order had Websites first and Categories last,
+                // which forced the most tedious path on every user.
+                categoriesSection
+                quickAppsSection
+                specificAppsSection
+                websitesSection
             }
             .scrollContentBackground(.hidden)
-            .background(AppColors.uiSurface)
-            .padding(.bottom, 24)
-            .navigationTitle(lang.isArabicEffective ? "تحرير عناصر الحجب" : "Edit Blocking Items")
+            .background(AppColors.uiBackground)
+            .navigationTitle(lang.isArabicEffective ? "عناصر الحجب" : "Block Items")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(lang.isArabicEffective ? "رجوع" : "Back") { dismiss() }
+                    Button(lang.isArabicEffective ? "إلغاء" : "Cancel") {
+                        if hasUnsavedChanges {
+                            showDiscardAlert = true
+                        } else {
+                            dismiss()
+                        }
+                    }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(lang.isArabicEffective ? "حفظ" : "Save") { saveAndDismiss() }
@@ -264,13 +94,14 @@ struct BlockItemsEditorView: View {
             }
             .onAppear {
                 selectedCategories = Set(draft.categories.map { $0.displayName ?? $0.value })
-                UITableView.appearance().backgroundColor = UIColor.systemBackground
-                UITableViewHeaderFooterView.appearance().tintColor = UIColor.systemBackground
+                // Reset the unsaved-changes flag every time the editor opens —
+                // the initial state IS the saved state.
+                hasUnsavedChanges = false
             }
-            .onDisappear {
-                UITableView.appearance().backgroundColor = nil
-                UITableViewHeaderFooterView.appearance().tintColor = nil
-            }
+            .onChange(of: selectedCategories) { _ in hasUnsavedChanges = true }
+            .onChange(of: quickSelected)      { _ in hasUnsavedChanges = true }
+            .onChange(of: draft.websites)     { _ in hasUnsavedChanges = true }
+            .onChange(of: draft.apps)         { _ in hasUnsavedChanges = true }
             .sheet(isPresented: $showAppPicker) {
                 if #available(iOS 16.0, *) {
                     PickerSheetWrapper(
@@ -281,6 +112,15 @@ struct BlockItemsEditorView: View {
                     )
                     .environmentObject(lang)
                 }
+            }
+            .alert(
+                lang.isArabicEffective ? "تجاهل التعديلات؟" : "Discard changes?",
+                isPresented: $showDiscardAlert
+            ) {
+                Button(lang.isArabicEffective ? "تجاهلها" : "Discard", role: .destructive) { dismiss() }
+                Button(lang.isArabicEffective ? "متابعة التعديل" : "Keep editing", role: .cancel) {}
+            } message: {
+                Text(lang.isArabicEffective ? "ستضيع تعديلاتك ولن يمكن استرجاعها." : "Your changes will be lost and can't be recovered.")
             }
             .alert(
                 lang.isArabicEffective ? "يحتاج إذن Screen Time" : "Screen Time permission needed",
@@ -298,11 +138,8 @@ struct BlockItemsEditorView: View {
             .onChange(of: familySelection) { _ in
                 if #available(iOS 16.0, *) {
                     let selectedCount = familySelection.applicationTokens.count
-                    // Use half-open `..<` (empty when count is 0) instead of closed
-                    // `1...count` (which crashes when count is 0). The previous
-                    // `1...selectedCount` crashed with "Range requires
-                    // lowerBound <= upperBound" whenever the user deselected every
-                    // app in the FamilyActivityPicker.
+                    // Use half-open `..<` (empty when count is 0) instead of
+                    // closed `1...count` (which crashes when count is 0).
                     let newApps: [DraftBlockItem] = (0..<selectedCount).map { idx in
                         let name = lang.isArabicEffective ? "تطبيق محدد #\(idx + 1)" : "Selected App #\(idx + 1)"
                         let value = UUID().uuidString
@@ -312,6 +149,229 @@ struct BlockItemsEditorView: View {
                 }
             }
         }
+    }
+
+    // ─── Section 1: Categories (broadest, fastest) ────────────────
+
+    private var categoriesSection: some View {
+        Section {
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 0) {
+                ForEach(Array(categoryOptions.enumerated()), id: \.element) { idx, cat in
+                    if idx > 0 { Divider().background(AppColors.uiBorder.opacity(0.4)) }
+                    Toggle(isOn: Binding(
+                        get: { selectedCategories.contains(cat) },
+                        set: { newVal in
+                            if newVal { selectedCategories.insert(cat) }
+                            else { selectedCategories.remove(cat) }
+                        }
+                    )) {
+                        Text(cat)
+                            .font(.subheadline)
+                            .foregroundColor(AppColors.textPrimary)
+                            .lineLimit(2)
+                            .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                    }
+                    .tint(AppColors.accent)
+                    .padding(.vertical, NNSpacing.xs)
+                }
+            }
+            .padding(NNSpacing.md)
+            .background(AppColors.uiSurface)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(AppColors.uiBorder, lineWidth: 0.5))
+        } header: {
+            sectionHeader(icon: "square.grid.2x2.fill", text: lang.isArabicEffective ? "الفئات" : "Categories")
+        }
+        .listRowInsets(EdgeInsets())
+        .listRowBackground(Color.clear)
+    }
+
+    // ─── Section 2: Quick Apps (popular shortcuts, one flat list) ─
+
+    private var quickAppsSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: NNSpacing.sm) {
+                Text(lang.isArabicEffective
+                    ? "اختصارات للتطبيقات الأكثر إدماناً — يُضاف كلٌّ منها كموقع وتطبيق."
+                    : "Shortcuts for the most addictive apps — each adds both a website and an app entry.")
+                    .font(.footnote)
+                    .foregroundColor(AppColors.textSecondary)
+                    .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                    .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+
+                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 0) {
+                    ForEach(Array(quickApps.enumerated()), id: \.element.key) { idx, qa in
+                        if idx > 0 { Divider().background(AppColors.uiBorder.opacity(0.4)) }
+                        Toggle(isOn: Binding(
+                            get: { quickSelected.contains(qa.key) },
+                            set: { v in
+                                if v { quickSelected.insert(qa.key) } else { quickSelected.remove(qa.key) }
+                            }
+                        )) {
+                            HStack(spacing: NNSpacing.xs) {
+                                Image(systemName: qa.icon)
+                                    .foregroundColor(AppColors.accent)
+                                Text(qa.title)
+                                    .font(.subheadline)
+                                    .foregroundColor(AppColors.textPrimary)
+                            }
+                        }
+                        .tint(AppColors.accent)
+                        .padding(.vertical, NNSpacing.xs)
+                    }
+                }
+            }
+            .padding(NNSpacing.md)
+            .background(AppColors.uiSurface)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(AppColors.uiBorder, lineWidth: 0.5))
+        } header: {
+            sectionHeader(icon: "bolt.fill", text: lang.isArabicEffective ? "تطبيقات شائعة" : "Popular Apps")
+        }
+        .listRowInsets(EdgeInsets())
+        .listRowBackground(Color.clear)
+    }
+
+    // ─── Section 3: Specific Apps via Family Activity Picker ─────
+
+    private var specificAppsSection: some View {
+        Section {
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
+                if #available(iOS 16.0, *) {
+                    Button(action: { handleAppsButtonTap() }) {
+                        HStack(spacing: NNSpacing.xs) {
+                            Image(systemName: "square.stack.3d.up.fill")
+                            Text(draft.apps.isEmpty
+                                ? (lang.isArabicEffective ? "اختر تطبيقات من جهازك" : "Pick apps from your device")
+                                : (lang.isArabicEffective ? "تعديل الاختيار" : "Edit selection"))
+                        }
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                        .foregroundColor(AppColors.accent)
+                        .background(AppColors.infoBg)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                if !draft.apps.isEmpty {
+                    // The FamilyActivityPicker returns opaque tokens; we can
+                    // only count them, not name them. Previously the UI
+                    // rendered "Selected App #1, #2…" which was useless.
+                    // Show a single count summary instead.
+                    HStack(spacing: NNSpacing.xs) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(AppColors.successGreen)
+                            .font(.subheadline)
+                        Text(lang.isArabicEffective
+                            ? "تم اختيار \(draft.apps.count) تطبيق"
+                            : "\(draft.apps.count) app\(draft.apps.count == 1 ? "" : "s") selected")
+                            .font(.footnote)
+                            .foregroundColor(AppColors.textSecondary)
+                        Spacer()
+                    }
+                }
+            }
+            .padding(NNSpacing.md)
+            .background(AppColors.uiSurface)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(AppColors.uiBorder, lineWidth: 0.5))
+        } header: {
+            sectionHeader(icon: "app.fill", text: lang.isArabicEffective ? "تطبيقات محدّدة" : "Specific Apps")
+        }
+        .listRowInsets(EdgeInsets())
+        .listRowBackground(Color.clear)
+    }
+
+    // ─── Section 4: Websites (manual URL entry) ───────────────────
+
+    private var websitesSection: some View {
+        Section {
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
+                HStack(spacing: NNSpacing.xs) {
+                    TextField(lang.isArabicEffective ? "مثال: youtube.com" : "e.g., youtube.com", text: $websiteInput)
+                        .textInputAutocapitalization(.never)
+                        .disableAutocorrection(true)
+                        .padding(12)
+                        .background(AppColors.uiBackground)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.uiBorder, lineWidth: 0.5))
+
+                    Button(action: addWebsite) {
+                        Image(systemName: "plus")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundColor(.white)
+                            .frame(width: 44, height: 44)
+                            .background(isValidDomain(websiteInput) ? AppColors.accent : AppColors.textDisabled)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .disabled(!isValidDomain(websiteInput))
+                    .accessibilityLabel(lang.isArabicEffective ? "إضافة" : "Add")
+                }
+
+                if draft.websites.isEmpty {
+                    Text(lang.isArabicEffective ? "لا توجد مواقع بعد" : "No websites yet")
+                        .font(.footnote)
+                        .foregroundColor(AppColors.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.top, NNSpacing.xs)
+                } else {
+                    VStack(spacing: 0) {
+                        ForEach(Array(draft.websites.enumerated()), id: \.element.id) { idx, item in
+                            if idx > 0 { Divider().background(AppColors.uiBorder.opacity(0.4)) }
+                            HStack(spacing: NNSpacing.xs) {
+                                Image(systemName: "globe").foregroundColor(AppColors.textSecondary)
+                                Text(item.value)
+                                    .font(.footnote)
+                                    .foregroundColor(AppColors.textPrimary)
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                                Spacer()
+                                Button(action: {
+                                    if let realIdx = draft.websites.firstIndex(where: { $0.id == item.id }) {
+                                        draft.websites.remove(at: realIdx)
+                                    }
+                                }) {
+                                    Image(systemName: "minus.circle.fill")
+                                        .foregroundColor(AppColors.textDisabled)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel(lang.isArabicEffective ? "حذف" : "Remove")
+                            }
+                            .padding(.vertical, NNSpacing.xs)
+                        }
+                    }
+                }
+            }
+            .padding(NNSpacing.md)
+            .background(AppColors.uiSurface)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(AppColors.uiBorder, lineWidth: 0.5))
+        } header: {
+            sectionHeader(icon: "globe", text: lang.isArabicEffective ? "مواقع" : "Websites")
+        }
+        .listRowInsets(EdgeInsets())
+        .listRowBackground(Color.clear)
+    }
+
+    /// Single section-header style shared by all four sections — icon +
+    /// text in the section's natural list-header position. Replaces the
+    /// previous pattern of duplicating HStack header bodies in every section.
+    @ViewBuilder
+    private func sectionHeader(icon: String, text: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.subheadline)
+                .foregroundColor(AppColors.accent)
+            Text(text)
+                .font(.nnCardTitle)
+                .foregroundColor(AppColors.textPrimary)
+            Spacer()
+        }
+        .padding(.horizontal, 4)
+        .padding(.top, NNSpacing.sm)
+        .textCase(nil)
     }
 
     private func dismissPickerAndApply() {
