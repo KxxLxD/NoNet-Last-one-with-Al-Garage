@@ -204,6 +204,44 @@ final class CloudKitPartnerStore: ObservableObject {
         return (share, record)
     }
 
+    /// Attach an additional list to an existing partnership — used when the
+    /// user creates a new Hard Mode list and picks an already-accepted partner
+    /// from the Partner step in CreateListSheet (Phase 2 of v1.3.0).
+    ///
+    /// Fetches the Partnership by recordName, appends the new list UUID to
+    /// `associatedListIDs` (deduping in case of double-tap), and saves. The
+    /// partnership lives in the owner's private DB once accepted; for the
+    /// invitee side we look it up via sharedDatabase.
+    func attachPartnership(_ partnerRecordName: String, toList listID: UUID) async {
+        let recordID = CKRecord.ID(recordName: partnerRecordName)
+        let listIDString = listID.uuidString
+        do {
+            // Try private DB first (the common case — most users are the owner
+            // creating Hard Mode lists with their own pre-accepted partner).
+            // Fall back to sharedDB for invitees attaching to a partnership
+            // they accepted from someone else.
+            var record: CKRecord
+            do {
+                record = try await privateDB.record(for: recordID)
+            } catch {
+                record = try await sharedDB.record(for: recordID)
+            }
+            var ids = (record["associatedListIDs"] as? [String]) ?? []
+            if !ids.contains(listIDString) {
+                ids.append(listIDString)
+            }
+            record["associatedListIDs"] = ids as CKRecordValue
+            try await save(records: [record])
+            log.notice("attachPartnership: list \(listIDString, privacy: .public) attached to \(partnerRecordName, privacy: .public)")
+            // Refresh the local cache so the new association is reflected in
+            // any view observing partnerships.
+            await fetchPartnerships()
+        } catch {
+            log.error("attachPartnership failed for \(partnerRecordName, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            self.lastError = error.localizedDescription
+        }
+    }
+
     /// Persist multiple records (record + share) in a single transaction.
     private func save(records: [CKRecord]) async throws {
         let operation = CKModifyRecordsOperation(recordsToSave: records, recordIDsToDelete: nil)

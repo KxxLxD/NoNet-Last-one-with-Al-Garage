@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreData
+import CloudKit
 import os
 
 struct CreateListSheet: View {
@@ -52,6 +53,32 @@ struct CreateListSheet: View {
     @State private var pendingBaseName: String = ""
     @State private var saveErrorMessage: String? = nil
 
+    // Recovery Partner (Phase 2 of v1.3.0 — inline step inside CreateListSheet)
+    @ObservedObject private var partnerStore = CloudKitPartnerStore.shared
+    /// nil = no partner selected (the default). Otherwise the recordID.recordName
+    /// of an existing Partnership the user picked to attach this list to.
+    @State private var pendingPartnerID: String? = nil
+    /// User selected "send invitation to a new partner" — the actual CKShare
+    /// creation defers until after the list saves (we need the saved list's
+    /// UUID to associate with the partnership record).
+    @State private var pendingNewInvite: Bool = false
+    /// Holds the CKShare after `createPartnership` resolves. When non-nil and
+    /// `showShareSheet` is true, PartnerInviteView presents it.
+    @State private var pendingShare: CKShare? = nil
+    /// Drives the .sheet that wraps PartnerInviteView.
+    @State private var showShareSheet: Bool = false
+    /// User-facing error when CKShare creation fails (offline, iCloud signed out).
+    @State private var partnerCreationError: String? = nil
+    /// Post-save nudge: triggered when the user saved a Hard Mode list without
+    /// selecting/inviting a partner. Reminds them once that the option exists.
+    @State private var showPostSavePartnerNudge: Bool = false
+    /// Passed to the nudge so it knows which list was just created (used when
+    /// the user taps "Add partner" from the nudge — kicks off the same
+    /// createPartnership + share flow as the inline option).
+    @State private var savedListIDForNudge: UUID? = nil
+    /// Display name used when creating the partnership (the list's name).
+    @State private var savedListNameForNudge: String = ""
+
     // Upgrade sheet
     @State private var showUpgradeSheet = false
 
@@ -75,7 +102,8 @@ struct CreateListSheet: View {
         let s4 = attachConfirmSheet(s3)
         let s5 = attachAlerts(s4)
         let s6 = attachDoneBar(s5)
-        return s6
+        let s7 = attachPartnerSheets(s6)
+        return s7
             .successToast(isPresented: $showSuccessToast, message: lang.isArabicEffective ? "تم إنشاء القائمة" : "List created")
     }
 
@@ -209,6 +237,121 @@ struct CreateListSheet: View {
         }
     }
 
+    /// Three partner-related modals:
+    ///   1. PartnerInviteView (CKShare sheet) for the new-partner flow.
+    ///   2. Post-save nudge when Hard Mode saves without a partner.
+    ///   3. Error alert for partnership creation failures.
+    private func attachPartnerSheets<V: View>(_ v: V) -> some View {
+        v
+            .sheet(isPresented: $showShareSheet) {
+                // Same wiring as HomeView's invite flow.
+                if let share = pendingShare {
+                    PartnerInviteView(
+                        share: share,
+                        container: partnerStore.container,
+                        isArabic: lang.isArabicEffective,
+                        onCompletion: {
+                            showShareSheet = false
+                            pendingShare = nil
+                            Task { await partnerStore.fetchPartnerships() }
+                            // The user finished the share flow — dismiss the
+                            // CreateListSheet to return them to HomeView.
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { dismiss() }
+                        }
+                    )
+                    .ignoresSafeArea()
+                }
+            }
+            .sheet(isPresented: $showPostSavePartnerNudge) {
+                postSavePartnerNudge
+            }
+            .alert(
+                lang.isArabicEffective ? "تعذّر إنشاء الشراكة" : "Couldn't create partnership",
+                isPresented: Binding(
+                    get: { partnerCreationError != nil },
+                    set: { if !$0 { partnerCreationError = nil } }
+                )
+            ) {
+                Button(lang.isArabicEffective ? "حسناً" : "OK", role: .cancel) {
+                    partnerCreationError = nil
+                }
+            } message: {
+                Text(partnerCreationError ?? "")
+            }
+    }
+
+    /// One-time reminder shown after a Hard Mode list saves with no partner.
+    /// Resolved by either "Add partner" (opens PartnerInviteView preloaded
+    /// with the saved list's UUID) or "Later" (just dismisses). Either way,
+    /// the CreateListSheet itself dismisses after the nudge is resolved.
+    @ViewBuilder
+    private var postSavePartnerNudge: some View {
+        VStack(spacing: NNSpacing.lg) {
+            Spacer()
+            Image(systemName: "person.2.fill")
+                .font(.largeTitle)
+                .foregroundColor(AppColors.accent)
+                .frame(width: 72, height: 72)
+                .background(AppColors.infoBg)
+                .clipShape(Circle())
+
+            Text(lang.isArabicEffective ? "هل تضيف شريك تعافي؟" : "Add a recovery partner?")
+                .font(.title2.weight(.semibold))
+                .multilineTextAlignment(.center)
+
+            Text(lang.isArabicEffective
+                 ? "تم تفعيل الوضع الصارم. إضافة شريك تعافي تزيد التزامك بالقرار، ويتولّى تنبيهك عند محاولة كسر الحجب."
+                 : "Hard Mode is on. A recovery partner gets notified when you try to bypass the block — better accountability, stronger commitment.")
+                .font(.subheadline)
+                .foregroundColor(AppColors.textSecondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, NNSpacing.lg)
+
+            Spacer()
+
+            VStack(spacing: NNSpacing.sm) {
+                Button(action: {
+                    // Close the nudge, then trigger the same share flow as
+                    // the inline option (createPartnership → PartnerInviteView).
+                    showPostSavePartnerNudge = false
+                    guard let savedID = savedListIDForNudge else {
+                        dismiss()
+                        return
+                    }
+                    Task { await beginNewInviteFlow(listID: savedID, listName: savedListNameForNudge) }
+                }) {
+                    Text(lang.isArabicEffective ? "أضف شريكاً" : "Add partner")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .frame(minHeight: 44)
+                        .background(AppColors.accent)
+                        .foregroundColor(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+
+                Button(action: {
+                    showPostSavePartnerNudge = false
+                    dismiss()
+                }) {
+                    Text(lang.isArabicEffective ? "لاحقاً" : "Later")
+                        .font(.subheadline)
+                        .foregroundColor(AppColors.textSecondary)
+                        .frame(maxWidth: .infinity)
+                        .frame(minHeight: 44)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, NNSpacing.xl)
+            .padding(.bottom, NNSpacing.lg)
+        }
+        .padding(.top, NNSpacing.xxl)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(AppColors.uiBackground)
+        .environment(\.layoutDirection, lang.isArabicEffective ? .rightToLeft : .leftToRight)
+        .presentationDetents([.medium])
+    }
+
     private var contentView: some View {
         List {
             nameCard()
@@ -277,6 +420,7 @@ struct CreateListSheet: View {
             if blockType == "timeLimit" { timeLimitCard() }
 
             protectionCard()
+            partnerCard()
             breaksCard()
         }
         .scrollContentBackground(.hidden)
@@ -524,14 +668,6 @@ struct CreateListSheet: View {
                     Text(lang.isArabicEffective ? "الوضع الصارم: صعب الإيقاف أثناء المدة." : "Hard Mode: Hard to stop during duration.")
                         .font(.footnote)
                         .foregroundColor(AppColors.textSecondary)
-                    if protection == "hard" {
-                        Text(lang.isArabicEffective
-                             ? "💡 بعد الإنشاء يمكنك دعوة شريك تعافي من تفاصيل القائمة."
-                             : "💡 After creating, invite a recovery partner from the list details.")
-                            .font(.footnote)
-                            .foregroundColor(AppColors.accent)
-                            .padding(.top, 4)
-                    }
                 }
                 .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
                     }
@@ -542,6 +678,117 @@ struct CreateListSheet: View {
             .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
         }
         .listRowBackground(Color.clear)
+    }
+
+    /// Partner step — appears only when Hard Mode is selected. Designed per
+    /// `docs/PARTNER_FEATURE_DESIGN_AR.md` lines 62-92 (Day 2 of the original
+    /// rollout, finally landing in v1.3.0). Three choices:
+    ///   1. None (default) — saves a Hard Mode list without a partner;
+    ///      triggers a one-time post-save nudge.
+    ///   2. Existing partner — appends this list to the partnership's
+    ///      `associatedListIDs` via `CloudKitPartnerStore.attachPartnership`.
+    ///   3. New invitation — opens `PartnerInviteView` for the CKShare flow.
+    @ViewBuilder
+    private func partnerCard() -> some View {
+        if protection == "hard" {
+            Section(header: HStack(spacing: 8) {
+                Image(systemName: "person.2.fill")
+                    .font(.nnCardBody)
+                    .foregroundColor(AppColors.accent)
+                Text(lang.isArabicEffective ? "شريك التعافي" : "Recovery Partner")
+                    .font(.nnCardTitle)
+            }) {
+                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
+                    Text(lang.isArabicEffective
+                         ? "يستلم شريكك إشعاراً عند محاولة كسر الحجب. حساب أفضل، التزام أقوى."
+                         : "Your partner is notified when you try to bypass the block. Better accountability, stronger commitment.")
+                        .font(.footnote)
+                        .foregroundColor(AppColors.textSecondary)
+                        .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                        .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+
+                    // Option 1 — None (default)
+                    partnerOptionRow(
+                        title: lang.isArabicEffective ? "بدون شريك" : "No partner",
+                        subtitle: lang.isArabicEffective ? "يمكنك إضافته لاحقاً من تفاصيل القائمة" : "You can add one later from the list details",
+                        isSelected: pendingPartnerID == nil && !pendingNewInvite,
+                        action: {
+                            pendingPartnerID = nil
+                            pendingNewInvite = false
+                        }
+                    )
+
+                    // Option 2 — Pick an existing partnership (only if any exist)
+                    let existingPartnerships = partnerStore.partnerships.filter { $0.status == .accepted }
+                    if !existingPartnerships.isEmpty {
+                        ForEach(existingPartnerships, id: \.id) { partnership in
+                            partnerOptionRow(
+                                title: partnership.partnerDisplayName ?? (lang.isArabicEffective ? "شريك بدون اسم" : "Unnamed partner"),
+                                subtitle: lang.isArabicEffective ? "شريك موجود" : "Existing partner",
+                                isSelected: pendingPartnerID == partnership.id,
+                                action: {
+                                    pendingPartnerID = partnership.id
+                                    pendingNewInvite = false
+                                }
+                            )
+                        }
+                    }
+
+                    // Option 3 — Mark intent to send new invite. The actual
+                    // CKShare creation defers until the list is saved (we need
+                    // the new list's UUID to associate with the partnership).
+                    partnerOptionRow(
+                        title: lang.isArabicEffective ? "أرسل دعوة لشريك جديد" : "Send invitation to a new partner",
+                        subtitle: lang.isArabicEffective ? "ينشأ رابط الدعوة بعد حفظ القائمة" : "The invite link is created after saving",
+                        isSelected: pendingNewInvite,
+                        action: {
+                            pendingNewInvite = true
+                            pendingPartnerID = nil
+                        }
+                    )
+                }
+                .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+                .padding(20)
+                .background(AppColors.uiSurface)
+                .cornerRadius(20)
+                .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+            }
+            .listRowBackground(Color.clear)
+        }
+    }
+
+    /// Single tappable row inside `partnerCard`. Visual: title + subtitle + a
+    /// checkmark when selected. Used for "No partner" + each existing partner.
+    @ViewBuilder
+    private func partnerOptionRow(title: String, subtitle: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 2) {
+                    Text(title)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundColor(AppColors.textPrimary)
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundColor(AppColors.textSecondary)
+                }
+                Spacer()
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(AppColors.accent)
+                        .font(.title3)
+                }
+            }
+            .padding(.horizontal, NNSpacing.md)
+            .padding(.vertical, NNSpacing.sm)
+            .frame(minHeight: 44)
+            .background(isSelected ? AppColors.infoBg : AppColors.uiBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isSelected ? AppColors.accent : AppColors.uiBorder, lineWidth: isSelected ? 1 : 0.5)
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     private func breaksCard() -> some View {
@@ -875,7 +1122,61 @@ struct CreateListSheet: View {
             BlockingEngine.shared.activate(list: entity)
         }
         showSuccessToast = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { dismiss() }
+
+        // Recovery Partner wiring — applies only for Hard Mode lists (Phase 2):
+        //   • Picked an existing partner → attach this list to that partnership.
+        //   • Picked "send new invite" → create CKShare for this list, then
+        //     present PartnerInviteView so the user can send via iMessage/etc.
+        //   • Picked None → show one-time nudge after the toast.
+        // Capture list metadata before we leave this scope (entity is owned by
+        // the managed object context; passing the raw values is safer).
+        let savedID = entity.id
+        let savedName = entity.name
+        if protection == "hard" {
+            if let chosenPartnerID = pendingPartnerID {
+                Task {
+                    await partnerStore.attachPartnership(chosenPartnerID, toList: savedID)
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { dismiss() }
+            } else if pendingNewInvite {
+                // Defer dismissal — the share flow needs to present first.
+                Task { await beginNewInviteFlow(listID: savedID, listName: savedName) }
+            } else {
+                // None selected → store details for the nudge and trigger it.
+                savedListIDForNudge = savedID
+                savedListNameForNudge = savedName
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                    showPostSavePartnerNudge = true
+                }
+            }
+        } else {
+            // Non-Hard list — no partner consideration.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { dismiss() }
+        }
+    }
+
+    /// Creates a CKShare for the just-saved list and presents PartnerInviteView.
+    /// Mirrors HomeView.invitePartner() but tailored to the post-save flow:
+    /// the parent CreateListSheet stays open until the share controller fires
+    /// `onCompletion`, after which both close together.
+    private func beginNewInviteFlow(listID: UUID, listName: String) async {
+        do {
+            let (share, _) = try await partnerStore.createPartnership(
+                ownerDisplayName: listName,
+                associatedListID: listID
+            )
+            await MainActor.run {
+                pendingShare = share
+                showShareSheet = true
+            }
+        } catch {
+            await MainActor.run {
+                partnerCreationError = error.localizedDescription
+                // Even on failure, the list was saved — dismiss after a beat
+                // so the user isn't trapped staring at a stuck sheet.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { dismiss() }
+            }
+        }
     }
     private func currentListsCount() -> Int {
         let req: NSFetchRequest<ListEntity> = ListEntity.fetchRequest()
