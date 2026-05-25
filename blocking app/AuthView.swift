@@ -25,7 +25,7 @@ struct AuthView: View {
                     .padding(.top, 12)
 
                 Text(lang.isArabicEffective ? "سجّل دخولك أو أنشئ حسابًا" : "Sign in or create an account")
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.nnCardTitle)
                     .multilineTextAlignment(.center)
                     .foregroundColor(AppColors.textPrimary)
                     .padding(.horizontal)
@@ -67,7 +67,7 @@ struct AuthView: View {
                             Button(action: { showPassword.toggle() }) {
                                 Text(showPassword ? (lang.isArabicEffective ? "إخفاء" : "Hide") : (lang.isArabicEffective ? "إظهار" : "Show"))
                                     .font(.footnote.weight(.semibold))
-                                    .foregroundColor(AppColors.accentDark)
+                                    .foregroundColor(AppColors.accent)
                                     .padding(.horizontal, 10)
                                     .padding(.vertical, 6)
                                     .background(AppColors.infoBg)
@@ -88,7 +88,7 @@ struct AuthView: View {
                                 .font(.subheadline.weight(.semibold))
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 48)
-                                .background(AppColors.accentDark)
+                                .background(AppColors.accent)
                                 .foregroundColor(.white)
                                 .cornerRadius(12)
                         }
@@ -97,7 +97,7 @@ struct AuthView: View {
                             Button(action: { showForgotPasswordAlert = true }) {
                                 Text(lang.isArabicEffective ? "نسيت كلمة المرور؟" : "Forgot password?")
                                     .font(.footnote)
-                                    .foregroundColor(AppColors.accentDark)
+                                    .foregroundColor(AppColors.accent)
                             }
                             .buttonStyle(.plain)
                             .frame(maxWidth: .infinity, alignment: .center)

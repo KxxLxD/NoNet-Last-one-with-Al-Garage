@@ -68,8 +68,8 @@ struct ConfirmCreateSheet: View {
             .scrollContentBackground(.hidden)
             .navigationTitle(isArabic ? "تأكيد الإنشاء" : "Confirm Create")
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button(isArabic ? "رجوع" : "Back") { onBack() } }
-                ToolbarItem(placement: .confirmationAction) { Button(isArabic ? "تأكيد" : "Confirm") { onConfirm() } }
+                ToolbarItem(placement: .cancellationAction) { Button(isArabic ? "رجوع للتعديل" : "Edit") { onBack() } }
+                ToolbarItem(placement: .confirmationAction) { Button(isArabic ? "أنشئ القائمة" : "Create list") { onConfirm() } }
             }
         }
     }

@@ -37,6 +37,9 @@ struct BlockItemsEditorView: View {
 
     @State private var showAppPicker = false
     @State private var familySelection: FamilyActivitySelection
+    // D13 — surfaces Family Controls denial with a Settings deep-link instead
+    // of silently failing to open the picker.
+    @State private var showPermissionAlert = false
 
     // Quick Apps in editor
     private let quickApps: [QuickAppEditor] = QuickAppEditor.defaultSet
@@ -52,10 +55,10 @@ struct BlockItemsEditorView: View {
             Form {
                 Section(header: HStack(spacing: 8) {
                     Image(systemName: "globe")
-                        .font(.system(size: 20, weight: .regular))
-                        .foregroundColor(AppColors.accentDark)
+                        .font(.nnCardBody)
+                        .foregroundColor(AppColors.accent)
                     Text(lang.isArabicEffective ? "إضافة موقع للحجب" : "Add Website to Block")
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.nnCardTitle)
                 }) {
                     VStack(spacing: 12) {
                     HStack {
@@ -72,7 +75,7 @@ struct BlockItemsEditorView: View {
                                     .font(.subheadline.weight(.semibold))
                                     .padding(.horizontal, 16)
                                     .frame(height: 44)
-                                    .background(isValidDomain(websiteInput) ? AppColors.accentDark : AppColors.accentDark.opacity(0.5))
+                                    .background(isValidDomain(websiteInput) ? AppColors.accent : AppColors.accent.opacity(0.5))
                                     .foregroundColor(.white)
                                     .cornerRadius(12)
                         }
@@ -110,16 +113,15 @@ struct BlockItemsEditorView: View {
 
                 Section(header: HStack(spacing: 8) {
                     Image(systemName: "app.fill")
-                        .font(.system(size: 20, weight: .regular))
-                        .foregroundColor(AppColors.accentDark)
+                        .font(.nnCardBody)
+                        .foregroundColor(AppColors.accent)
                     Text(lang.isArabicEffective ? "إضافة تطبيقات للحجب" : "Add Apps to Block")
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.nnCardTitle)
                 }) {
                     VStack(spacing: 12) {
                     if #available(iOS 16.0, *) {
                         Button(action: {
-                            requestFamilyControlsPermission()
-                            showAppPicker = true
+                            handleAppsButtonTap()
                         }) {
                             HStack {
                                     Image(systemName: "square.stack.3d.up.fill")
@@ -128,9 +130,9 @@ struct BlockItemsEditorView: View {
                                 .font(.subheadline.weight(.semibold))
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 44)
-                                .foregroundColor(AppColors.accentDark)
+                                .foregroundColor(AppColors.accent)
                                 .background(Color.clear)
-                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.accentDark, lineWidth: 1.5))
+                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.accent, lineWidth: 1.5))
                             }
                             .cornerRadius(12)
                     }
@@ -165,7 +167,7 @@ struct BlockItemsEditorView: View {
                 .listRowBackground(Color.clear)
 
                 // Quick Apps after Apps
-                Section(header: HStack(spacing: 8) { Image(systemName: "bolt.fill").foregroundColor(AppColors.accentDark); Text(lang.isArabicEffective ? "Quick Apps Blocking" : "Quick Apps Blocking").font(.system(size: 20, weight: .semibold)) }) {
+                Section(header: HStack(spacing: 8) { Image(systemName: "bolt.fill").foregroundColor(AppColors.accent); Text(lang.isArabicEffective ? "Quick Apps Blocking" : "Quick Apps Blocking").font(.nnCardTitle) }) {
                     VStack(alignment: .leading, spacing: 12) {
                         Text(lang.isArabicEffective ? "اختر الأكثر إدمانًا أولًا — سيتم إضافة الحجب كمواقع وتطبيقات." : "Pick the most addictive first — we’ll add both website and app entries.")
                             .font(.footnote)
@@ -181,7 +183,7 @@ struct BlockItemsEditorView: View {
                                     if qa.key != quickApps.prefix(6).first?.key { SoftDivider(width: 280, opacity: 0.7) }
                                     Toggle(isOn: Binding(get: { quickSelected.contains(qa.key) }, set: { v in if v { quickSelected.insert(qa.key) } else { quickSelected.remove(qa.key) } })) {
                                         HStack(spacing: 8) {
-                                            Image(systemName: qa.icon).foregroundColor(AppColors.accentDark)
+                                            Image(systemName: qa.icon).foregroundColor(AppColors.accent)
                                             Text(qa.title)
                                         }
                                     }
@@ -200,7 +202,7 @@ struct BlockItemsEditorView: View {
                                     if qa.key != quickApps.dropFirst(6).first?.key { SoftDivider(width: 280, opacity: 0.7) }
                                     Toggle(isOn: Binding(get: { quickSelected.contains(qa.key) }, set: { v in if v { quickSelected.insert(qa.key) } else { quickSelected.remove(qa.key) } })) {
                                         HStack(spacing: 8) {
-                                            Image(systemName: qa.icon).foregroundColor(AppColors.accentDark)
+                                            Image(systemName: qa.icon).foregroundColor(AppColors.accent)
                                             Text(qa.title)
                                         }
                                     }
@@ -217,10 +219,10 @@ struct BlockItemsEditorView: View {
 
                 Section(header: HStack(spacing: 8) {
                     Image(systemName: "square.grid.2x2.fill")
-                        .font(.system(size: 20, weight: .regular))
-                        .foregroundColor(AppColors.accentDark)
+                        .font(.nnCardBody)
+                        .foregroundColor(AppColors.accent)
                     Text(lang.isArabicEffective ? "إضافة فئات للحجب" : "Add Categories to Block")
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.nnCardTitle)
                 }) {
                     VStack(alignment: .leading, spacing: 0) {
                         ForEach(Array(categoryOptions.enumerated()), id: \.element) { idx, cat in
@@ -280,6 +282,19 @@ struct BlockItemsEditorView: View {
                     .environmentObject(lang)
                 }
             }
+            .alert(
+                lang.isArabicEffective ? "يحتاج إذن Screen Time" : "Screen Time permission needed",
+                isPresented: $showPermissionAlert
+            ) {
+                Button(lang.isArabicEffective ? "فتح الإعدادات" : "Open Settings") {
+                    PermissionsManager.shared.openAppSettings()
+                }
+                Button(lang.isArabicEffective ? "لاحقاً" : "Later", role: .cancel) {}
+            } message: {
+                Text(lang.isArabicEffective
+                    ? "لاختيار التطبيقات للحجب، فعّل Screen Time من الإعدادات > Screen Time. NoNet يعمل محلياً على جهازك فقط."
+                    : "To pick apps to block, enable Screen Time in Settings > Screen Time. NoNet runs locally on your device only.")
+            }
             .onChange(of: familySelection) { _ in
                 if #available(iOS 16.0, *) {
                     let selectedCount = familySelection.applicationTokens.count
@@ -332,6 +347,25 @@ struct BlockItemsEditorView: View {
 
     private func requestFamilyControlsPermission() {
         Task { await PermissionsManager.shared.requestScreenTime() }
+    }
+
+    /// D13 — Apps button handler.
+    ///
+    /// Requests Family Controls, then opens the picker only if authorization
+    /// succeeded. If the user (or device policy) denies, we surface an alert
+    /// with a Settings deep-link rather than letting the picker silently fail
+    /// to open — that silent failure was a high-friction onboarding drop point.
+    private func handleAppsButtonTap() {
+        Task {
+            await PermissionsManager.shared.requestScreenTime()
+            await MainActor.run {
+                if PermissionsManager.shared.isScreenTimeGranted {
+                    showAppPicker = true
+                } else {
+                    showPermissionAlert = true
+                }
+            }
+        }
     }
 
     /// Stricter domain validation than the previous `contains(".")` check.
@@ -445,7 +479,7 @@ private struct PickerSheetWrapper: View {
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(AppColors.primaryBlue)
+                        .background(AppColors.accent)
                         .foregroundColor(.white)
                         .cornerRadius(12)
                         .padding(.horizontal)
@@ -455,14 +489,14 @@ private struct PickerSheetWrapper: View {
             .interactiveDismissDisabled(hasChanges)
             .onAppear { initialSelection = selection }
             .alert(lang.isArabicEffective ? "تجاهل التعديلات؟" : "Discard changes?", isPresented: $showCancelAlert) {
-                Button(lang.isArabicEffective ? "نعم" : "Yes", role: .destructive) {
+                Button(lang.isArabicEffective ? "تجاهلها" : "Discard", role: .destructive) {
                     // revert
                     selection = initialSelection
                     onCancel(); dismiss()
                 }
-                Button(lang.isArabicEffective ? "لا" : "No", role: .cancel) {}
+                Button(lang.isArabicEffective ? "متابعة التعديل" : "Keep editing", role: .cancel) {}
             } message: {
-                Text(lang.isArabicEffective ? "سيتم تجاهل تغييراتك." : "Your changes will be discarded.")
+                Text(lang.isArabicEffective ? "تغييراتك راح تتلاشى ولا يمكن استرجاعها." : "Your changes will be lost and can't be recovered.")
             }
         }
     }

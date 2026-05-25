@@ -141,7 +141,39 @@ struct HomeView: View {
             }
             .padding(12)
             .background(AppColors.alertRed.opacity(0.08))
-            .cornerRadius(10)
+            .cornerRadius(12)
+        }
+    }
+
+    /// Banner shown when the user has Scheduled or Time-Limit lists that
+    /// should have triggered the BlockingMonitor extension but haven't —
+    /// signal that the extension target isn't bound, the App Group is missing,
+    /// or signing/provisioning is wrong. Without this signal the silent failure
+    /// turns into 1-star reviews ("the schedule didn't work").
+    @ViewBuilder
+    private func monitorBannerIfNeeded() -> some View {
+        let scheduledLists = lists.filter { $0.blockType == "scheduled" || $0.blockType == "timeLimit" }
+        let oldestCreation = scheduledLists.map { $0.createdAt }.min()
+        if MonitorHealthcheck.shouldShowBanner(oldestScheduledOrLimit: oldestCreation) {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "bolt.slash.fill")
+                    .foregroundColor(AppColors.alertRed)
+                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 4) {
+                    Text(lang.isArabicEffective ? "الجدولة غير مفعّلة" : "Scheduling not active")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundColor(AppColors.alertRed)
+                    Text(lang.isArabicEffective
+                         ? "نظام مراقبة الجدولة (DeviceActivityMonitor) لم يستجب خلال آخر 24 ساعة. القوائم المجدولة وحدود الوقت اليومي قد لا تطبّق الحجب تلقائياً. تواصل مع الدعم."
+                         : "The scheduling extension hasn't responded in the last 24 hours. Scheduled lists and daily Time-Limit blocks may not apply automatically. Contact support.")
+                        .font(.footnote)
+                        .foregroundColor(AppColors.textSecondary)
+                        .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(12)
+            .background(AppColors.alertRed.opacity(0.08))
+            .cornerRadius(12)
         }
     }
 
@@ -154,7 +186,7 @@ struct HomeView: View {
                         let trimmedName = obName.trimmingCharacters(in: .whitespacesAndNewlines)
                         if !trimmedName.isEmpty {
                             Text(lang.isArabicEffective ? "أهلاً، \(trimmedName) 👋" : "Welcome, \(trimmedName) 👋")
-                                .font(.system(size: 16, weight: .medium))
+                                .font(.body.weight(.medium))
                                 .foregroundColor(AppColors.textSecondary)
                                 .frame(maxWidth: .infinity)
                                 .multilineTextAlignment(.center)
@@ -169,7 +201,7 @@ struct HomeView: View {
                                 .frame(width: 60, height: 60)
                         }
                         Text(AppStrings.heroTitle(lang))
-                            .font(.system(size: 28, weight: .semibold))
+                            .font(.nnHero)
                             .foregroundColor(AppColors.textPrimary)
                             .multilineTextAlignment(.center)
                         Text(AppStrings.homeSubtitle(lang))
@@ -188,18 +220,28 @@ struct HomeView: View {
                          LevelCard(lang: lang, value: "1")
                          ChallengesSimpleCard(lang: lang, value: "add")
                      }
+                    // Secondary CTA — outlined style so the primary "Get Started" (below)
+                    // stays the single dominant action on the screen. One primary per screen
+                    // is the canonical "Visual Hierarchy" rule (Apple HIG + Material).
                     if !lists.isEmpty || !activeLists.isEmpty {
                         ShareLink(item: shareMessage) {
-                            Text(lang.isArabicEffective ? "مشاركة" : "Share")
-                                .font(.subheadline.weight(.semibold))
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 44)
-                                .background(AppColors.accentDark)
-                                .foregroundColor(.white)
-                                .cornerRadius(12)
+                            HStack(spacing: 8) {
+                                Image(systemName: "square.and.arrow.up")
+                                Text(lang.isArabicEffective ? "مشاركة تقدّمي" : "Share progress")
+                            }
+                            .font(.subheadline.weight(.semibold))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 44)
+                            .background(Color.clear)
+                            .foregroundColor(AppColors.accent)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(AppColors.accent, lineWidth: 1)
+                            )
                         }
                     }
                     iCloudBannerIfNeeded()
+                    monitorBannerIfNeeded()
                     SoftDivider(width: 300, opacity: 0.70)
 
                     // Primary CTA — Create Blocklist
@@ -211,42 +253,47 @@ struct HomeView: View {
                     }
                     SoftDivider(width: 300, opacity: 0.70)
 
-                    // Permissions (render only if missing)
+                    // Permissions (render only if missing).
+                    // Collapsed: slim banner (warning style — single row, ~44pt tall) so it
+                    //   signals "needs attention" without competing with the primary CTA.
+                    // Expanded: full card with per-permission Grant buttons (unchanged UX).
                     if !(hasScreenTimePermission && hasNotificationPermission) {
+                        let requiredCount = (hasScreenTimePermission ? 0 : 1) + (hasNotificationPermission ? 0 : 1)
                         VStack(spacing: 0) {
                             HStack(spacing: 12) {
-                                Text(AppStrings.permissionsTitle(lang))
-                                    .font(.system(size: 20, weight: .semibold))
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundColor(AppColors.warningFg)
+                                    .font(.callout)
+                                Text(lang.isArabicEffective
+                                     ? "أذونات ناقصة (\(requiredCount))"
+                                     : "Missing permissions (\(requiredCount))")
+                                    .font(.subheadline.weight(.semibold))
                                     .foregroundColor(AppColors.textPrimary)
                                 Spacer()
-                                let requiredCount = (hasScreenTimePermission ? 0 : 1) + (hasNotificationPermission ? 0 : 1)
-                                let isAllSet = requiredCount == 0
-                                Text(isAllSet ? (lang.isArabicEffective ? "مكتملة" : "All set") : (lang.isArabicEffective ? "مطلوبة (\(requiredCount))" : "Required (\(requiredCount))"))
+                                Text(lang.isArabicEffective
+                                     ? (permissionsExpanded ? "إخفاء" : "إصلاح")
+                                     : (permissionsExpanded ? "Hide" : "Fix"))
                                     .font(.footnote.weight(.semibold))
-                                    .padding(.horizontal, 10)
-                                    .frame(height: 26)
-                                    .background(isAllSet ? Color.clear : AppColors.warningBg)
-                                    .foregroundColor(isAllSet ? AppColors.textSecondary : AppColors.warningFg)
-                                    .overlay(
-                                        Capsule().stroke(isAllSet ? AppColors.uiBorder : AppColors.warningFg.opacity(0.5), lineWidth: 0.5)
-                                    )
-                                    .clipShape(Capsule())
+                                    .foregroundColor(AppColors.accent)
                                 Image(systemName: permissionsExpanded ? "chevron.up" : "chevron.down")
-                                    .foregroundColor(AppColors.textSecondary)
+                                    .foregroundColor(AppColors.accent)
+                                    .font(.caption.weight(.semibold))
                             }
                             .contentShape(Rectangle())
                             .onTapGesture { withAnimation(.easeInOut(duration: 0.2)) { permissionsExpanded.toggle() } }
-                            .padding(16)
-                            .background(AppColors.uiSurface)
+                            .padding(.horizontal, 16)
+                            .frame(minHeight: 44) // HIG minimum touch target
+                            .padding(.vertical, 8)
+                            .background(AppColors.warningBg)
                             .overlay(
-                                RoundedRectangle(cornerRadius: permissionsExpanded ? 0 : 20)
-                                    .stroke(AppColors.uiBorder, lineWidth: 0.5)
+                                RoundedRectangle(cornerRadius: permissionsExpanded ? 0 : 12)
+                                    .stroke(AppColors.warningFg.opacity(0.3), lineWidth: 0.5)
                             )
                             if permissionsExpanded {
                                 VStack(spacing: 0) {
                                     // Screen Time row
                                     HStack(spacing: 12) {
-                                        Image(systemName: "lock.iphone").foregroundColor(AppColors.accentDark)
+                                        Image(systemName: "lock.iphone").foregroundColor(AppColors.accent)
                                         Text(lang.isArabicEffective ? "Screen Time" : "Screen Time")
                                             .font(.subheadline)
                                             .foregroundColor(AppColors.textPrimary)
@@ -257,22 +304,27 @@ struct HomeView: View {
                                                     .font(.footnote.weight(.semibold))
                                                     .padding(.horizontal, 12)
                                                     .frame(height: 30)
-                                                    .background(AppColors.accentDark)
+                                                    .background(AppColors.accent)
                                                     .foregroundColor(.white)
                                                     .cornerRadius(8)
                                             }
                                             .buttonStyle(.plain)
                                         } else {
-                                            Text(lang.isArabicEffective ? "تم" : "Granted")
-                                                .font(.footnote)
-                                                .foregroundColor(AppColors.textSecondary)
+                                            HStack(spacing: 4) {
+                                                Image(systemName: "checkmark.circle.fill")
+                                                    .foregroundColor(AppColors.successGreen)
+                                                    .font(.caption)
+                                                Text(lang.isArabicEffective ? "مُفعَّل" : "Granted")
+                                                    .font(.footnote)
+                                                    .foregroundColor(AppColors.textSecondary)
+                                            }
                                         }
                                     }
                                     .padding(16)
                                     Divider().background(AppColors.uiBorder.opacity(0.35))
                                     // Notifications row
                                     HStack(spacing: 12) {
-                                        Image(systemName: "bell").foregroundColor(AppColors.accentDark)
+                                        Image(systemName: "bell").foregroundColor(AppColors.accent)
                                         Text(lang.isArabicEffective ? "الإشعارات" : "Notifications")
                                             .font(.subheadline)
                                             .foregroundColor(AppColors.textPrimary)
@@ -283,48 +335,48 @@ struct HomeView: View {
                                                     .font(.footnote.weight(.semibold))
                                                     .padding(.horizontal, 12)
                                                     .frame(height: 30)
-                                                    .background(AppColors.accentDark)
+                                                    .background(AppColors.accent)
                                                     .foregroundColor(.white)
                                                     .cornerRadius(8)
                                             }
                                             .buttonStyle(.plain)
                                         } else {
-                                            Text(lang.isArabicEffective ? "تم" : "Enabled")
-                                                .font(.footnote)
-                                                .foregroundColor(AppColors.textSecondary)
+                                            HStack(spacing: 4) {
+                                                Image(systemName: "checkmark.circle.fill")
+                                                    .foregroundColor(AppColors.successGreen)
+                                                    .font(.caption)
+                                                Text(lang.isArabicEffective ? "مُفعَّل" : "Enabled")
+                                                    .font(.footnote)
+                                                    .foregroundColor(AppColors.textSecondary)
+                                            }
                                         }
                                     }
                                     .padding(16)
                                 }
                                 .background(AppColors.uiSurface)
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 20)
-                                        .stroke(AppColors.uiBorder, lineWidth: 0.5)
+                                    // Side+bottom border only (top edge meets the banner).
+                                    Rectangle().stroke(AppColors.uiBorder, lineWidth: 0.5)
                                 )
-                                .clipShape(RoundedRectangle(cornerRadius: 20))
                             }
                         }
-                        .background(AppColors.uiSurface)
-                        .cornerRadius(20)
+                        // Outer container: slim banner radius when collapsed,
+                        // full-card radius when expanded. The outer clip rounds the
+                        // whole stack so banner + detail share a single outer shape.
+                        .clipShape(RoundedRectangle(cornerRadius: permissionsExpanded ? 20 : 12))
                         SoftDivider(width: 300, opacity: 0.70)
                     }
-
-                    // Share progress
-                    // [Removed from here to reduce visual noise when completed]
-
-                    // Permissions (moved above)
-                    // [Removed from here to reduce visual noise when completed]
 
                     // Lists
                     VStack(alignment: .leading, spacing: 16) {
                         HStack {
                             Text(lang.isArabicEffective ? "قوائمك" : "Your Lists")
-                                .font(.system(size: 22, weight: .semibold))
+                                .font(.nnSectionTitle)
                                 .foregroundColor(AppColors.textPrimary)
                             Spacer()
                             Button(action: { showingCreate = true }) {
                                 Image(systemName: "plus")
-                                    .foregroundColor(AppColors.accentDark)
+                                    .foregroundColor(AppColors.accent)
                                     .frame(width: 28, height: 28)
                                     .background(AppColors.infoBg)
                                     .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -350,8 +402,8 @@ struct HomeView: View {
                                             if !lang.isArabicEffective && item.protection != "hard" {
                                                 Button(action: { toggleManual(for: item) }) {
                                                     Image(systemName: isActiveNow(item) ? "pause.fill" : "play.fill")
-                                                        .font(.system(size: 14, weight: .semibold))
-                                                        .foregroundColor(AppColors.accentDark)
+                                                        .font(.nnSmallButton)
+                                                        .foregroundColor(AppColors.accent)
                                                         .frame(width: 32, height: 32)
                                                         .background(AppColors.infoBg)
                                                         .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -364,8 +416,8 @@ struct HomeView: View {
                                             if lang.isArabicEffective && item.protection != "hard" {
                                                 Button(action: { toggleManual(for: item) }) {
                                                     Image(systemName: isActiveNow(item) ? "pause.fill" : "play.fill")
-                                                        .font(.system(size: 14, weight: .semibold))
-                                                        .foregroundColor(AppColors.accentDark)
+                                                        .font(.nnSmallButton)
+                                                        .foregroundColor(AppColors.accent)
                                                         .frame(width: 32, height: 32)
                                                         .background(AppColors.infoBg)
                                                         .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -391,8 +443,8 @@ struct HomeView: View {
                                             if !lang.isArabicEffective && item.protection != "hard" {
                                                 Button(action: { toggleManual(for: item) }) {
                                                     Image(systemName: isActiveNow(item) ? "pause.fill" : "play.fill")
-                                                        .font(.system(size: 14, weight: .semibold))
-                                                        .foregroundColor(AppColors.accentDark)
+                                                        .font(.nnSmallButton)
+                                                        .foregroundColor(AppColors.accent)
                                                         .frame(width: 32, height: 32)
                                                         .background(AppColors.infoBg)
                                                         .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -405,8 +457,8 @@ struct HomeView: View {
                                             if lang.isArabicEffective && item.protection != "hard" {
                                                 Button(action: { toggleManual(for: item) }) {
                                                     Image(systemName: isActiveNow(item) ? "pause.fill" : "play.fill")
-                                                        .font(.system(size: 14, weight: .semibold))
-                                                        .foregroundColor(AppColors.accentDark)
+                                                        .font(.nnSmallButton)
+                                                        .foregroundColor(AppColors.accent)
                                                         .frame(width: 32, height: 32)
                                                         .background(AppColors.infoBg)
                                                         .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -442,15 +494,15 @@ struct HomeView: View {
             .toolbar(.hidden, for: .navigationBar)
             .alert(isPresented: $showDeleteConfirm) {
                 Alert(
-                    title: Text(lang.isArabicEffective ? "حذف القائمة" : "Delete List"),
-                    message: Text(lang.isArabicEffective ? "هل أنت متأكد من حذف هذه القائمة؟" : "Are you sure you want to delete this list?"),
-                    primaryButton: .destructive(Text(lang.isArabicEffective ? "حذف" : "Delete")) {
+                    title: Text(lang.isArabicEffective ? "حذف هذه القائمة؟" : "Delete this list?"),
+                    message: Text(lang.isArabicEffective ? "الحجب راح يتوقّف فوراً، وما يمكن استعادة الإعدادات بعد الحذف." : "The block will stop immediately, and the settings can't be restored after deletion."),
+                    primaryButton: .destructive(Text(lang.isArabicEffective ? "احذف القائمة" : "Delete list")) {
                         if let toDelete = listToDelete {
                             deleteList(toDelete)
                         }
                         listToDelete = nil
                     },
-                    secondaryButton: .cancel(Text(lang.isArabicEffective ? "إلغاء" : "Cancel")) {
+                    secondaryButton: .cancel(Text(lang.isArabicEffective ? "احتفظ بها" : "Keep it")) {
                         listToDelete = nil
                     }
                 )
@@ -529,7 +581,7 @@ private struct PermissionCard: View {
     var body: some View {
         VStack(alignment: layoutDirection == .rightToLeft ? .trailing : .leading, spacing: 8) {
             HStack(spacing: 10) {
-                Image(systemName: icon).foregroundColor(AppColors.accentDark)
+                Image(systemName: icon).foregroundColor(AppColors.accent)
                 Text(title).font(.headline)
             }
             Text(message).font(.subheadline).foregroundColor(AppColors.textSecondary)
@@ -540,7 +592,7 @@ private struct PermissionCard: View {
                 }
                 .buttonStyle(.plain)
                 .font(.subheadline.weight(.semibold))
-                .foregroundColor(AppColors.accentDark)
+                .foregroundColor(AppColors.accent)
             }
         }
         .padding(20)
@@ -570,8 +622,8 @@ private struct RealListRow: View {
                 if !lang.isArabicEffective { // LTR → button on left
                     Button(action: { onToggle() }) {
                         Image(systemName: isActive ? "pause.fill" : "play.fill")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(AppColors.accentDark)
+                            .font(.nnSmallButton)
+                            .foregroundColor(AppColors.accent)
                             .frame(width: 32, height: 32)
                             .background(AppColors.infoBg)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -596,8 +648,8 @@ private struct RealListRow: View {
                 if lang.isArabicEffective { // RTL → button on right
                     Button(action: { onToggle() }) {
                         Image(systemName: isActive ? "pause.fill" : "play.fill")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(AppColors.accentDark)
+                            .font(.nnSmallButton)
+                            .foregroundColor(AppColors.accent)
                             .frame(width: 32, height: 32)
                             .background(AppColors.infoBg)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -739,7 +791,7 @@ private struct Badge: View {
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: icon)
-                .font(.system(size: 12, weight: .semibold))
+                .font(.caption.weight(.semibold))
             Text(text)
                 .font(.caption.weight(.semibold))
                 .lineLimit(1)
@@ -792,7 +844,7 @@ private struct EmptyStateView: View {
     var body: some View {
         VStack(spacing: 12) {
             Image(systemName: "square.and.pencil")
-                .font(.system(size: 28))
+                .font(.title)
                 .foregroundColor(.secondary)
             Text(isArabic ? "رحلة تركيزك تبدأ من هنا. اضغط \"أنشئ قائمة\"." : "Your focus journey starts here. Tap Create List.")
                 .font(.subheadline)
@@ -845,11 +897,11 @@ private struct CreateBlocklistCard: View {
         VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
             HStack {
                 Text(AppStrings.createBlocklistTitle(lang))
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.nnCardTitle)
                     .foregroundColor(AppColors.textPrimary)
                 Spacer()
                 Image(systemName: "plus")
-                    .foregroundColor(AppColors.accent600)
+                    .foregroundColor(AppColors.accent)
                     .frame(width: 28, height: 28)
                     .background(AppColors.infoBg)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -861,7 +913,7 @@ private struct CreateBlocklistCard: View {
                     .frame(height: 44)
                     .background(
                         Group {
-                            AppColors.accentDark
+                            AppColors.accent
                         }
                     )
                     .foregroundColor(.white)
@@ -890,7 +942,7 @@ private struct ChallengesCard: View {
                     Spacer()
                     Button(action: { /* add challenge */ }) {
                         Image(systemName: "plus")
-                            .foregroundColor(AppColors.accentDark)
+                            .foregroundColor(AppColors.accent)
                             .frame(width: 24, height: 24)
                             .background(AppColors.infoBg)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -904,9 +956,9 @@ private struct ChallengesCard: View {
                         .font(.subheadline.weight(.semibold))
                         .frame(maxWidth: .infinity)
                         .frame(height: 40)
-                        .background(AppColors.accentDark)
+                        .background(AppColors.accent)
                         .foregroundColor(.white)
-                        .cornerRadius(10)
+                        .cornerRadius(12)
                 }
                 .padding(.horizontal, 4)
             }
@@ -922,7 +974,7 @@ private struct ChallengesSimpleCard: View {
             NavigationLink(destination: ChallengesView().environmentObject(lang)) {
                 VStack(spacing: 8) {
                     Image(systemName: "trophy.fill")
-                        .font(.system(size: 28, weight: .semibold))
+                        .font(.nnHero)
                         .foregroundColor(AppColors.trophyGold)
                     Text(lang.isArabicEffective ? "أضف تحدّي" : "Add Challenge")
                         .font(.caption)
@@ -940,7 +992,7 @@ private struct ChallengesSimpleCard: View {
                 )
             }
             Image(systemName: "plus")
-                .foregroundColor(AppColors.accentDark)
+                .foregroundColor(AppColors.accent)
                 .frame(width: 24, height: 24)
                 .background(AppColors.infoBg)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -971,7 +1023,7 @@ private struct SavedCycleCard: View {
         .background(
             ZStack {
                 AppColors.uiSurface
-                if flash { AppColors.accentDark.opacity(0.12) }
+                if flash { AppColors.accent.opacity(0.12) }
             }
         )
         .cornerRadius(20)
@@ -988,7 +1040,7 @@ private struct SavedCycleCard: View {
                 }
             }) {
                 Image(systemName: "arrow.triangle.2.circlepath")
-                    .foregroundColor(AppColors.accentDark)
+                    .foregroundColor(AppColors.accent)
                     .frame(width: 24, height: 24)
                     .background(AppColors.infoBg)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -1041,7 +1093,7 @@ private struct LevelCard: View {
             )
             Button(action: { showInfo = true }) {
                 Image(systemName: "exclamationmark.circle")
-                    .foregroundColor(AppColors.accentDark)
+                    .foregroundColor(AppColors.accent)
                     .frame(width: 24, height: 24)
                     .background(AppColors.infoBg)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -1052,7 +1104,7 @@ private struct LevelCard: View {
             Alert(
                 title: Text(lang.isArabicEffective ? "كيف يعمل المستوى؟" : "How do levels work?"),
                 message: Text(lang.isArabicEffective ? "نظام النقاط يعتمد على التحديات المكتملة والساعات التي تم توفيرها." : "Your points grow with completed challenges and hours saved."),
-                dismissButton: .default(Text(lang.isArabicEffective ? "حسنًا" : "OK"))
+                dismissButton: .default(Text(lang.isArabicEffective ? "حسناً" : "OK"))
             )
         }
     }
@@ -1068,6 +1120,18 @@ struct ListDetailView: View {
     @State private var pendingShare: CKShare?
     @State private var partnerError: String?
     @State private var isCreatingPartnership = false
+    // D14 — Share URL disclosure. The CKShare URL is permanent and accepts the
+    // first iCloud user who taps it, with no PIN or revocation per-recipient.
+    // We surface that risk before generating the share so the user understands
+    // what they're about to put in a chat.
+    @State private var showInviteDisclosure = false
+    @State private var disclosureAccepted = false
+    // D18 — Emergency unlock request UI state. The store is the source of truth;
+    // this nonce just forces the view to re-render after a request / cancel,
+    // since EmergencyUnlockStore reads through UserDefaults (not @Published).
+    @State private var emergencyUnlockNonce = UUID()
+    @State private var showRequestUnlockConfirm = false
+    @State private var showCancelUnlockConfirm = false
     @State private var breakAttempts: [BreakAttempt] = []
     @State private var isLoadingAttempts = false
     @Environment(\.dismiss) private var dismiss
@@ -1103,11 +1167,16 @@ struct ListDetailView: View {
                     .cornerRadius(12)
                 }
 
+                // Emergency unlock — Forever + Hard only (D18)
+                if list.protection == "hard" && list.blockType == "forever" {
+                    emergencyUnlockCard()
+                }
+
                 // Header
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 12) {
                         Text(list.name)
-                            .font(.system(size: 22, weight: .semibold))
+                            .font(.nnSectionTitle)
                             .foregroundColor(AppColors.textPrimary)
                             .lineLimit(2)
                             .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
@@ -1189,7 +1258,7 @@ struct ListDetailView: View {
                                 .font(.subheadline.weight(.semibold))
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 44)
-                                .background(AppColors.accentDark)
+                                .background(AppColors.accent)
                                 .foregroundColor(.white)
                                 .cornerRadius(12)
                         }
@@ -1230,12 +1299,160 @@ struct ListDetailView: View {
         .onDisappear { }
     }
 
+    /// D18 — Emergency unlock card for Forever + Hard lists.
+    ///
+    /// Three states surfaced to the user:
+    /// * No pending request → explanation + "Request unlock (72h delay)" button.
+    /// * Pending request → live countdown + "Cancel request" button.
+    /// * Matured request → green confirmation + "Release lock now" button.
+    ///
+    /// TimelineView re-renders every minute so the countdown ticks. The store
+    /// itself is timestamp-based, so the same physical request remains valid
+    /// across app launches without us having to schedule any timers.
+    @ViewBuilder
+    private func emergencyUnlockCard() -> some View {
+        let id = stableListId
+        let _ = emergencyUnlockNonce // re-evaluate when nonce changes
+
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "key.fill")
+                    .foregroundColor(AppColors.accent)
+                Text(lang.isArabicEffective ? "فك الحجب الطارئ" : "Emergency Unlock")
+                    .font(.caption.weight(.semibold))
+                    .foregroundColor(AppColors.textSecondary)
+            }
+
+            if EmergencyUnlockStore.requestedAt(for: id) == nil {
+                emergencyUnlockIdleView()
+            } else {
+                TimelineView(.periodic(from: .now, by: 60)) { context in
+                    let granted = EmergencyUnlockStore.isGranted(for: id, now: context.date)
+                    let remaining = EmergencyUnlockStore.remainingSeconds(for: id, now: context.date)
+                    if granted {
+                        emergencyUnlockMaturedView()
+                    } else {
+                        emergencyUnlockPendingView(remaining: remaining)
+                    }
+                }
+            }
+        }
+        .padding(16)
+        .background(AppColors.uiSurface)
+        .cornerRadius(12)
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.uiBorder, lineWidth: 0.5))
+        .alert(
+            lang.isArabicEffective ? "طلب فك الحجب؟" : "Request unlock?",
+            isPresented: $showRequestUnlockConfirm
+        ) {
+            Button(lang.isArabicEffective ? "اطلب الفك" : "Request unlock", role: .destructive) {
+                EmergencyUnlockStore.requestUnlock(for: stableListId)
+                emergencyUnlockNonce = UUID()
+            }
+            Button(lang.isArabicEffective ? "إلغاء" : "Cancel", role: .cancel) {}
+        } message: {
+            Text(lang.isArabicEffective
+                 ? "سيُرفع الحجب تلقائياً بعد 72 ساعة من الآن. تقدر تلغي الطلب في أي وقت قبل ذلك."
+                 : "The block will release automatically 72 hours from now. You can cancel the request anytime before then.")
+        }
+        .alert(
+            lang.isArabicEffective ? "إلغاء الطلب؟" : "Cancel request?",
+            isPresented: $showCancelUnlockConfirm
+        ) {
+            Button(lang.isArabicEffective ? "نعم، أبقِ الحجب" : "Yes, keep blocked", role: .destructive) {
+                EmergencyUnlockStore.clear(for: stableListId)
+                emergencyUnlockNonce = UUID()
+            }
+            Button(lang.isArabicEffective ? "تراجع" : "Cancel", role: .cancel) {}
+        } message: {
+            Text(lang.isArabicEffective
+                 ? "سيبقى الحجب نشطاً ولن يُفك حتى تطلب من جديد."
+                 : "The block stays active and will not release until you request again.")
+        }
+    }
+
+    private func emergencyUnlockIdleView() -> some View {
+        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 10) {
+            Text(lang.isArabicEffective
+                 ? "الحجب الدائم لا يمكن إيقافه فوراً. اطلب فك الحجب الآن وسيُرفع تلقائياً بعد 72 ساعة — وقت كافٍ ليمر الاندفاع، لكنك لست محبوساً للأبد."
+                 : "Forever blocks can't be deactivated instantly. Request unlock now and the block will release automatically after 72 hours — long enough for an impulse to pass, but not indefinitely locked.")
+                .font(.footnote)
+                .foregroundColor(AppColors.textSecondary)
+                .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+
+            Button(action: { showRequestUnlockConfirm = true }) {
+                Text(lang.isArabicEffective ? "اطلب فك الحجب (تأخير 72 ساعة)" : "Request unlock (72-hour delay)")
+                    .font(.subheadline.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 44)
+                    .background(AppColors.alertRed.opacity(0.10))
+                    .foregroundColor(AppColors.alertRed)
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.alertRed.opacity(0.6), lineWidth: 1))
+                    .cornerRadius(12)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func emergencyUnlockPendingView(remaining: TimeInterval) -> some View {
+        let hours = Int(remaining) / 3600
+        let minutes = (Int(remaining) % 3600) / 60
+        let remainingText: String
+        if lang.isArabicEffective {
+            remainingText = "متبقي \(hours) ساعة و \(minutes) دقيقة"
+        } else {
+            remainingText = "\(hours)h \(minutes)m remaining"
+        }
+        return VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "hourglass")
+                    .foregroundColor(AppColors.accent)
+                Text(remainingText)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(AppColors.textPrimary)
+            }
+            Text(lang.isArabicEffective
+                 ? "بعد انتهاء العداد، يمكنك إيقاف الحجب من هنا."
+                 : "Once the timer ends, you can deactivate the block from here.")
+                .font(.footnote)
+                .foregroundColor(AppColors.textSecondary)
+
+            Button(action: { showCancelUnlockConfirm = true }) {
+                Text(lang.isArabicEffective ? "إلغاء الطلب" : "Cancel request")
+                    .font(.subheadline.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 44)
+                    .foregroundColor(AppColors.accent)
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.accent.opacity(0.6), lineWidth: 1))
+                    .cornerRadius(12)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func emergencyUnlockMaturedView() -> some View {
+        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(AppColors.successGreen)
+                Text(lang.isArabicEffective ? "اكتمل فك الحجب" : "Unlock matured")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(AppColors.successGreen)
+            }
+            Text(lang.isArabicEffective
+                 ? "يمكنك الآن إيقاف الحجب من هذه القائمة عبر زر إيقاف الحالة في الشاشة الرئيسية."
+                 : "You can now deactivate this block from the toggle on the home screen.")
+                .font(.footnote)
+                .foregroundColor(AppColors.textSecondary)
+        }
+    }
+
     @ViewBuilder
     private func partnerSection() -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: "person.2.fill")
-                    .foregroundColor(AppColors.accentDark)
+                    .foregroundColor(AppColors.accent)
                 Text(lang.isArabicEffective ? "شريك التعافي" : "Recovery Partner")
                     .font(.caption.weight(.semibold))
                     .foregroundColor(AppColors.textSecondary)
@@ -1274,6 +1491,18 @@ struct ListDetailView: View {
                 .ignoresSafeArea()
             }
         }
+        .sheet(isPresented: $showInviteDisclosure) {
+            PartnerInviteDisclosureSheet(
+                isArabic: lang.isArabicEffective,
+                accepted: $disclosureAccepted,
+                onContinue: {
+                    showInviteDisclosure = false
+                    invitePartner()
+                },
+                onCancel: { showInviteDisclosure = false }
+            )
+            .environmentObject(lang)
+        }
         .alert(
             lang.isArabicEffective ? "تعذّر دعوة شريك" : "Couldn't invite partner",
             isPresented: Binding(get: { partnerError != nil }, set: { if !$0 { partnerError = nil } })
@@ -1298,7 +1527,10 @@ struct ListDetailView: View {
     }
 
     private func partnerInviteButton() -> some View {
-        Button(action: invitePartner) {
+        Button(action: {
+            disclosureAccepted = false
+            showInviteDisclosure = true
+        }) {
             HStack {
                 if isCreatingPartnership {
                     ProgressView().progressViewStyle(.circular).tint(.white)
@@ -1310,7 +1542,7 @@ struct ListDetailView: View {
             .font(.subheadline.weight(.semibold))
             .frame(maxWidth: .infinity)
             .frame(height: 44)
-            .background(AppColors.accentDark)
+            .background(AppColors.accent)
             .foregroundColor(.white)
             .cornerRadius(12)
         }
@@ -1374,7 +1606,7 @@ struct ListDetailView: View {
                 Text(lang.isArabicEffective ? "تحديث" : "Refresh")
                     .font(.footnote)
             }
-            .foregroundColor(AppColors.accentDark)
+            .foregroundColor(AppColors.accent)
         }
         .buttonStyle(.plain)
         .padding(.top, 4)
@@ -1556,5 +1788,107 @@ private struct ListRowCore: View {
             }
         }
         .padding(.vertical, 16)
+    }
+}
+
+// MARK: - Partner Invite Disclosure (D14)
+
+/// Disclosure sheet shown before generating a Recovery Partner CKShare URL.
+/// CKShare URLs are durable and unrevokable per-recipient: the first iCloud
+/// user who taps the link accepts the share, regardless of whom the sender
+/// intended. Apple authenticates the recipient by Apple ID but does not
+/// verify *which* person that is. The acknowledgement here is friction by
+/// design — it surfaces the trust requirement before a link enters a chat.
+private struct PartnerInviteDisclosureSheet: View {
+    let isArabic: Bool
+    @Binding var accepted: Bool
+    let onContinue: () -> Void
+    let onCancel: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "exclamationmark.shield.fill")
+                            .font(.title)
+                            .foregroundColor(AppColors.alertRed)
+                        Text(isArabic ? "قبل إرسال الدعوة" : "Before you send the invitation")
+                            .font(.title3.weight(.semibold))
+                            .foregroundColor(AppColors.textPrimary)
+                    }
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        bulletRow(
+                            icon: "link",
+                            text: isArabic
+                                ? "أي شخص يضغط رابط الدعوة بحساب iCloud يصير شريك التعافي. لا يوجد رمز تأكيد إضافي."
+                                : "Anyone who taps the invitation link with an iCloud account becomes your Recovery Partner. There is no extra PIN."
+                        )
+                        bulletRow(
+                            icon: "person.crop.circle.badge.exclamationmark",
+                            text: isArabic
+                                ? "إذا أعدت توجيه الرابط للمحادثة الخطأ، الشخص الجديد سيستلم محاولات كسر الحجب بدلاً من شريكك."
+                                : "If you forward the link to the wrong chat, the new person receives break-attempt notifications instead of your intended partner."
+                        )
+                        bulletRow(
+                            icon: "arrow.uturn.backward.slash",
+                            text: isArabic
+                                ? "لا يمكن سحب الرابط بعد إرساله، لكن يمكنك إنهاء الشراكة من شاشة القائمة في أي وقت."
+                                : "The link can't be revoked once sent, but you can end the partnership from the list screen at any time."
+                        )
+                    }
+
+                    Toggle(isOn: $accepted) {
+                        Text(isArabic
+                             ? "أفهم وسأرسل الرابط لشخص أثق فيه فقط."
+                             : "I understand and will share the link only with someone I trust.")
+                            .font(.subheadline)
+                            .foregroundColor(AppColors.textPrimary)
+                    }
+                    .tint(AppColors.accent)
+                    .padding(16)
+                    .background(AppColors.uiSurface)
+                    .cornerRadius(12)
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.uiBorder, lineWidth: 0.5))
+
+                    Button(action: { if accepted { onContinue() } }) {
+                        Text(isArabic ? "إنشاء الرابط ومتابعة" : "Create link and continue")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(accepted ? AppColors.accent : AppColors.accent.opacity(0.4))
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!accepted)
+                }
+                .padding(20)
+            }
+            .background(AppColors.uiSurface.opacity(0.3))
+            .navigationTitle(isArabic ? "دعوة شريك تعافي" : "Invite Recovery Partner")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(isArabic ? "إلغاء" : "Cancel") { onCancel() }
+                }
+            }
+        }
+        .environment(\.layoutDirection, isArabic ? .rightToLeft : .leftToRight)
+    }
+
+    private func bulletRow(icon: String, text: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon)
+                .foregroundColor(AppColors.accent)
+                .frame(width: 24, alignment: .center)
+            Text(text)
+                .font(.footnote)
+                .foregroundColor(AppColors.textPrimary)
+                .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
+        }
     }
 } 

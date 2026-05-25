@@ -1,7 +1,9 @@
 import SwiftUI
+import CoreData
 
 struct OnboardingView: View {
     @EnvironmentObject var lang: LanguageManager
+    @Environment(\.managedObjectContext) private var context
     @AppStorage(AppStorageKeys.showOnboardingAfterLogin) private var showOnboardingAfterLogin: Bool = false
 
     // Collected data (UI-only for now)
@@ -127,7 +129,7 @@ struct OnboardingView: View {
                     // Page 1: Name + Gender
                     VStack(spacing: 16) {
                         Text(lang.isArabicEffective ? "تعريف بسيط" : "Quick intro")
-                            .font(.system(size: 22, weight: .semibold))
+                            .font(.nnSectionTitle)
                             .foregroundColor(AppColors.textPrimary)
                         VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
                             TextField(lang.isArabicEffective ? "اسمك" : "Your name", text: $obName)
@@ -157,7 +159,7 @@ struct OnboardingView: View {
                     // Page 2: Age group
                     VStack(spacing: 16) {
                         Text(lang.isArabicEffective ? "العمر" : "Age")
-                            .font(.system(size: 22, weight: .semibold))
+                            .font(.nnSectionTitle)
                             .foregroundColor(AppColors.textPrimary)
                         VStack(alignment: .center, spacing: 12) {
                             ageChip(title: lang.isArabicEffective ? "13–17" : "13–17", value: "13-17")
@@ -180,7 +182,7 @@ struct OnboardingView: View {
                     // Page 3: Addictive apps/categories
                     VStack(spacing: 16) {
                         Text(lang.isArabicEffective ? "مصادر الإدمان" : "Addictive sources")
-                            .font(.system(size: 22, weight: .semibold))
+                            .font(.nnSectionTitle)
                             .foregroundColor(AppColors.textPrimary)
                         VStack(spacing: 16) {
                             // Apps section
@@ -235,7 +237,7 @@ struct OnboardingView: View {
                     // Page 4: Goals
                     VStack(spacing: 16) {
                         Text(lang.isArabicEffective ? "هدفك من التطبيق؟" : "Your goal with the app?")
-                            .font(.system(size: 22, weight: .semibold))
+                            .font(.nnSectionTitle)
                             .foregroundColor(AppColors.textPrimary)
                         Text(lang.isArabicEffective ? "يمكنك اختيار أكثر من هدف." : "You can pick more than one goal.")
                             .font(.footnote)
@@ -284,12 +286,19 @@ struct OnboardingView: View {
                         Text(page < 3 ? (lang.isArabicEffective ? "التالي" : "Next") : (lang.isArabicEffective ? "إنهاء" : "Finish"))
                             .font(.subheadline.weight(.semibold))
                             .frame(width: 120, height: 44)
-                            .background(AppColors.accentDark)
+                            .background(AppColors.accent)
                             .foregroundColor(.white)
                             .cornerRadius(12)
                     }
                     .simultaneousGesture(TapGesture().onEnded {
-                        if page == 3 { showOnboardingAfterLogin = false }
+                        if page == 3 {
+                            // Seed a goal-shaped first list (inactive — user must
+                            // tap to activate). Skipping onboarding bypasses this:
+                            // skip means the user explicitly opted out of sharing
+                            // their goal data, so we don't pretend to use it.
+                            SmartListSeeder.seedIfNeeded(in: context)
+                            showOnboardingAfterLogin = false
+                        }
                     })
                 }
                 .padding(.horizontal, 24)
@@ -308,7 +317,7 @@ struct OnboardingView: View {
                 .foregroundColor(obAgeGroup == value ? .white : AppColors.textPrimary)
                 .frame(maxWidth: .infinity)
                 .frame(height: 40)
-                .background(obAgeGroup == value ? AppColors.accentDark : AppColors.uiSurface)
+                .background(obAgeGroup == value ? AppColors.accent : AppColors.uiSurface)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(AppColors.uiBorder, lineWidth: obAgeGroup == value ? 0 : 0.5)
@@ -339,7 +348,7 @@ private struct ChipGrid: View {
                         .foregroundColor(isSelected ? .white : AppColors.textPrimary)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(isSelected ? AppColors.accentDark : AppColors.uiSurface)
+                        .background(isSelected ? AppColors.accent : AppColors.uiSurface)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(AppColors.uiBorder, lineWidth: isSelected ? 0 : 0.5)

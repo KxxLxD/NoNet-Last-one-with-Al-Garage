@@ -20,8 +20,8 @@ struct SettingsView: View {
             Link(destination: url) {
                 HStack {
                     Image(systemName: icon)
-                        .foregroundColor(AppColors.accentDark)
-                        .font(.system(size: 20, weight: .regular))
+                        .foregroundColor(AppColors.accent)
+                        .font(.nnCardBody)
                     Text(label)
                     Spacer()
                 }
@@ -31,8 +31,8 @@ struct SettingsView: View {
             Button(action: { hapticLight(); showComingSoonAlert = true }) {
                 HStack {
                     Image(systemName: icon)
-                        .foregroundColor(AppColors.accentDark)
-                        .font(.system(size: 20, weight: .regular))
+                        .foregroundColor(AppColors.accent)
+                        .font(.nnCardBody)
                     Text(label)
                         .foregroundColor(AppColors.textPrimary)
                     Spacer()
@@ -41,8 +41,8 @@ struct SettingsView: View {
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
                         .background(AppColors.infoBg)
-                        .foregroundColor(AppColors.accentDark)
-                        .cornerRadius(6)
+                        .foregroundColor(AppColors.accent)
+                        .cornerRadius(8)
                 }
             }
             .buttonStyle(.plain)
@@ -54,7 +54,7 @@ struct SettingsView: View {
             ScrollView {
                 VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 24) {
                     // Language
-                    HStack { Text(lang.isArabicEffective ? "اللغة" : "Language").font(.system(size: 22, weight: .semibold)).foregroundColor(AppColors.textPrimary); Spacer() }
+                    HStack { Text(lang.isArabicEffective ? "اللغة" : "Language").font(.nnSectionTitle).foregroundColor(AppColors.textPrimary); Spacer() }
                         .padding(.horizontal, 24)
                     VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
                         Text(lang.isArabicEffective ? "لغة التطبيق" : "App Language")
@@ -78,7 +78,7 @@ struct SettingsView: View {
                     .padding(.horizontal, 24)
                 
                     // Subscription
-                    HStack { Text(lang.isArabicEffective ? "الاشتراك" : "Subscription").font(.system(size: 22, weight: .semibold)).foregroundColor(AppColors.textPrimary); Spacer() }
+                    HStack { Text(lang.isArabicEffective ? "الاشتراك" : "Subscription").font(.nnSectionTitle).foregroundColor(AppColors.textPrimary); Spacer() }
                         .padding(.horizontal, 24)
                     VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
                         HStack {
@@ -92,7 +92,7 @@ struct SettingsView: View {
                                 .background(
                                     Capsule().fill(isPremium ? AppColors.successGreen.opacity(0.12) : AppColors.infoBg)
                                 )
-                                .foregroundColor(isPremium ? AppColors.successGreen : AppColors.accentDark)
+                                .foregroundColor(isPremium ? AppColors.successGreen : AppColors.accent)
                         }
                         Text(lang.isArabicEffective ? "الترقية تفتح السكجوال والميزات المتقدمة." : "Upgrade unlocks scheduling and advanced features.")
                             .font(.footnote)
@@ -107,7 +107,7 @@ struct SettingsView: View {
                                     .font(.subheadline.weight(.semibold))
                                     .frame(maxWidth: .infinity)
                                     .frame(height: 44)
-                                    .background(AppColors.accentDark)
+                                    .background(AppColors.accent)
                                     .foregroundColor(.white)
                                     .cornerRadius(12)
                             }
@@ -127,13 +127,13 @@ struct SettingsView: View {
                     .padding(.horizontal, 24)
 
                     // Help & Support
-                    HStack { Text(lang.isArabicEffective ? "المساعدة والدعم" : "Help & Support").font(.system(size: 22, weight: .semibold)).foregroundColor(AppColors.textPrimary); Spacer() }
+                    HStack { Text(lang.isArabicEffective ? "المساعدة والدعم" : "Help & Support").font(.nnSectionTitle).foregroundColor(AppColors.textPrimary); Spacer() }
                         .padding(.horizontal, 24)
                     VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
                         Link(destination: URL(string: "mailto:support@nonet.app")!) {
                             HStack {
-                                Image(systemName: "envelope").foregroundColor(AppColors.accentDark)
-                                    .font(.system(size: 20, weight: .regular))
+                                Image(systemName: "envelope").foregroundColor(AppColors.accent)
+                                    .font(.nnCardBody)
                                 Text(lang.isArabicEffective ? "بريد الدعم" : "Support Email")
                                 Spacer()
                             }
@@ -142,8 +142,8 @@ struct SettingsView: View {
                         SoftDivider(width: 280, opacity: 0.70)
                         NavigationLink(destination: FAQView().environmentObject(lang)) {
                             HStack {
-                                Image(systemName: "questionmark.circle").foregroundColor(AppColors.accentDark)
-                                    .font(.system(size: 20, weight: .regular))
+                                Image(systemName: "questionmark.circle").foregroundColor(AppColors.accent)
+                                    .font(.nnCardBody)
                                 Text("FAQ")
                                 Spacer()
                             }
@@ -152,8 +152,8 @@ struct SettingsView: View {
                         SoftDivider(width: 280, opacity: 0.70)
                         NavigationLink(destination: ResourcesView().environmentObject(lang)) {
                             HStack {
-                                Image(systemName: "book.fill").foregroundColor(AppColors.accentDark)
-                                    .font(.system(size: 20, weight: .regular))
+                                Image(systemName: "book.fill").foregroundColor(AppColors.accent)
+                                    .font(.nnCardBody)
                                 Text(lang.isArabicEffective ? "الموارد" : "Resources")
                                 Spacer()
                             }
@@ -162,8 +162,8 @@ struct SettingsView: View {
                         SoftDivider(width: 280, opacity: 0.70)
                         Button(action: { hapticLight(); showBlockPreview = true }) {
                             HStack {
-                                Image(systemName: "eye").foregroundColor(AppColors.accentDark)
-                                    .font(.system(size: 20, weight: .regular))
+                                Image(systemName: "eye").foregroundColor(AppColors.accent)
+                                    .font(.nnCardBody)
                                 Text(lang.isArabicEffective ? "معاينة شاشة الحجب" : "Preview Block Screen")
                                 Spacer()
                             }
@@ -183,7 +183,7 @@ struct SettingsView: View {
                     // are provisioned. Replace `url: nil` with `url: URL(string: "...")`
                     // once the WhatsApp/Telegram channels go live (see TODO_FOR_KHALID.md
                     // section v1.1.0 → "روابط المجتمع").
-                    HStack { Text(lang.isArabicEffective ? "المجتمع" : "Community").font(.system(size: 22, weight: .semibold)).foregroundColor(AppColors.textPrimary); Spacer() }
+                    HStack { Text(lang.isArabicEffective ? "المجتمع" : "Community").font(.nnSectionTitle).foregroundColor(AppColors.textPrimary); Spacer() }
                         .padding(.horizontal, 24)
                     VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
                         communityRow(
@@ -208,14 +208,14 @@ struct SettingsView: View {
                     .padding(.horizontal, 24)
 
                     // Legal
-                    HStack { Text(lang.isArabicEffective ? "القانوني" : "Legal").font(.system(size: 22, weight: .semibold)).foregroundColor(AppColors.textPrimary); Spacer() }
+                    HStack { Text(lang.isArabicEffective ? "القانوني" : "Legal").font(.nnSectionTitle).foregroundColor(AppColors.textPrimary); Spacer() }
                         .padding(.horizontal, 24)
                     VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
                         NavigationLink(destination: PoliciesView().environmentObject(lang)) {
                             HStack {
                                 Image(systemName: "doc.text")
-                                    .foregroundColor(AppColors.accentDark)
-                                    .font(.system(size: 20, weight: .regular))
+                                    .foregroundColor(AppColors.accent)
+                                    .font(.nnCardBody)
                                 Text(lang.isArabicEffective ? "السياسات والشروط" : "Policies & Terms")
                                 Spacer()
                             }
@@ -231,14 +231,14 @@ struct SettingsView: View {
                     .padding(.horizontal, 24)
 
                     // About
-                    HStack { Text(lang.isArabicEffective ? "حول التطبيق" : "About").font(.system(size: 22, weight: .semibold)).foregroundColor(AppColors.textPrimary); Spacer() }
+                    HStack { Text(lang.isArabicEffective ? "حول التطبيق" : "About").font(.nnSectionTitle).foregroundColor(AppColors.textPrimary); Spacer() }
                         .padding(.horizontal, 24)
                     VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
                         NavigationLink(destination: AboutView().environmentObject(lang)) {
                             HStack {
                                 Image(systemName: "info.circle")
-                                    .foregroundColor(AppColors.accentDark)
-                                    .font(.system(size: 20, weight: .regular))
+                                    .foregroundColor(AppColors.accent)
+                                    .font(.nnCardBody)
                                 Text(lang.isArabicEffective ? "معلومات التطبيق" : "App Information")
                                 Spacer()
                             }
@@ -254,7 +254,7 @@ struct SettingsView: View {
                     .padding(.horizontal, 24)
                 
                 // Account / Logout
-                    HStack { Text(lang.isArabicEffective ? "الحساب" : "Account").font(.system(size: 22, weight: .semibold)).foregroundColor(AppColors.textPrimary); Spacer() }
+                    HStack { Text(lang.isArabicEffective ? "الحساب" : "Account").font(.nnSectionTitle).foregroundColor(AppColors.textPrimary); Spacer() }
                         .padding(.horizontal, 24)
                     VStack(alignment: .center, spacing: 12) {
                         LogoutButton()
@@ -303,7 +303,7 @@ struct FAQView: View {
         ScrollView {
             VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 16) {
                 Text(lang.isArabicEffective ? "الأسئلة الشائعة" : "Frequently Asked Questions")
-                    .font(.system(size: 22, weight: .semibold))
+                    .font(.nnSectionTitle)
                     .foregroundColor(AppColors.textPrimary)
                     .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
                 
@@ -408,11 +408,11 @@ struct FAQItem: View {
                             .multilineTextAlignment(.trailing)
                         Spacer()
                         Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                            .font(.system(size: 20, weight: .regular))
+                            .font(.nnCardBody)
                             .foregroundColor(AppColors.textSecondary)
                     } else {
                         Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                            .font(.system(size: 20, weight: .regular))
+                            .font(.nnCardBody)
                             .foregroundColor(AppColors.textSecondary)
                         Text(question)
                             .font(.headline)
@@ -457,20 +457,20 @@ struct LogoutButton: View {
                 .background(AppColors.alertRed)
                 .cornerRadius(12)
         }
-        .alert(lang.isArabicEffective ? "تأكيد" : "Confirm", isPresented: $showConfirm) {
+        .alert(lang.isArabicEffective ? "تسجيل الخروج؟" : "Log out?", isPresented: $showConfirm) {
             Button(role: .destructive) {
                 AppleSignInCoordinator.shared.signOut()
                 isAuthenticated = false
                 selectedTab = 0
             } label: {
-                Text(lang.isArabicEffective ? "تسجيل الخروج" : "Log out")
+                Text(lang.isArabicEffective ? "سجّل الخروج" : "Log out")
             }
             Button(role: .cancel) {
             } label: {
                 Text(lang.isArabicEffective ? "إلغاء" : "Cancel")
             }
         } message: {
-            Text(lang.isArabicEffective ? "هل أنت متأكد من تسجيل الخروج؟" : "Are you sure you want to log out?")
+            Text(lang.isArabicEffective ? "راح تحتاج تسجّل دخولك مرة ثانية للوصول لقوائمك وإعداداتك." : "You'll need to sign in again to access your lists and settings.")
         }
     }
 }

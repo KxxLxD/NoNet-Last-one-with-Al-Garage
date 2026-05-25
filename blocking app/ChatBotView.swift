@@ -111,8 +111,8 @@ struct ChatBotView: View {
                 if !isPremium {
                     VStack(spacing: 16) {
                         Image(systemName: "lock.shield")
-                            .font(.system(size: 48))
-                            .foregroundColor(AppColors.primaryBlue)
+                            .font(.system(size: 48))  /* TODO: icon — consider Image scale */
+                            .foregroundColor(AppColors.accent)
                         Text(lang.isArabicEffective ? "الشات بوت متاح فقط للمستخدمين المميزين" : "Chat Bot is available for Premium users")
                             .multilineTextAlignment(.center)
                             .foregroundColor(.secondary)
@@ -122,7 +122,7 @@ struct ChatBotView: View {
                                 .fontWeight(.semibold)
                                 .frame(maxWidth: .infinity)
                                 .padding()
-                                .background(AppColors.primaryBlue)
+                                .background(AppColors.accent)
                                 .foregroundColor(.white)
                                 .cornerRadius(12)
                         }
@@ -134,9 +134,9 @@ struct ChatBotView: View {
                             VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 16) {
                                 // Header
                                 HStack(spacing: 8) {
-                                    Image(systemName: "sparkles").foregroundColor(AppColors.accentDark)
+                                    Image(systemName: "sparkles").foregroundColor(AppColors.accent)
                                     Text("NoNet AI")
-                                        .font(.system(size: 22, weight: .semibold))
+                                        .font(.nnSectionTitle)
                                         .foregroundColor(AppColors.textPrimary)
                                     Spacer()
                                 }
@@ -174,8 +174,8 @@ struct ChatBotView: View {
                             if lang.isArabicEffective {
                                 Button(action: { showSuggestions = true }) {
                                     Image(systemName: "sparkles")
-                                        .foregroundColor(AppColors.accentDark)
-                                        .font(.system(size: 18))
+                                        .foregroundColor(AppColors.accent)
+                                        .font(.title3)
                                         .frame(width: 44, height: 44)
                                         .background(AppColors.uiSurface)
                                         .cornerRadius(12)
@@ -188,7 +188,7 @@ struct ChatBotView: View {
                                     Image(systemName: "paperplane.fill")
                                         .foregroundColor(.white)
                                         .frame(width: 44, height: 44)
-                                        .background(AppColors.accentDark)
+                                        .background(AppColors.accent)
                                         .cornerRadius(12)
                                 }
                                 .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -223,8 +223,8 @@ struct ChatBotView: View {
                                 )
                                 Button(action: { showSuggestions = true }) {
                                     Image(systemName: "sparkles")
-                                        .foregroundColor(AppColors.accentDark)
-                                        .font(.system(size: 18))
+                                        .foregroundColor(AppColors.accent)
+                                        .font(.title3)
                                         .frame(width: 44, height: 44)
                                         .background(AppColors.uiSurface)
                                         .cornerRadius(12)
@@ -237,7 +237,7 @@ struct ChatBotView: View {
                                     Image(systemName: "paperplane.fill")
                                         .foregroundColor(.white)
                                         .frame(width: 44, height: 44)
-                                        .background(AppColors.accentDark)
+                                        .background(AppColors.accent)
                                         .cornerRadius(12)
                                 }
                                 .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -341,10 +341,10 @@ struct SuggestionsSheet: View {
                     HStack(spacing: 8) {
                         if lang.isArabicEffective { Spacer() }
                         Image(systemName: "sparkles")
-                            .foregroundColor(AppColors.accentDark)
-                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(AppColors.accent)
+                            .font(.nnSubheader.weight(.semibold))
                 Text(lang.isArabicEffective ? "اقتراحات" : "Suggestions")
-                            .font(.system(size: 22, weight: .semibold))
+                            .font(.nnSectionTitle)
                             .foregroundColor(AppColors.textPrimary)
                         if !lang.isArabicEffective { Spacer() }
                     }

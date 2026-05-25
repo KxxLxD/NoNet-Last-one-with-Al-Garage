@@ -46,12 +46,12 @@ struct BlockScreenView: View {
                     .padding(.bottom, 12)
                 VStack(spacing: 8) {
                     Text(isArabic ? "وضع التركيز مفعّل — وضع السكينة مفعّل" : "Focus mode is ON — Peace mode is ON")
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.nnCardTitle)
                         .foregroundColor(AppColors.textPrimary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 24)
                     Text(isArabic ? "استمر… إنت ماشي صح ✨" : "Stay in focus — keep going ✨")
-                        .font(.system(size: 18, weight: .medium))
+                        .font(.nnSubheader)
                         .foregroundColor(AppColors.textPrimary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 24)
@@ -68,10 +68,10 @@ struct BlockScreenView: View {
                     onClose()
                 }) {
                     Text(isArabic ? "تمام — لنكمل" : "Okay — let’s continue")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.nnButton)
                         .frame(maxWidth: .infinity)
                         .frame(height: 44)
-                        .background(AppColors.accentDark)
+                        .background(AppColors.accent)
                         .foregroundColor(.white)
                         .cornerRadius(12)
                 }
@@ -101,7 +101,7 @@ struct BlockScreenView: View {
     private func infoCard(text: String) -> some View {
         VStack(spacing: 0) {
             Text(text)
-                .font(.system(size: 14, weight: .regular))
+                .font(.subheadline)
                 .foregroundColor(AppColors.textSecondary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
@@ -121,21 +121,21 @@ struct BlockScreenView: View {
         let durText = isArabic ? "\(minutes) دقيقة" : "\(minutes) min"
         return HStack(spacing: 8) {
             Image(systemName: "cup.and.saucer")
-                .font(.system(size: 13, weight: .regular))
+                .font(.footnote)
                 .foregroundColor(AppColors.textPrimary)
             Text(isArabic ? "استراحة" : "Break")
-                .font(.system(size: 13, weight: .semibold))
+                .font(.footnote.weight(.semibold))
                 .foregroundColor(AppColors.textPrimary)
             Text(countText)
-                .font(.system(size: 12, weight: .regular))
+                .font(.nnCaption)
                 .foregroundColor(AppColors.textSecondary)
             Text(durText)
-                .font(.system(size: 12, weight: .regular))
+                .font(.nnCaption)
                 .foregroundColor(AppColors.textSecondary)
         }
         .padding(.horizontal, 12)
         .frame(height: 32)
-        .background(flashBreak ? AppColors.accentDark.opacity(0.4) : Color.clear)
+        .background(flashBreak ? AppColors.accent.opacity(0.4) : Color.clear)
         .overlay(
             Capsule().stroke(AppColors.uiBorder, lineWidth: 0.5)
         )

@@ -62,7 +62,7 @@ struct UpgradeView: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: 44)
                     .background(AppColors.infoBg)
-                    .foregroundColor(AppColors.accentDark)
+                    .foregroundColor(AppColors.accent)
                     .cornerRadius(12)
                 }
 
@@ -73,7 +73,7 @@ struct UpgradeView: View {
                 Button(action: { Task { await store.restorePurchases() } }) {
                     Text(isArabic ? "استعادة المشتريات" : "Restore Purchases")
                         .font(.footnote.weight(.semibold))
-                        .foregroundColor(AppColors.accentDark)
+                        .foregroundColor(AppColors.accent)
                         .frame(maxWidth: .infinity)
                 }
                 .padding(.top, 4)
@@ -90,7 +90,7 @@ struct UpgradeView: View {
                         .font(.subheadline.weight(.semibold))
                         .frame(maxWidth: .infinity)
                         .frame(height: 44)
-                        .background(AppColors.accentDark)
+                        .background(AppColors.accent)
                         .foregroundColor(.white)
                         .cornerRadius(12)
                 }
@@ -154,13 +154,13 @@ struct UpgradeView: View {
     private func planCard(title: String, product: Product?, planKey: String, isSelected: Bool, onSelect: @escaping () -> Void) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
-                .font(.system(size: 20, weight: .semibold))
+                .font(.nnCardTitle)
                 .foregroundColor(AppColors.textPrimary)
             HStack(alignment: .firstTextBaseline, spacing: 12) {
                 if let product {
                     Text(product.displayPrice)
                         .font(.title3).bold()
-                        .foregroundColor(AppColors.accentDark)
+                        .foregroundColor(AppColors.accent)
                     if let period = product.subscription?.subscriptionPeriod {
                         Text("/ \(periodLabel(period))")
                             .font(.footnote)
@@ -180,9 +180,9 @@ struct UpgradeView: View {
                         .frame(height: 36)
                         .padding(.horizontal, 12)
                         .background(isSelected ? AppColors.infoBg : Color.clear)
-                        .foregroundColor(AppColors.accentDark)
-                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppColors.accentDark, lineWidth: 1.5))
-                        .cornerRadius(10)
+                        .foregroundColor(AppColors.accent)
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppColors.accent, lineWidth: 1.5))
+                        .cornerRadius(12)
                 }
                 .disabled(product == nil)
             }
@@ -192,7 +192,7 @@ struct UpgradeView: View {
         .cornerRadius(20)
         .overlay(
             RoundedRectangle(cornerRadius: 20)
-                .stroke(isSelected ? AppColors.accentDark : AppColors.uiBorder, lineWidth: isSelected ? 1 : 0.5)
+                .stroke(isSelected ? AppColors.accent : AppColors.uiBorder, lineWidth: isSelected ? 1 : 0.5)
         )
     }
 
@@ -212,7 +212,7 @@ struct UpgradeView: View {
     private var featuresCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(isArabic ? "حرّر تركيزك وغيّر عاداتك الرقمية" : "Unlock focus and change digital habits")
-                .font(.system(size: 20, weight: .semibold))
+                .font(.nnCardTitle)
                 .foregroundColor(AppColors.textPrimary)
             Text(isArabic ? "كل ما تحتاجه لتبقى على المسار الصحيح." : "Everything you need to stay on track.")
                 .font(.subheadline)
@@ -253,15 +253,14 @@ struct UpgradeView: View {
     }
 
     private var goldenGuaranteeCard: some View {
-        let gold = Color(red: 212/255, green: 175/255, blue: 55/255)
-        return VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Image(systemName: "shield.checkerboard")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(gold)
+                    .font(.nnSubheader.weight(.semibold))
+                    .foregroundColor(AppColors.trophyGold)
                 Text(isArabic ? "الضمان الذهبي" : "Golden Guarantee")
                     .font(.headline)
-                    .foregroundColor(gold)
+                    .foregroundColor(AppColors.trophyGold)
             }
             Text(isArabic ? "استرداد كامل للمبلغ بدون أسئلة." : "Full refund, no questions asked.")
                 .foregroundColor(AppColors.textPrimary)
@@ -284,7 +283,7 @@ struct UpgradeView: View {
     private func featureRow(icon: String, textAr: String, textEn: String) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: icon)
-                .foregroundColor(AppColors.accentDark)
+                .foregroundColor(AppColors.accent)
             Text(isArabic ? textAr : textEn)
                 .font(.body)
                 .foregroundColor(AppColors.textPrimary)
@@ -295,10 +294,10 @@ struct UpgradeView: View {
     private func availabilityRow(icon: String, textAr: String, textEn: String, available: Bool) -> some View {
         HStack(spacing: 10) {
             Image(systemName: available ? "checkmark.circle.fill" : "xmark.circle")
-                .foregroundColor(available ? AppColors.accentDark : AppColors.textSecondary)
+                .foregroundColor(available ? AppColors.accent : AppColors.textSecondary)
             HStack(spacing: 6) {
                 Image(systemName: icon)
-                    .foregroundColor(available ? AppColors.accentDark : AppColors.textSecondary)
+                    .foregroundColor(available ? AppColors.accent : AppColors.textSecondary)
                 Text(isArabic ? textAr : textEn)
                     .foregroundColor(available ? AppColors.textPrimary : AppColors.textSecondary)
             }

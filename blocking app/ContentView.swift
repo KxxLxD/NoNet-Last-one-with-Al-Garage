@@ -48,7 +48,7 @@ struct ContentView: View {
                         .tabItem { Label(AppStrings.settingsTitle(lang), systemImage: "gearshape") }
                     .tag(2)
                     }
-                    .accentColor(AppColors.accentDark)
+                    .accentColor(AppColors.accent)
                     .toolbar(.hidden, for: .tabBar)
                     .safeAreaInset(edge: .bottom) {
                         CustomTabBar(selectedTab: $selectedTab)
@@ -69,6 +69,10 @@ struct ContentView: View {
                 if store.isAccountAvailable {
                     await store.setupSubscriptions()
                     await store.fetchPartnerships()
+                    // Replay any BreakAttempts that couldn't reach iCloud earlier
+                    // (offline / account-unavailable / transient CKError). Wired
+                    // here so account-state transitions trigger the flush.
+                    await store.flushPendingBreakAttempts()
                 }
             }
         }
@@ -79,6 +83,10 @@ struct ContentView: View {
                 if store.isAccountAvailable {
                     await store.setupSubscriptions()
                     await store.fetchPartnerships()
+                    // Replay any BreakAttempts that couldn't reach iCloud earlier
+                    // (offline / account-unavailable / transient CKError). Wired
+                    // here so account-state transitions trigger the flush.
+                    await store.flushPendingBreakAttempts()
                 }
             }
         }
@@ -86,13 +94,13 @@ struct ContentView: View {
             applySemanticDirection(isArabic: isArabic)
             configureTabBarAppearance()
         }
-        .alert(lang.isArabicEffective ? "انتهت التجربة المجانية" : "Free Trial Expired", isPresented: $showTrialExpiredAlert) {
-            Button(lang.isArabicEffective ? "ترقية الآن" : "Upgrade Now") {
+        .alert(lang.isArabicEffective ? "انتهت تجربتك المجانية" : "Your free trial ended", isPresented: $showTrialExpiredAlert) {
+            Button(lang.isArabicEffective ? "اشترك الآن" : "Subscribe now") {
                 selectedTab = 2 // Settings tab
             }
-            Button(lang.isArabicEffective ? "لاحقًا" : "Later", role: .cancel) {}
+            Button(lang.isArabicEffective ? "لاحقاً" : "Later", role: .cancel) {}
         } message: {
-            Text(lang.isArabicEffective ? "انتهت تجربتك المجانية لمدة 7 أيام. ترقّ الآن للاستمرار في استخدام جميع الميزات." : "Your 7-day free trial has expired. Upgrade now to continue using all features.")
+            Text(lang.isArabicEffective ? "نأمل إن NoNet ساعدك خلال الـ 7 أيام. اختر خطّة عشان تكمل بالميزات الكاملة، أو استمر بالنسخة المجانية." : "We hope NoNet helped you during these 7 days. Choose a plan to keep all features, or continue with the free version.")
         }
         .preferredColorScheme(.light)
     }
@@ -176,17 +184,17 @@ struct CustomTabBar: View {
                             VStack(spacing: 4) {
                                 Image(systemName: item.systemImage)
                                     .symbolRenderingMode(.monochrome)
-                                    .font(.system(size: 21, weight: .regular))
-                                    .foregroundColor(selectedTab == item.id ? AppColors.accentDark : AppColors.textSecondary)
+                                    .font(.title2)
+                                    .foregroundColor(selectedTab == item.id ? AppColors.accent : AppColors.textSecondary)
                                     .padding(.top, 14)
                                 Text(item.title)
-                                    .font(.system(size: 12, weight: selectedTab == item.id ? .semibold : .regular))
-                                    .foregroundColor(selectedTab == item.id ? AppColors.accentDark : AppColors.textSecondary)
+                                    .font(.caption.weight(selectedTab == item.id ? .semibold : .regular))
+                                    .foregroundColor(selectedTab == item.id ? AppColors.accent : AppColors.textSecondary)
                                     .lineLimit(1)
                             }
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                             if flashIndex == item.id {
-                                AppColors.accentDark.opacity(0.12)
+                                AppColors.accent.opacity(0.12)
                                     .ignoresSafeArea()
                             }
                         }

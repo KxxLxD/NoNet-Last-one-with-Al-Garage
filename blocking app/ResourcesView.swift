@@ -17,7 +17,7 @@ struct ResourcesView: View {
         ScrollView {
             VStack(alignment: isArabic ? .trailing : .leading, spacing: 16) {
                 Text(isArabic ? "موارد ومعرفة" : "Resources & Knowledge")
-                    .font(.system(size: 22, weight: .semibold))
+                    .font(.nnSectionTitle)
                     .foregroundColor(AppColors.textPrimary)
                     .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
 
@@ -86,8 +86,8 @@ struct ResourcesView: View {
         VStack(alignment: isArabic ? .trailing : .leading, spacing: 12) {
             HStack(spacing: 10) {
                 Image(systemName: icon)
-                    .font(.system(size: 22, weight: .regular))
-                    .foregroundColor(AppColors.accentDark)
+                    .font(.title2)
+                    .foregroundColor(AppColors.accent)
                     .frame(width: 36, height: 36)
                     .background(AppColors.infoBg)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -106,9 +106,9 @@ struct ResourcesView: View {
                                 .font(.footnote)
                                 .foregroundColor(AppColors.textSecondary)
                                 .multilineTextAlignment(.trailing)
-                            Text("•").foregroundColor(AppColors.accentDark)
+                            Text("•").foregroundColor(AppColors.accent)
                         } else {
-                            Text("•").foregroundColor(AppColors.accentDark)
+                            Text("•").foregroundColor(AppColors.accent)
                             Text(line)
                                 .font(.footnote)
                                 .foregroundColor(AppColors.textSecondary)

@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreData
+import os
 
 struct CreateListSheet: View {
     @EnvironmentObject var lang: LanguageManager
@@ -136,33 +137,33 @@ struct CreateListSheet: View {
     }
     private func attachAlerts<V: View>(_ v: V) -> some View {
         v
-            .alert(lang.isArabicEffective ? "ترقية لفتح كامل طاقتك" : "Upgrade to unlock your full potential", isPresented: $showLimitAlert) {
-                Button(lang.isArabicEffective ? "لاحقًا" : "Later", role: .cancel) {}
-                Button("Upgrade") {}
+            .alert(lang.isArabicEffective ? "وصلت حدّ النسخة المجانية" : "Free plan limit reached", isPresented: $showLimitAlert) {
+                Button(lang.isArabicEffective ? "لاحقاً" : "Later", role: .cancel) {}
+                Button(lang.isArabicEffective ? "رقّي حسابي" : "Upgrade") {}
             } message: {
-                Text(lang.isArabicEffective ? "أنت قريب من انطلاقة إنتاجية أقوى! مع الترقية، حرر كامل طاقتك وأنشئ قوائم غير محدودة، ركّز أكثر وغيّر عاداتك الرقمية للأفضل." : "You’re close to a stronger productivity breakthrough! Upgrade to unlock unlimited lists, focus deeper, and transform your digital habits.")
+                Text(lang.isArabicEffective ? "النسخة المجانية تسمح بـ 3 قوائم. رقّي لـ Premium لقوائم غير محدودة وميزات الجدولة الذكية." : "The free plan allows up to 3 lists. Upgrade to Premium for unlimited lists and smart scheduling.")
             }
             .alert(lang.isArabicEffective ? "تحقق من الإدخالات" : "Check inputs", isPresented: $showValidationAlert) {
-                Button(lang.isArabicEffective ? "حسنًا" : "OK", role: .cancel) {}
+                Button(lang.isArabicEffective ? "حسناً" : "OK", role: .cancel) {}
             } message: {
                 Text(validationMessage)
             }
-            .alert(lang.isArabicEffective ? "تأكيد الوضع الصارم" : "Confirm Hard Mode", isPresented: $showHardConfirmAlert) {
-                Button(lang.isArabicEffective ? "تأكيد" : "Confirm") { save(totalSeconds: pendingSeconds, baseName: pendingBaseName) }
-                Button(lang.isArabicEffective ? "رجوع" : "Back", role: .cancel) {}
+            .alert(lang.isArabicEffective ? "تفعيل الوضع الصارم" : "Enable Hard Mode", isPresented: $showHardConfirmAlert) {
+                Button(lang.isArabicEffective ? "فعّل الصارم" : "Enable Hard Mode") { save(totalSeconds: pendingSeconds, baseName: pendingBaseName) }
+                Button(lang.isArabicEffective ? "لا، رجّعني" : "No, go back", role: .cancel) {}
             } message: {
-                Text(lang.isArabicEffective ? "سيتم إنشاء قائمة بوضع صارم (Hard Mode). لن تتمكن من تعديلها أو حذفها خلال المدة." : "This list will be created in Hard Mode. You won’t be able to edit or delete it during the duration.")
+                Text(lang.isArabicEffective ? "الوضع الصارم يقفل القائمة طوال المدة. ما تقدر تعدّل، تحذف، أو توقف الحجب حتى ينتهي الوقت. هذا متعمَّد لتعزيز التزامك." : "Hard Mode locks this list for the full duration. You can't edit, delete, or pause the block until time runs out. This is intentional, to strengthen your commitment.")
             }
-            .alert(lang.isArabicEffective ? "حجب دائم — هل أنت متأكد؟" : "Permanent Block — are you sure?", isPresented: $showForeverFirstAlert) {
-                Button(lang.isArabicEffective ? "متابعة" : "Continue") { /* keep blockType = forever */ }
+            .alert(lang.isArabicEffective ? "الحجب الدائم خيار جدّي" : "Permanent block is serious", isPresented: $showForeverFirstAlert) {
+                Button(lang.isArabicEffective ? "فهمت، متابعة" : "I understand, continue") { /* keep blockType = forever */ }
                 Button(lang.isArabicEffective ? "إلغاء" : "Cancel", role: .cancel) { blockType = "now" }
             } message: {
                 Text(lang.isArabicEffective
-                     ? "الحجب الدائم يبقى فعالاً حتى تحذف القائمة. إذا اخترت الوضع الصارم أيضاً، لن تتمكن من حذفها إطلاقاً."
+                     ? "الحجب الدائم يبقى فعّالاً حتى تحذف القائمة. إذا اخترت الوضع الصارم أيضاً، ما راح تقدر تحذفها إطلاقاً."
                      : "A permanent block stays active until you delete the list. With Hard Mode you cannot delete it at all.")
             }
             .alert(lang.isArabicEffective ? "تأكيد نهائي" : "Final Confirmation", isPresented: $showForeverConfirmAlert) {
-                Button(lang.isArabicEffective ? "أؤكد، أنشئ الحجب" : "I confirm — create block", role: .destructive) {
+                Button(lang.isArabicEffective ? "أوافق، فعّل الحجب الدائم" : "I agree — enable permanent block", role: .destructive) {
                     if protection == "hard" {
                         showForeverConfirmAlert = false
                         showHardConfirmAlert = true
@@ -170,17 +171,17 @@ struct CreateListSheet: View {
                         save(totalSeconds: 0, baseName: pendingBaseName)
                     }
                 }
-                Button(lang.isArabicEffective ? "تراجع" : "Back", role: .cancel) {}
+                Button(lang.isArabicEffective ? "إلغاء" : "Cancel", role: .cancel) {}
             } message: {
                 Text(lang.isArabicEffective
-                     ? "هذه آخر فرصة. الحجب الدائم يعني أن التطبيقات والمواقع المختارة لن تعمل أبداً حتى تحذف هذه القائمة."
-                     : "This is your last chance. A permanent block means the selected apps/sites will be blocked forever until you delete this list.")
+                     ? "بعد التفعيل، التطبيقات والمواقع المختارة ما راح تشتغل أبداً حتى تحذف القائمة يدوياً. مع الوضع الصارم، حتى الحذف ما راح يكون متاحاً."
+                     : "Once enabled, the selected apps and sites will never work until you manually delete this list. With Hard Mode, even deletion won't be available.")
             }
             .alert(
-                lang.isArabicEffective ? "تعذّر إنشاء القائمة" : "Couldn't create list",
+                lang.isArabicEffective ? "تعذّر حفظ القائمة" : "Couldn't save list",
                 isPresented: Binding(get: { saveErrorMessage != nil }, set: { if !$0 { saveErrorMessage = nil } })
             ) {
-                Button(lang.isArabicEffective ? "حسناً" : "OK", role: .cancel) { saveErrorMessage = nil }
+                Button(lang.isArabicEffective ? "حاول مجدّداً" : "Try again", role: .cancel) { saveErrorMessage = nil }
             } message: {
                 Text(saveErrorMessage ?? "")
             }
@@ -194,7 +195,7 @@ struct CreateListSheet: View {
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                        .background(AppColors.accentDark)
+                        .background(AppColors.accent)
                             .foregroundColor(.white)
                             .cornerRadius(12)
                     }
@@ -215,21 +216,21 @@ struct CreateListSheet: View {
             // Add items Card
             Section(header: HStack(spacing: 8) {
                 Image(systemName: "square.and.pencil")
-                    .font(.system(size: 20, weight: .regular))
-                    .foregroundColor(AppColors.accentDark)
+                    .font(.nnCardBody)
+                    .foregroundColor(AppColors.accent)
                 Text(lang.isArabicEffective ? "إنشاء قائمة الحجب" : "Create blocking list")
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.nnCardTitle)
             }) {
                 VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 16) {
                     if let suggestion = onboardingSuggestionText() {
                         HStack(alignment: .top, spacing: 10) {
                             Image(systemName: "sparkles")
-                                .foregroundColor(AppColors.accentDark)
-                                .font(.system(size: 16, weight: .regular))
+                                .foregroundColor(AppColors.accent)
+                                .font(.body)
                             VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 4) {
                                 Text(lang.isArabicEffective ? "اقتراحات بناءً على تفضيلاتك" : "Based on your preferences")
                                     .font(.footnote.weight(.semibold))
-                                    .foregroundColor(AppColors.accentDark)
+                                    .foregroundColor(AppColors.accent)
                                 Text(suggestion)
                                     .font(.footnote)
                                     .foregroundColor(AppColors.textSecondary)
@@ -239,7 +240,7 @@ struct CreateListSheet: View {
                         }
                         .padding(12)
                         .background(AppColors.infoBg)
-                        .cornerRadius(10)
+                        .cornerRadius(12)
                     }
 
                     Button(action: { openEditor() }) {
@@ -247,7 +248,7 @@ struct CreateListSheet: View {
                             .font(.subheadline.weight(.semibold))
                             .frame(maxWidth: .infinity)
                             .frame(height: 44)
-                            .background(AppColors.accentDark)
+                            .background(AppColors.accent)
                             .foregroundColor(.white)
                             .cornerRadius(12)
                     }
@@ -313,10 +314,10 @@ struct CreateListSheet: View {
     private func timeToBlockCard() -> some View {
         Section(header: HStack(spacing: 8) {
             Image(systemName: "clock")
-                .font(.system(size: 20, weight: .regular))
-                .foregroundColor(AppColors.accentDark)
+                .font(.nnCardBody)
+                .foregroundColor(AppColors.accent)
             Text(lang.isArabicEffective ? "وقت الحجب" : "Time to block")
-                .font(.system(size: 20, weight: .semibold))
+                .font(.nnCardTitle)
         }) {
             VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
                 Picker("Time", selection: $blockType) {
@@ -378,7 +379,7 @@ struct CreateListSheet: View {
                         Text(lang.isArabicEffective ? "ترقية / تجربة 7 أيام" : "Upgrade / 7‑day Trial")
                 }
                     .buttonStyle(.plain)
-                    .foregroundColor(AppColors.primaryBlue)
+                    .foregroundColor(AppColors.accent)
                 }
 
                 if blockType == "scheduled" && isPremium {
@@ -419,10 +420,10 @@ struct CreateListSheet: View {
     private func durationCard() -> some View {
         Section(header: HStack(spacing: 8) {
             Image(systemName: "hourglass")
-                .font(.system(size: 20, weight: .regular))
-                .foregroundColor(AppColors.accentDark)
+                .font(.nnCardBody)
+                .foregroundColor(AppColors.accent)
             Text(lang.isArabicEffective ? "المدة" : "Duration")
-                .font(.system(size: 20, weight: .semibold))
+                .font(.nnCardTitle)
         }) {
             VStack(alignment: .center, spacing: 12) {
                 HStack(alignment: .top, spacing: 16) {
@@ -466,10 +467,10 @@ struct CreateListSheet: View {
     private func timeLimitCard() -> some View {
         Section(header: HStack(spacing: 8) {
             Image(systemName: "hourglass.bottomhalf.filled")
-                .font(.system(size: 20, weight: .regular))
-                .foregroundColor(AppColors.accentDark)
+                .font(.nnCardBody)
+                .foregroundColor(AppColors.accent)
             Text(lang.isArabicEffective ? "الحد اليومي" : "Daily Limit")
-                .font(.system(size: 20, weight: .semibold))
+                .font(.nnCardTitle)
         },
         footer: Text(lang.isArabicEffective
                      ? "يبدأ كل يوم بدون حجب. بعد استخدام التطبيقات/المواقع للمدة المحددة، يتفعّل الحجب حتى منتصف الليل."
@@ -504,10 +505,10 @@ struct CreateListSheet: View {
     private func protectionCard() -> some View {
         Section(header: HStack(spacing: 8) {
             Image(systemName: "shield.checkered")
-                .font(.system(size: 20, weight: .regular))
-                .foregroundColor(AppColors.accentDark)
+                .font(.nnCardBody)
+                .foregroundColor(AppColors.accent)
             Text(lang.isArabicEffective ? "الحماية" : "Protection")
-                .font(.system(size: 20, weight: .semibold))
+                .font(.nnCardTitle)
         }) {
             VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
                 Picker("Protection", selection: $protection) {
@@ -528,7 +529,7 @@ struct CreateListSheet: View {
                              ? "💡 بعد الإنشاء يمكنك دعوة شريك تعافي من تفاصيل القائمة."
                              : "💡 After creating, invite a recovery partner from the list details.")
                             .font(.footnote)
-                            .foregroundColor(AppColors.accentDark)
+                            .foregroundColor(AppColors.accent)
                             .padding(.top, 4)
                     }
                 }
@@ -546,10 +547,10 @@ struct CreateListSheet: View {
     private func breaksCard() -> some View {
         Section(header: HStack(spacing: 8) {
             Image(systemName: "cup.and.saucer")
-                .font(.system(size: 20, weight: .regular))
-                .foregroundColor(AppColors.accentDark)
+                .font(.nnCardBody)
+                .foregroundColor(AppColors.accent)
             Text(lang.isArabicEffective ? "الاستراحات المسموحة" : "Allows Breaks")
-                .font(.system(size: 20, weight: .semibold))
+                .font(.nnCardTitle)
         },
         footer: Text(lang.isArabicEffective ? "حدّد عدد الاستراحات خلال 24 ساعة ومدة كل استراحة." : "Choose number of breaks across 24h and the duration of each.")
             .font(.footnote)
@@ -595,8 +596,8 @@ struct CreateListSheet: View {
         VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Image(systemName: "globe")
-                    .font(.system(size: 20, weight: .regular))
-                    .foregroundColor(AppColors.accentDark)
+                    .font(.nnCardBody)
+                    .foregroundColor(AppColors.accent)
                 Text(lang.isArabicEffective ? "مواقع الويب" : "Websites")
                     .font(.subheadline.weight(.semibold))
                 Text("(\(draft.websites.count))")
@@ -639,8 +640,8 @@ struct CreateListSheet: View {
         VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Image(systemName: "app.fill")
-                    .font(.system(size: 20, weight: .regular))
-                    .foregroundColor(AppColors.accentDark)
+                    .font(.nnCardBody)
+                    .foregroundColor(AppColors.accent)
                 Text(lang.isArabicEffective ? "التطبيقات" : "Apps")
                     .font(.subheadline.weight(.semibold))
                 Text("(\(draft.apps.count))")
@@ -683,8 +684,8 @@ struct CreateListSheet: View {
         VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Image(systemName: "square.grid.2x2.fill")
-                    .font(.system(size: 20, weight: .regular))
-                    .foregroundColor(AppColors.accentDark)
+                    .font(.nnCardBody)
+                    .foregroundColor(AppColors.accent)
                 Text(lang.isArabicEffective ? "الفئات" : "Categories")
                     .font(.subheadline.weight(.semibold))
                 Text("(\(draft.categories.count))")
@@ -840,9 +841,12 @@ struct CreateListSheet: View {
         FamilySelectionStore.save(draft.familySelection, for: entity.id)
         switch context.saveIfNeeded() {
         case .failure(let error):
+            // Log technical details internally; show the user a friendly, actionable message.
+            Logger(subsystem: "app.nonet.blocking", category: "CreateListSheet")
+                .error("Core Data save failed while creating list '\(pendingBaseName, privacy: .public)': \(error.localizedDescription, privacy: .public)")
             saveErrorMessage = lang.isArabicEffective
-                ? "حدث خطأ أثناء الحفظ: \(error.localizedDescription)"
-                : "An error occurred while saving: \(error.localizedDescription)"
+                ? "لم نتمكّن من حفظ القائمة الآن. جرّب مرّة ثانية، وإذا تكرّر الخطأ أعد تشغيل التطبيق."
+                : "We couldn't save the list right now. Try again, and if it keeps failing, restart the app."
             return
         case .success:
             break

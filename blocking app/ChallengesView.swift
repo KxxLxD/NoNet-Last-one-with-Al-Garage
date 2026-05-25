@@ -15,7 +15,7 @@ struct ChallengesView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     pointsCard()
                     Text(lang.isArabicEffective ? "التحديات" : "Challenges")
-                        .font(.system(size: 22, weight: .semibold))
+                        .font(.nnSectionTitle)
                         .foregroundColor(AppColors.textPrimary)
                     Text(lang.isArabicEffective ? "اختر تحديات تكسب بها نقاطًا ثم احفظ." : "Pick challenges to earn points, then save.")
                         .font(.body)
@@ -86,13 +86,13 @@ struct ChallengesView: View {
             Button(action: { dismiss() }) {
                 Text(lang.isArabicEffective ? "إغلاق" : "Close")
                     .font(.subheadline)
-                    .foregroundColor(AppColors.accentDark)
+                    .foregroundColor(AppColors.accent)
             }
             Spacer()
             Button(action: { dismiss() }) {
                 Text(lang.isArabicEffective ? "تم" : "Done")
                     .font(.subheadline.weight(.semibold))
-                    .foregroundColor(AppColors.accentDark)
+                    .foregroundColor(AppColors.accent)
             }
         }
         .padding(.horizontal, 24)
@@ -120,7 +120,7 @@ struct ChallengesView: View {
             }
             ZStack(alignment: .leading) {
                 Capsule().fill(AppColors.uiBorder.opacity(0.6)).frame(height: 8)
-                Capsule().fill(AppColors.accentDark).frame(width: CGFloat(progress) * UIScreen.main.bounds.width * 0.6, height: 8)
+                Capsule().fill(AppColors.accent).frame(width: CGFloat(progress) * UIScreen.main.bounds.width * 0.6, height: 8)
             }
         }
         .padding(16)
@@ -170,7 +170,7 @@ private struct ChallengeCardCompact: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
-                .font(.system(size: 18, weight: .semibold))
+                .font(.nnSubheader.weight(.semibold))
                 .foregroundColor(AppColors.textPrimary)
             Text(description)
                 .font(.footnote)
@@ -198,15 +198,15 @@ private struct ChipGrid: View {
                 let isSel = selected == opt
                 Button(action: { selected = opt; onPick(opt) }) {
                     Text(label(for: opt))
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.nnSmallButton)
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(isSel ? AppColors.accentDark : AppColors.uiSurface)
+                        .background(isSel ? AppColors.accent : AppColors.uiSurface)
                         .foregroundColor(isSel ? .white : AppColors.textPrimary)
                         .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppColors.uiBorder, lineWidth: isSel ? 0 : 0.5))
-                        .cornerRadius(10)
+                        .cornerRadius(12)
                 }
                 .buttonStyle(.plain)
             }
@@ -229,7 +229,7 @@ private struct SleepChallengeCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(lang.isArabicEffective ? "نوم بلا إنترنت" : "No‑Internet Sleep")
-                .font(.system(size: 18, weight: .semibold))
+                .font(.nnSubheader.weight(.semibold))
                 .foregroundColor(AppColors.textPrimary)
             Text(lang.isArabicEffective ? "اقتراح: 8م → 8ص (كل الأيام). يمكنك التعديل." : "Suggestion: 8pm → 8am (every day). You can edit.")
                 .font(.footnote)
@@ -240,15 +240,15 @@ private struct SleepChallengeCard: View {
                 DatePicker(lang.isArabicEffective ? "إلى" : "To", selection: $to, displayedComponents: .hourAndMinute)
             }
             Toggle(lang.isArabicEffective ? "كل الأيام" : "Every day", isOn: $allDays)
-                .tint(AppColors.accentDark)
+                .tint(AppColors.accent)
             Button(action: { onChange(40) }) {
                 Text(lang.isArabicEffective ? "اعتمد هذه الأوقات" : "Apply these times")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.nnSmallButton)
                     .frame(height: 36)
                     .padding(.horizontal, 12)
-                    .background(AppColors.accentDark)
+                    .background(AppColors.accent)
                     .foregroundColor(.white)
-                    .cornerRadius(10)
+                    .cornerRadius(12)
             }
         }
         .padding(16)
@@ -276,10 +276,10 @@ private struct Footer: View {
             }
             Button(action: onDone) {
                 Text(lang.isArabicEffective ? "حفظ وإغلاق" : "Save & close")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.nnButton)
                     .frame(maxWidth: .infinity)
                     .frame(height: 44)
-                    .background(AppColors.accentDark)
+                    .background(AppColors.accent)
                     .foregroundColor(.white)
                     .cornerRadius(12)
             }

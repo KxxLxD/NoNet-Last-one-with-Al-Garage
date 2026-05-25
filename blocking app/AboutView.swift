@@ -42,16 +42,16 @@ struct AboutView: View {
                 .scaledToFit()
                 .frame(width: 84, height: 84)
                 .clipShape(RoundedRectangle(cornerRadius: 18))
-                .shadow(color: AppColors.accentDark.opacity(0.15), radius: 12, y: 4)
+                .shadow(color: AppColors.accent.opacity(0.15), radius: 12, y: 4)
 
             Text(appName)
-                .font(.system(size: 36, weight: .bold))
-                .foregroundColor(AppColors.accentDark)
+                .font(.largeTitle.weight(.bold))
+                .foregroundColor(AppColors.accent)
 
             Text(isArabic
                  ? "استعد تركيزك. تخلّص من الإلهاءات."
                  : "Reclaim your focus. Remove the distractions.")
-                .font(.system(size: 17, weight: .medium))
+                .font(.body.weight(.medium))
                 .foregroundColor(AppColors.textSecondary)
                 .multilineTextAlignment(.center)
         }
@@ -121,7 +121,7 @@ struct AboutView: View {
     private var featuresGrid: some View {
         VStack(alignment: isArabic ? .trailing : .leading, spacing: 12) {
             Text(isArabic ? "ما يميّز NoNet" : "What makes NoNet different")
-                .font(.system(size: 20, weight: .semibold))
+                .font(.nnCardTitle)
                 .foregroundColor(AppColors.textPrimary)
                 .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
                 .padding(.bottom, 4)
@@ -129,14 +129,14 @@ struct AboutView: View {
             ForEach(features) { feature in
                 HStack(alignment: .top, spacing: 12) {
                     Image(systemName: feature.icon)
-                        .font(.system(size: 22, weight: .regular))
-                        .foregroundColor(AppColors.accentDark)
+                        .font(.title2)
+                        .foregroundColor(AppColors.accent)
                         .frame(width: 32, height: 32)
                         .background(AppColors.infoBg)
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                     VStack(alignment: isArabic ? .trailing : .leading, spacing: 4) {
                         Text(feature.title)
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.nnButton)
                             .foregroundColor(AppColors.textPrimary)
                             .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
                         Text(feature.description)
@@ -160,7 +160,7 @@ struct AboutView: View {
     private var appInfoCard: some View {
         VStack(alignment: isArabic ? .trailing : .leading, spacing: 10) {
             Text(isArabic ? "معلومات التطبيق" : "App Information")
-                .font(.system(size: 18, weight: .semibold))
+                .font(.nnSubheader.weight(.semibold))
                 .foregroundColor(AppColors.textPrimary)
                 .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
                 .padding(.bottom, 4)
@@ -194,7 +194,7 @@ struct AboutView: View {
     private var linksCard: some View {
         VStack(alignment: isArabic ? .trailing : .leading, spacing: 12) {
             Text(isArabic ? "روابط" : "Links")
-                .font(.system(size: 18, weight: .semibold))
+                .font(.nnSubheader.weight(.semibold))
                 .foregroundColor(AppColors.textPrimary)
                 .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
 
@@ -219,8 +219,8 @@ struct AboutView: View {
     private func linkRow(icon: String, text: String) -> some View {
         HStack {
             Image(systemName: icon)
-                .foregroundColor(AppColors.accentDark)
-                .font(.system(size: 18, weight: .regular))
+                .foregroundColor(AppColors.accent)
+                .font(.title3)
             Text(text)
                 .foregroundColor(AppColors.textPrimary)
             Spacer()

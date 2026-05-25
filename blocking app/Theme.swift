@@ -37,28 +37,54 @@ final class LanguageManager: ObservableObject {
     }
 }
 
+/// NoNet Design System — Color Tokens
+///
+/// Source of truth: `.cursor/rules/UI-Mode.mdc`.
+/// Single canonical accent (`accent`) at #2563EB (contrast 4.83:1 on white — AA pass).
+/// All button/CTA usages MUST use `accent`. Legacy `accentDark`/`primaryBlue` aliases
+/// remain to avoid bulk-rename churn; they all resolve to the same #2563EB.
 struct AppColors {
-    static let primaryBlue = Color(red: 37/255, green: 99/255, blue: 235/255)
-    static let alertRed = Color(red: 239/255, green: 68/255, blue: 68/255)
-    static let successGreen = Color(red: 16/255, green: 185/255, blue: 129/255)
-    // UI-Mode tokens
+    // MARK: - Canonical Accent (single source)
+    /// Primary accent — use for ALL buttons, CTAs, links, selected states.
+    /// AA contrast 4.83:1 on white surface ✅
+    static let accent = Color(red: 37/255, green: 99/255, blue: 235/255) // #2563EB
+
+    // MARK: - Semantic State Tokens
+    static let alertRed = Color(red: 239/255, green: 68/255, blue: 68/255)     // #EF4444
+    static let successGreen = Color(red: 16/255, green: 185/255, blue: 129/255) // #10B981
+    static let warningFg = Color(red: 245/255, green: 158/255, blue: 11/255)    // #F59E0B
+    static let warningBg = Color(red: 245/255, green: 158/255, blue: 11/255).opacity(0.1) // #F59E0B1A
+    static let dangerBg  = Color(red: 239/255, green: 68/255, blue: 68/255).opacity(0.1)  // #EF44441A
+    static let infoFg = accent
+    static let infoBg = accent.opacity(0.1) // #2563EB1A
+    static let successBg = successGreen.opacity(0.1) // #10B9811A
+
+    // MARK: - Surface / Background
     static let uiBackground = Color(red: 243/255, green: 244/255, blue: 246/255) // #F3F4F6
     static let uiSurface = Color.white // #FFFFFF
     static let uiBorder = Color(red: 229/255, green: 231/255, blue: 235/255) // #E5E7EB
-    // Precise tokens
-    static let accent400 = Color(red: 96/255, green: 165/255, blue: 250/255) // #60A5FA
-    static let accent600 = Color(red: 37/255, green: 99/255, blue: 235/255) // #2563EB
-    // Custom gradient palette
-    static let accentLight = Color(red: 140/255, green: 188/255, blue: 252/255) // #8CBCFC
-    static let accentDark  = Color(red: 77/255,  green: 162/255, blue: 252/255) // #4DA2FC
-    static let textPrimary = Color(red: 55/255, green: 65/255, blue: 81/255) // #374151
-    static let textSecondary = Color(red: 107/255, green: 114/255, blue: 128/255) // #6B7280
-    static let infoBg = Color(red: 37/255, green: 99/255, blue: 235/255).opacity(0.1) // #2563EB1A
-    static let infoFg = Color(red: 37/255, green: 99/255, blue: 235/255) // #2563EB
-    static let warningBg = Color(red: 245/255, green: 158/255, blue: 11/255).opacity(0.1) // #F59E0B1A
-    static let warningFg = Color(red: 245/255, green: 158/255, blue: 11/255) // #F59E0B
-    // Calm trophy gold for achievements
+
+    // MARK: - Text
+    static let textPrimary = Color(red: 55/255, green: 65/255, blue: 81/255)   // #374151 (AAA on bg)
+    static let textSecondary = Color(red: 107/255, green: 114/255, blue: 128/255) // #6B7280 (AA on surface)
+    static let textDisabled  = Color(red: 156/255, green: 163/255, blue: 175/255) // #9CA3AF
+
+    // MARK: - Specialty (limited use)
+    /// Calm trophy gold — achievements/golden-guarantee only. Do not use as accent.
     static let trophyGold = Color(red: 212/255, green: 175/255, blue: 55/255) // #D4AF37
+    /// Soft accent for decorative gradients only. Never use for text/buttons.
+    static let accentLight = Color(red: 140/255, green: 188/255, blue: 252/255) // #8CBCFC
+
+    // MARK: - Legacy aliases (DO NOT use in new code)
+    // Kept to avoid bulk rename. All resolve to canonical `accent`.
+    @available(*, deprecated, renamed: "accent", message: "Use AppColors.accent")
+    static let primaryBlue = accent
+    @available(*, deprecated, renamed: "accent", message: "Use AppColors.accent. The old #4DA2FC failed AA contrast; this now resolves to #2563EB.")
+    static let accentDark = accent
+    @available(*, deprecated, renamed: "accent", message: "Use AppColors.accent")
+    static let accent600 = accent
+    @available(*, deprecated, renamed: "accent", message: "Use AppColors.accent")
+    static let accent400 = accent
 }
 
 struct AppStrings {

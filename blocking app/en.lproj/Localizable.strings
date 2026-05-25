@@ -1,0 +1,12 @@
+/*
+  Localizable.strings
+  blocking app
+
+  English strings used outside the main Swift source (e.g. push notifications
+  emitted by the BlockingMonitor extension and CloudKitPartnerStore's
+  CKQuerySubscription template). Apple displays the localized version that
+  matches the recipient device's language, not the sender's.
+*/
+
+"PARTNER_BREAK_TITLE" = "Block break attempt";
+"PARTNER_BREAK_BODY" = "%@ tried to lift a Hard Mode block — check in with them.";
