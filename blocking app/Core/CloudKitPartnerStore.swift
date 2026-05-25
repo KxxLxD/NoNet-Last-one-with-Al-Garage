@@ -197,30 +197,124 @@ final class CloudKitPartnerStore: ObservableObject {
     // MARK: - Break attempts
 
     /// Log a break-attempt to CloudKit. The partner gets a push via the CKQuerySubscription
-    /// the partnership owner sets up on first save. Best-effort: errors are logged but not
-    /// rethrown to the caller, so a failed CloudKit write never blocks the user-facing
-    /// "you can't break Hard Mode" experience.
+    /// the partnership owner sets up on first save.
+    ///
+    /// Persistence guarantee: if iCloud is unavailable (account, network, or transient
+    /// CKError), the attempt is enqueued locally to `PendingBreakAttemptQueue` and
+    /// replayed by `flushPendingBreakAttempts()` on the next account/foreground
+    /// transition. The user-facing "you can't break Hard Mode" experience never
+    /// waits on this, but the partner notification is no longer best-effort.
     func recordBreakAttempt(partnershipID: String,
                             listID: UUID,
                             listName: String,
                             type: BreakAttemptType,
                             reachedThrough: String? = nil) async {
-        let recordID = CKRecord.ID(recordName: UUID().uuidString)
-        let record = CKRecord(recordType: PartnerRecordTypes.breakAttempt, recordID: recordID)
-        let partnershipRecordID = CKRecord.ID(recordName: partnershipID)
-        record["partnershipID"] = CKRecord.Reference(recordID: partnershipRecordID, action: .deleteSelf)
-        record["listID"] = listID.uuidString as CKRecordValue
-        record["listName"] = listName as CKRecordValue
-        record["attemptedAt"] = Date() as CKRecordValue
-        record["attemptType"] = type.rawValue as CKRecordValue
-        if let r = reachedThrough { record["reachedThrough"] = r as CKRecordValue }
+        let attemptedAt = Date()
+        let attemptID = UUID()
+
+        // Fast path: account known offline — go straight to the queue without
+        // round-tripping CloudKit.
+        guard isAccountAvailable else {
+            log.notice("recordBreakAttempt: account unavailable, queuing locally")
+            PendingBreakAttemptQueue.enqueue(PendingBreakAttempt(
+                id: attemptID,
+                partnershipID: partnershipID,
+                listID: listID,
+                listName: listName,
+                attemptedAt: attemptedAt,
+                typeRaw: type.rawValue,
+                reachedThrough: reachedThrough
+            ))
+            return
+        }
+
+        let record = makeBreakAttemptRecord(
+            recordName: attemptID.uuidString,
+            partnershipID: partnershipID,
+            listID: listID,
+            listName: listName,
+            attemptedAt: attemptedAt,
+            type: type,
+            reachedThrough: reachedThrough
+        )
 
         do {
             try await save(records: [record])
             log.notice("recordBreakAttempt: \(type.rawValue, privacy: .public) on list \(listID, privacy: .public)")
         } catch {
-            log.error("recordBreakAttempt failed: \(error.localizedDescription, privacy: .public)")
+            // CloudKit gave us an error mid-flight. Persist locally and let the
+            // next flush retry — the partner will still get the push, just later.
+            log.error("recordBreakAttempt failed, enqueuing: \(error.localizedDescription, privacy: .public)")
+            PendingBreakAttemptQueue.enqueue(PendingBreakAttempt(
+                id: attemptID,
+                partnershipID: partnershipID,
+                listID: listID,
+                listName: listName,
+                attemptedAt: attemptedAt,
+                typeRaw: type.rawValue,
+                reachedThrough: reachedThrough
+            ))
         }
+    }
+
+    /// Replay any queued BreakAttempts. Safe to call repeatedly — entries that
+    /// succeed are removed individually, so partial flush is fine.
+    ///
+    /// Wired into:
+    ///   * `ContentView.onAppear` / `CKAccountChanged` listener
+    ///   * After every `fetchPartnerships()` success.
+    func flushPendingBreakAttempts() async {
+        let pending = PendingBreakAttemptQueue.load()
+        guard !pending.isEmpty else { return }
+        guard isAccountAvailable else {
+            log.notice("flushPendingBreakAttempts: account still unavailable, deferring \(pending.count) entries")
+            return
+        }
+
+        log.notice("flushPendingBreakAttempts: \(pending.count) entries to replay")
+        for attempt in pending {
+            let record = makeBreakAttemptRecord(
+                recordName: attempt.id.uuidString,
+                partnershipID: attempt.partnershipID,
+                listID: attempt.listID,
+                listName: attempt.listName,
+                attemptedAt: attempt.attemptedAt,
+                type: attempt.type,
+                reachedThrough: attempt.reachedThrough
+            )
+            do {
+                try await save(records: [record])
+                PendingBreakAttemptQueue.remove(id: attempt.id)
+                log.notice("flushed pending attempt \(attempt.id, privacy: .public)")
+            } catch {
+                // Stop on first persistent failure; we'll try the rest next
+                // time the trigger fires. Avoids hammering CloudKit if iCloud
+                // is mid-degradation.
+                log.error("flush stalled on attempt \(attempt.id, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                return
+            }
+        }
+    }
+
+    /// Build a BreakAttempt CKRecord. Extracted so the live-write path and the
+    /// queue-flush path produce identical records.
+    private func makeBreakAttemptRecord(recordName: String,
+                                        partnershipID: String,
+                                        listID: UUID,
+                                        listName: String,
+                                        attemptedAt: Date,
+                                        type: BreakAttemptType,
+                                        reachedThrough: String?) -> CKRecord {
+        let recordID = CKRecord.ID(recordName: recordName)
+        let record = CKRecord(recordType: PartnerRecordTypes.breakAttempt, recordID: recordID)
+        let partnershipRecordID = CKRecord.ID(recordName: partnershipID)
+        record["partnershipID"] = CKRecord.Reference(recordID: partnershipRecordID, action: .deleteSelf)
+        record["listID"] = listID.uuidString as CKRecordValue
+        record["listName"] = listName as CKRecordValue
+        record["attemptedAt"] = attemptedAt as CKRecordValue
+        record["attemptType"] = type.rawValue as CKRecordValue
+        if let r = reachedThrough { record["reachedThrough"] = r as CKRecordValue }
+        return record
     }
 
     /// Fetch all break attempts for a given partnership, newest first.
