@@ -1345,9 +1345,9 @@ struct ListDetailView: View {
     @State private var showEditSheet = false
     @State private var showHardAlert = false
     @State private var showPartnerInvite = false
-    @State private var pendingShare: CKShare?
+    /// User-facing error surfaced via .alert at the bottom of the body. Set
+    /// from beginAction when a Hard+Partner list has no accepted partnership.
     @State private var partnerError: String?
-    @State private var isCreatingPartnership = false
     // D14 — Share URL disclosure. The CKShare URL is permanent and accepts the
     // first iCloud user who taps it, with no PIN or revocation per-recipient.
     // We surface that risk before generating the share so the user understands
@@ -1956,16 +1956,15 @@ struct ListDetailView: View {
     }
 
     private func partnerInviteButton() -> some View {
+        // Tap opens the disclosure sheet; PartnerInviteView itself runs the
+        // async createPartnership now (PR 2 refactor), so this button no
+        // longer needs an in-flight ProgressView.
         Button(action: {
             disclosureAccepted = false
             showInviteDisclosure = true
         }) {
             HStack {
-                if isCreatingPartnership {
-                    ProgressView().progressViewStyle(.circular).tint(.white)
-                } else {
-                    Image(systemName: "envelope.fill")
-                }
+                Image(systemName: "envelope.fill")
                 Text(lang.isArabicEffective ? "دعوة شريك" : "Invite Partner")
             }
             .font(.subheadline.weight(.semibold))
@@ -1976,7 +1975,6 @@ struct ListDetailView: View {
             .cornerRadius(12)
         }
         .buttonStyle(.plain)
-        .disabled(isCreatingPartnership)
     }
 
     @ViewBuilder

@@ -88,7 +88,17 @@ struct ContentView: View {
         }
         .sheet(item: Binding(
             get: { partnerStore.pendingShareMetadata.map(MetadataWrapper.init) },
-            set: { _ in /* dismissal handled inside the sheet via onFinished */ }
+            set: { newValue in
+                // Two paths land here: (a) PartnerAcceptSheet finished
+                // (accept/reject/later) and nulled pendingShareMetadata
+                // itself, (b) the user swiped the sheet down without
+                // deciding. Treat both as "clear the metadata so the sheet
+                // doesn't reappear" — the user can re-tap the original
+                // share link if they want to reconsider.
+                if newValue == nil {
+                    partnerStore.pendingShareMetadata = nil
+                }
+            }
         )) { wrapper in
             PartnerAcceptSheet(metadata: wrapper.metadata, onFinished: {})
                 .environmentObject(lang)
@@ -118,6 +128,11 @@ struct ContentView: View {
         // Approval workflow surfaces (PR 2).
         await store.fetchPendingRequestsForMe()
         await store.fetchMyOutgoingRequests()
+        // Drain any approved requests we may have missed while the app was
+        // closed — e.g. partner approved while we were offline, or the
+        // background push delivery failed. fetchMyOutgoingRequests above
+        // populated the list this reads from.
+        await ApprovalExecutor.executePendingApprovals()
     }
 
     private func expireTrialIfNeeded() {
