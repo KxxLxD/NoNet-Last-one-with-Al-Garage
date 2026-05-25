@@ -1,5 +1,30 @@
 import SwiftUI
 
+/// NoNet AI chat surface — Premium-gated. Standard chat UI layout:
+///   ┌──────────────────────────────────┐
+///   │ Header (sticky)                   │  ← brand + clear button
+///   ├──────────────────────────────────┤
+///   │                                   │
+///   │   Messages (scrollable area)      │  ← auto-scroll to bottom
+///   │   • user bubbles: accent + white  │
+///   │   • AI bubbles:   surface + text  │
+///   │   • typing indicator: 3 dots      │
+///   │                                   │
+///   ├──────────────────────────────────┤
+///   │ [💡]  Type a message  [→]         │  ← sticky input bar
+///   └──────────────────────────────────┘
+///
+/// Layout decisions
+/// • Header sits OUTSIDE the ScrollView so it doesn't scroll away.
+/// • Input bar sits OUTSIDE the ScrollView with its own surface bg so
+///   typing always has a stable anchor.
+/// • RTL handled by SwiftUI's layoutDirection environment — no
+///   duplicated branches per language (the previous version had ~70
+///   lines of mirrored if-Arabic-else code for the same input bar).
+/// • Messages are styled iOS Messages–style: user bubbles use the
+///   accent fill with white text, AI bubbles use uiSurface with
+///   textPrimary. Different visual weight makes the conversation
+///   easy to skim.
 struct ChatBotView: View {
     @EnvironmentObject var lang: LanguageManager
     @AppStorage(AppStorageKeys.isPremium) private var isPremium: Bool = false
@@ -15,33 +40,13 @@ struct ChatBotView: View {
 
     @State private var messages: [ChatMessage] = []
     @State private var inputText: String = ""
-    @State private var showUpgradeAlert = false
     @State private var showSuggestions = false
     @State private var isTyping: Bool = false
-    
-    private var suggestions: [String] {
-        if lang.isArabicEffective {
-            return [
-                "ساعدني أرتب حياتي",
-                "ما مضار إدمان الريلز؟",
-                "كيف أقلل وقت الألعاب؟",
-                "أعطني خطة تركيز لمدة 7 أيام",
-                "كيف أتخلص من عادة السوشيال؟",
-                "اقترح جدول حجب 60 دقيقة",
-                "بدائل صحية للهاتف"
-            ]
-        } else {
-            return [
-                "Help me organize my life",
-                "What are the harms of Reels addiction?",
-                "How to reduce gaming time?",
-                "Give me a 7‑day focus plan",
-                "How to quit social media habit?",
-                "Suggest a 60‑minute block schedule",
-                "Healthy alternatives to phone use"
-            ]
-        }
-    }
+
+    // ─── Suggestion sources ───────────────────────────────────────
+    // Three categories shown in the suggestions sheet. Each list is
+    // language-aware. The first three of `orgCategory` also serve as
+    // inline "starter chips" in the empty state.
 
     private var orgCategory: [String] {
         if lang.isArabicEffective {
@@ -55,8 +60,8 @@ struct ChatBotView: View {
         } else {
             return [
                 "Help me organize my life",
-                "Give me a 7‑day focus plan",
-                "Suggest a 60‑minute block schedule",
+                "Give me a 7-day focus plan",
+                "Suggest a 60-minute block schedule",
                 "Morning routine for focus",
                 "Time management tips"
             ]
@@ -95,7 +100,7 @@ struct ChatBotView: View {
             ]
         } else {
             return [
-                "Lifelong porn‑block plan",
+                "Lifelong porn-block plan",
                 "Quit gambling forever plan",
                 "Healthy sleep (night internet off)",
                 "Reduce social media addiction",
@@ -105,186 +110,270 @@ struct ChatBotView: View {
         }
     }
 
-    var body: some View {
-        NavigationView {
-            Group {
-                if !isPremium {
-                    VStack(spacing: 16) {
-                        Image(systemName: "lock.shield")
-                            .font(.system(size: 48))  /* TODO: icon — consider Image scale */
-                            .foregroundColor(AppColors.accent)
-                        Text(lang.isArabicEffective ? "مساعد NoNet متاح لمشتركي Premium فقط" : "Chat Bot is available for Premium users")
-                            .multilineTextAlignment(.center)
-                            .foregroundColor(AppColors.textSecondary)
-                            .padding(.horizontal)
-                        Button(action: { selectedTab = 2 }) {
-                            Text(lang.isArabicEffective ? "اشترك الآن" : "Upgrade Now")
-                                .fontWeight(.semibold)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(AppColors.accent)
-                                .foregroundColor(.white)
-                                .cornerRadius(12)
-                        }
-                        .padding(.horizontal)
-                    }
-                } else {
-                    VStack(spacing: 0) {
-                        ScrollView {
-                            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 16) {
-                                // Header
-                                HStack(spacing: 8) {
-                                    Image(systemName: "sparkles").foregroundColor(AppColors.accent)
-                                    Text("NoNet AI")
-                                        .font(.nnSectionTitle)
-                                        .foregroundColor(AppColors.textPrimary)
-                                    Spacer()
-                                }
-                                .padding(.top, 24)
+    // ─── Body ─────────────────────────────────────────────────────
 
-                            LazyVStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
-                                    ForEach(Array(messages.enumerated()), id: \.element.id) { idx, msg in
-                                        if idx > 0 && messages[idx-1].isUser != msg.isUser {
-                                            SoftDivider(width: 120, opacity: 0.45)
-                                        }
-                                    HStack {
-                                        if msg.isUser {
-                                            Spacer()
-                                            bubble(text: msg.text, isUser: true)
-                                        } else {
-                                            bubble(text: msg.text, isUser: false)
-                                            Spacer()
-                                        }
-                                    }
-                                }
-                                    if isTyping {
-                                        HStack {
-                                            typingIndicator()
-                                            Spacer()
-                                        }
-                                    }
-                                }
-                                .padding(.bottom, 8)
-                            }
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 12)
-                        }
-                        .padding(.bottom, 72)
-                        HStack(spacing: 8) {
-                            if lang.isArabicEffective {
-                                Button(action: { showSuggestions = true }) {
-                                    Image(systemName: "sparkles")
-                                        .foregroundColor(AppColors.accent)
-                                        .font(.title3)
-                                        .frame(width: 44, height: 44)
-                                        .background(AppColors.uiSurface)
-                                        .cornerRadius(12)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .stroke(AppColors.uiBorder, lineWidth: 0.5)
-                                        )
-                                }
-                                Button(action: send) {
-                                    Image(systemName: "paperplane.fill")
-                                        .foregroundColor(.white)
-                                        .frame(width: 44, height: 44)
-                                        .background(AppColors.accent)
-                                        .cornerRadius(12)
-                                }
-                                .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                                HStack {
-                                    TextField(lang.isArabicEffective ? "اكتب رسالتك" : "Type your message", text: $inputText)
-                                        .multilineTextAlignment(.trailing)
-                                        .textInputAutocapitalization(.sentences)
-                                        .disableAutocorrection(false)
-                                }
-                                .padding(.horizontal, 12)
-                                .frame(height: 44)
-                                .background(AppColors.uiSurface)
-                                .cornerRadius(12)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(AppColors.uiBorder, lineWidth: 0.5)
-                                )
-                            } else {
-                                HStack {
-                                    TextField(lang.isArabicEffective ? "اكتب رسالتك" : "Type your message", text: $inputText)
-                                        .multilineTextAlignment(.leading)
-                                        .textInputAutocapitalization(.sentences)
-                                        .disableAutocorrection(false)
-                                }
-                                .padding(.horizontal, 12)
-                                .frame(height: 44)
-                                .background(AppColors.uiSurface)
-                                .cornerRadius(12)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(AppColors.uiBorder, lineWidth: 0.5)
-                                )
-                                Button(action: { showSuggestions = true }) {
-                                    Image(systemName: "sparkles")
-                                        .foregroundColor(AppColors.accent)
-                                        .font(.title3)
-                                        .frame(width: 44, height: 44)
-                                        .background(AppColors.uiSurface)
-                                        .cornerRadius(12)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .stroke(AppColors.uiBorder, lineWidth: 0.5)
-                                        )
-                                }
-                                Button(action: send) {
-                                    Image(systemName: "paperplane.fill")
-                                        .foregroundColor(.white)
-                                        .frame(width: 44, height: 44)
-                                        .background(AppColors.accent)
-                                        .cornerRadius(12)
-                                }
-                                .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                            }
-                        }
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 12)
-                        .padding(.bottom, 12)
-                        .background(AppColors.uiBackground)
-                    }
+    var body: some View {
+        NavigationStack {
+            Group {
+                if isPremium {
+                    chatSurface
+                } else {
+                    lockedState
                 }
             }
             .navigationTitle("")
             .toolbar(.hidden, for: .navigationBar)
             .background(AppColors.uiBackground)
-            .onAppear(perform: seedIfFirstTime)
-            .sheet(isPresented: $showSuggestions) {
-                SuggestionsSheet(org: orgCategory, add: addictionCategory, plans: plansCategory) { chosen in
-                    inputText = chosen
-                    showSuggestions = false
+        }
+        .sheet(isPresented: $showSuggestions) {
+            SuggestionsSheet(org: orgCategory, add: addictionCategory, plans: plansCategory) { chosen in
+                inputText = chosen
+                showSuggestions = false
+            }
+            .environmentObject(lang)
+            .presentationDetents([.medium, .large])
+        }
+    }
+
+    // ─── Premium-locked state ─────────────────────────────────────
+
+    @ViewBuilder
+    private var lockedState: some View {
+        VStack(spacing: NNSpacing.md) {
+            Spacer()
+            Image(systemName: "lock.shield")
+                .font(.system(size: 56))
+                .foregroundColor(AppColors.accent)
+            Text(lang.isArabicEffective ? "مساعد NoNet متاح لمشتركي Premium فقط" : "NoNet AI is available for Premium subscribers")
+                .multilineTextAlignment(.center)
+                .foregroundColor(AppColors.textSecondary)
+                .padding(.horizontal, NNSpacing.xl)
+            Spacer()
+            Button(action: { selectedTab = 2 }) {
+                Text(lang.isArabicEffective ? "اشترك الآن" : "Upgrade Now")
+                    .font(.subheadline.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .background(AppColors.accent)
+                    .foregroundColor(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+            .padding(.horizontal, NNSpacing.xl)
+            .padding(.bottom, NNSpacing.xl)
+        }
+    }
+
+    // ─── Chat surface (header + messages + input) ─────────────────
+
+    @ViewBuilder
+    private var chatSurface: some View {
+        VStack(spacing: 0) {
+            chatHeader
+            Divider().background(AppColors.uiBorder.opacity(0.6))
+            messagesArea
+            inputBar
+        }
+    }
+
+    @ViewBuilder
+    private var chatHeader: some View {
+        HStack(spacing: NNSpacing.xs) {
+            Image(systemName: "sparkles")
+                .foregroundColor(AppColors.accent)
+            Text("NoNet AI")
+                .font(.headline)
+                .foregroundColor(AppColors.textPrimary)
+            Spacer()
+            if !messages.isEmpty {
+                Button(action: clearChat) {
+                    Image(systemName: "arrow.counterclockwise")
+                        .foregroundColor(AppColors.textSecondary)
+                        .frame(width: 44, height: 44)
                 }
-                .presentationDetents([.medium, .large])
-                .background(AppColors.uiBackground)
+                .buttonStyle(.plain)
+                .accessibilityLabel(lang.isArabicEffective ? "مسح المحادثة" : "Clear conversation")
+            }
+        }
+        .padding(.horizontal, NNSpacing.md)
+        .frame(height: 56)
+        .background(AppColors.uiSurface)
+    }
+
+    @ViewBuilder
+    private var messagesArea: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
+                    if messages.isEmpty {
+                        emptyStateChips
+                            .padding(.top, NNSpacing.xxl)
+                    }
+                    ForEach(messages) { msg in
+                        messageRow(msg)
+                            .id(msg.id)
+                    }
+                    if isTyping {
+                        HStack {
+                            typingIndicator
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.horizontal, NNSpacing.md)
+                        .id("typing")
+                    }
+                }
+                .padding(.vertical, NNSpacing.md)
+            }
+            .background(AppColors.uiBackground)
+            .scrollDismissesKeyboard(.interactively)
+            .onChange(of: messages.count) { _ in
+                scrollToLatest(proxy: proxy)
+            }
+            .onChange(of: isTyping) { typing in
+                if typing { withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo("typing", anchor: .bottom) } }
+            }
+            .onAppear {
+                seedIfFirstTime()
+                scrollToLatest(proxy: proxy)
             }
         }
     }
 
-    private func bubble(text: String, isUser: Bool) -> some View {
-        Text(text)
-            .font(.body)
-            .foregroundColor(AppColors.textPrimary)
-            .padding(12)
-            .background(AppColors.uiSurface)
-            .cornerRadius(20)
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(AppColors.uiBorder, lineWidth: 0.5)
-            )
-            .frame(maxWidth: UIScreen.main.bounds.width * 0.7, alignment: isUser ? .trailing : .leading)
+    @ViewBuilder
+    private var emptyStateChips: some View {
+        VStack(spacing: NNSpacing.md) {
+            Image(systemName: "sparkles")
+                .font(.largeTitle)
+                .foregroundColor(AppColors.accent)
+            Text(lang.isArabicEffective ? "كيف أقدر أساعدك اليوم؟" : "How can I help today?")
+                .font(.title3.weight(.semibold))
+                .foregroundColor(AppColors.textPrimary)
+                .multilineTextAlignment(.center)
+            VStack(spacing: NNSpacing.xs) {
+                ForEach(orgCategory.prefix(3), id: \.self) { starter in
+                    Button(action: {
+                        inputText = starter
+                        send()
+                    }) {
+                        Text(starter)
+                            .font(.subheadline)
+                            .foregroundColor(AppColors.accent)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, NNSpacing.md)
+                            .frame(minHeight: 44)
+                            .frame(maxWidth: .infinity)
+                            .background(AppColors.infoBg)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(.horizontal, NNSpacing.lg)
     }
 
-    private func typingIndicator() -> some View {
-        Capsule()
-            .fill(AppColors.infoBg)
-            .frame(width: 36, height: 8)
-            .padding(.vertical, 6)
+    @ViewBuilder
+    private func messageRow(_ msg: ChatMessage) -> some View {
+        HStack {
+            if msg.isUser { Spacer(minLength: 40) }
+            bubble(for: msg)
+            if !msg.isUser { Spacer(minLength: 40) }
+        }
+        .padding(.horizontal, NNSpacing.md)
     }
+
+    @ViewBuilder
+    private func bubble(for msg: ChatMessage) -> some View {
+        let bg = msg.isUser ? AppColors.accent : AppColors.uiSurface
+        let fg = msg.isUser ? Color.white : AppColors.textPrimary
+        Text(msg.text)
+            .font(.body)
+            .foregroundColor(fg)
+            .padding(.horizontal, NNSpacing.sm + 2)
+            .padding(.vertical, NNSpacing.sm - 2)
+            .background(bg)
+            .clipShape(RoundedRectangle(cornerRadius: 18))
+            .overlay(
+                RoundedRectangle(cornerRadius: 18)
+                    .stroke(msg.isUser ? Color.clear : AppColors.uiBorder, lineWidth: 0.5)
+            )
+            .textSelection(.enabled)
+    }
+
+    /// Three-dot indicator with a staggered bounce — actually communicates
+    /// "the AI is typing", unlike the previous static capsule.
+    @ViewBuilder
+    private var typingIndicator: some View {
+        HStack(spacing: 4) {
+            ForEach(0..<3, id: \.self) { idx in
+                TypingDot(delay: Double(idx) * 0.18)
+            }
+        }
+        .padding(.horizontal, NNSpacing.sm + 2)
+        .padding(.vertical, NNSpacing.sm - 2)
+        .background(AppColors.uiSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(AppColors.uiBorder, lineWidth: 0.5)
+        )
+    }
+
+    @ViewBuilder
+    private var inputBar: some View {
+        HStack(spacing: NNSpacing.xs) {
+            // Suggestions launcher — light secondary action
+            Button(action: { showSuggestions = true }) {
+                Image(systemName: "lightbulb.fill")
+                    .foregroundColor(AppColors.accent)
+                    .frame(width: 44, height: 44)
+                    .background(AppColors.infoBg)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(lang.isArabicEffective ? "اقتراحات" : "Suggestions")
+
+            // Text input — grows as the user types (up to 4 lines)
+            HStack {
+                TextField(lang.isArabicEffective ? "اكتب رسالتك..." : "Type your message...", text: $inputText, axis: .vertical)
+                    .lineLimit(1...4)
+                    .textInputAutocapitalization(.sentences)
+                    .disableAutocorrection(false)
+                    .onSubmit(send)
+            }
+            .padding(.horizontal, NNSpacing.sm + 2)
+            .padding(.vertical, NNSpacing.xs + 2)
+            .background(AppColors.uiBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(AppColors.uiBorder, lineWidth: 0.5)
+            )
+
+            // Send — primary action; visually disabled when empty
+            Button(action: send) {
+                Image(systemName: "paperplane.fill")
+                    .foregroundColor(.white)
+                    .frame(width: 44, height: 44)
+                    .background(canSend ? AppColors.accent : AppColors.textDisabled)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+            .buttonStyle(.plain)
+            .disabled(!canSend)
+            .accessibilityLabel(lang.isArabicEffective ? "إرسال" : "Send")
+        }
+        .padding(.horizontal, NNSpacing.md)
+        .padding(.vertical, NNSpacing.sm)
+        .background(
+            AppColors.uiSurface
+                .shadow(color: Color.black.opacity(0.04), radius: 4, y: -1)
+        )
+    }
+
+    private var canSend: Bool {
+        !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    // ─── Behaviour ────────────────────────────────────────────────
 
     private func send() {
         let trimmed = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -299,16 +388,62 @@ struct ChatBotView: View {
         }
     }
 
-    private func selectSuggestion(_ text: String) { inputText = text }
+    private func clearChat() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        withAnimation(.easeOut(duration: 0.2)) {
+            messages.removeAll()
+            isTyping = false
+        }
+        // Re-seed the welcome message immediately so the surface doesn't
+        // flash empty in the milliseconds after clearing.
+        seedIfFirstTime()
+    }
 
     private func seedIfFirstTime() {
-        if messages.isEmpty && isPremium {
-            let welcome = lang.isArabicEffective ? "مرحباً! أنا رفيق NoNet الذكي. كيف أساعدك اليوم؟" : "Hi! I'm your NoNet assistant. How can I help today?"
-            messages.append(ChatMessage(isUser: false, text: welcome, timestamp: Date()))
+        guard messages.isEmpty && isPremium else { return }
+        // Empty state now shows starter chips instead of an automatic
+        // welcome message — keeps the surface looking inviting without
+        // forcing the user to read a greeting first.
+    }
+
+    private func scrollToLatest(proxy: ScrollViewProxy) {
+        guard let last = messages.last else { return }
+        withAnimation(.easeOut(duration: 0.25)) {
+            proxy.scrollTo(last.id, anchor: .bottom)
         }
     }
 }
 
+// MARK: - TypingDot
+
+/// One of three dots in the typing indicator. Each receives a staggered
+/// `delay` so the three dots bounce in a wave.
+private struct TypingDot: View {
+    let delay: Double
+    @State private var bouncing = false
+
+    var body: some View {
+        Circle()
+            .fill(AppColors.textSecondary.opacity(0.6))
+            .frame(width: 7, height: 7)
+            .offset(y: bouncing ? -3 : 0)
+            .onAppear {
+                withAnimation(
+                    .easeInOut(duration: 0.45)
+                        .repeatForever(autoreverses: true)
+                        .delay(delay)
+                ) {
+                    bouncing = true
+                }
+            }
+    }
+}
+
+// MARK: - SuggestionsSheet
+
+/// Bottom sheet that surfaces categorized starter prompts. Tapping a
+/// row prefills the input field (does NOT auto-send) so the user can
+/// review or edit before sending.
 struct SuggestionsSheet: View {
     let org: [String]
     let add: [String]
@@ -316,94 +451,82 @@ struct SuggestionsSheet: View {
     let onPick: (String) -> Void
     @EnvironmentObject var lang: LanguageManager
 
-    private var columns: [GridItem] { [GridItem(.flexible())] }
-    
     var body: some View {
-        ZStack {
-            AppColors.uiBackground.ignoresSafeArea()
-        ScrollView {
-            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 24) {
-                    HStack(spacing: 8) {
-                        if lang.isArabicEffective { Spacer() }
-                        Image(systemName: "sparkles")
-                            .foregroundColor(AppColors.accent)
-                            .font(.nnSubheader.weight(.semibold))
-                Text(lang.isArabicEffective ? "اقتراحات" : "Suggestions")
-                            .font(.nnSectionTitle)
-                            .foregroundColor(AppColors.textPrimary)
-                        if !lang.isArabicEffective { Spacer() }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 16)
-
-                    VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 24) {
-                        section(title: lang.isArabicEffective ? "التنظيم والتركيز" : "Organization & Focus", items: org)
-                            .padding(16)
-                            .background(AppColors.uiSurface)
-                            .cornerRadius(20)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .stroke(AppColors.uiBorder, lineWidth: 0.5)
-                            )
-                        SoftDivider(width: 300, opacity: 0.70)
-                        section(title: lang.isArabicEffective ? "الإدمان والبدائل" : "Addiction & Alternatives", items: add)
-                            .padding(16)
-                            .background(AppColors.uiSurface)
-                            .cornerRadius(20)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .stroke(AppColors.uiBorder, lineWidth: 0.5)
-                            )
-                        SoftDivider(width: 300, opacity: 0.70)
-                        section(title: lang.isArabicEffective ? "أفكار وخطط جبارة" : "Powerful Plans", items: plans)
-                            .padding(16)
-                            .background(AppColors.uiSurface)
-                            .cornerRadius(20)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .stroke(AppColors.uiBorder, lineWidth: 0.5)
-                            )
-                        }
-                    }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 12)
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.lg) {
+                    section(
+                        title: lang.isArabicEffective ? "التنظيم والتركيز" : "Organization & Focus",
+                        icon: "calendar",
+                        items: org
+                    )
+                    section(
+                        title: lang.isArabicEffective ? "الإدمان والبدائل" : "Addiction & Alternatives",
+                        icon: "leaf.fill",
+                        items: add
+                    )
+                    section(
+                        title: lang.isArabicEffective ? "خطط جاهزة" : "Ready Plans",
+                        icon: "list.bullet.rectangle",
+                        items: plans
+                    )
+                }
+                .padding(.horizontal, NNSpacing.xl)
+                .padding(.vertical, NNSpacing.md)
             }
+            .background(AppColors.uiBackground)
+            .navigationTitle(lang.isArabicEffective ? "اقتراحات" : "Suggestions")
+            .navigationBarTitleDisplayMode(.inline)
         }
+        .environment(\.layoutDirection, lang.isArabicEffective ? .rightToLeft : .leftToRight)
     }
 
-    private func section(title: String, items: [String]) -> some View {
-        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
-            Text(title)
-                .font(.headline)
-                .foregroundColor(AppColors.textPrimary)
-                .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
-            LazyVGrid(columns: columns, alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
-                ForEach(items, id: \.self) { item in
-                            Button(action: { onPick(item) }) {
-                                    Text(item)
-                            .font(.subheadline)
-                            .foregroundColor(AppColors.textPrimary)
-                                        .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
-                            .lineLimit(2)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 12)
-                            .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
-                            }
-                            .buttonStyle(.plain)
-                    .background(AppColors.uiSurface)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                            .stroke(AppColors.uiBorder, lineWidth: 0.5)
-                            )
-                    .contentShape(RoundedRectangle(cornerRadius: 12))
-                    .cornerRadius(12)
+    @ViewBuilder
+    private func section(title: String, icon: String, items: [String]) -> some View {
+        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
+            HStack(spacing: NNSpacing.xs) {
+                Image(systemName: icon)
+                    .foregroundColor(AppColors.accent)
+                    .font(.subheadline)
+                Text(title)
+                    .font(.headline)
+                    .foregroundColor(AppColors.textPrimary)
+                Spacer()
+            }
+            VStack(spacing: 0) {
+                ForEach(Array(items.enumerated()), id: \.element) { idx, item in
+                    Button(action: { onPick(item) }) {
+                        HStack {
+                            Text(item)
+                                .font(.subheadline)
+                                .foregroundColor(AppColors.textPrimary)
+                                .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                                .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+                            Image(systemName: lang.isArabicEffective ? "chevron.left" : "chevron.right")
+                                .foregroundColor(AppColors.textSecondary)
+                                .font(.caption)
+                        }
+                        .padding(.horizontal, NNSpacing.md)
+                        .frame(minHeight: 48)
+                    }
+                    .buttonStyle(.plain)
+                    if idx < items.count - 1 {
+                        Divider()
+                            .background(AppColors.uiBorder.opacity(0.4))
+                            .padding(.horizontal, NNSpacing.md)
+                    }
                 }
             }
+            .background(AppColors.uiSurface)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(AppColors.uiBorder, lineWidth: 0.5)
+            )
         }
     }
 }
 
 #Preview {
     ChatBotView().environmentObject(LanguageManager.shared)
-} 
+}
