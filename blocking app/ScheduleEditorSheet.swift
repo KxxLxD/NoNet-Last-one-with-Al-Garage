@@ -46,7 +46,7 @@ struct ScheduleEditorSheet: View {
                 Section {
                     HStack(alignment: .top, spacing: 16) {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(isArabic ? "من" : "From").font(.footnote).foregroundColor(.secondary)
+                            Text(isArabic ? "من" : "From").font(.footnote).foregroundColor(AppColors.textSecondary)
                             HStack {
                                 Picker("h", selection: $fromHour) { ForEach(0...23, id: \.self) { Text("\($0)") } }
                                     .frame(width: 90, height: 120)
@@ -58,7 +58,7 @@ struct ScheduleEditorSheet: View {
                         }
                         .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(isArabic ? "إلى" : "To").font(.footnote).foregroundColor(.secondary)
+                            Text(isArabic ? "إلى" : "To").font(.footnote).foregroundColor(AppColors.textSecondary)
                             HStack {
                                 Picker("h", selection: $toHour) { ForEach(0...23, id: \.self) { Text("\($0)") } }
                                     .frame(width: 90, height: 120)
@@ -73,7 +73,7 @@ struct ScheduleEditorSheet: View {
                     .padding(.vertical, 4)
                     Text(totalDurationLabel)
                         .font(.footnote)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(AppColors.textSecondary)
                         .padding(.top, 6)
                         .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
                 }
@@ -82,15 +82,15 @@ struct ScheduleEditorSheet: View {
                 }
                 .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
                 if working.isEmpty {
-                    Text(isArabic ? "لا توجد فترات" : "No slots").foregroundColor(.secondary)
+                    Text(isArabic ? "لا توجد فترات" : "No slots").foregroundColor(AppColors.textSecondary)
                         .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
                 } else {
                     ForEach(working) { s in
                         Group {
                             if isArabic {
-                                HStack { Text(timeRangeLabel(s)).foregroundColor(.secondary); Spacer(); Text(dayName(s.day)) }
+                                HStack { Text(timeRangeLabel(s)).foregroundColor(AppColors.textSecondary); Spacer(); Text(dayName(s.day)) }
                             } else {
-                                HStack { Text(dayName(s.day)); Spacer(); Text(timeRangeLabel(s)).foregroundColor(.secondary) }
+                                HStack { Text(dayName(s.day)); Spacer(); Text(timeRangeLabel(s)).foregroundColor(AppColors.textSecondary) }
                             }
                         }
                     }

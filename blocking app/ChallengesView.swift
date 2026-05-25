@@ -149,15 +149,6 @@ struct ChallengesView: View {
     }
 }
 
-private struct SoftDivider: View {
-    let width: CGFloat
-    let opacity: Double
-    var body: some View {
-        HStack { Spacer(); Rectangle().fill(AppColors.uiBorder.opacity(opacity)).frame(width: width, height: 1); Spacer() }
-            .padding(.vertical, 6)
-    }
-}
-
 private enum ChallengeOption: Hashable { case option(label: String, points: Int) }
 
 private struct ChallengeCardCompact: View {

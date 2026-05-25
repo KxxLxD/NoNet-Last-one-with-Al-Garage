@@ -28,7 +28,7 @@ struct ConfirmCreateSheet: View {
                         .foregroundColor(isHard ? AppColors.alertRed : AppColors.successGreen)
                     if isHard {
                         Text(isArabic ? "سيتم تفعيل الوضع الصارم ولا يمكن التعديل أو الحذف خلال المدة." : "Hard Mode will be enabled; no edits/deletes during duration.")
-                            .font(.footnote).foregroundColor(.secondary)
+                            .font(.footnote).foregroundColor(AppColors.textSecondary)
                             .multilineTextAlignment(isArabic ? .trailing : .leading)
                     }
                 }
@@ -38,7 +38,7 @@ struct ConfirmCreateSheet: View {
                         Toggle(isArabic ? "تشغيل مباشرة بعد الإنشاء" : "Start immediately", isOn: $startImmediately)
                     } else {
                         if slots.isEmpty {
-                            Text(isArabic ? "لا توجد فترات" : "No slots").frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading).foregroundColor(.secondary)
+                            Text(isArabic ? "لا توجد فترات" : "No slots").frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading).foregroundColor(AppColors.textSecondary)
                         } else {
                             ForEach(0..<slots.count, id: \.self) { idx in
                                 let s = slots[idx]
@@ -46,14 +46,14 @@ struct ConfirmCreateSheet: View {
                                     if isArabic {
                                         VStack(alignment: .trailing, spacing: 2) {
                                             Text(timeRangeLabel(from: s.1, to: s.2))
-                                            Text(totalDurationLabel(from: s.1, to: s.2)).font(.footnote).foregroundColor(.secondary)
+                                            Text(totalDurationLabel(from: s.1, to: s.2)).font(.footnote).foregroundColor(AppColors.textSecondary)
                                         }
                                         Spacer(); Text(dayName(s.0))
                                     } else {
                                         Text(dayName(s.0)); Spacer()
                                         VStack(alignment: .trailing, spacing: 2) {
                                             Text(timeRangeLabel(from: s.1, to: s.2))
-                                            Text(totalDurationLabel(from: s.1, to: s.2)).font(.footnote).foregroundColor(.secondary)
+                                            Text(totalDurationLabel(from: s.1, to: s.2)).font(.footnote).foregroundColor(AppColors.textSecondary)
                                         }
                                     }
                                 }

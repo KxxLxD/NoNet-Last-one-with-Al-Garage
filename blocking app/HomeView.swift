@@ -845,11 +845,11 @@ private struct EmptyStateView: View {
         VStack(spacing: 12) {
             Image(systemName: "square.and.pencil")
                 .font(.title)
-                .foregroundColor(.secondary)
+                .foregroundColor(AppColors.textSecondary)
             Text(isArabic ? "رحلة تركيزك تبدأ من هنا. اضغط \"أنشئ قائمة\"." : "Your focus journey starts here. Tap Create List.")
                 .font(.subheadline)
                 .multilineTextAlignment(isArabic ? .trailing : .center)
-                .foregroundColor(.secondary)
+                .foregroundColor(AppColors.textSecondary)
         }
         .frame(maxWidth: .infinity)
         .padding(18)
@@ -1744,21 +1744,6 @@ private extension HomeView {
         Task { await permissions.requestNotifications() }
     }
 }
-
-private struct SoftDivider: View {
-    let width: CGFloat
-    let opacity: Double
-    var body: some View {
-        HStack {
-            Spacer()
-            Rectangle()
-                .fill(AppColors.uiBorder.opacity(opacity))
-                .frame(width: width, height: 1)
-            Spacer()
-        }
-        .padding(.vertical, 8)
-    }
-} 
 
 private struct ListRowCore: View {
     let item: ListEntity

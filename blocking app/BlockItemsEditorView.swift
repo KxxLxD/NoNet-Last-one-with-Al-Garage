@@ -171,7 +171,7 @@ struct BlockItemsEditorView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Text(lang.isArabicEffective ? "اختر الأكثر إدمانًا أولًا — سيتم إضافة الحجب كمواقع وتطبيقات." : "Pick the most addictive first — we’ll add both website and app entries.")
                             .font(.footnote)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(AppColors.textSecondary)
                             .padding(.bottom, 4)
                         // Recommended top
                         Text(lang.isArabicEffective ? "مقترح" : "Recommended")
@@ -385,21 +385,6 @@ struct BlockItemsEditorView: View {
         guard let tld = labels.last, tld.count >= 2,
               tld.allSatisfy({ $0.isLetter }) else { return false }
         return true
-    }
-}
-
-private struct SoftDivider: View {
-    let width: CGFloat
-    let opacity: Double
-    var body: some View {
-        HStack {
-            Spacer()
-            Rectangle()
-                .fill(AppColors.uiBorder.opacity(opacity))
-                .frame(width: width, height: 1)
-            Spacer()
-        }
-        .padding(.vertical, 8)
     }
 }
 

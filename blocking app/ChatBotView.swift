@@ -115,7 +115,7 @@ struct ChatBotView: View {
                             .foregroundColor(AppColors.accent)
                         Text(lang.isArabicEffective ? "الشات بوت متاح فقط للمستخدمين المميزين" : "Chat Bot is available for Premium users")
                             .multilineTextAlignment(.center)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(AppColors.textSecondary)
                             .padding(.horizontal)
                         Button(action: { selectedTab = 2 }) {
                             Text(lang.isArabicEffective ? "اشترك الآن / Upgrade Now" : "Upgrade Now")
@@ -306,21 +306,6 @@ struct ChatBotView: View {
             let welcome = lang.isArabicEffective ? "مرحبًا! أنا رفيق NoNet الذكي. كيف أساعدك اليوم؟" : "Hi! I'm your NoNet assistant. How can I help today?"
             messages.append(ChatMessage(isUser: false, text: welcome, timestamp: Date()))
         }
-    }
-}
-
-private struct SoftDivider: View {
-    let width: CGFloat
-    let opacity: Double
-    var body: some View {
-        HStack {
-            Spacer()
-            Rectangle()
-                .fill(AppColors.uiBorder.opacity(opacity))
-                .frame(width: width, height: 1)
-            Spacer()
-        }
-        .padding(.vertical, 6)
     }
 }
 

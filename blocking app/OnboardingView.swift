@@ -275,6 +275,15 @@ struct OnboardingView: View {
                 }
                 .tabViewStyle(.page(indexDisplayMode: .always))
 
+                // Explicit step counter — dot-indicators alone don't tell users
+                // the total step count until they page through the whole flow.
+                Text(lang.isArabicEffective
+                     ? "خطوة \(page + 1) من 4"
+                     : "Step \(page + 1) of 4")
+                    .font(.nnCaption)
+                    .foregroundColor(AppColors.textSecondary)
+                    .monospacedDigit()
+
                 HStack {
                     Button(action: { showOnboardingAfterLogin = false }) {
                         Text(lang.isArabicEffective ? "تخطي" : "Skip")

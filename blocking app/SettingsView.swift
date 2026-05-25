@@ -475,21 +475,6 @@ struct LogoutButton: View {
     }
 }
 
-private struct SoftDivider: View {
-    let width: CGFloat
-    let opacity: Double
-    var body: some View {
-        HStack {
-            Spacer()
-            Rectangle()
-                .fill(AppColors.uiBorder.opacity(opacity))
-                .frame(width: width, height: 1)
-            Spacer()
-        }
-        .padding(.vertical, 8)
-    }
-}
-
 #Preview {
     if #available(iOS 17.0, *) {
         SettingsView()

@@ -374,7 +374,7 @@ struct CreateListSheet: View {
                 if !isPremium {
                     Text(lang.isArabicEffective ? "الجدولة ضمن الترقية." : "Scheduling is in Upgrade.")
                         .font(.footnote)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(AppColors.textSecondary)
                     Button(action: { showUpgradeSheet = true }) {
                         Text(lang.isArabicEffective ? "ترقية / تجربة 7 أيام" : "Upgrade / 7‑day Trial")
                 }
@@ -392,14 +392,14 @@ struct CreateListSheet: View {
                     if slots.isEmpty {
                         Text(lang.isArabicEffective ? "لا توجد فترات مجدولة بعد" : "No schedule slots yet")
                             .font(.footnote)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(AppColors.textSecondary)
                 } else {
                         ForEach(slots) { s in
                         Group {
                                 if lang.isArabicEffective {
-                                    HStack { Text(timeRangeLabel(s)).foregroundColor(.secondary); Spacer(); Text(dayName(s.day)) }
+                                    HStack { Text(timeRangeLabel(s)).foregroundColor(AppColors.textSecondary); Spacer(); Text(dayName(s.day)) }
                             } else {
-                                    HStack { Text(dayName(s.day)); Spacer(); Text(timeRangeLabel(s)).foregroundColor(.secondary) }
+                                    HStack { Text(dayName(s.day)); Spacer(); Text(timeRangeLabel(s)).foregroundColor(AppColors.textSecondary) }
                             }
                         }
                     }
@@ -448,11 +448,11 @@ struct CreateListSheet: View {
                 }
                 Text(lang.isArabicEffective ? "الحد الأدنى 5 دقائق." : "Minimum duration is 5 minutes.")
                     .font(.footnote)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(AppColors.textSecondary)
                 if blockType == "now" && !isDurationValid {
                     Text(lang.isArabicEffective ? "اختر مدة لا تقل عن 5 دقائق" : "Select at least 5 minutes")
                         .font(.footnote)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(AppColors.textSecondary)
                 }
             }
             .frame(maxWidth: .infinity)
@@ -476,7 +476,7 @@ struct CreateListSheet: View {
                      ? "يبدأ كل يوم بدون حجب. بعد استخدام التطبيقات/المواقع للمدة المحددة، يتفعّل الحجب حتى منتصف الليل."
                      : "Each day starts with no block. After using the selected apps/sites for this many minutes, the block kicks in until midnight.")
             .font(.footnote)
-            .foregroundColor(.secondary)
+            .foregroundColor(AppColors.textSecondary)
             .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
         ) {
             VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
@@ -491,7 +491,7 @@ struct CreateListSheet: View {
                 let summaryEn = "Allows \(timeLimitMinutes) minute(s) per day before the block kicks in."
                 Text(lang.isArabicEffective ? summaryAr : summaryEn)
                     .font(.footnote)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(AppColors.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
             .padding(20)
@@ -520,10 +520,10 @@ struct CreateListSheet: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(lang.isArabicEffective ? "بدون حماية: تعديل/حذف في أي وقت." : "No Protection: Edit/Delete anytime.")
                         .font(.footnote)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(AppColors.textSecondary)
                     Text(lang.isArabicEffective ? "الوضع الصارم: صعب الإيقاف أثناء المدة." : "Hard Mode: Hard to stop during duration.")
                         .font(.footnote)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(AppColors.textSecondary)
                     if protection == "hard" {
                         Text(lang.isArabicEffective
                              ? "💡 بعد الإنشاء يمكنك دعوة شريك تعافي من تفاصيل القائمة."
@@ -554,14 +554,14 @@ struct CreateListSheet: View {
         },
         footer: Text(lang.isArabicEffective ? "حدّد عدد الاستراحات خلال 24 ساعة ومدة كل استراحة." : "Choose number of breaks across 24h and the duration of each.")
             .font(.footnote)
-            .foregroundColor(.secondary)
+            .foregroundColor(AppColors.textSecondary)
             .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
         ) {
             VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
                 VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 6) {
                     Text(lang.isArabicEffective ? "العدد" : "Count")
                         .font(.footnote)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(AppColors.textSecondary)
                     Picker("Breaks", selection: $breaksCount) { ForEach(0...5, id: \.self) { Text("\($0)") } }
                         .pickerStyle(.wheel)
                         .frame(height: 120)
@@ -569,7 +569,7 @@ struct CreateListSheet: View {
                 VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 6) {
                     Text(lang.isArabicEffective ? "مدة كل استراحة" : "Duration of each break")
                         .font(.footnote)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(AppColors.textSecondary)
                     Picker("Break Duration", selection: $breakDurationMinutes) {
                         ForEach(breakDurationOptions, id: \.self) { v in
                             Text(lang.isArabicEffective ? "\(v) دقائق" : "\(v) minutes").tag(v)
@@ -581,7 +581,7 @@ struct CreateListSheet: View {
                 let summaryEn = "You can take \(breaksCount) break(s) across 24h, each for \(breakDurationMinutes) minutes."
                 Text(lang.isArabicEffective ? summaryAr : summaryEn)
                                                 .font(.footnote)
-                                                .foregroundColor(.secondary)
+                                                .foregroundColor(AppColors.textSecondary)
                                         }
             .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
             .padding(20)
@@ -949,21 +949,6 @@ struct CreateListSheet: View {
             return daysDesc + " " + fmt(from) + "–" + fmt(to)
         }
         return lang.isArabicEffective ? "\(list.count) فترات" : "\(list.count) slots"
-    }
-}
-
-private struct SoftDivider: View {
-    let width: CGFloat
-    let opacity: Double
-    var body: some View {
-        HStack {
-            Spacer()
-            Rectangle()
-                .fill(AppColors.uiBorder.opacity(opacity))
-                .frame(width: width, height: 1)
-            Spacer()
-        }
-        .padding(.vertical, 8)
     }
 }
 

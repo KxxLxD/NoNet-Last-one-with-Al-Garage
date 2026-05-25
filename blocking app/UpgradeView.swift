@@ -27,13 +27,13 @@ struct UpgradeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text(isArabic ? "الاشتراك المميز" : "Premium Pricing")
-                    .font(.title2).bold()
+                    .font(.nnSectionTitle)
 
                 Text(isArabic
                      ? "اشتراك يُدار عبر App Store. يمكنك إلغاء الاشتراك في أي وقت من إعدادات Apple."
                      : "Subscription managed via the App Store. Cancel anytime in your Apple Settings.")
                     .font(.footnote)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(AppColors.textSecondary)
 
                 // Plans (load asynchronously; placeholders show until products fetched)
                 planCard(
@@ -164,11 +164,11 @@ struct UpgradeView: View {
                     if let period = product.subscription?.subscriptionPeriod {
                         Text("/ \(periodLabel(period))")
                             .font(.footnote)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(AppColors.textSecondary)
                     }
                 } else {
                     Text(isArabic ? "جاري التحميل..." : "Loading...")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(AppColors.textSecondary)
                 }
                 Spacer()
             }
@@ -303,21 +303,6 @@ struct UpgradeView: View {
             }
             .font(.body)
         }
-    }
-}
-
-private struct SoftDivider: View {
-    let width: CGFloat
-    let opacity: Double
-    var body: some View {
-        HStack {
-            Spacer()
-            Rectangle()
-                .fill(AppColors.uiBorder.opacity(opacity))
-                .frame(width: width, height: 1)
-            Spacer()
-        }
-        .padding(.vertical, 8)
     }
 }
 
