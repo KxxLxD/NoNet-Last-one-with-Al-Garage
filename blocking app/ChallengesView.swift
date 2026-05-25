@@ -123,10 +123,18 @@ struct ChallengesView: View {
                     .font(.subheadline)
                     .foregroundColor(AppColors.textSecondary)
             }
-            ZStack(alignment: .leading) {
-                Capsule().fill(AppColors.uiBorder.opacity(0.6)).frame(height: 8)
-                Capsule().fill(AppColors.accent).frame(width: CGFloat(progress) * UIScreen.main.bounds.width * 0.6, height: 8)
+            // GeometryReader sizes the progress bar relative to its actual
+            // container width instead of UIScreen.main.bounds, which assumed
+            // a 375-point iPhone and clipped on wider devices (iPhone 14+
+            // Pro Max) and shrank on iPad.
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(AppColors.uiBorder.opacity(0.6)).frame(height: 8)
+                    Capsule().fill(AppColors.accent)
+                        .frame(width: CGFloat(progress) * geo.size.width, height: 8)
+                }
             }
+            .frame(height: 8)
         }
         .padding(16)
         .background(AppColors.uiSurface)
@@ -235,6 +243,16 @@ private struct SleepChallengeCard: View {
                 DatePicker(lang.isArabicEffective ? "من" : "From", selection: $from, displayedComponents: .hourAndMinute)
                 DatePicker(lang.isArabicEffective ? "إلى" : "To", selection: $to, displayedComponents: .hourAndMinute)
             }
+            // Inline validation: identical from/to is a silent footgun. End
+            // crossing midnight (from > to) is fine and intended for sleep
+            // schedules — we only refuse the zero-duration case.
+            if isZeroDuration {
+                Text(lang.isArabicEffective
+                     ? "وقت البداية والنهاية متطابقان."
+                     : "Start and end times are identical.")
+                    .font(.caption)
+                    .foregroundColor(AppColors.alertRed)
+            }
             Toggle(lang.isArabicEffective ? "كل الأيام" : "Every day", isOn: $allDays)
                 .tint(AppColors.accent)
             Button(action: { onChange(40) }) {
@@ -242,10 +260,11 @@ private struct SleepChallengeCard: View {
                     .font(.nnSmallButton)
                     .frame(minHeight: 44) // HIG minimum touch target
                     .padding(.horizontal, 16)
-                    .background(AppColors.accent)
+                    .background(isZeroDuration ? AppColors.textDisabled : AppColors.accent)
                     .foregroundColor(.white)
                     .cornerRadius(12)
             }
+            .disabled(isZeroDuration)
         }
         .padding(16)
         .background(AppColors.uiSurface)
@@ -254,6 +273,14 @@ private struct SleepChallengeCard: View {
             RoundedRectangle(cornerRadius: 16)
                 .stroke(AppColors.uiBorder, lineWidth: 0.5)
         )
+    }
+
+    /// True if from == to (same minute). Compare hour+minute components only —
+    /// the DatePicker is `.hourAndMinute`, so day/year never drift.
+    private var isZeroDuration: Bool {
+        let fromComps = Calendar.current.dateComponents([.hour, .minute], from: from)
+        let toComps = Calendar.current.dateComponents([.hour, .minute], from: to)
+        return fromComps.hour == toComps.hour && fromComps.minute == toComps.minute
     }
 }
 

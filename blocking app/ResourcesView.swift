@@ -31,6 +31,7 @@ struct ResourcesView: View {
 
                 infographicCard(
                     icon: "iphone.gen3",
+                    accentColor: AppColors.alertRed,   // alarming statistics → red
                     title: isArabic ? "إحصائيات إدمان الشاشات" : "Screen-time addiction in numbers",
                     bullets: isArabic
                         ? ["البالغ يفتح هاتفه ~58 مرة يومياً.",
@@ -45,6 +46,7 @@ struct ResourcesView: View {
 
                 infographicCard(
                     icon: "leaf.fill",
+                    accentColor: AppColors.successGreen, // benefits / growth → green
                     title: isArabic ? "فوائد التخلص الرقمي" : "Benefits of a digital detox",
                     bullets: isArabic
                         ? ["تحسّن جودة النوم خلال أسبوع.",
@@ -59,6 +61,7 @@ struct ResourcesView: View {
 
                 infographicCard(
                     icon: "shield.lefthalf.filled",
+                    accentColor: AppColors.accent,       // how NoNet works → brand accent
                     title: isArabic ? "كيف يعمل NoNet" : "How NoNet works",
                     bullets: isArabic
                         ? ["يستخدم Screen Time من Apple — حماية رسمية.",
@@ -82,14 +85,19 @@ struct ResourcesView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private func infographicCard(icon: String, title: String, bullets: [String]) -> some View {
+    /// Each card carries its own `accentColor` so the three categories
+    /// (alarming statistics / benefits / how-NoNet-works) read as visually
+    /// distinct rather than three identical blue blocks. Bullets use a
+    /// filled-circle SF Symbol instead of the bullet character, which kept
+    /// rendering inconsistently across font fallbacks.
+    private func infographicCard(icon: String, accentColor: Color, title: String, bullets: [String]) -> some View {
         VStack(alignment: isArabic ? .trailing : .leading, spacing: 12) {
             HStack(spacing: 10) {
                 Image(systemName: icon)
-                    .font(.title2)
-                    .foregroundColor(AppColors.accent)
+                    .font(.title3)
+                    .foregroundColor(accentColor)
                     .frame(width: 36, height: 36)
-                    .background(AppColors.infoBg)
+                    .background(accentColor.opacity(0.12))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                 Text(title)
                     .font(.headline)
@@ -106,9 +114,15 @@ struct ResourcesView: View {
                                 .font(.footnote)
                                 .foregroundColor(AppColors.textSecondary)
                                 .multilineTextAlignment(.trailing)
-                            Text("•").foregroundColor(AppColors.accent)
+                            Image(systemName: "circle.fill")
+                                .font(.system(size: 5))
+                                .foregroundColor(accentColor)
+                                .padding(.top, 7)
                         } else {
-                            Text("•").foregroundColor(AppColors.accent)
+                            Image(systemName: "circle.fill")
+                                .font(.system(size: 5))
+                                .foregroundColor(accentColor)
+                                .padding(.top, 7)
                             Text(line)
                                 .font(.footnote)
                                 .foregroundColor(AppColors.textSecondary)
@@ -122,7 +136,10 @@ struct ResourcesView: View {
         .padding(20)
         .background(AppColors.uiSurface)
         .cornerRadius(20)
-        .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(accentColor.opacity(0.25), lineWidth: 0.5)
+        )
     }
 }
 

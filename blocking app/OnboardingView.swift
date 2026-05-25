@@ -207,7 +207,9 @@ struct OnboardingView: View {
                             .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
 
                             // Divider between sections (soft)
-                            HStack { Spacer(); Rectangle().fill(AppColors.uiBorder.opacity(0.70)).frame(width: 300, height: 1); Spacer() }
+                            // Responsive divider — replaces the fixed-width 300pt
+                            // version which overflowed on iPhone SE (335pt safe width).
+                            SoftDivider(maxWidth: 320, opacity: 0.7)
 
                             // Categories section
                             VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
@@ -255,7 +257,9 @@ struct OnboardingView: View {
                                 .cornerRadius(20)
                                 .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
                                 if idx != goalSections.count - 1 {
-                                    HStack { Spacer(); Rectangle().fill(AppColors.uiBorder.opacity(0.70)).frame(width: 300, height: 1); Spacer() }
+                                    // Responsive divider — replaces the fixed-width 300pt
+                            // version which overflowed on iPhone SE (335pt safe width).
+                            SoftDivider(maxWidth: 320, opacity: 0.7)
                                 }
                             }
                             if obGoals.split(separator: ",").contains("other") {

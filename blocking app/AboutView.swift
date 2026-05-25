@@ -234,11 +234,18 @@ struct AboutView: View {
 
     private var creditsFooter: some View {
         VStack(spacing: 8) {
-            Text(isArabic
-                 ? "شكراً لاستخدامك NoNet 💙"
-                 : "Thanks for using NoNet 💙")
-                .font(.footnote.weight(.medium))
-                .foregroundColor(AppColors.textPrimary)
+            // SF Symbol heart renders consistently across fonts and Dynamic
+            // Type sizes; the emoji 💙 was font-dependent and could fall back
+            // to a black-and-white glyph on some configurations.
+            HStack(spacing: 4) {
+                Text(isArabic ? "شكراً لاستخدامك NoNet" : "Thanks for using NoNet")
+                Image(systemName: "heart.fill")
+                    .foregroundColor(AppColors.accent)
+                    .font(.footnote)
+            }
+            .font(.footnote.weight(.medium))
+            .foregroundColor(AppColors.textPrimary)
+
             Text(isArabic
                  ? "صُنع بعناية لمساعدتك على تركيز أعمق."
                  : "Made with care to help you focus deeper.")

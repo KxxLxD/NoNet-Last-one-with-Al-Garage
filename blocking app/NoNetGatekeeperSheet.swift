@@ -215,6 +215,14 @@ struct NoNetGatekeeperSheet: View {
                 )
                 .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
                 .environment(\.layoutDirection, lang.isArabicEffective ? .rightToLeft : .leftToRight)
+                // Soft cap so a runaway paste doesn't fill UserDefaults via
+                // DeletionLogStore. 1000 is well past any genuine explanation
+                // and still safe to persist.
+                .onChange(of: reason) { newValue in
+                    if newValue.count > 1000 {
+                        reason = String(newValue.prefix(1000))
+                    }
+                }
 
             // Live character counter
             HStack {

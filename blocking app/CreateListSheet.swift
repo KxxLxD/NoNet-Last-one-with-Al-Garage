@@ -441,11 +441,26 @@ struct CreateListSheet: View {
                     .background(AppColors.uiSurface)
                     .cornerRadius(12)
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.uiBorder, lineWidth: 0.5))
-                if !isNameValid, !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    Text(lang.isArabicEffective ? "الاسم قصير جداً" : "Name is too short")
-                        .font(.footnote)
+                    // Cap at 40 chars so the list name fits visually on
+                    // HomeView cards without truncation. Clamp via onChange
+                    // rather than .textField API (which lacks a maxLength).
+                    .onChange(of: name) { newValue in
+                        if newValue.count > 40 {
+                            name = String(newValue.prefix(40))
+                        }
+                    }
+                HStack {
+                    if !isNameValid, !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Text(lang.isArabicEffective ? "الاسم قصير جداً" : "Name is too short")
+                            .font(.footnote)
+                            .foregroundColor(AppColors.textSecondary)
+                    }
+                    Spacer()
+                    Text("\(name.count)/40")
+                        .font(.caption)
                         .foregroundColor(AppColors.textSecondary)
-    }
+                        .monospacedDigit()
+                }
             }
             .padding(20)
             .background(AppColors.uiSurface)

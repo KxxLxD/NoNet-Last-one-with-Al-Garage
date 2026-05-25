@@ -18,7 +18,21 @@ struct PoliciesView: View {
                 .padding(.top, 12)
 
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: NNSpacing.sm) {
+                        // Subtle hint that the body text is selectable —
+                        // .textSelection has no visual affordance otherwise.
+                        HStack(spacing: 6) {
+                            Image(systemName: "text.cursor")
+                                .font(.caption2)
+                            Text(isArabic ? "اضغط مطوّلاً لتحديد ونسخ النص" : "Long-press to select and copy text")
+                                .font(.caption)
+                            Spacer(minLength: 0)
+                            Text(isArabic ? "آخر تحديث: مايو 2026" : "Last updated: May 2026")
+                                .font(.caption)
+                        }
+                        .foregroundColor(AppColors.textSecondary)
+                        .padding(.bottom, NNSpacing.xs)
+
                         Text(currentText)
                             .font(.body)
                             .foregroundColor(AppColors.textPrimary)
@@ -26,13 +40,16 @@ struct PoliciesView: View {
                             .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
                             .textSelection(.enabled)
                     }
-                    .padding(16)
+                    .padding(NNSpacing.lg)
                     .background(AppColors.uiSurface)
-                    .cornerRadius(20)
-                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
-                    .padding(.horizontal, 24)
-                    .padding(.top, 16)
-                    .padding(.bottom, 24)
+                    .cornerRadius(NNRadius.container)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: NNRadius.container)
+                            .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+                    )
+                    .padding(.horizontal, NNSpacing.xl)
+                    .padding(.top, NNSpacing.md)
+                    .padding(.bottom, NNSpacing.xl)
                 }
             }
         }

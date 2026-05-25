@@ -29,6 +29,17 @@ struct ChatBotView: View {
     @EnvironmentObject var lang: LanguageManager
     @AppStorage(AppStorageKeys.isPremium) private var isPremium: Bool = false
     @AppStorage(AppStorageKeys.selectedTab) private var selectedTab: Int = 0
+    /// Free-tier daily message budget. Resets at midnight per-device. We
+    /// store the count + last-used date as separate AppStorage keys so the
+    /// rollover logic stays simple (compare day-component only).
+    @AppStorage("v1:chat:freeMessagesUsedToday") private var freeMessagesUsedToday: Int = 0
+    @AppStorage("v1:chat:freeMessagesLastDayKey") private var freeMessagesLastDayKey: String = ""
+
+    /// How many free messages a non-premium user gets per day. Picked as
+    /// "enough to evaluate the assistant" without giving away the premium
+    /// experience. Tune via experiment if conversion data warrants it.
+    static let freeDailyMessageBudget: Int = 3
+
     private let responder: ChatResponder = LocalChatResponder()
 
     struct ChatMessage: Identifiable {
@@ -42,6 +53,29 @@ struct ChatBotView: View {
     @State private var inputText: String = ""
     @State private var showSuggestions = false
     @State private var isTyping: Bool = false
+    @State private var showFreeLimitReached: Bool = false
+
+    /// Day-stable key (YYYY-MM-DD) used to detect when to reset the daily
+    /// free-message counter. Computed every access — cheap, no caching.
+    private var todayKey: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter.string(from: Date())
+    }
+
+    /// Free messages remaining today, after auto-resetting at midnight.
+    /// Premium users always see Int.max conceptually (we don't gate them).
+    private var freeRemainingToday: Int {
+        if freeMessagesLastDayKey != todayKey { return Self.freeDailyMessageBudget }
+        return max(0, Self.freeDailyMessageBudget - freeMessagesUsedToday)
+    }
+
+    /// True when a non-premium user has hit their daily free-message limit.
+    /// Used to gate the send button and surface the upgrade prompt.
+    private var freeBudgetExhausted: Bool {
+        !isPremium && freeRemainingToday <= 0
+    }
 
     // ─── Suggestion sources ───────────────────────────────────────
     // Three categories shown in the suggestions sheet. Each list is
@@ -114,16 +148,10 @@ struct ChatBotView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
-                if isPremium {
-                    chatSurface
-                } else {
-                    lockedState
-                }
-            }
-            .navigationTitle("")
-            .toolbar(.hidden, for: .navigationBar)
-            .background(AppColors.uiBackground)
+            chatSurface
+                .navigationTitle("")
+                .toolbar(.hidden, for: .navigationBar)
+                .background(AppColors.uiBackground)
         }
         .sheet(isPresented: $showSuggestions) {
             SuggestionsSheet(org: orgCategory, add: addictionCategory, plans: plansCategory) { chosen in
@@ -133,33 +161,18 @@ struct ChatBotView: View {
             .environmentObject(lang)
             .presentationDetents([.medium, .large])
         }
-    }
-
-    // ─── Premium-locked state ─────────────────────────────────────
-
-    @ViewBuilder
-    private var lockedState: some View {
-        VStack(spacing: NNSpacing.md) {
-            Spacer()
-            Image(systemName: "lock.shield")
-                .font(.system(size: 56))
-                .foregroundColor(AppColors.accent)
-            Text(lang.isArabicEffective ? "مساعد NoNet متاح لمشتركي Premium فقط" : "NoNet AI is available for Premium subscribers")
-                .multilineTextAlignment(.center)
-                .foregroundColor(AppColors.textSecondary)
-                .padding(.horizontal, NNSpacing.xl)
-            Spacer()
-            Button(action: { selectedTab = 2 }) {
-                Text(lang.isArabicEffective ? "اشترك الآن" : "Upgrade Now")
-                    .font(.subheadline.weight(.semibold))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(AppColors.accent)
-                    .foregroundColor(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
+        .alert(
+            lang.isArabicEffective ? "انتهى رصيد اليوم المجاني" : "Daily free messages used up",
+            isPresented: $showFreeLimitReached
+        ) {
+            Button(lang.isArabicEffective ? "اشترك في Premium" : "Subscribe to Premium") {
+                selectedTab = 2
             }
-            .padding(.horizontal, NNSpacing.xl)
-            .padding(.bottom, NNSpacing.xl)
+            Button(lang.isArabicEffective ? "لاحقاً" : "Later", role: .cancel) {}
+        } message: {
+            Text(lang.isArabicEffective
+                 ? "استخدمت \(Self.freeDailyMessageBudget) رسائل مجانية اليوم. سيتجدّد الرصيد منتصف الليل، أو اشترك في Premium لرسائل غير محدودة."
+                 : "You've used your \(Self.freeDailyMessageBudget) free messages for today. Your quota resets at midnight, or subscribe to Premium for unlimited messages.")
         }
     }
 
@@ -183,6 +196,29 @@ struct ChatBotView: View {
             Text("NoNet AI")
                 .font(.headline)
                 .foregroundColor(AppColors.textPrimary)
+            // Free-tier counter chip — gives non-premium users visibility
+            // into how many messages they have left today + a tap-target
+            // that jumps to the upgrade tab. Hidden for premium.
+            if !isPremium {
+                Button(action: { selectedTab = 2 }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "sparkle")
+                            .font(.caption2)
+                        Text(lang.isArabicEffective
+                             ? "\(freeRemainingToday)/\(Self.freeDailyMessageBudget) مجانية"
+                             : "\(freeRemainingToday)/\(Self.freeDailyMessageBudget) free")
+                            .font(.caption.weight(.semibold))
+                            .monospacedDigit()
+                    }
+                    .foregroundColor(freeRemainingToday > 0 ? AppColors.accent : AppColors.alertRed)
+                    .padding(.vertical, 4)
+                    .padding(.horizontal, 8)
+                    .background((freeRemainingToday > 0 ? AppColors.accent : AppColors.alertRed).opacity(0.10))
+                    .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(lang.isArabicEffective ? "تبقّى \(freeRemainingToday) من \(Self.freeDailyMessageBudget)" : "\(freeRemainingToday) of \(Self.freeDailyMessageBudget) remaining")
+            }
             Spacer()
             if !messages.isEmpty {
                 Button(action: clearChat) {
@@ -378,6 +414,20 @@ struct ChatBotView: View {
     private func send() {
         let trimmed = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
+        // Free-tier gating: refuse with an upgrade prompt once the daily
+        // budget is gone. Premium skips this branch entirely.
+        if !isPremium {
+            if freeRemainingToday <= 0 {
+                showFreeLimitReached = true
+                return
+            }
+            // Roll over the counter if this is the first message of a new day.
+            if freeMessagesLastDayKey != todayKey {
+                freeMessagesLastDayKey = todayKey
+                freeMessagesUsedToday = 0
+            }
+            freeMessagesUsedToday += 1
+        }
         messages.append(ChatMessage(isUser: true, text: trimmed, timestamp: Date()))
         inputText = ""
         isTyping = true

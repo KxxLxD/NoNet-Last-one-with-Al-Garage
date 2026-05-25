@@ -833,182 +833,9 @@ private struct PermissionCard: View {
     }
 }
 
-private struct RealListRow: View {
-    let item: ListEntity
-    let isActive: Bool
-    let onToggle: () -> Void
-
-    @Environment(\.layoutDirection) private var layoutDirection
-    @EnvironmentObject private var lang: LanguageManager
-
-    // Local decode model for schedule slots
-    private struct Slot: Codable { let id: UUID; let day: Int; let fromMinutes: Int; let toMinutes: Int }
-
-    var body: some View {
-        HStack(alignment: .center) {
-            if item.protection != "hard" {
-                if !lang.isArabicEffective { // LTR → button on left
-                    Button(action: { onToggle() }) {
-                        Image(systemName: isActive ? "pause.fill" : "play.fill")
-                            .font(.nnSmallButton)
-                            .foregroundColor(AppColors.accent)
-                            .frame(width: 32, height: 32)
-                            .background(AppColors.infoBg)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-
-            VStack(alignment: layoutDirection == .rightToLeft ? .trailing : .leading, spacing: 6) {
-                Text(item.name)
-                    .font(.headline)
-                    .foregroundColor(AppColors.textPrimary)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                HStack(spacing: 8) {
-                    ProtectionBadge(isHard: item.protection == "hard", isRTL: layoutDirection == .rightToLeft)
-                }
-            }
-            Spacer()
-
-            if item.protection != "hard" {
-                if lang.isArabicEffective { // RTL → button on right
-                    Button(action: { onToggle() }) {
-                        Image(systemName: isActive ? "pause.fill" : "play.fill")
-                            .font(.nnSmallButton)
-                            .foregroundColor(AppColors.accent)
-                            .frame(width: 32, height: 32)
-                            .background(AppColors.infoBg)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
-                    .buttonStyle(.plain)
-                }
-            } else if isActive {
-                Text(layoutDirection == .rightToLeft ? "مفعّلة الآن" : "Active")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundColor(AppColors.infoFg)
-                    .padding(.vertical, 6)
-                    .padding(.horizontal, 10)
-                    .background(AppColors.infoBg)
-                    .cornerRadius(8)
-            }
-        }
-        .padding(.vertical, 16)
-        .padding(.horizontal, 20)
-        .frame(maxWidth: .infinity, alignment: layoutDirection == .rightToLeft ? .trailing : .leading)
-        .background(Color.clear)
-    }
-
-    private func itemsCountText(_ count: Int) -> String {
-        if layoutDirection == .rightToLeft {
-            return "\(arabicDigits(count)) عنصر"
-        } else {
-            return "\(count) items"
-        }
-    }
-
-    private func arabicDigits(_ n: Int) -> String {
-        let formatter = NumberFormatter()
-        formatter.locale = Locale(identifier: "ar")
-        return formatter.string(from: NSNumber(value: n)) ?? "\(n)"
-    }
-
-    private func decodedSlots() -> [Slot] {
-        guard let data = item.scheduleSlots else { return [] }
-        return SchedulePersistence.decode(data).map { Slot(id: $0.id, day: $0.day, fromMinutes: $0.fromMinutes, toMinutes: $0.toMinutes) }
-    }
-
-    private func scheduleSummaryBadged() -> String? {
-        guard item.blockType == "scheduled" else { return nil }
-        let slots = decodedSlots()
-        guard !slots.isEmpty, let summary = scheduleSummary(slots) else { return nil }
-        return summary
-    }
-
-    private func subtitleText() -> String? { /* kept for potential future use */
-        if item.blockType == "forever" {
-            return layoutDirection == .rightToLeft ? "حجب دائم" : "Permanent block"
-        }
-        if item.blockType == "timeLimit" {
-            let minutes = Int(item.durationSeconds / 60)
-            return layoutDirection == .rightToLeft ? "حد يومي \(minutes) دقيقة" : "Daily limit: \(minutes) min"
-        }
-        if item.blockType == "now" && isActive {
-            let end = item.createdAt.addingTimeInterval(TimeInterval(item.durationSeconds))
-            let remaining = Int(max(0, end.timeIntervalSince(Date())))
-            if remaining <= 0 { return nil }
-            return (layoutDirection == .rightToLeft ? "ينتهي خلال " : "Ends in ") + format(remaining)
-        }
-        if item.blockType == "scheduled" {
-            let slots = decodedSlots()
-            if !slots.isEmpty {
-                if let summary = scheduleSummary(slots) { return summary }
-                let cnt = slots.count
-                return layoutDirection == .rightToLeft ? "جدولة: \(cnt) فترات" : "Scheduled: \(cnt) slots"
-            }
-        }
-        return nil
-    }
-
-    private func scheduleSummary(_ slots: [Slot]) -> String? {
-        guard let firstSlot = slots.first else { return nil }
-        let uniqueTimes = Set(slots.map { "\($0.fromMinutes)-\($0.toMinutes)" })
-        guard uniqueTimes.count == 1 else { return nil }
-        let from = firstSlot.fromMinutes
-        let to = firstSlot.toMinutes
-        let days = Array(Set(slots.map { $0.day })).sorted()
-        guard let firstDay = days.first, let lastDay = days.last else { return nil }
-        let daysDesc: String
-        if isContiguous(days) && days.count >= 2 {
-            daysDesc = dayShortName(firstDay) + "–" + dayShortName(lastDay)
-        } else if days.count <= 3 {
-            daysDesc = days.map { dayShortName($0) }.joined(separator: layoutDirection == .rightToLeft ? "، " : ", ")
-        } else {
-            return nil
-        }
-        let time = formatHM(from) + "–" + formatHM(to)
-        return (layoutDirection == .rightToLeft ? "\(daysDesc) \(time)" : "\(daysDesc) \(time)")
-    }
-
-    private func isContiguous(_ days: [Int]) -> Bool {
-        guard days.count >= 2 else { return false }
-        for i in 1..<days.count { if days[i] != days[i-1] + 1 { return false } }
-        return true
-    }
-
-    private func dayShortName(_ d: Int) -> String {
-        if layoutDirection == .rightToLeft {
-            let names = ["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"]
-            return names[(d % 7 + 7) % 7]
-        } else {
-            let names = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
-            return names[(d % 7 + 7) % 7]
-        }
-    }
-
-    private func formatHM(_ minutes: Int) -> String {
-        let h = minutes / 60
-        let m = minutes % 60
-        let s = String(format: "%02d:%02d", h, m)
-        return s
-    }
-
-    private func format(_ seconds: Int) -> String {
-        let d = seconds / 86400
-        let h = (seconds % 86400) / 3600
-        let m = (seconds % 3600) / 60
-        if layoutDirection == .rightToLeft {
-            if d > 0 { return "\(d)ي \(h)س" }
-            if h > 0 { return "\(h)س \(m)د" }
-            return "\(m)د"
-        } else {
-            if d > 0 { return "\(d)d \(h)h" }
-            if h > 0 { return "\(h)h \(m)m" }
-            return "\(m)m"
-        }
-    }
-}
+// (RealListRow removed — was a historic alternate list-row layout from the
+//  pre-v1.3.0 home design. Superseded by ListRowCore + listRow(item:isActive:)
+//  on HomeView, neither of which referenced it.)
 
 private enum BadgeStyle { case neutral, warning, danger }
 
@@ -1408,8 +1235,13 @@ struct ListDetailView: View {
                     pendingPartnerRequestBanner(request: pending)
                 }
 
-                // Emergency unlock — Forever + Hard only (D18)
-                if list.protection == "hard" && list.blockType == "forever" {
+                // Emergency unlock — every Hard Mode list (was Forever-only
+                // pre-v1.4 NoNet-as-gatekeeper redesign). The 7-day countdown
+                // is the same escape-valve we surface in NoNetGatekeeperSheet,
+                // so it should be visible from the detail view too — users
+                // who didn't pick the "wait 7 days" path from the sheet might
+                // change their mind later.
+                if list.protection == "hard" && list.gatekeeperType == "nonet" {
                     emergencyUnlockCard()
                 }
 
@@ -1727,10 +1559,15 @@ struct ListDetailView: View {
             .flatMap { $0.partnerDisplayName }
             ?? (lang.isArabicEffective ? "شريكك" : "your partner")
 
+        // Outgoing-request banner uses a warning palette (amber) so it
+        // visually differs from incoming-request banners on HomeView
+        // (which use the accent/info palette). Same shape, different tone =
+        // "this is your action waiting" vs "this is your partner needing
+        // your action."
         VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.xs) {
             HStack(spacing: NNSpacing.xs) {
                 Image(systemName: "hourglass")
-                    .foregroundColor(AppColors.accent)
+                    .foregroundColor(AppColors.warningFg)
                     .font(.callout)
                 Text(lang.isArabicEffective
                      ? "بانتظار موافقة \(partnerName)"
@@ -1765,11 +1602,11 @@ struct ListDetailView: View {
             .buttonStyle(.plain)
         }
         .padding(NNSpacing.md)
-        .background(AppColors.infoBg)
+        .background(AppColors.warningBg)
         .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
         .overlay(
             RoundedRectangle(cornerRadius: NNRadius.card)
-                .stroke(AppColors.accent.opacity(0.3), lineWidth: NNBorder.hairline)
+                .stroke(AppColors.warningFg.opacity(0.3), lineWidth: NNBorder.hairline)
         )
     }
 
@@ -2170,6 +2007,25 @@ private struct ListRowCore: View {
     /// need a LanguageManager dependency.
     var pendingPartnerLabel: String? = nil
     @Environment(\.layoutDirection) private var layoutDirection
+
+    /// Localized label for the list's blockType — surfaces the difference
+    /// between immediate / scheduled / time-limit / forever lists at a glance
+    /// rather than burying it in the detail view. nil for `now` (default
+    /// case), which doesn't need its own chip.
+    private var typeLabel: (icon: String, text: String)? {
+        let isRTL = layoutDirection == .rightToLeft
+        switch item.blockType {
+        case "scheduled":
+            return ("calendar", isRTL ? "مجدول" : "Scheduled")
+        case "timeLimit":
+            return ("clock.badge", isRTL ? "حد يومي" : "Daily limit")
+        case "forever":
+            return ("infinity", isRTL ? "للأبد" : "Forever")
+        default:
+            return nil
+        }
+    }
+
     var body: some View {
         HStack(alignment: .center) {
             VStack(alignment: layoutDirection == .rightToLeft ? .trailing : .leading, spacing: 6) {
@@ -2180,18 +2036,11 @@ private struct ListRowCore: View {
                     .truncationMode(.tail)
                 HStack(spacing: 8) {
                     ProtectionBadge(isHard: item.protection == "hard", isRTL: layoutDirection == .rightToLeft)
+                    if let type = typeLabel {
+                        chip(icon: type.icon, text: type.text, color: AppColors.textSecondary)
+                    }
                     if let label = pendingPartnerLabel {
-                        HStack(spacing: 4) {
-                            Image(systemName: "hourglass")
-                                .font(.caption2)
-                            Text(label)
-                                .font(.caption.weight(.semibold))
-                        }
-                        .foregroundColor(AppColors.accent)
-                        .padding(.vertical, 3)
-                        .padding(.horizontal, 8)
-                        .background(AppColors.infoBg)
-                        .clipShape(Capsule())
+                        chip(icon: "hourglass", text: label, color: AppColors.accent)
                     }
                 }
             }
@@ -2207,6 +2056,23 @@ private struct ListRowCore: View {
             }
         }
         .padding(.vertical, 16)
+    }
+
+    /// Pill-shape chip used for blockType + pending-partner badges. Background
+    /// uses the color's 0.08 opacity so chips stay quiet against the row.
+    @ViewBuilder
+    private func chip(icon: String, text: String, color: Color) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.caption2)
+            Text(text)
+                .font(.caption.weight(.semibold))
+        }
+        .foregroundColor(color)
+        .padding(.vertical, 3)
+        .padding(.horizontal, 8)
+        .background(color.opacity(0.10))
+        .clipShape(Capsule())
     }
 }
 

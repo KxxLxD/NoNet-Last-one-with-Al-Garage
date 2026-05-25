@@ -200,9 +200,11 @@ struct UpgradeView: View {
         let radioIcon = isSelected ? "checkmark.circle.fill" : "circle"
         Button(action: {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            selectedPlan = planKey
+            withAnimation(.easeInOut(duration: 0.2)) {
+                selectedPlan = planKey
+            }
         }) {
-            HStack(alignment: .center, spacing: NNSpacing.sm) {
+            HStack(spacing: NNSpacing.sm) {
                 Image(systemName: radioIcon)
                     .foregroundColor(isSelected ? AppColors.accent : AppColors.textDisabled)
                     .font(.title3)
@@ -293,14 +295,20 @@ struct UpgradeView: View {
 
     @ViewBuilder
     private var goldenGuarantee: some View {
+        // Title kept as "Golden Guarantee" for brand recognition, but the
+        // visual treatment uses success green now — the green color reads
+        // as "safe / risk-free" universally, where gold can be read as
+        // "premium tier" and confuse the message ("is the refund itself
+        // a paid feature?"). The header copy still says "Golden" so the
+        // brand promise is preserved.
         VStack(alignment: isArabic ? .trailing : .leading, spacing: NNSpacing.xs) {
             HStack(spacing: 8) {
-                Image(systemName: "shield.checkerboard")
+                Image(systemName: "checkmark.shield.fill")
                     .font(.title3.weight(.semibold))
-                    .foregroundColor(AppColors.trophyGold)
+                    .foregroundColor(AppColors.successGreen)
                 Text(isArabic ? "الضمان الذهبي" : "Golden Guarantee")
                     .font(.headline)
-                    .foregroundColor(AppColors.trophyGold)
+                    .foregroundColor(AppColors.successGreen)
                 Spacer(minLength: 0)
             }
             Text(isArabic ? "استرداد كامل بدون أسئلة." : "Full refund, no questions asked.")

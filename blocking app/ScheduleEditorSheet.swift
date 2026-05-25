@@ -93,8 +93,22 @@ struct ScheduleEditorSheet: View {
                                 HStack { Text(dayName(s.day)); Spacer(); Text(timeRangeLabel(s)).foregroundColor(AppColors.textSecondary) }
                             }
                         }
+                        // Swipe-to-delete with an explicit destructive
+                        // action button instead of the bare onDelete handler.
+                        // Adding a slot is multi-step (day + from + to + add),
+                        // so deletion deserves the same visible affordance —
+                        // a single-finger slide can't undo someone's setup
+                        // by mistake.
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                if let idx = working.firstIndex(where: { $0.id == s.id }) {
+                                    working.remove(at: idx)
+                                }
+                            } label: {
+                                Label(isArabic ? "حذف" : "Delete", systemImage: "trash")
+                            }
+                        }
                     }
-                    .onDelete { idx in working.remove(atOffsets: idx) }
                 }
             }
             .scrollContentBackground(.hidden)

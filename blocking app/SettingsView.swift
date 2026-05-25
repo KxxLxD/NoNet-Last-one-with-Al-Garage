@@ -343,14 +343,21 @@ struct LogoutButton: View {
     @AppStorage(AppStorageKeys.selectedTab) private var selectedTab: Int = 0
     
     var body: some View {
+        // Destructive actions read as more intentional with an outline rather
+        // than a solid red fill — the user has to consciously pick the
+        // dangerous option vs. tapping the most-prominent button on screen.
         Button(action: { showConfirm = true }) {
             Text(lang.isArabicEffective ? "تسجيل الخروج" : "Log out")
                 .font(.headline)
                 .frame(maxWidth: .infinity)
                 .frame(height: 48)
-                .foregroundColor(.white)
-                .background(AppColors.alertRed)
-                .cornerRadius(12)
+                .foregroundColor(AppColors.alertRed)
+                .background(Color.clear)
+                .overlay(
+                    RoundedRectangle(cornerRadius: NNRadius.control)
+                        .stroke(AppColors.alertRed, lineWidth: NNBorder.strong)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
         }
         .alert(lang.isArabicEffective ? "تسجيل الخروج؟" : "Log out?", isPresented: $showConfirm) {
             Button(role: .destructive) {

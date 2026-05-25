@@ -82,8 +82,13 @@ struct BlockScreenView: View {
     private func breakButton(total: Int, remain: Int, minutes: Int) -> some View {
         Button(action: {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            withAnimation(.easeOut(duration: 0.5)) { flashBreak = true }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            // Flash on → wait → flash off. Task.sleep gives us cancellation
+            // semantics for free (matters if the view dismisses mid-flash)
+            // and aligns timing more reliably than DispatchQueue.asyncAfter,
+            // which can drift under load.
+            Task { @MainActor in
+                withAnimation(.easeOut(duration: 0.5)) { flashBreak = true }
+                try? await Task.sleep(nanoseconds: 500_000_000)
                 withAnimation(.easeIn(duration: 0.5)) { flashBreak = false }
             }
             onTakeBreak?()
