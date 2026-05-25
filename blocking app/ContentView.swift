@@ -148,6 +148,15 @@ struct ContentView: View {
     ContentView()
 }
 
+/// Three-tab bottom navigation. SwiftUI's native TabView is hidden in favour
+/// of this custom strip so we control:
+///   • Hairline divider visibility (single 0.5pt line on top)
+///   • Accent color matching the design system
+///   • Press-feedback that's subtle (scale + tint) instead of a heavy overlay
+///   • Vertical rhythm — icon stays centered, no .padding(.top, 14) hacks
+/// Safe area: SwiftUI's `safeAreaInset(edge: .bottom)` (used by the parent
+/// ContentView) automatically extends the background to cover the home
+/// indicator, so the view itself doesn't need ignoresSafeArea games.
 struct CustomTabBar: View {
     @Binding var selectedTab: Int
     @EnvironmentObject private var lang: LanguageManager
@@ -156,55 +165,74 @@ struct CustomTabBar: View {
 
     private var items: [Item] {
         [
-            Item(id: 0, title: AppStrings.homeTitle(lang), systemImage: "house"),
-            Item(id: 1, title: lang.isArabicEffective ? "NoNet AI" : "NoNet AI", systemImage: "sparkles"),
-            Item(id: 2, title: AppStrings.settingsTitle(lang), systemImage: "gearshape")
+            Item(id: 0, title: AppStrings.homeTitle(lang), systemImage: "house.fill"),
+            Item(id: 1, title: "NoNet AI", systemImage: "sparkles"),
+            Item(id: 2, title: AppStrings.settingsTitle(lang), systemImage: "gearshape.fill")
         ]
     }
 
-    @State private var flashIndex: Int? = nil
+    @State private var pressedID: Int? = nil
 
     var body: some View {
         VStack(spacing: 0) {
+            // Top hairline — single 0.5pt divider between content and tab bar.
             Rectangle()
-                .fill(AppColors.uiBorder.opacity(0.35))
+                .fill(AppColors.uiBorder.opacity(0.6))
                 .frame(height: 0.5)
-                .edgesIgnoringSafeArea(.bottom)
+
             HStack(spacing: 0) {
                 ForEach(items) { item in
-                    Button(action: {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        withAnimation(.easeOut(duration: 0.2)) { flashIndex = item.id }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                            withAnimation(.easeIn(duration: 0.15)) { flashIndex = nil }
-                        }
-                        withAnimation(.easeOut(duration: 0.15)) { selectedTab = item.id }
-                    }) {
-                        ZStack(alignment: .top) {
-                            VStack(spacing: 4) {
-                                Image(systemName: item.systemImage)
-                                    .symbolRenderingMode(.monochrome)
-                                    .font(.title2)
-                                    .foregroundColor(selectedTab == item.id ? AppColors.accent : AppColors.textSecondary)
-                                    .padding(.top, 14)
-                                Text(item.title)
-                                    .font(.caption.weight(selectedTab == item.id ? .semibold : .regular))
-                                    .foregroundColor(selectedTab == item.id ? AppColors.accent : AppColors.textSecondary)
-                                    .lineLimit(1)
-                            }
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                            if flashIndex == item.id {
-                                AppColors.accent.opacity(0.12)
-                                    .ignoresSafeArea()
-                            }
-                        }
-                    }
-                    .buttonStyle(.plain)
+                    tabButton(for: item)
                 }
             }
-            .frame(height: 60)
+            .frame(height: 56)
             .background(AppColors.uiSurface)
         }
-        .background(AppColors.uiSurface)
+        .background(
+            // Background extends behind the home indicator (safeAreaInset
+            // already handles the inset; this just paints the surface
+            // continuation so the bottom edge doesn't show the page bg).
+            AppColors.uiSurface.ignoresSafeArea(edges: .bottom)
+        )
+    }
+
+    @ViewBuilder
+    private func tabButton(for item: Item) -> some View {
+        let isSelected = selectedTab == item.id
+        let isPressed = pressedID == item.id
+
+        Button(action: {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            withAnimation(.easeOut(duration: 0.12)) { selectedTab = item.id }
+        }) {
+            VStack(spacing: 2) {
+                Image(systemName: item.systemImage)
+                    .symbolRenderingMode(.monochrome)
+                    .font(.system(size: 22, weight: .regular))
+                    .foregroundColor(isSelected ? AppColors.accent : AppColors.textSecondary)
+                    .scaleEffect(isPressed ? 0.92 : 1.0)
+                Text(item.title)
+                    .font(.caption2.weight(isSelected ? .semibold : .regular))
+                    .foregroundColor(isSelected ? AppColors.accent : AppColors.textSecondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        // Custom press tracking — subtle scale on the icon, no overlay flash.
+        // SimultaneousGesture so the button's tap action still fires.
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    withAnimation(.easeOut(duration: 0.1)) { pressedID = item.id }
+                }
+                .onEnded { _ in
+                    withAnimation(.easeIn(duration: 0.15)) { pressedID = nil }
+                }
+        )
+        .accessibilityLabel(item.title)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
