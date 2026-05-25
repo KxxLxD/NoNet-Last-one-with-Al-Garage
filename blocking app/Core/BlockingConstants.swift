@@ -39,5 +39,15 @@ enum BlockingConstants {
     /// (the lock exists *for* that impulse) but bounded so the user is never
     /// permanently held. Matches the patterns Apple Review has accepted in
     /// Cold Turkey and Opal Hard Mode.
-    static let emergencyUnlockDelaySeconds: TimeInterval = 72 * 60 * 60
+    ///
+    /// Now 7 days (was 72h) — reframed as the user-visible "NoNet is your
+    /// gatekeeper" wait path. Surfaced via NoNetGatekeeperSheet rather than
+    /// hidden behind a HomeView hold-press, so the user picks it consciously
+    /// when creating the list.
+    static let emergencyUnlockDelaySeconds: TimeInterval = 7 * 24 * 60 * 60
+
+    /// Minimum character count for the "strong reason" override path in
+    /// NoNetGatekeeperSheet. High enough that an impulsive user can't blow
+    /// through it, low enough that a genuinely motivated user can.
+    static let strongReasonMinCharacters: Int = 200
 }

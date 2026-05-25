@@ -16,6 +16,10 @@ struct HomeView: View {
     // حالة حذف
     @State private var showDeleteConfirm = false
     @State private var listToDelete: ListEntity?
+    /// When non-nil, presents NoNetGatekeeperSheet for the given list. Set
+    /// from deleteList(_:) when the list's gatekeeperType is "nonet" — the
+    /// user must pass the 200-char or 7-day gate before the actual purge runs.
+    @State private var gatekeeperSheetList: ListEntity?
     // حالة خطأ الحفظ
     @State private var saveErrorMessage: String? = nil
     // عرض/إخفاء "قوائم أخرى" — مطوي افتراضياً (DisclosureGroup)
@@ -70,12 +74,27 @@ struct HomeView: View {
     }
 
     /// Delete a list and clean up its UserDefaults-backed companion data (breaks/manual state, family selection, shields).
+    ///
+    /// Routing for Hard-Mode lists depends on the configured gatekeeper:
+    ///   • "nonet" — open NoNetGatekeeperSheet so the user picks the 200-char
+    ///     reason path (immediate) or the 7-day wait path (delayed). The
+    ///     actual purge runs inside `performHardDelete` once the gate is passed.
+    ///   • "partner" — current behavior: refuse + record BreakAttempt. The
+    ///     full approval workflow lands in PR 2.
+    /// Non-Hard lists delete immediately.
     private func deleteList(_ list: ListEntity) {
         if BlockingEngine.shared.isHardLocked(list: list) {
+            if list.gatekeeperType == "nonet" {
+                // Defer to NoNetGatekeeperSheet — the user must satisfy one of
+                // the two gates before performHardDelete runs.
+                gatekeeperSheetList = list
+                return
+            }
+            // gatekeeperType == "partner" → keep the existing behavior until
+            // the full approval workflow ships (PR 2 of this feature).
             saveErrorMessage = lang.isArabicEffective
-                ? "لا يمكن حذف قائمة بوضع صارم حتى انتهاء المدة."
-                : "Can't delete a Hard-Mode list until its duration ends."
-            // Notify the recovery partner (if any) that a delete attempt was made.
+                ? "لا يمكن حذف قائمة بوضع صارم حتى يوافق شريكك."
+                : "Can't delete a Hard-Mode list until your partner approves."
             if let partnership = CloudKitPartnerStore.shared.partnership(for: list.id) {
                 let id = list.id
                 let name = list.name
@@ -91,6 +110,14 @@ struct HomeView: View {
             }
             return
         }
+        performHardDelete(list)
+    }
+
+    /// Actually delete a list — runs the Core Data purge plus all UserDefaults
+    /// companion-data cleanup. Called directly by `deleteList` for non-Hard
+    /// lists, and by the NoNetGatekeeperSheet callback once the user has
+    /// satisfied the 200-char gate.
+    private func performHardDelete(_ list: ListEntity) {
         let id = list.id
         BlockingEngine.shared.purge(listId: id)
         context.delete(list)
@@ -98,6 +125,7 @@ struct HomeView: View {
         case .success:
             BreaksStore.clear(for: id)
             ManualStateStore.clear(for: id)
+            EmergencyUnlockStore.clear(for: id)
         case .failure(let error):
             saveErrorMessage = lang.isArabicEffective
                 ? "تعذّر حذف القائمة: \(error.localizedDescription)"
@@ -412,6 +440,20 @@ struct HomeView: View {
                 Button(lang.isArabicEffective ? "حسناً" : "OK", role: .cancel) { saveErrorMessage = nil }
             } message: {
                 Text(saveErrorMessage ?? "")
+            }
+            .sheet(item: $gatekeeperSheetList) { list in
+                NoNetGatekeeperSheet(
+                    listID: list.id,
+                    listName: list.name,
+                    action: .delete,
+                    onReasonAccepted: { performHardDelete(list) },
+                    onWaitStarted: {
+                        // Force a re-read so the new countdown badge shows up
+                        // on the list card.
+                        refreshTick &+= 1
+                    }
+                )
+                .environmentObject(lang)
             }
             .onAppear {
                 checkPermissions()

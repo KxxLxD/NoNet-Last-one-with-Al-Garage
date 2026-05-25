@@ -64,7 +64,17 @@ final class CoreDataStack {
         list_updatedAt.attributeType = .dateAttributeType
         list_updatedAt.isOptional = false
 
-        listEntity.properties = [list_id, list_name, list_protection, list_blockType, list_durationSeconds, list_scheduleSlots, list_createdAt, list_updatedAt]
+        let list_gatekeeperType = NSAttributeDescription()
+        list_gatekeeperType.name = "gatekeeperType"
+        list_gatekeeperType.attributeType = .stringAttributeType
+        list_gatekeeperType.isOptional = false
+        // Default value — applied to new entities AND to existing rows
+        // that pre-date this attribute on next save (Core Data lightweight
+        // migration is automatic for added non-optional attributes with
+        // a default value).
+        list_gatekeeperType.defaultValue = "nonet"
+
+        listEntity.properties = [list_id, list_name, list_protection, list_blockType, list_durationSeconds, list_scheduleSlots, list_createdAt, list_updatedAt, list_gatekeeperType]
 
         // BlockItemEntity
         let itemEntity = NSEntityDescription()
