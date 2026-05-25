@@ -33,4 +33,11 @@ enum BlockingConstants {
     /// Allowed daily Time-Limit choices, in minutes. After the user has used the
     /// blocked apps/sites for this many minutes in a day, shields apply until midnight.
     static let timeLimitOptions: [Int] = [15, 30, 60, 90, 120]
+
+    /// Delay between requesting an emergency unlock for a Hard + Forever list
+    /// and the lock actually being released. Long enough to break the impulse
+    /// (the lock exists *for* that impulse) but bounded so the user is never
+    /// permanently held. Matches the patterns Apple Review has accepted in
+    /// Cold Turkey and Opal Hard Mode.
+    static let emergencyUnlockDelaySeconds: TimeInterval = 72 * 60 * 60
 }

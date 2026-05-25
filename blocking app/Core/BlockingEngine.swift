@@ -80,11 +80,24 @@ final class BlockingEngine {
     }
 
     /// Convenience helper used by the UI: returns true if the list is locked by Hard Mode and
-    /// the configured duration hasn't elapsed yet. Forever + Hard and TimeLimit + Hard are
-    /// locked indefinitely (no natural end date).
+    /// the configured duration hasn't elapsed yet.
+    ///
+    /// Forever + Hard normally has no natural end. To satisfy Apple Guideline 5.1.1 (user
+    /// control) we honour a matured `EmergencyUnlockStore` request — once the user has waited
+    /// the configured delay (default 72h), the lock releases. The delay is long enough that
+    /// the lock still serves its purpose against impulse, while bounded enough that the user
+    /// is never permanently held.
+    ///
+    /// TimeLimit + Hard also returns true (lock until midnight when the daily window resets),
+    /// but does NOT honour emergency unlock — the daily reset already provides natural escape
+    /// and the time-bounded nature avoids the 5.1.1 concern.
     func isHardLocked(list: ListEntity) -> Bool {
         guard list.protection == "hard" else { return false }
-        if list.blockType == "forever" || list.blockType == "timeLimit" { return true }
+        if list.blockType == "forever" {
+            if EmergencyUnlockStore.isGranted(for: list.id) { return false }
+            return true
+        }
+        if list.blockType == "timeLimit" { return true }
         guard list.blockType == "now" else { return false }
         let end = list.createdAt.addingTimeInterval(TimeInterval(list.durationSeconds))
         return Date() < end
@@ -102,6 +115,7 @@ final class BlockingEngine {
         // but stopMonitoring tolerates unknown names.
         center.stopMonitoring([activityName(for: id), limitActivityName(for: id)])
         FamilySelectionStore.clear(for: id)
+        EmergencyUnlockStore.clear(for: id)
     }
 
     // MARK: - Private helpers
