@@ -59,95 +59,112 @@ struct BlockItemsEditorView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                // Order intentionally goes fast → specific:
-                //   1. Categories     — broadest, fastest selection (8 toggles)
-                //   2. Quick Apps     — popular shortcuts (one flat list, no
-                //                       Recommended/Others split)
-                //   3. Specific Apps  — Family Activity Picker for fine control
-                //   4. Websites       — manual URL entry (slowest path)
-                // Previous order had Websites first and Categories last,
-                // which forced the most tedious path on every user.
-                categoriesSection
-                quickAppsSection
-                specificAppsSection
-                websitesSection
+            editorForm
+        }
+    }
+
+    // Splitting the form into a property keeps `body` short enough for the
+    // Swift type-checker; chaining toolbar + 5 onChange + sheet + 2 alerts on
+    // a single inline expression broke the inference budget.
+    private var editorForm: some View {
+        Form {
+            // Order intentionally goes fast → specific:
+            //   1. Categories     — broadest, fastest selection (8 toggles)
+            //   2. Quick Apps     — popular shortcuts (one flat list, no
+            //                       Recommended/Others split)
+            //   3. Specific Apps  — Family Activity Picker for fine control
+            //   4. Websites       — manual URL entry (slowest path)
+            // Previous order had Websites first and Categories last,
+            // which forced the most tedious path on every user.
+            categoriesSection
+            quickAppsSection
+            specificAppsSection
+            websitesSection
+        }
+        .scrollContentBackground(.hidden)
+        .background(AppColors.uiBackground)
+        .navigationTitle(lang.isArabicEffective ? "عناصر الحجب" : "Block Items")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar { toolbarContent }
+        .onAppear(perform: handleOnAppear)
+        .onChange(of: selectedCategories) { _ in hasUnsavedChanges = true }
+        .onChange(of: quickSelected)      { _ in hasUnsavedChanges = true }
+        .onChange(of: draft.websites)     { _ in hasUnsavedChanges = true }
+        .onChange(of: draft.apps)         { _ in hasUnsavedChanges = true }
+        .onChange(of: familySelection)    { _ in handleFamilySelectionChange() }
+        .sheet(isPresented: $showAppPicker) { pickerSheet }
+        .alert(
+            lang.isArabicEffective ? "تجاهل التعديلات؟" : "Discard changes?",
+            isPresented: $showDiscardAlert
+        ) {
+            Button(lang.isArabicEffective ? "تجاهلها" : "Discard", role: .destructive) { dismiss() }
+            Button(lang.isArabicEffective ? "متابعة التعديل" : "Keep editing", role: .cancel) {}
+        } message: {
+            Text(lang.isArabicEffective ? "ستضيع تعديلاتك ولن يمكن استرجاعها." : "Your changes will be lost and can't be recovered.")
+        }
+        .alert(
+            lang.isArabicEffective ? "يحتاج إذن Screen Time" : "Screen Time permission needed",
+            isPresented: $showPermissionAlert
+        ) {
+            Button(lang.isArabicEffective ? "فتح الإعدادات" : "Open Settings") {
+                PermissionsManager.shared.openAppSettings()
             }
-            .scrollContentBackground(.hidden)
-            .background(AppColors.uiBackground)
-            .navigationTitle(lang.isArabicEffective ? "عناصر الحجب" : "Block Items")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(lang.isArabicEffective ? "إلغاء" : "Cancel") {
-                        if hasUnsavedChanges {
-                            showDiscardAlert = true
-                        } else {
-                            dismiss()
-                        }
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(lang.isArabicEffective ? "حفظ" : "Save") { saveAndDismiss() }
-                        .disabled(!hasAtLeastOneItem())
-                }
-            }
-            .onAppear {
-                selectedCategories = Set(draft.categories.map { $0.displayName ?? $0.value })
-                // Reset the unsaved-changes flag every time the editor opens —
-                // the initial state IS the saved state.
-                hasUnsavedChanges = false
-            }
-            .onChange(of: selectedCategories) { _ in hasUnsavedChanges = true }
-            .onChange(of: quickSelected)      { _ in hasUnsavedChanges = true }
-            .onChange(of: draft.websites)     { _ in hasUnsavedChanges = true }
-            .onChange(of: draft.apps)         { _ in hasUnsavedChanges = true }
-            .sheet(isPresented: $showAppPicker) {
-                if #available(iOS 16.0, *) {
-                    PickerSheetWrapper(
-                        selection: $familySelection,
-                        title: lang.isArabicEffective ? "اختر الأنشطة" : "Choose Activities",
-                        onDone: { dismissPickerAndApply() },
-                        onCancel: { showAppPicker = false }
-                    )
-                    .environmentObject(lang)
-                }
-            }
-            .alert(
-                lang.isArabicEffective ? "تجاهل التعديلات؟" : "Discard changes?",
-                isPresented: $showDiscardAlert
-            ) {
-                Button(lang.isArabicEffective ? "تجاهلها" : "Discard", role: .destructive) { dismiss() }
-                Button(lang.isArabicEffective ? "متابعة التعديل" : "Keep editing", role: .cancel) {}
-            } message: {
-                Text(lang.isArabicEffective ? "ستضيع تعديلاتك ولن يمكن استرجاعها." : "Your changes will be lost and can't be recovered.")
-            }
-            .alert(
-                lang.isArabicEffective ? "يحتاج إذن Screen Time" : "Screen Time permission needed",
-                isPresented: $showPermissionAlert
-            ) {
-                Button(lang.isArabicEffective ? "فتح الإعدادات" : "Open Settings") {
-                    PermissionsManager.shared.openAppSettings()
-                }
-                Button(lang.isArabicEffective ? "لاحقاً" : "Later", role: .cancel) {}
-            } message: {
-                Text(lang.isArabicEffective
-                    ? "لاختيار التطبيقات للحجب، فعّل Screen Time من الإعدادات > Screen Time. NoNet يعمل محلياً على جهازك فقط."
-                    : "To pick apps to block, enable Screen Time in Settings > Screen Time. NoNet runs locally on your device only.")
-            }
-            .onChange(of: familySelection) { _ in
-                if #available(iOS 16.0, *) {
-                    let selectedCount = familySelection.applicationTokens.count
-                    // Use half-open `..<` (empty when count is 0) instead of
-                    // closed `1...count` (which crashes when count is 0).
-                    let newApps: [DraftBlockItem] = (0..<selectedCount).map { idx in
-                        let name = lang.isArabicEffective ? "تطبيق محدد #\(idx + 1)" : "Selected App #\(idx + 1)"
-                        let value = UUID().uuidString
-                        return DraftBlockItem(kind: .app, value: value, displayName: name)
-                    }
-                    draft.apps = newApps
+            Button(lang.isArabicEffective ? "لاحقاً" : "Later", role: .cancel) {}
+        } message: {
+            Text(lang.isArabicEffective
+                ? "لاختيار التطبيقات للحجب، فعّل Screen Time من الإعدادات > Screen Time. NoNet يعمل محلياً على جهازك فقط."
+                : "To pick apps to block, enable Screen Time in Settings > Screen Time. NoNet runs locally on your device only.")
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .cancellationAction) {
+            Button(lang.isArabicEffective ? "إلغاء" : "Cancel") {
+                if hasUnsavedChanges {
+                    showDiscardAlert = true
+                } else {
+                    dismiss()
                 }
             }
+        }
+        ToolbarItem(placement: .confirmationAction) {
+            Button(lang.isArabicEffective ? "حفظ" : "Save") { saveAndDismiss() }
+                .disabled(!hasAtLeastOneItem())
+        }
+    }
+
+    @ViewBuilder
+    private var pickerSheet: some View {
+        if #available(iOS 16.0, *) {
+            PickerSheetWrapper(
+                selection: $familySelection,
+                title: lang.isArabicEffective ? "اختر الأنشطة" : "Choose Activities",
+                onDone: { dismissPickerAndApply() },
+                onCancel: { showAppPicker = false }
+            )
+            .environmentObject(lang)
+        }
+    }
+
+    private func handleOnAppear() {
+        selectedCategories = Set(draft.categories.map { $0.displayName ?? $0.value })
+        // Reset the unsaved-changes flag every time the editor opens —
+        // the initial state IS the saved state.
+        hasUnsavedChanges = false
+    }
+
+    private func handleFamilySelectionChange() {
+        if #available(iOS 16.0, *) {
+            let selectedCount = familySelection.applicationTokens.count
+            // Use half-open `..<` (empty when count is 0) instead of
+            // closed `1...count` (which crashes when count is 0).
+            let newApps: [DraftBlockItem] = (0..<selectedCount).map { idx in
+                let name = lang.isArabicEffective ? "تطبيق محدد #\(idx + 1)" : "Selected App #\(idx + 1)"
+                let value = UUID().uuidString
+                return DraftBlockItem(kind: .app, value: value, displayName: name)
+            }
+            draft.apps = newApps
         }
     }
 
