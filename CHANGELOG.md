@@ -7,6 +7,62 @@
 
 ## [Unreleased]
 
+## [1.3.0] — 2026-05-25
+
+### الإصدار الرابع — Home Page أهدأ + شريك التعافي صار جزء من إنشاء القائمة
+
+#### المضاف (Added)
+
+- **خطوة شريك التعافي داخل CreateListSheet** — لمّا تختار الوضع الصارم،
+  تظهر بطاقة "شريك التعافي" تلقائياً تحت بطاقة الحماية، فيها ثلاث
+  خيارات: "بدون شريك"، اختيار شريك مقبول من الشراكات الموجودة، أو
+  إرسال دعوة لشريك جديد. الدعوة الجديدة تستخدم CKShare وتُسلَّم عبر
+  iMessage / Mail / AirDrop / نسخ الرابط — نفس آلية HomeView لكن مدمجة
+  في تدفق الإنشاء كما كان مخطّطاً في `docs/PARTNER_FEATURE_DESIGN_AR.md`
+  منذ إصدار 1.1.0.
+- **تذكير بعد الحفظ** — لو حفظت قائمة بوضع صارم بدون اختيار شريك، يظهر
+  sheet يقترح إضافة شريك تعافي. خياران: "أضف شريكاً" (يكمل نفس تدفق
+  الدعوة)، أو "لاحقاً" (الشراكة تظل ممكنة من تفاصيل القائمة).
+- **`CloudKitPartnerStore.attachPartnership(_:toList:)`** — دالة جديدة
+  لإلحاق قائمة جديدة بشراكة موجودة (`associatedListIDs`). تجرّب
+  privateDB أوّلاً للمالك، وتسقط لـ sharedDB للمدعوّ. تتعامل مع
+  double-tap بـ dedup، وتُحدّث الـ cache المحلّي بعد النجاح.
+
+#### المُعَدَّل (Changed)
+
+- **HomeView أُعيد تصميمه بالكامل لتقليل الحشو** — كان المستخدم بثلاث
+  قوائم يحتاج 1,134pt من السكرول (شاشتين كاملتين) للوصول للأسفل على
+  iPhone SE. التغييرات:
+  - الـ Hero (شعار 96×96 + عنوان 28pt + شرح) ↔ مُزال. يظهر اسم
+    المستخدم الآن في navigationTitle بشكل مدمج: "أهلاً، [الاسم]".
+  - زر مشاركة التقدّم نُقل من زرّ inline 44pt إلى أيقونة في الـ toolbar
+    (`square.and.arrow.up`)، ويظهر فقط لمّا تكون فيه قائمة على الأقل.
+  - الـ Stats Row (SavedCycle + Level + Challenges، 112pt دائماً) ↔
+    استُبدل بسطر footer دقيق يعرض "X قائمة نشطة الآن"، يظهر فقط لمّا
+    `activeLists.count > 0` (لا "Level 1" بدون داتا).
+  - البنرات (iCloud + Monitor) ↔ دُمجت في `alertsStrip` يعرض **بنر واحد
+    فقط** بترتيب أولويّة (Permissions → iCloud → Monitor)، بنمط slim
+    44pt يطابق بنر الأذونات الموجود.
+  - قائمة الـ Lists ↔ كانت container واحد 430pt+؛ الآن مفصول: "النشطة
+    الآن" كبطاقة مستقلّة، و"قوائم أخرى" داخل `DisclosureGroup` مطوي
+    افتراضياً (يوفّر ~180pt على الـ first paint).
+  - المسافة بين الـ sections: 24pt → 16pt (`NNSpacing.md`). مع تقليل
+    عدد الـ blocks، الـ rhythm الجديد طبيعي ولا يحسّ المستخدم بفجوات.
+- **`AppStrings` تحت `@MainActor`** — متابعة لتعليم `LanguageManager`
+  بـ `@MainActor` في v1.2.0؛ هذه الدوال تقرأ `lang.isArabicEffective`
+  وتحتاج نفس actor isolation تحت الـ strict concurrency.
+
+#### المُصلَح (Fixed)
+
+- **Crash عند إلغاء اختيار جميع التطبيقات في FamilyActivityPicker** —
+  `BlockItemsEditorView.swift:302` كان يستخدم `for idx in 1...selectedCount`
+  (closed range). لمّا `selectedCount == 0` كان يصير `1...0` ويفجّر بـ
+  "Range requires lowerBound <= upperBound". تحوّل إلى half-open range
+  `(0..<selectedCount).map { ... }` — `0..<0` empty range آمن.
+- **Build error: `Cannot find 'gold' in scope`** — في `UpgradeView.swift`
+  سطرين 277-278 كانا يشيران لمتغيّر `gold` محلي تم حذفه سابقاً.
+  استُبدل بـ `AppColors.trophyGold` (الـ token الموحَّد).
+
 ## [1.2.0] — 2026-05-25
 
 ### الإصدار الثالث — نظام تصميم موحَّد + موثوقيّة + ميزات تجربة جديدة
