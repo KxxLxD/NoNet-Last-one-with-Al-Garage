@@ -354,73 +354,25 @@ struct CreateListSheet: View {
 
     private var contentView: some View {
         List {
+            // ─── Section 1: Basics ─────────────────────────────────
             nameCard()
 
-            // Add items Card
-            Section(header: HStack(spacing: 8) {
-                Image(systemName: "square.and.pencil")
-                    .font(.nnCardBody)
-                    .foregroundColor(AppColors.accent)
-                Text(lang.isArabicEffective ? "إنشاء قائمة الحجب" : "Create blocking list")
-                    .font(.nnCardTitle)
-            }) {
-                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 16) {
-                    if let suggestion = onboardingSuggestionText() {
-                        HStack(alignment: .top, spacing: 10) {
-                            Image(systemName: "sparkles")
-                                .foregroundColor(AppColors.accent)
-                                .font(.body)
-                            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 4) {
-                                Text(lang.isArabicEffective ? "اقتراحات بناءً على تفضيلاتك" : "Based on your preferences")
-                                    .font(.footnote.weight(.semibold))
-                                    .foregroundColor(AppColors.accent)
-                                Text(suggestion)
-                                    .font(.footnote)
-                                    .foregroundColor(AppColors.textSecondary)
-                                    .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
-                            }
-                            Spacer(minLength: 0)
-                        }
-                        .padding(12)
-                        .background(AppColors.infoBg)
-                        .cornerRadius(12)
-                    }
+            // ─── Section 2: What to block ──────────────────────────
+            // (Single card — was 4 nested cards before: outer "Create
+            //  blocking list" wrapper + 3 sub-cards for websites/apps/
+            //  categories. The outer wrapper duplicated the nav title.)
+            whatToBlockCard()
 
-                    Button(action: { openEditor() }) {
-                        Text(lang.isArabicEffective ? "أضف عناصر الحجب" : "Add items to block")
-                            .font(.subheadline.weight(.semibold))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 44)
-                            .background(AppColors.accent)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
-                    }
-                    .buttonStyle(.plain)
-
-                    websitesListCard()
-                    appsListCard()
-                    categoriesListCard()
-
-        if draft.websites.isEmpty && draft.apps.isEmpty && draft.categories.isEmpty {
-                        Text(lang.isArabicEffective ? "أضف عنصراً واحداً على الأقل" : "Add at least one item")
-                            .font(.footnote)
-                            .foregroundColor(AppColors.textSecondary)
-                    }
-                }
-                .padding(20)
-                .background(AppColors.uiSurface)
-                .cornerRadius(20)
-                .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
-            }
-            .listRowBackground(Color.clear)
-
+            // ─── Section 3: When ───────────────────────────────────
             timeToBlockCard()
-
             if blockType == "now" { durationCard() }
             if blockType == "timeLimit" { timeLimitCard() }
 
+            // ─── Section 4: Protection ─────────────────────────────
             protectionCard()
-            partnerCard()
+            partnerCard() // appears only when protection == "hard"
+
+            // ─── Section 5: Breaks ─────────────────────────────────
             breaksCard()
         }
         .scrollContentBackground(.hidden)
@@ -428,6 +380,132 @@ struct CreateListSheet: View {
         .navigationTitle(lang.isArabicEffective ? "إنشاء قائمة" : "Create List")
         .listStyle(.insetGrouped)
         .padding(.bottom, 120)
+    }
+
+    /// "What to block" — replaces the previous nested-card structure.
+    /// One section with: optional suggestion banner → "Add items" CTA →
+    /// flat selected-items list grouped by type (chips). Eliminates the
+    /// three sub-cards (websitesListCard, appsListCard, categoriesListCard)
+    /// in favour of a single readable surface.
+    private func whatToBlockCard() -> some View {
+        Section(header: HStack(spacing: 8) {
+            Image(systemName: "square.and.pencil")
+                .font(.nnCardBody)
+                .foregroundColor(AppColors.accent)
+            Text(lang.isArabicEffective ? "ما الذي تريد حجبه؟" : "What to block")
+                .font(.nnCardTitle)
+        }) {
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.md) {
+                if let suggestion = onboardingSuggestionText() {
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: "sparkles")
+                            .foregroundColor(AppColors.accent)
+                            .font(.body)
+                        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 4) {
+                            Text(lang.isArabicEffective ? "اقتراحات بناءً على تفضيلاتك" : "Based on your preferences")
+                                .font(.footnote.weight(.semibold))
+                                .foregroundColor(AppColors.accent)
+                            Text(suggestion)
+                                .font(.footnote)
+                                .foregroundColor(AppColors.textSecondary)
+                                .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .padding(12)
+                    .background(AppColors.infoBg)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+
+                Button(action: { openEditor() }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "plus.circle.fill")
+                        Text(draft.websites.isEmpty && draft.apps.isEmpty && draft.categories.isEmpty
+                             ? (lang.isArabicEffective ? "أضف عناصر الحجب" : "Add items to block")
+                             : (lang.isArabicEffective ? "تعديل العناصر" : "Edit items"))
+                    }
+                    .font(.subheadline.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 44)
+                    .background(AppColors.accent)
+                    .foregroundColor(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+
+                if draft.websites.isEmpty && draft.apps.isEmpty && draft.categories.isEmpty {
+                    Text(lang.isArabicEffective ? "أضف عنصراً واحداً على الأقل" : "Add at least one item")
+                        .font(.footnote)
+                        .foregroundColor(AppColors.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.top, NNSpacing.xs)
+                } else {
+                    selectedItemsSummary()
+                }
+            }
+            .padding(NNSpacing.md)
+            .background(AppColors.uiSurface)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(AppColors.uiBorder, lineWidth: 0.5))
+        }
+        .listRowBackground(Color.clear)
+    }
+
+    /// Replaces the three separate sub-cards (websites/apps/categories)
+    /// with a single compact summary: type chips with counts + a flat
+    /// list of selected items. Trusts SwiftUI's RTL handling — no manual
+    /// `if isArabic { Spacer; Text } else { Text; Spacer }` hacks.
+    @ViewBuilder
+    private func selectedItemsSummary() -> some View {
+        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.xs) {
+            HStack(spacing: NNSpacing.xs) {
+                if draft.websites.count > 0 { itemTypeChip(icon: "globe", count: draft.websites.count, label: lang.isArabicEffective ? "موقع" : "site") }
+                if draft.apps.count > 0 { itemTypeChip(icon: "app.fill", count: draft.apps.count, label: lang.isArabicEffective ? "تطبيق" : "app") }
+                if draft.categories.count > 0 { itemTypeChip(icon: "square.grid.2x2.fill", count: draft.categories.count, label: lang.isArabicEffective ? "فئة" : "category") }
+                Spacer(minLength: 0)
+            }
+            ForEach(allSelectedItems, id: \.id) { item in
+                HStack(spacing: 8) {
+                    Image(systemName: iconFor(kind: item.kind))
+                        .foregroundColor(AppColors.textSecondary)
+                        .font(.caption)
+                    Text(item.displayName ?? item.value)
+                        .font(.footnote)
+                        .foregroundColor(AppColors.textPrimary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                    Spacer(minLength: 0)
+                }
+                .padding(.vertical, 4)
+            }
+        }
+    }
+
+    /// All selected items flattened into one array for the summary list.
+    private var allSelectedItems: [DraftBlockItem] {
+        draft.websites + draft.apps + draft.categories
+    }
+
+    private func iconFor(kind: DraftBlockItem.Kind) -> String {
+        switch kind {
+        case .website: return "globe"
+        case .app: return "app.fill"
+        case .category: return "square.grid.2x2.fill"
+        }
+    }
+
+    @ViewBuilder
+    private func itemTypeChip(icon: String, count: Int, label: String) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon).font(.caption2)
+            Text("\(count)").font(.caption.weight(.semibold)).monospacedDigit()
+            Text(label).font(.caption)
+        }
+        .foregroundColor(AppColors.accent)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(AppColors.infoBg)
+        .clipShape(Capsule())
     }
 
     private func nameCard() -> some View {
@@ -485,34 +563,31 @@ struct CreateListSheet: View {
                     }
                 }
 
+                // Forever-block notice — kept inline because it's tightly
+                // coupled to the picker choice. Reduced padding + lighter
+                // background tint so it reads as a callout, not a panic alert.
                 if blockType == "forever" {
-                    VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 8) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(AppColors.alertRed)
-                            Text(lang.isArabicEffective ? "حجب دائم — لا نهاية" : "Permanent block — no end")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundColor(AppColors.alertRed)
-                        }
-                        Text(lang.isArabicEffective
-                             ? "يبقى الحجب فعالاً إلى أن تحذف القائمة. ينصح به للمحتوى الإباحي وتطبيقات القمار."
-                             : "Block stays active until you delete the list. Recommended for adult content and gambling apps.")
+                    HStack(alignment: .top, spacing: NNSpacing.xs) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(AppColors.alertRed)
                             .font(.footnote)
-                            .foregroundColor(AppColors.textSecondary)
-                            .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
-                        if protection == "hard" {
-                            Text(lang.isArabicEffective
-                                 ? "⚠️ مع الوضع الصارم لا يمكن حذف القائمة إلا عبر الدعم."
-                                 : "⚠️ With Hard Mode you cannot delete this list except via support.")
+                        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 2) {
+                            Text(lang.isArabicEffective ? "حجب دائم — لا نهاية" : "Permanent block — no end")
                                 .font(.footnote.weight(.semibold))
                                 .foregroundColor(AppColors.alertRed)
+                            Text(lang.isArabicEffective
+                                 ? "يبقى الحجب فعّالاً حتى تحذف القائمة. مع الوضع الصارم لا يمكن الحذف."
+                                 : "Stays active until you delete the list. With Hard Mode, deletion is blocked.")
+                                .font(.caption)
+                                .foregroundColor(AppColors.textSecondary)
                                 .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
                         }
+                        Spacer(minLength: 0)
                     }
-                    .padding(12)
+                    .padding(NNSpacing.sm)
                     .background(AppColors.alertRed.opacity(0.08))
-                    .cornerRadius(12)
-                    .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppColors.alertRed.opacity(0.25), lineWidth: 0.5))
                 }
 
                 if !isPremium {
@@ -569,26 +644,17 @@ struct CreateListSheet: View {
             Text(lang.isArabicEffective ? "المدة" : "Duration")
                 .font(.nnCardTitle)
         }) {
-            VStack(alignment: .center, spacing: 12) {
-                HStack(alignment: .top, spacing: 16) {
-                    VStack(alignment: .center, spacing: 8) {
-                        Text(lang.isArabicEffective ? "أيام" : "Days").font(.subheadline)
-                        Picker("Days", selection: $days) { ForEach(0...360, id: \.self) { Text("\($0)") } }
-                            .pickerStyle(.wheel)
-                            .frame(width: 100, height: 140)
-                    }
-                    VStack(alignment: .center, spacing: 8) {
-                        Text(lang.isArabicEffective ? "ساعات" : "Hours").font(.subheadline)
-                        Picker("Hours", selection: $hours) { ForEach(0...23, id: \.self) { Text("\($0)") } }
-                            .pickerStyle(.wheel)
-                            .frame(width: 100, height: 140)
-                    }
-                    VStack(alignment: .center, spacing: 8) {
-                        Text(lang.isArabicEffective ? "دقائق" : "Minutes").font(.subheadline)
-                        Picker("Minutes", selection: $minutes) { ForEach(minuteOptions, id: \.self) { Text("\($0)") } }
-                            .pickerStyle(.wheel)
-                            .frame(width: 100, height: 140)
-                    }
+            VStack(alignment: .center, spacing: NNSpacing.sm) {
+                // Three compact wheels — reduced from 140pt to 110pt height
+                // and labels moved beside the pickers so total card height
+                // shrinks from ~190pt to ~150pt on iPhone SE.
+                HStack(alignment: .center, spacing: NNSpacing.sm) {
+                    durationWheelColumn(label: lang.isArabicEffective ? "أيام" : "Days",
+                                        binding: $days, range: 0...360)
+                    durationWheelColumn(label: lang.isArabicEffective ? "ساعات" : "Hours",
+                                        binding: $hours, range: 0...23)
+                    durationWheelColumn(label: lang.isArabicEffective ? "دقائق" : "Min",
+                                        binding: $minutes, values: minuteOptions)
                 }
                 Text(lang.isArabicEffective ? "الحد الأدنى 5 دقائق." : "Minimum duration is 5 minutes.")
                     .font(.footnote)
@@ -606,6 +672,37 @@ struct CreateListSheet: View {
             .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
         }
         .listRowBackground(Color.clear)
+    }
+
+    /// Single column of the duration picker (label + compact wheel).
+    /// Two overloads: contiguous Int range OR custom values array (used for
+    /// the minutes column which steps by 5).
+    @ViewBuilder
+    private func durationWheelColumn(label: String, binding: Binding<Int>, range: ClosedRange<Int>) -> some View {
+        VStack(alignment: .center, spacing: 4) {
+            Text(label).font(.caption).foregroundColor(AppColors.textSecondary)
+            Picker(label, selection: binding) {
+                ForEach(Array(range), id: \.self) { Text("\($0)").monospacedDigit() }
+            }
+            .pickerStyle(.wheel)
+            .frame(maxWidth: .infinity)
+            .frame(height: 110)
+            .clipped()
+        }
+    }
+
+    @ViewBuilder
+    private func durationWheelColumn(label: String, binding: Binding<Int>, values: [Int]) -> some View {
+        VStack(alignment: .center, spacing: 4) {
+            Text(label).font(.caption).foregroundColor(AppColors.textSecondary)
+            Picker(label, selection: binding) {
+                ForEach(values, id: \.self) { Text("\($0)").monospacedDigit() }
+            }
+            .pickerStyle(.wheel)
+            .frame(maxWidth: .infinity)
+            .frame(height: 110)
+            .clipped()
+        }
     }
 
     private func timeLimitCard() -> some View {
@@ -809,9 +906,12 @@ struct CreateListSheet: View {
                     Text(lang.isArabicEffective ? "العدد" : "Count")
                         .font(.footnote)
                         .foregroundColor(AppColors.textSecondary)
-                    Picker("Breaks", selection: $breaksCount) { ForEach(0...5, id: \.self) { Text("\($0)") } }
-                        .pickerStyle(.wheel)
-                        .frame(height: 120)
+                    // Range 0-5 fits a segmented picker perfectly — wheel
+                    // was overkill for six discrete values.
+                    Picker("Breaks", selection: $breaksCount) {
+                        ForEach(0...5, id: \.self) { Text("\($0)").tag($0) }
+                    }
+                    .pickerStyle(.segmented)
                 }
                 VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 6) {
                     Text(lang.isArabicEffective ? "مدة كل استراحة" : "Duration of each break")
@@ -839,142 +939,7 @@ struct CreateListSheet: View {
         .listRowBackground(Color.clear)
     }
     
-    private func websitesListCard() -> some View {
-        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                Image(systemName: "globe")
-                    .font(.nnCardBody)
-                    .foregroundColor(AppColors.accent)
-                Text(lang.isArabicEffective ? "مواقع الويب" : "Websites")
-                    .font(.subheadline.weight(.semibold))
-                Text("(\(draft.websites.count))")
-                    .font(.footnote)
-                    .foregroundColor(AppColors.textSecondary)
-            }
-            .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
-
-            if draft.websites.isEmpty {
-                Text(lang.isArabicEffective ? "لا توجد مواقع بعد" : "No websites yet")
-                    .font(.footnote)
-                    .foregroundColor(AppColors.textSecondary)
-                    .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
-            } else {
-                ForEach(Array(draft.websites.enumerated()), id: \.element.id) { idx, item in
-                    VStack(spacing: 0) {
-                        if idx > 0 { SoftDivider(width: 280, opacity: 0.7) }
-                        HStack {
-                            if lang.isArabicEffective {
-                                        Spacer()
-                                Text(item.displayName ?? item.value)
-                                    .lineLimit(1)
-                                    .truncationMode(.tail)
-                                    } else {
-                                Text(item.displayName ?? item.value)
-                                    .lineLimit(1)
-                                    .truncationMode(.tail)
-                                        Spacer()
-                            }
-                        }
-                        .padding(.vertical, 4)
-                        .foregroundColor(AppColors.textPrimary)
-                    }
-                }
-            }
-        }
-    }
-
-    private func appsListCard() -> some View {
-        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                Image(systemName: "app.fill")
-                    .font(.nnCardBody)
-                    .foregroundColor(AppColors.accent)
-                Text(lang.isArabicEffective ? "التطبيقات" : "Apps")
-                    .font(.subheadline.weight(.semibold))
-                Text("(\(draft.apps.count))")
-                                                .font(.footnote)
-                    .foregroundColor(AppColors.textSecondary)
-                                        }
-            .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
-
-            if draft.apps.isEmpty {
-                Text(lang.isArabicEffective ? "لا توجد تطبيقات بعد" : "No apps yet")
-                    .font(.footnote)
-                    .foregroundColor(AppColors.textSecondary)
-                    .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
-            } else {
-                ForEach(Array(draft.apps.enumerated()), id: \.element.id) { idx, item in
-                    VStack(spacing: 0) {
-                        if idx > 0 { SoftDivider(width: 280, opacity: 0.7) }
-                        HStack {
-                            if lang.isArabicEffective {
-                                Spacer()
-                                Text(item.displayName ?? item.value)
-                                    .lineLimit(1)
-                                    .truncationMode(.tail)
-                            } else {
-                                Text(item.displayName ?? item.value)
-                                    .lineLimit(1)
-                                    .truncationMode(.tail)
-                                Spacer()
-                            }
-                        }
-                        .padding(.vertical, 4)
-                        .foregroundColor(AppColors.textPrimary)
-                    }
-                }
-            }
-        }
-    }
-
-    private func categoriesListCard() -> some View {
-        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                Image(systemName: "square.grid.2x2.fill")
-                    .font(.nnCardBody)
-                    .foregroundColor(AppColors.accent)
-                Text(lang.isArabicEffective ? "الفئات" : "Categories")
-                    .font(.subheadline.weight(.semibold))
-                Text("(\(draft.categories.count))")
-                    .font(.footnote)
-                    .foregroundColor(AppColors.textSecondary)
-            }
-            .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
-
-            if draft.categories.isEmpty {
-                Text(lang.isArabicEffective ? "لا توجد فئات بعد" : "No categories yet")
-                    .font(.footnote)
-                    .foregroundColor(AppColors.textSecondary)
-                    .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
-            } else {
-                ForEach(Array(draft.categories.enumerated()), id: \.element.id) { idx, item in
-                    VStack(spacing: 0) {
-                        if idx > 0 { SoftDivider(width: 280, opacity: 0.7) }
-                        HStack {
-                            if lang.isArabicEffective {
-                                Spacer()
-                                Text(item.displayName ?? item.value)
-                                    .lineLimit(1)
-                                    .truncationMode(.tail)
-        } else {
-                                Text(item.displayName ?? item.value)
-                                    .lineLimit(1)
-                                    .truncationMode(.tail)
-                                Spacer()
-        }
-    }
-                        .padding(.vertical, 4)
-                        .foregroundColor(AppColors.textPrimary)
-                    }
-                }
-            }
-        }
-    }
-
     // Logic helpers
-    private var itemsCountSummary: String {
-        draft.websites.count + draft.apps.count + draft.categories.count > 0 ? "ok" : "empty"
-    }
     private func openEditor() { draft.name = name; showingEditor = true }
 
     /// Build a localized list of categories+apps the user selected during onboarding,
