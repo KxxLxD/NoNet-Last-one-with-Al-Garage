@@ -298,11 +298,15 @@ struct BlockItemsEditorView: View {
             .onChange(of: familySelection) { _ in
                 if #available(iOS 16.0, *) {
                     let selectedCount = familySelection.applicationTokens.count
-                    var newApps: [DraftBlockItem] = []
-                    for idx in 1...selectedCount {
-                        let name = lang.isArabicEffective ? "تطبيق محدد #\(idx)" : "Selected App #\(idx)"
+                    // Use half-open `..<` (empty when count is 0) instead of closed
+                    // `1...count` (which crashes when count is 0). The previous
+                    // `1...selectedCount` crashed with "Range requires
+                    // lowerBound <= upperBound" whenever the user deselected every
+                    // app in the FamilyActivityPicker.
+                    let newApps: [DraftBlockItem] = (0..<selectedCount).map { idx in
+                        let name = lang.isArabicEffective ? "تطبيق محدد #\(idx + 1)" : "Selected App #\(idx + 1)"
                         let value = UUID().uuidString
-                        newApps.append(DraftBlockItem(kind: .app, value: value, displayName: name))
+                        return DraftBlockItem(kind: .app, value: value, displayName: name)
                     }
                     draft.apps = newApps
                 }
