@@ -115,11 +115,20 @@ enum SmartListSeeder {
     }
 
     /// Read LanguageManager's effective state without importing it here (this
-    /// file stays Core/-pure and doesn't depend on SwiftUI views). Falls back
-    /// to the device's preferredLanguage if the user never toggled language.
+    /// file stays Core/-pure and doesn't depend on SwiftUI views). Mirrors the
+    /// resolution order in LanguageManager.isArabicEffective: explicit user
+    /// choice (LanguageOption raw value) first, then system locale fallback.
+    ///
+    /// Key + values must match `LanguageManager` exactly:
+    /// - Key: "AppLanguage" (Theme.swift:27,36)
+    /// - Values: "system" / "arabic" / "english"
     private static func currentLanguageIsArabic() -> Bool {
-        if let stored = UserDefaults.standard.string(forKey: "v1:lang.selected") {
-            return stored == "ar"
+        if let stored = UserDefaults.standard.string(forKey: "AppLanguage") {
+            switch stored {
+            case "arabic": return true
+            case "english": return false
+            default: break // "system" or unknown → fall through to locale
+            }
         }
         let preferred = Locale.preferredLanguages.first ?? "en"
         return preferred.hasPrefix("ar")

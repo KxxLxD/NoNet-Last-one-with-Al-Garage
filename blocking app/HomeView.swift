@@ -556,11 +556,24 @@ struct HomeView: View {
 
 private extension HomeView {
     func toggleManual(for list: ListEntity) {
-        guard list.protection != "hard" else { return }
+        // Hard Mode normally blocks the toggle — that's the whole point. But
+        // once an emergency-unlock request has matured (72h elapsed), the user
+        // has *earned* the right to release; let the toggle deactivate the
+        // list in that one specific case. Without this, the matured-unlock
+        // banner would say "use the toggle" but the toggle would silently
+        // do nothing (the original P0).
+        if list.protection == "hard" && !EmergencyUnlockStore.isGranted(for: list.id) {
+            return
+        }
         let wasActive = ManualStateStore.isActive(for: list.id)
         ManualStateStore.toggle(for: list.id)
         if wasActive {
             BlockingEngine.shared.deactivate(list: list)
+            // Consume the matured unlock so it isn't reusable indefinitely;
+            // a future re-block requires a fresh 72h request.
+            if list.protection == "hard" {
+                EmergencyUnlockStore.clear(for: list.id)
+            }
         } else {
             BlockingEngine.shared.activate(list: list)
         }
@@ -1552,12 +1565,16 @@ struct ListDetailView: View {
 
     @ViewBuilder
     private func partnerActiveView(_ partnership: Partnership) -> some View {
-        // Owner sees the partner's display name (if accepted); partner sees the owner's.
-        // partnerUserID is filled only after acceptance, so it's a good "accepted" signal.
-        let isOwnerView = partnership.partnerUserID == nil || partnership.partnerUserID != "<self>"
-        let displayName = isOwnerView
-            ? (partnership.partnerDisplayName ?? (lang.isArabicEffective ? "بانتظار قبول الشريك…" : "Waiting for partner to accept…"))
-            : partnership.ownerDisplayName
+        // Owner sees the partner's display name (if accepted); partner sees the
+        // owner's. `partnerUserID` is the recipient's iCloud userRecordID — so
+        // we compare it against THIS device's own cached recordID to know which
+        // perspective to show. (Before the fix, the placeholder "<self>" string
+        // was never written anywhere, making the comparison a tautology that
+        // always returned isOwnerView=true.)
+        let isInviteeView = partnerStore.isInvitee(partnership)
+        let displayName = isInviteeView
+            ? partnership.ownerDisplayName
+            : (partnership.partnerDisplayName ?? (lang.isArabicEffective ? "بانتظار قبول الشريك…" : "Waiting for partner to accept…"))
 
         HStack(spacing: 8) {
             Image(systemName: partnership.status == .accepted ? "checkmark.seal.fill" : "clock.fill")

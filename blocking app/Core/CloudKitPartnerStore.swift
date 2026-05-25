@@ -83,6 +83,10 @@ final class CloudKitPartnerStore: ObservableObject {
     @Published private(set) var accountStatus: CKAccountStatus = .couldNotDetermine
     @Published private(set) var partnerships: [Partnership] = []
     @Published private(set) var lastError: String?
+    /// The current device's iCloud userRecordID.recordName. Populated lazily
+    /// after `refreshAccountStatus()` succeeds. Required for owner/partner
+    /// role detection (compare against `partnership.partnerUserID`).
+    @Published private(set) var currentUserRecordID: String?
 
     private init() {
         self.container = CKContainer(identifier: Self.containerID)
@@ -93,13 +97,34 @@ final class CloudKitPartnerStore: ObservableObject {
     /// Convenience: most call-sites only need "can we do CloudKit work right now?".
     var isAccountAvailable: Bool { accountStatus == .available }
 
+    /// True iff the given partnership.partnerUserID is THIS device's userRecordID
+    /// (i.e., the device viewing this partnership is the invitee, not the owner).
+    /// Returns false when `currentUserRecordID` hasn't loaded yet, defaulting to
+    /// owner-view rather than misclassifying.
+    func isInvitee(_ partnership: Partnership) -> Bool {
+        guard let myID = currentUserRecordID, let theirID = partnership.partnerUserID else { return false }
+        return myID == theirID
+    }
+
     /// Re-checks the user's iCloud account state. Call on app launch and on
-    /// `CKAccountChanged` notifications. Idempotent.
+    /// `CKAccountChanged` notifications. Idempotent. Also caches the user's
+    /// own recordID once available so role detection (owner vs invitee) works.
     func refreshAccountStatus() async {
         do {
             let status = try await container.accountStatus()
             self.accountStatus = status
             log.notice("iCloud accountStatus: \(self.describe(status), privacy: .public)")
+            // Cache userRecordID for owner/invitee role detection. Only attempt
+            // when account is healthy — the call would fail otherwise and the
+            // failure isn't actionable for the user.
+            if status == .available, currentUserRecordID == nil {
+                do {
+                    let recordID = try await container.userRecordID()
+                    self.currentUserRecordID = recordID.recordName
+                } catch {
+                    log.error("userRecordID fetch failed: \(error.localizedDescription, privacy: .public)")
+                }
+            }
         } catch {
             log.error("accountStatus check failed: \(error.localizedDescription, privacy: .public)")
             self.lastError = error.localizedDescription
