@@ -57,9 +57,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         log.error("APNs registration failed: \(error.localizedDescription, privacy: .public)")
     }
 
-    /// Silent push delivery. NoNet pushes are CloudKit subscription
-    /// notifications about new `BreakAttempt` records on the partner's
-    /// device. Hand off to CloudKit and let the store refresh.
+    /// Silent push delivery. CloudKit pushes fire on:
+    ///   • A new BreakAttempt arriving (sender created a request → partner is notified)
+    ///   • A BreakAttempt status change (partner approved/denied → sender is notified)
+    /// Both end up here as a generic CKNotification; we refresh the whole approval
+    /// surface and let ApprovalExecutor act on any newly-approved outgoing requests.
     func application(_ application: UIApplication,
                      didReceiveRemoteNotification userInfo: [AnyHashable: Any],
                      fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
@@ -69,8 +71,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         }
         log.notice("Received CloudKit push notification")
         Task { @MainActor in
-            await CloudKitPartnerStore.shared.fetchPartnerships()
-            await CloudKitPartnerStore.shared.flushPendingBreakAttempts()
+            let store = CloudKitPartnerStore.shared
+            await store.fetchPartnerships()
+            await store.fetchPendingRequestsForMe()
+            await ApprovalExecutor.executePendingApprovals()
+            await store.flushPendingBreakAttempts()
             completionHandler(.newData)
         }
     }
@@ -84,8 +89,12 @@ final class PartnerSceneDelegate: NSObject, UIWindowSceneDelegate {
     func windowScene(_ windowScene: UIWindowScene,
                      userDidAcceptCloudKitShareWith cloudKitShareMetadata: CKShare.Metadata) {
         log.notice("scene received CKShare.Metadata for \(cloudKitShareMetadata.share.recordID.recordName, privacy: .public)")
+        // Don't auto-accept anymore — the user must first pick a display name
+        // (the one the sender will see in their HomeView). Stash the metadata
+        // and let ContentView present PartnerAcceptSheet against it; that sheet
+        // is what actually calls acceptInvitation once the user confirms.
         Task { @MainActor in
-            await CloudKitPartnerStore.shared.acceptInvitation(metadata: cloudKitShareMetadata)
+            CloudKitPartnerStore.shared.pendingShareMetadata = cloudKitShareMetadata
         }
     }
 }

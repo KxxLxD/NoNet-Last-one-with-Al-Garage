@@ -20,6 +20,12 @@ struct ContentView: View {
 
     @State private var showTrialExpiredAlert: Bool = false
 
+    /// Drives the PartnerAcceptSheet. We observe partnerStore.pendingShareMetadata
+    /// (set by PartnerSceneDelegate when a CKShare invite arrives) and present
+    /// the accept sheet so the invitee can pick a display name before the share
+    /// is actually accepted.
+    @ObservedObject private var partnerStore = CloudKitPartnerStore.shared
+
     var body: some View {
         Group {
             if !isAuthenticated {
@@ -63,32 +69,10 @@ struct ContentView: View {
             applySemanticDirection(isArabic: lang.isArabicEffective)
             expireTrialIfNeeded()
             configureTabBarAppearance()
-            Task {
-                let store = CloudKitPartnerStore.shared
-                await store.refreshAccountStatus()
-                if store.isAccountAvailable {
-                    await store.setupSubscriptions()
-                    await store.fetchPartnerships()
-                    // Replay any BreakAttempts that couldn't reach iCloud earlier
-                    // (offline / account-unavailable / transient CKError). Wired
-                    // here so account-state transitions trigger the flush.
-                    await store.flushPendingBreakAttempts()
-                }
-            }
+            Task { await bootstrapCloudKit() }
         }
         .onReceive(NotificationCenter.default.publisher(for: .CKAccountChanged)) { _ in
-            Task {
-                let store = CloudKitPartnerStore.shared
-                await store.refreshAccountStatus()
-                if store.isAccountAvailable {
-                    await store.setupSubscriptions()
-                    await store.fetchPartnerships()
-                    // Replay any BreakAttempts that couldn't reach iCloud earlier
-                    // (offline / account-unavailable / transient CKError). Wired
-                    // here so account-state transitions trigger the flush.
-                    await store.flushPendingBreakAttempts()
-                }
-            }
+            Task { await bootstrapCloudKit() }
         }
         .onChange(of: lang.isArabicEffective) { isArabic in
             applySemanticDirection(isArabic: isArabic)
@@ -102,7 +86,38 @@ struct ContentView: View {
         } message: {
             Text(lang.isArabicEffective ? "نأمل أن NoNet ساعدك خلال هذه الأيام السبعة. اختر خطّة لتحتفظ بجميع المزايا، أو استمرّ بالنسخة المجانية." : "We hope NoNet helped you during these 7 days. Choose a plan to keep all features, or continue with the free version.")
         }
+        .sheet(item: Binding(
+            get: { partnerStore.pendingShareMetadata.map(MetadataWrapper.init) },
+            set: { _ in /* dismissal handled inside the sheet via onFinished */ }
+        )) { wrapper in
+            PartnerAcceptSheet(metadata: wrapper.metadata, onFinished: {})
+                .environmentObject(lang)
+        }
         .preferredColorScheme(.light)
+    }
+
+    /// CKShare.Metadata isn't Identifiable, so we wrap it for use with
+    /// `.sheet(item:)`. The id key is the share's recordID.recordName —
+    /// stable, unique, and human-readable in logs.
+    private struct MetadataWrapper: Identifiable {
+        let metadata: CKShare.Metadata
+        var id: String { metadata.share.recordID.recordName }
+    }
+
+    /// Centralized bootstrap so onAppear and CKAccountChanged share the same
+    /// sequence. Pulls account state, registers push subscriptions, fetches
+    /// partnerships, replays any queued BreakAttempts, and refreshes the two
+    /// approval-workflow lists.
+    private func bootstrapCloudKit() async {
+        let store = CloudKitPartnerStore.shared
+        await store.refreshAccountStatus()
+        guard store.isAccountAvailable else { return }
+        await store.setupSubscriptions()
+        await store.fetchPartnerships()
+        await store.flushPendingBreakAttempts()
+        // Approval workflow surfaces (PR 2).
+        await store.fetchPendingRequestsForMe()
+        await store.fetchMyOutgoingRequests()
     }
 
     private func expireTrialIfNeeded() {

@@ -20,6 +20,19 @@ struct HomeView: View {
     /// from deleteList(_:) when the list's gatekeeperType is "nonet" — the
     /// user must pass the 200-char or 7-day gate before the actual purge runs.
     @State private var gatekeeperSheetList: ListEntity?
+    /// Backing for the RequestActionSheet (Hard + Partner). The wrapper
+    /// captures listID/name + partnership at the moment delete is tapped so
+    /// the sheet has stable references even if Core Data context updates.
+    @State private var partnerRequestSheet: PartnerRequestSheetContext?
+
+    /// Stable snapshot of "user asked to delete list X gated by partnership Y."
+    /// Used as the .sheet(item:) source so SwiftUI handles dismissal correctly.
+    struct PartnerRequestSheetContext: Identifiable {
+        let id: UUID            // listID, doubles as the SwiftUI item id
+        let listName: String
+        let action: GatekeeperAction
+        let partnership: Partnership
+    }
     // حالة خطأ الحفظ
     @State private var saveErrorMessage: String? = nil
     // عرض/إخفاء "قوائم أخرى" — مطوي افتراضياً (DisclosureGroup)
@@ -90,24 +103,24 @@ struct HomeView: View {
                 gatekeeperSheetList = list
                 return
             }
-            // gatekeeperType == "partner" → keep the existing behavior until
-            // the full approval workflow ships (PR 2 of this feature).
-            saveErrorMessage = lang.isArabicEffective
-                ? "لا يمكن حذف قائمة بوضع صارم حتى يوافق شريكك."
-                : "Can't delete a Hard-Mode list until your partner approves."
-            if let partnership = CloudKitPartnerStore.shared.partnership(for: list.id) {
-                let id = list.id
-                let name = list.name
-                Task {
-                    await CloudKitPartnerStore.shared.recordBreakAttempt(
-                        partnershipID: partnership.id,
-                        listID: id,
-                        listName: name,
-                        type: .delete,
-                        reachedThrough: "home_delete_button"
-                    )
-                }
+            // gatekeeperType == "partner": route through RequestActionSheet
+            // so the partner can approve or deny. If no partnership is yet
+            // associated (e.g. the invitation hasn't been accepted), fall back
+            // to a refusal — there's no one to approve through.
+            if let partnership = CloudKitPartnerStore.shared.partnership(for: list.id),
+               partnership.status == .accepted {
+                partnerRequestSheet = PartnerRequestSheetContext(
+                    id: list.id,
+                    listName: list.name,
+                    action: .delete,
+                    partnership: partnership
+                )
+                return
             }
+            // No accepted partnership yet — refusal + best-effort log.
+            saveErrorMessage = lang.isArabicEffective
+                ? "هذه القائمة بحماية شريك بشري، لكن لم يقبل أحد الدعوة بعد. أرسل دعوة جديدة أو حوّل الحارس إلى NoNet من تفاصيل القائمة."
+                : "This list is partner-protected, but no one has accepted yet. Send a new invitation or switch the gatekeeper to NoNet from the list details."
             return
         }
         performHardDelete(list)
@@ -180,11 +193,12 @@ struct HomeView: View {
                     // iPhone SE viewport.
                     welcomeCard()
 
-                    // Consolidated alerts — at most one banner shows at a time
-                    // (priority: Permissions → iCloud → Monitor). The Permissions
-                    // case stays inline below to preserve its expand/collapse UX.
+                    // Consolidated alerts — at most one major banner shows at a
+                    // time (priority: Permissions → iCloud → Monitor). Inbound
+                    // partner requests get their own (richer) banner below,
+                    // since they are interactive and shouldn't be dismissed by
+                    // a less-important alert taking the slot.
                     if hasScreenTimePermission && hasNotificationPermission {
-                        // Other alerts only fire after permissions are sorted
                         if let reason = iCloudAlertReason {
                             slimAlertBanner(
                                 icon: "exclamationmark.icloud.fill",
@@ -199,6 +213,18 @@ struct HomeView: View {
                                     ? "نظام الجدولة لم يستجب خلال آخر 24 ساعة. تواصل مع الدعم."
                                     : "Scheduling hasn't responded in 24h. Contact support."
                             )
+                        }
+                    }
+
+                    // Inbound partner requests — one card per pending request,
+                    // each with Approve / Deny actions. Cards disappear the
+                    // moment the user decides (CloudKitPartnerStore updates
+                    // pendingPartnerRequests via fetchPendingRequestsForMe).
+                    if !partnerStore.pendingPartnerRequests.isEmpty {
+                        VStack(spacing: NNSpacing.xs) {
+                            ForEach(partnerStore.pendingPartnerRequests) { request in
+                                partnerRequestBanner(request)
+                            }
                         }
                     }
 
@@ -455,6 +481,20 @@ struct HomeView: View {
                 )
                 .environmentObject(lang)
             }
+            .sheet(item: $partnerRequestSheet) { ctx in
+                RequestActionSheet(
+                    listID: ctx.id,
+                    listName: ctx.listName,
+                    action: ctx.action,
+                    partnership: ctx.partnership,
+                    onRequestSent: {
+                        Task {
+                            await partnerStore.fetchMyOutgoingRequests()
+                        }
+                    }
+                )
+                .environmentObject(lang)
+            }
             .onAppear {
                 checkPermissions()
             }
@@ -541,6 +581,111 @@ struct HomeView: View {
                 .stroke(AppColors.alertRed.opacity(0.3), lineWidth: 0.5)
         )
         .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    /// Banner for a single inbound partner request. Renders the action type +
+    /// list name + reason + sender, with Approve / Deny inline. The buttons
+    /// kick off CloudKit updates and the banner disappears once
+    /// pendingPartnerRequests no longer contains this request.
+    @ViewBuilder
+    private func partnerRequestBanner(_ request: BreakAttempt) -> some View {
+        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.xs) {
+            HStack(alignment: .top, spacing: NNSpacing.xs) {
+                Image(systemName: "envelope.open.badge.clock")
+                    .foregroundColor(AppColors.accent)
+                    .font(.callout)
+                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 2) {
+                    Text(requestBannerTitle(request))
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundColor(AppColors.textPrimary)
+                        .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                    if let reason = request.reason, !reason.isEmpty {
+                        Text(lang.isArabicEffective ? "السبب: \(reason)" : "Reason: \(reason)")
+                            .font(.footnote)
+                            .foregroundColor(AppColors.textSecondary)
+                            .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+
+            HStack(spacing: NNSpacing.sm) {
+                Button(action: { decide(request: request, approve: false) }) {
+                    Text(lang.isArabicEffective ? "أرفض" : "Deny")
+                        .font(.footnote.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 36)
+                        .background(Color.clear)
+                        .foregroundColor(AppColors.alertRed)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: NNRadius.control)
+                                .stroke(AppColors.alertRed.opacity(0.4), lineWidth: NNBorder.input)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+                }
+                .buttonStyle(.plain)
+
+                Button(action: { decide(request: request, approve: true) }) {
+                    Text(lang.isArabicEffective ? "أوافق" : "Approve")
+                        .font(.footnote.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 36)
+                        .background(AppColors.accent)
+                        .foregroundColor(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, NNSpacing.md)
+        .padding(.vertical, NNSpacing.sm)
+        .background(AppColors.infoBg)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(AppColors.accent.opacity(0.3), lineWidth: 0.5)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    /// Build the banner title for a BreakAttempt — "Khalid wants to delete
+    /// 'Focus Time'." Falls back to a generic owner label when the request
+    /// doesn't have a Partnership cached (e.g. fresh fetch hasn't completed).
+    private func requestBannerTitle(_ request: BreakAttempt) -> String {
+        let owner: String = {
+            if let partnership = partnerStore.partnerships.first(where: { $0.id == request.partnershipID }) {
+                return partnership.ownerDisplayName
+            }
+            return lang.isArabicEffective ? "أحد شركائك" : "A partner"
+        }()
+        let listName = request.listName
+        if lang.isArabicEffective {
+            switch request.type {
+            case .delete:  return "\(owner) يطلب حذف «\(listName)»"
+            case .disable: return "\(owner) يطلب إيقاف «\(listName)»"
+            case .modify:  return "\(owner) يطلب تعديل «\(listName)»"
+            case .uninstallAttempt: return "\(owner) قد حاول إلغاء تثبيت التطبيق"
+            }
+        } else {
+            switch request.type {
+            case .delete:  return "\(owner) wants to delete \"\(listName)\""
+            case .disable: return "\(owner) wants to pause \"\(listName)\""
+            case .modify:  return "\(owner) wants to modify \"\(listName)\""
+            case .uninstallAttempt: return "\(owner) attempted to uninstall the app"
+            }
+        }
+    }
+
+    /// Approve or deny an inbound partner request. The CloudKit update happens
+    /// inside the store; we just wait for it to refresh
+    /// pendingPartnerRequests so the banner disappears.
+    private func decide(request: BreakAttempt, approve: Bool) {
+        Task {
+            if approve {
+                await partnerStore.approveRequest(request.id)
+            } else {
+                await partnerStore.denyRequest(request.id)
+            }
+        }
     }
 
     /// Single list row — kept in one helper so Active and Other lists share
@@ -1547,18 +1692,15 @@ struct ListDetailView: View {
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.uiBorder, lineWidth: 0.5))
         }
         .sheet(isPresented: $showPartnerInvite) {
-            if let share = pendingShare {
-                PartnerInviteView(
-                    share: share,
-                    container: partnerStore.container,
-                    isArabic: lang.isArabicEffective,
-                    onCompletion: {
-                        showPartnerInvite = false
-                        Task { await partnerStore.fetchPartnerships() }
-                    }
-                )
-                .ignoresSafeArea()
-            }
+            PartnerInviteView(
+                listID: stableListId,
+                listName: list.name,
+                onCompletion: {
+                    showPartnerInvite = false
+                    Task { await partnerStore.fetchPartnerships() }
+                }
+            )
+            .environmentObject(lang)
         }
         .sheet(isPresented: $showInviteDisclosure) {
             PartnerInviteDisclosureSheet(
@@ -1712,28 +1854,13 @@ struct ListDetailView: View {
         return formatter.localizedString(for: date, relativeTo: Date())
     }
 
+    /// Hand off to PartnerInviteView, which collects names from the user and
+    /// runs createPartnership + share sheet itself. We no longer touch CloudKit
+    /// directly from here — that work moved inside the invite view so the name
+    /// fields are part of the same screen as the share.
     private func invitePartner() {
-        isCreatingPartnership = true
-        let listID = stableListId
-        let displayName = list.name
-        Task {
-            do {
-                let (share, _) = try await CloudKitPartnerStore.shared.createPartnership(
-                    ownerDisplayName: displayName,
-                    associatedListID: listID
-                )
-                await MainActor.run {
-                    pendingShare = share
-                    isCreatingPartnership = false
-                    showPartnerInvite = true
-                }
-            } catch {
-                await MainActor.run {
-                    partnerError = error.localizedDescription
-                    isCreatingPartnership = false
-                }
-            }
-        }
+        // No async pre-step needed anymore — just open the invite sheet.
+        showPartnerInvite = true
     }
 
     private func isActiveNowDetail() -> Bool {

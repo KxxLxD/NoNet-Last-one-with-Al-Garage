@@ -37,6 +37,10 @@ struct Partnership: Identifiable, Hashable {
     var partnerUserID: String?
     var ownerDisplayName: String
     var partnerDisplayName: String?
+    /// The nickname the inviter suggested for the partner at invite time —
+    /// shown on the invitee's accept sheet as a starting point. The invitee
+    /// can override it with their own preferred name before accepting.
+    var proposedPartnerName: String?
     var status: PartnershipStatus
     var createdAt: Date
     var acceptedAt: Date?
@@ -50,6 +54,20 @@ enum BreakAttemptType: String, Codable {
     case uninstallAttempt = "uninstall_attempt"
 }
 
+/// State machine for a BreakAttempt record. Distinguishes "request awaiting
+/// partner decision" from "log of a refused break" — both fields share the
+/// same CloudKit record type to keep the schema small.
+enum RequestStatus: String, Codable {
+    case pending      // sender created the request, awaiting partner decision
+    case approved     // partner approved → action will execute
+    case denied       // partner denied → action is blocked
+    case completed    // action has executed after approval (delete/disable/modify)
+    case cancelled    // sender withdrew the request before partner decided
+    case logOnly      // legacy/observer mode — recorded, not actionable. Used
+                      // by recordBreakAttempt(_:) calls that pre-date the
+                      // approval workflow.
+}
+
 struct BreakAttempt: Identifiable, Hashable {
     let id: String                  // CKRecord.ID.recordName
     let partnershipID: String
@@ -58,6 +76,16 @@ struct BreakAttempt: Identifiable, Hashable {
     let attemptedAt: Date
     let type: BreakAttemptType
     let reachedThrough: String?
+    /// Approval-workflow state. Defaults to .logOnly on records produced by
+    /// the legacy recordBreakAttempt() path; new records from
+    /// createActionRequest() start at .pending.
+    var status: RequestStatus
+    /// User-written explanation submitted with the request. Optional —
+    /// some action types (like .modify) may not require one.
+    var reason: String?
+    /// When the partner approved / denied / the user cancelled. nil while
+    /// status == .pending or .logOnly.
+    var decidedAt: Date?
 }
 
 // MARK: - CloudKit record-type names (single source of truth)
@@ -87,6 +115,17 @@ final class CloudKitPartnerStore: ObservableObject {
     /// after `refreshAccountStatus()` succeeds. Required for owner/partner
     /// role detection (compare against `partnership.partnerUserID`).
     @Published private(set) var currentUserRecordID: String?
+    /// BreakAttempt records the current device should review — i.e. requests
+    /// addressed TO this device acting as a recovery partner. Populated by
+    /// fetchPendingRequestsForMe and on every CloudKit push.
+    @Published private(set) var pendingPartnerRequests: [BreakAttempt] = []
+    /// BreakAttempt records the current device originated — used by HomeView
+    /// to show a "pending partner approval" indicator on Hard+Partner lists.
+    @Published private(set) var myOutgoingRequests: [BreakAttempt] = []
+    /// A share invitation that just arrived via the Scene delegate but has
+    /// not yet been accepted — ContentView observes this and presents
+    /// PartnerAcceptSheet so the invitee can choose a display name first.
+    @Published var pendingShareMetadata: CKShare.Metadata?
 
     private init() {
         self.container = CKContainer(identifier: Self.containerID)
@@ -182,7 +221,12 @@ final class CloudKitPartnerStore: ObservableObject {
     /// The record is saved in the user's private database; the CKShare moves it into a
     /// shared zone once the invitee accepts. associatedListIDs starts with the single list
     /// that triggered the invite — additional lists can be added later via fetch+update.
-    func createPartnership(ownerDisplayName: String, associatedListID: UUID) async throws -> (CKShare, CKRecord) {
+    ///
+    /// `proposedPartnerName` is the nickname the inviter chose for the invitee at
+    /// invite time ("Abu Mohammed", "Mom"). It's shown on the invitee's accept
+    /// sheet as a starting point; the invitee can override it with their own
+    /// preferred name before accepting.
+    func createPartnership(ownerDisplayName: String, proposedPartnerName: String?, associatedListID: UUID) async throws -> (CKShare, CKRecord) {
         guard isAccountAvailable else { throw PartnerStoreError.accountUnavailable }
 
         let ownerID = try await container.userRecordID()
@@ -191,6 +235,9 @@ final class CloudKitPartnerStore: ObservableObject {
         let record = CKRecord(recordType: PartnerRecordTypes.partnership, recordID: recordID)
         record["ownerUserID"] = ownerID.recordName as CKRecordValue
         record["ownerDisplayName"] = ownerDisplayName as CKRecordValue
+        if let proposed = proposedPartnerName, !proposed.isEmpty {
+            record["proposedPartnerName"] = proposed as CKRecordValue
+        }
         record["status"] = PartnershipStatus.pending.rawValue as CKRecordValue
         record["createdAt"] = Date() as CKRecordValue
         record["associatedListIDs"] = [associatedListID.uuidString] as CKRecordValue
@@ -257,7 +304,152 @@ final class CloudKitPartnerStore: ObservableObject {
         }
     }
 
-    // MARK: - Break attempts
+    // MARK: - Approval workflow (the gatekeeper part of Recovery Partner)
+
+    /// Create a new action request (delete/disable/modify) addressed to a
+    /// recovery partner. Saved as a BreakAttempt record with status=.pending;
+    /// the partner gets a push via the CKQuerySubscription and responds with
+    /// approveRequest / denyRequest.
+    ///
+    /// Returns the record's name so the caller can track it locally.
+    @discardableResult
+    func createActionRequest(partnershipID: String,
+                             listID: UUID,
+                             listName: String,
+                             type: BreakAttemptType,
+                             reason: String?) async -> String? {
+        let attemptID = UUID()
+        let record = makeBreakAttemptRecord(
+            recordName: attemptID.uuidString,
+            partnershipID: partnershipID,
+            listID: listID,
+            listName: listName,
+            attemptedAt: Date(),
+            type: type,
+            reachedThrough: "approval_request",
+            status: .pending,
+            reason: reason
+        )
+        do {
+            try await save(records: [record])
+            log.notice("createActionRequest: \(type.rawValue, privacy: .public) for list \(listID, privacy: .public)")
+            await fetchMyOutgoingRequests()
+            return attemptID.uuidString
+        } catch {
+            log.error("createActionRequest failed: \(error.localizedDescription, privacy: .public)")
+            self.lastError = error.localizedDescription
+            return nil
+        }
+    }
+
+    /// Partner's decision: approve. Updates the BreakAttempt's status so the
+    /// requesting device sees the decision on next push / fetch.
+    func approveRequest(_ requestID: String) async {
+        await updateRequestStatus(requestID: requestID, to: .approved)
+    }
+
+    /// Partner's decision: deny. Same as approveRequest but with .denied.
+    func denyRequest(_ requestID: String) async {
+        await updateRequestStatus(requestID: requestID, to: .denied)
+    }
+
+    /// Sender cancels their own pending request before the partner decides.
+    func cancelMyRequest(_ requestID: String) async {
+        await updateRequestStatus(requestID: requestID, to: .cancelled)
+    }
+
+    /// Mark a request as completed once the local action (e.g. delete) has
+    /// actually run. Called by AppDelegate's push handler after executing.
+    func markRequestCompleted(_ requestID: String) async {
+        await updateRequestStatus(requestID: requestID, to: .completed)
+    }
+
+    private func updateRequestStatus(requestID: String, to status: RequestStatus) async {
+        let recordID = CKRecord.ID(recordName: requestID)
+        // The record lives wherever it was saved — try shared first (the
+        // common case: invitee approving) then private (sender cancelling).
+        var record: CKRecord?
+        for db in [sharedDB, privateDB] {
+            if let r = try? await db.record(for: recordID) {
+                record = r
+                break
+            }
+        }
+        guard let record = record else {
+            log.error("updateRequestStatus: record \(requestID, privacy: .public) not found")
+            return
+        }
+        record["status"] = status.rawValue as CKRecordValue
+        record["decidedAt"] = Date() as CKRecordValue
+        do {
+            // Save back to whichever DB owned the record — we test both.
+            for db in [sharedDB, privateDB] {
+                do {
+                    _ = try await db.save(record)
+                    log.notice("updateRequestStatus: \(requestID, privacy: .public) → \(status.rawValue, privacy: .public)")
+                    await fetchPendingRequestsForMe()
+                    await fetchMyOutgoingRequests()
+                    return
+                } catch {
+                    continue
+                }
+            }
+            log.error("updateRequestStatus: save failed in both DBs for \(requestID, privacy: .public)")
+        }
+    }
+
+    /// Fetch break-attempt records where the current device is the partner
+    /// (i.e. records in the sharedDB whose partnership.partnerUserID is us).
+    /// Populates `pendingPartnerRequests`.
+    func fetchPendingRequestsForMe() async {
+        // Look in sharedDB — that's where records arrive when someone shares
+        // a partnership with us. We filter to .pending status only.
+        let query = CKQuery(
+            recordType: PartnerRecordTypes.breakAttempt,
+            predicate: NSPredicate(format: "status == %@", RequestStatus.pending.rawValue)
+        )
+        query.sortDescriptors = [NSSortDescriptor(key: "attemptedAt", ascending: false)]
+        do {
+            let (results, _) = try await sharedDB.records(matching: query)
+            let attempts = results.compactMap { _, result -> BreakAttempt? in
+                guard case .success(let record) = result else { return nil }
+                return BreakAttempt(from: record)
+            }
+            self.pendingPartnerRequests = attempts
+        } catch {
+            log.error("fetchPendingRequestsForMe failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    /// Fetch break-attempt records the current device originated. Populates
+    /// `myOutgoingRequests` so HomeView can show "Awaiting partner" badges.
+    func fetchMyOutgoingRequests() async {
+        let query = CKQuery(
+            recordType: PartnerRecordTypes.breakAttempt,
+            predicate: NSPredicate(value: true)
+        )
+        query.sortDescriptors = [NSSortDescriptor(key: "attemptedAt", ascending: false)]
+        var collected: [BreakAttempt] = []
+        for db in [privateDB, sharedDB] {
+            do {
+                let (results, _) = try await db.records(matching: query)
+                let attempts = results.compactMap { _, result -> BreakAttempt? in
+                    guard case .success(let record) = result else { return nil }
+                    return BreakAttempt(from: record)
+                }
+                collected.append(contentsOf: attempts)
+            } catch {
+                log.error("fetchMyOutgoingRequests in \(db.databaseScope.rawValue, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
+            }
+        }
+        // Only keep records where status indicates work in progress or recent
+        // resolution (so HomeView can show a transient banner for denied).
+        self.myOutgoingRequests = collected.filter {
+            $0.status == .pending || $0.status == .approved || $0.status == .denied
+        }
+    }
+
+    // MARK: - Break attempts (legacy log-only path)
 
     /// Log a break-attempt to CloudKit. The partner gets a push via the CKQuerySubscription
     /// the partnership owner sets up on first save.
@@ -361,13 +553,19 @@ final class CloudKitPartnerStore: ObservableObject {
 
     /// Build a BreakAttempt CKRecord. Extracted so the live-write path and the
     /// queue-flush path produce identical records.
+    ///
+    /// Default values (status: .logOnly, reason: nil) preserve the legacy
+    /// "fire and forget" semantics of recordBreakAttempt — the approval
+    /// workflow path (createActionRequest) passes status: .pending + reason.
     private func makeBreakAttemptRecord(recordName: String,
                                         partnershipID: String,
                                         listID: UUID,
                                         listName: String,
                                         attemptedAt: Date,
                                         type: BreakAttemptType,
-                                        reachedThrough: String?) -> CKRecord {
+                                        reachedThrough: String?,
+                                        status: RequestStatus = .logOnly,
+                                        reason: String? = nil) -> CKRecord {
         let recordID = CKRecord.ID(recordName: recordName)
         let record = CKRecord(recordType: PartnerRecordTypes.breakAttempt, recordID: recordID)
         let partnershipRecordID = CKRecord.ID(recordName: partnershipID)
@@ -376,7 +574,9 @@ final class CloudKitPartnerStore: ObservableObject {
         record["listName"] = listName as CKRecordValue
         record["attemptedAt"] = attemptedAt as CKRecordValue
         record["attemptType"] = type.rawValue as CKRecordValue
+        record["status"] = status.rawValue as CKRecordValue
         if let r = reachedThrough { record["reachedThrough"] = r as CKRecordValue }
+        if let r = reason, !r.isEmpty { record["reason"] = r as CKRecordValue }
         return record
     }
 
@@ -432,35 +632,62 @@ final class CloudKitPartnerStore: ObservableObject {
 
     // MARK: - Push subscriptions
 
-    /// Register a CKQuerySubscription so iOS pushes a notification to the partner
-    /// whenever a new BreakAttempt is inserted in the shared zone. Idempotent —
-    /// re-running just no-ops once the subscription exists.
+    /// Register CKQuerySubscriptions so iOS pushes silent notifications when:
+    ///   • A new BreakAttempt is created (partner is notified of a request)
+    ///   • An existing BreakAttempt's status changes (sender is notified when
+    ///     the partner approves/denies, and gets a content-available push so
+    ///     ApprovalExecutor can act in the background).
+    /// Both are best-effort and idempotent — re-running no-ops once installed.
     func setupSubscriptions() async {
-        let subID = "v1.breakAttempt.notify"
-        let predicate = NSPredicate(value: true)
+        await installSubscription(
+            id: "v1.breakAttempt.notify",
+            options: [.firesOnRecordCreation],
+            titleLocalizationKey: "PARTNER_BREAK_TITLE",
+            alertLocalizationKey: "PARTNER_BREAK_BODY"
+        )
+        // Update push — silent (content-available only). The sender's device
+        // wakes up just long enough for ApprovalExecutor to run.
+        await installSubscription(
+            id: "v1.breakAttempt.statusChange",
+            options: [.firesOnRecordUpdate],
+            titleLocalizationKey: nil,
+            alertLocalizationKey: nil
+        )
+    }
+
+    private func installSubscription(id subID: String,
+                                     options: CKQuerySubscription.Options,
+                                     titleLocalizationKey: String?,
+                                     alertLocalizationKey: String?) async {
         let subscription = CKQuerySubscription(
             recordType: PartnerRecordTypes.breakAttempt,
-            predicate: predicate,
+            predicate: NSPredicate(value: true),
             subscriptionID: subID,
-            options: [.firesOnRecordCreation]
+            options: options
         )
-
         let info = CKSubscription.NotificationInfo()
-        info.titleLocalizationKey = "PARTNER_BREAK_TITLE"
-        info.alertLocalizationKey = "PARTNER_BREAK_BODY"
-        info.alertLocalizationArgs = ["listName"]
+        if let titleKey = titleLocalizationKey {
+            info.titleLocalizationKey = titleKey
+        }
+        if let alertKey = alertLocalizationKey {
+            info.alertLocalizationKey = alertKey
+            info.alertLocalizationArgs = ["listName"]
+        }
         info.shouldSendContentAvailable = true
-        info.soundName = "default"
+        // Only play sound for the "new request" push; status-change pushes
+        // are silent so the sender doesn't get pinged twice for the same flow.
+        if titleLocalizationKey != nil {
+            info.soundName = "default"
+        }
         subscription.notificationInfo = info
 
         do {
             _ = try await sharedDB.save(subscription)
             log.notice("subscription \(subID, privacy: .public) installed")
         } catch let error as CKError where error.code == .serverRejectedRequest {
-            // Already exists — that's fine.
             log.notice("subscription \(subID, privacy: .public) already present")
         } catch {
-            log.error("subscription install failed: \(error.localizedDescription, privacy: .public)")
+            log.error("subscription \(subID, privacy: .public) install failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -470,21 +697,30 @@ final class CloudKitPartnerStore: ObservableObject {
     /// `windowScene(_:userDidAcceptCloudKitShareWith:)`. Apple completes the
     /// cross-account hand-off; after this resolves, the shared records become
     /// visible via `sharedDB`.
-    func acceptInvitation(metadata: CKShare.Metadata) async {
+    ///
+    /// `partnerDisplayName` is what the invitee wants to show as their name
+    /// to the sender (defaulting to the inviter's proposedPartnerName if
+    /// the invitee left it unchanged). Saving here means HomeView on the
+    /// sender's device stops saying "Waiting for partner…" the moment the
+    /// share lands.
+    func acceptInvitation(metadata: CKShare.Metadata, partnerDisplayName: String) async {
         do {
             _ = try await container.accept(metadata)
             log.notice("accepted share \(metadata.share.recordID.recordName, privacy: .public)")
             await fetchPartnerships()
-            await markPartnershipAccepted(rootRecordID: metadata.hierarchicalRootRecordID)
+            await markPartnershipAccepted(
+                rootRecordID: metadata.hierarchicalRootRecordID,
+                partnerDisplayName: partnerDisplayName
+            )
         } catch {
             log.error("accept share failed: \(error.localizedDescription, privacy: .public)")
             self.lastError = error.localizedDescription
         }
     }
 
-    /// Update the shared Partnership's status to accepted and stamp acceptedAt.
-    /// Called on the invitee side after the share hand-off completes.
-    private func markPartnershipAccepted(rootRecordID: CKRecord.ID?) async {
+    /// Update the shared Partnership's status to accepted, stamp acceptedAt,
+    /// and persist the partner's chosen display name.
+    private func markPartnershipAccepted(rootRecordID: CKRecord.ID?, partnerDisplayName: String) async {
         guard let recordID = rootRecordID else { return }
         do {
             let record = try await sharedDB.record(for: recordID)
@@ -492,10 +728,34 @@ final class CloudKitPartnerStore: ObservableObject {
             record["acceptedAt"] = Date() as CKRecordValue
             let partnerUserID = try await container.userRecordID().recordName
             record["partnerUserID"] = partnerUserID as CKRecordValue
+            let trimmed = partnerDisplayName.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty {
+                record["partnerDisplayName"] = trimmed as CKRecordValue
+            }
             _ = try await sharedDB.save(record)
             await fetchPartnerships()
         } catch {
             log.error("markPartnershipAccepted failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    /// Reject a pending invitation. Called from PartnerAcceptSheet when the
+    /// invitee taps "Reject" — updates the shared Partnership.status so the
+    /// sender's UI reflects the rejection rather than hanging on "Waiting".
+    func rejectInvitation(metadata: CKShare.Metadata) async {
+        guard let recordID = metadata.hierarchicalRootRecordID else { return }
+        do {
+            // First accept the share so we can write back into it. (CloudKit
+            // doesn't let us mutate a record we haven't accepted into our
+            // sharedDB scope.) Then immediately update status to rejected.
+            _ = try? await container.accept(metadata)
+            let record = try await sharedDB.record(for: recordID)
+            record["status"] = PartnershipStatus.rejected.rawValue as CKRecordValue
+            _ = try await sharedDB.save(record)
+            log.notice("rejected share \(metadata.share.recordID.recordName, privacy: .public)")
+            await fetchPartnerships()
+        } catch {
+            log.error("rejectInvitation failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -537,6 +797,8 @@ extension Partnership {
         self.partnerUserID = record["partnerUserID"] as? String
         self.ownerDisplayName = ownerDisplayName
         self.partnerDisplayName = record["partnerDisplayName"] as? String
+        // Optional — older records (pre-PR2) don't have this field, that's OK.
+        self.proposedPartnerName = record["proposedPartnerName"] as? String
         self.status = status
         self.createdAt = createdAt
         self.acceptedAt = record["acceptedAt"] as? Date
@@ -561,5 +823,16 @@ extension BreakAttempt {
         self.attemptedAt = attemptedAt
         self.type = type
         self.reachedThrough = record["reachedThrough"] as? String
+        // Older records (pre-PR2) won't have `status` — they predate the
+        // approval workflow, so default to .logOnly which matches their
+        // recordBreakAttempt origin.
+        if let statusRaw = record["status"] as? String,
+           let parsed = RequestStatus(rawValue: statusRaw) {
+            self.status = parsed
+        } else {
+            self.status = .logOnly
+        }
+        self.reason = record["reason"] as? String
+        self.decidedAt = record["decidedAt"] as? Date
     }
 }

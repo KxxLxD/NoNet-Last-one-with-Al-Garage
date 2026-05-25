@@ -64,15 +64,16 @@ struct CreateListSheet: View {
     /// nil = no existing partner picked. Otherwise the recordID.recordName
     /// of an existing Partnership the user picked to attach this list to.
     @State private var pendingPartnerID: String? = nil
-    /// User selected "send invitation to a new partner" — the actual CKShare
-    /// creation defers until after the list saves (we need the saved list's
-    /// UUID to associate with the partnership record).
+    /// User selected "send invitation to a new partner" — actual createPartnership
+    /// is deferred to PartnerInviteView (which collects ownerName + partner
+    /// nickname before calling it).
     @State private var pendingNewInvite: Bool = false
-    /// Holds the CKShare after `createPartnership` resolves. When non-nil and
-    /// `showShareSheet` is true, PartnerInviteView presents it.
-    @State private var pendingShare: CKShare? = nil
-    /// Drives the .sheet that wraps PartnerInviteView.
+    /// Drives the .sheet that hosts PartnerInviteView. Set in save() after
+    /// the list has been persisted; PartnerInviteView reads pendingInviteListID
+    /// / pendingInviteListName to know which list to associate.
     @State private var showShareSheet: Bool = false
+    @State private var pendingInviteListID: UUID? = nil
+    @State private var pendingInviteListName: String = ""
     /// User-facing error when CKShare creation fails (offline, iCloud signed out).
     @State private var partnerCreationError: String? = nil
 
@@ -244,22 +245,19 @@ struct CreateListSheet: View {
     private func attachPartnerSheets<V: View>(_ v: V) -> some View {
         v
             .sheet(isPresented: $showShareSheet) {
-                // Same wiring as HomeView's invite flow.
-                if let share = pendingShare {
+                if let listID = pendingInviteListID {
                     PartnerInviteView(
-                        share: share,
-                        container: partnerStore.container,
-                        isArabic: lang.isArabicEffective,
+                        listID: listID,
+                        listName: pendingInviteListName,
                         onCompletion: {
                             showShareSheet = false
-                            pendingShare = nil
+                            pendingInviteListID = nil
                             Task { await partnerStore.fetchPartnerships() }
-                            // The user finished the share flow — dismiss the
-                            // CreateListSheet to return them to HomeView.
+                            // Return to HomeView after a beat.
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { dismiss() }
                         }
                     )
-                    .ignoresSafeArea()
+                    .environmentObject(lang)
                 }
             }
             .alert(
@@ -1093,27 +1091,15 @@ struct CreateListSheet: View {
         }
     }
 
-    /// Creates a CKShare for the just-saved list and presents PartnerInviteView.
-    /// Mirrors HomeView.invitePartner() but tailored to the post-save flow:
-    /// the parent CreateListSheet stays open until the share controller fires
-    /// `onCompletion`, after which both close together.
+    /// Hand off to PartnerInviteView, which collects ownerDisplayName +
+    /// proposedPartnerName, calls createPartnership itself, and then presents
+    /// the Apple share sheet. The parent CreateListSheet stays open until
+    /// PartnerInviteView fires `onCompletion`, after which both close.
     private func beginNewInviteFlow(listID: UUID, listName: String) async {
-        do {
-            let (share, _) = try await partnerStore.createPartnership(
-                ownerDisplayName: listName,
-                associatedListID: listID
-            )
-            await MainActor.run {
-                pendingShare = share
-                showShareSheet = true
-            }
-        } catch {
-            await MainActor.run {
-                partnerCreationError = error.localizedDescription
-                // Even on failure, the list was saved — dismiss after a beat
-                // so the user isn't trapped staring at a stuck sheet.
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { dismiss() }
-            }
+        await MainActor.run {
+            pendingInviteListID = listID
+            pendingInviteListName = listName
+            showShareSheet = true
         }
     }
     private func currentListsCount() -> Int {
