@@ -1903,7 +1903,7 @@ struct ListDetailView: View {
             .environmentObject(lang)
         }
         .alert(
-            lang.isArabicEffective ? "تعذّر دعوة شريك" : "Couldn't invite partner",
+            lang.isArabicEffective ? "تعذّر إتمام العملية" : "Couldn't complete action",
             isPresented: Binding(get: { partnerError != nil }, set: { if !$0 { partnerError = nil } })
         ) {
             Button(lang.isArabicEffective ? "حسناً" : "OK", role: .cancel) { partnerError = nil }

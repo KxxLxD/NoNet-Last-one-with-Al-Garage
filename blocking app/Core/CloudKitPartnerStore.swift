@@ -726,7 +726,12 @@ final class CloudKitPartnerStore: ObservableObject {
     /// the invitee left it unchanged). Saving here means HomeView on the
     /// sender's device stops saying "Waiting for partner…" the moment the
     /// share lands.
-    func acceptInvitation(metadata: CKShare.Metadata, partnerDisplayName: String) async {
+    ///
+    /// Returns the failure reason for display in PartnerAcceptSheet, or nil
+    /// on success. The caller checks this rather than reading `lastError`
+    /// (which may already be populated from an earlier, unrelated failure).
+    @discardableResult
+    func acceptInvitation(metadata: CKShare.Metadata, partnerDisplayName: String) async -> String? {
         do {
             _ = try await container.accept(metadata)
             log.notice("accepted share \(metadata.share.recordID.recordName, privacy: .public)")
@@ -735,9 +740,11 @@ final class CloudKitPartnerStore: ObservableObject {
                 rootRecordID: metadata.hierarchicalRootRecordID,
                 partnerDisplayName: partnerDisplayName
             )
+            return nil
         } catch {
             log.error("accept share failed: \(error.localizedDescription, privacy: .public)")
             self.lastError = error.localizedDescription
+            return error.localizedDescription
         }
     }
 
@@ -765,20 +772,27 @@ final class CloudKitPartnerStore: ObservableObject {
     /// Reject a pending invitation. Called from PartnerAcceptSheet when the
     /// invitee taps "Reject" — updates the shared Partnership.status so the
     /// sender's UI reflects the rejection rather than hanging on "Waiting".
-    func rejectInvitation(metadata: CKShare.Metadata) async {
-        guard let recordID = metadata.hierarchicalRootRecordID else { return }
+    ///
+    /// Returns nil on success, or a localized error description for surfacing
+    /// in the sheet. We need to accept the share first so CloudKit puts the
+    /// record in our scope (no public decline API exists), then immediately
+    /// stamp it as rejected.
+    @discardableResult
+    func rejectInvitation(metadata: CKShare.Metadata) async -> String? {
+        guard let recordID = metadata.hierarchicalRootRecordID else {
+            return "Missing share metadata"
+        }
         do {
-            // First accept the share so we can write back into it. (CloudKit
-            // doesn't let us mutate a record we haven't accepted into our
-            // sharedDB scope.) Then immediately update status to rejected.
             _ = try? await container.accept(metadata)
             let record = try await sharedDB.record(for: recordID)
             record["status"] = PartnershipStatus.rejected.rawValue as CKRecordValue
             _ = try await sharedDB.save(record)
             log.notice("rejected share \(metadata.share.recordID.recordName, privacy: .public)")
             await fetchPartnerships()
+            return nil
         } catch {
             log.error("rejectInvitation failed: \(error.localizedDescription, privacy: .public)")
+            return error.localizedDescription
         }
     }
 

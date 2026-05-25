@@ -229,19 +229,37 @@ struct PartnerAcceptSheet: View {
         guard !trimmed.isEmpty else { return }
         isProcessing = true
         Task {
-            await CloudKitPartnerStore.shared.acceptInvitation(
+            let failureReason = await CloudKitPartnerStore.shared.acceptInvitation(
                 metadata: metadata,
                 partnerDisplayName: trimmed
             )
-            await MainActor.run { finish() }
+            await MainActor.run {
+                if let reason = failureReason {
+                    // Stay on the sheet so the user sees the error and can
+                    // retry. pendingShareMetadata is left intact so a
+                    // background recovery (re-tap link, account recovers)
+                    // can re-attempt.
+                    isProcessing = false
+                    errorMessage = reason
+                } else {
+                    finish()
+                }
+            }
         }
     }
 
     private func reject() {
         isProcessing = true
         Task {
-            await CloudKitPartnerStore.shared.rejectInvitation(metadata: metadata)
-            await MainActor.run { finish() }
+            let failureReason = await CloudKitPartnerStore.shared.rejectInvitation(metadata: metadata)
+            await MainActor.run {
+                if let reason = failureReason {
+                    isProcessing = false
+                    errorMessage = reason
+                } else {
+                    finish()
+                }
+            }
         }
     }
 
