@@ -18,6 +18,8 @@ struct HomeView: View {
     @State private var listToDelete: ListEntity?
     // حالة خطأ الحفظ
     @State private var saveErrorMessage: String? = nil
+    // عرض/إخفاء "قوائم أخرى" — مطوي افتراضياً (DisclosureGroup)
+    @State private var showOtherLists: Bool = false
 
     // حالة الاشتراك/التجربة
     @AppStorage(AppStorageKeys.isPremium) private var isPremium: Bool = false
@@ -119,144 +121,54 @@ struct HomeView: View {
     private var hasScreenTimePermission: Bool { permissions.isScreenTimeGranted }
     private var hasNotificationPermission: Bool { permissions.isNotificationsGranted }
 
-    /// Only worth nagging about iCloud when at least one Hard-Mode list exists —
-    /// otherwise the recovery-partner feature isn't reachable anyway.
-    @ViewBuilder
-    private func iCloudBannerIfNeeded() -> some View {
+    // ─── Alert sources (data) ───
+    // Computed conditions for the consolidated alertsStrip(). Each is a pure
+    // predicate — the strip decides which one wins by priority order.
+
+    /// iCloud account is unavailable AND user has at least one Hard Mode list
+    /// (Recovery Partner relies on iCloud; without it the safety net is broken).
+    private var iCloudAlertReason: String? {
         let hasHardList = lists.contains { $0.protection == "hard" }
-        if hasHardList, let reason = partnerStore.accountUnavailableReason(isArabic: lang.isArabicEffective) {
-            HStack(alignment: .top, spacing: 10) {
-                Image(systemName: "exclamationmark.icloud.fill")
-                    .foregroundColor(AppColors.alertRed)
-                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 4) {
-                    Text(lang.isArabicEffective ? "تنبيه iCloud" : "iCloud Notice")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundColor(AppColors.alertRed)
-                    Text(reason)
-                        .font(.footnote)
-                        .foregroundColor(AppColors.textSecondary)
-                        .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
-                }
-                Spacer(minLength: 0)
-            }
-            .padding(12)
-            .background(AppColors.alertRed.opacity(0.08))
-            .cornerRadius(12)
-        }
+        guard hasHardList else { return nil }
+        return partnerStore.accountUnavailableReason(isArabic: lang.isArabicEffective)
     }
 
-    /// Banner shown when the user has Scheduled or Time-Limit lists that
-    /// should have triggered the BlockingMonitor extension but haven't —
-    /// signal that the extension target isn't bound, the App Group is missing,
-    /// or signing/provisioning is wrong. Without this signal the silent failure
-    /// turns into 1-star reviews ("the schedule didn't work").
-    @ViewBuilder
-    private func monitorBannerIfNeeded() -> some View {
+    /// `DeviceActivityMonitor` extension hasn't responded in 24h despite the
+    /// user having Scheduled or Time-Limit lists that need it. Silent failure
+    /// becomes a 1-star review territory; surface it explicitly.
+    private var monitorAlertActive: Bool {
         let scheduledLists = lists.filter { $0.blockType == "scheduled" || $0.blockType == "timeLimit" }
         let oldestCreation = scheduledLists.map { $0.createdAt }.min()
-        if MonitorHealthcheck.shouldShowBanner(oldestScheduledOrLimit: oldestCreation) {
-            HStack(alignment: .top, spacing: 10) {
-                Image(systemName: "bolt.slash.fill")
-                    .foregroundColor(AppColors.alertRed)
-                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 4) {
-                    Text(lang.isArabicEffective ? "الجدولة غير مفعّلة" : "Scheduling not active")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundColor(AppColors.alertRed)
-                    Text(lang.isArabicEffective
-                         ? "نظام مراقبة الجدولة (DeviceActivityMonitor) لم يستجب خلال آخر 24 ساعة. القوائم المجدولة وحدود الوقت اليومي قد لا تطبّق الحجب تلقائياً. تواصل مع الدعم."
-                         : "The scheduling extension hasn't responded in the last 24 hours. Scheduled lists and daily Time-Limit blocks may not apply automatically. Contact support.")
-                        .font(.footnote)
-                        .foregroundColor(AppColors.textSecondary)
-                        .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
-                }
-                Spacer(minLength: 0)
-            }
-            .padding(12)
-            .background(AppColors.alertRed.opacity(0.08))
-            .cornerRadius(12)
-        }
+        return MonitorHealthcheck.shouldShowBanner(oldestScheduledOrLimit: oldestCreation)
     }
 
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    // Hero
-                    VStack(spacing: 12) {
-                        let trimmedName = obName.trimmingCharacters(in: .whitespacesAndNewlines)
-                        if !trimmedName.isEmpty {
-                            Text(lang.isArabicEffective ? "أهلاً، \(trimmedName) 👋" : "Welcome, \(trimmedName) 👋")
-                                .font(.body.weight(.medium))
-                                .foregroundColor(AppColors.textSecondary)
-                                .frame(maxWidth: .infinity)
-                                .multilineTextAlignment(.center)
-                        }
-                        ZStack {
-                            Circle()
-                                .fill(AppColors.infoBg)
-                                .frame(width: 96, height: 96)
-                            Image("nonet_logo")
-                            .resizable()
-                            .scaledToFit()
-                                .frame(width: 60, height: 60)
-                        }
-                        Text(AppStrings.heroTitle(lang))
-                            .font(.nnHero)
-                            .foregroundColor(AppColors.textPrimary)
-                            .multilineTextAlignment(.center)
-                        Text(AppStrings.homeSubtitle(lang))
-                            .font(.subheadline)
-                            .foregroundColor(AppColors.textSecondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 24)
-                    .padding(.bottom, 8)
-                    
- 
-                     // Motivational stats
-                     HStack(spacing: 12) {
-                         SavedCycleCard(lang: lang)
-                         LevelCard(lang: lang, value: "1")
-                         ChallengesSimpleCard(lang: lang, value: "add")
-                     }
-                    // Secondary CTA — outlined style so the primary "Get Started" (below)
-                    // stays the single dominant action on the screen. One primary per screen
-                    // is the canonical "Visual Hierarchy" rule (Apple HIG + Material).
-                    if !lists.isEmpty || !activeLists.isEmpty {
-                        ShareLink(item: shareMessage) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "square.and.arrow.up")
-                                Text(lang.isArabicEffective ? "مشاركة تقدّمي" : "Share progress")
-                            }
-                            .font(.subheadline.weight(.semibold))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 44)
-                            .background(Color.clear)
-                            .foregroundColor(AppColors.accent)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(AppColors.accent, lineWidth: 1)
+                VStack(alignment: .leading, spacing: NNSpacing.md) {
+                    // Consolidated alerts — at most one banner shows at a time
+                    // (priority: Permissions → iCloud → Monitor). The Permissions
+                    // case stays inline below to preserve its expand/collapse UX.
+                    if hasScreenTimePermission && hasNotificationPermission {
+                        // Other alerts only fire after permissions are sorted
+                        if let reason = iCloudAlertReason {
+                            slimAlertBanner(
+                                icon: "exclamationmark.icloud.fill",
+                                title: lang.isArabicEffective ? "iCloud غير متاح" : "iCloud unavailable",
+                                detail: reason
+                            )
+                        } else if monitorAlertActive {
+                            slimAlertBanner(
+                                icon: "bolt.slash.fill",
+                                title: lang.isArabicEffective ? "الجدولة غير مفعّلة" : "Scheduling not active",
+                                detail: lang.isArabicEffective
+                                    ? "نظام الجدولة لم يستجب خلال آخر 24 ساعة. تواصل مع الدعم."
+                                    : "Scheduling hasn't responded in 24h. Contact support."
                             )
                         }
                     }
-                    iCloudBannerIfNeeded()
-                    monitorBannerIfNeeded()
-                    SoftDivider(width: 300, opacity: 0.70)
 
-                    // Primary CTA — Create Blocklist
-                    CreateBlocklistCard(lang: lang, useGradientCTA: false) {
-                        showingCreate = true
-                    }
-                    .sheet(isPresented: $showingCreate) {
-                        CreateListSheet().environmentObject(lang)
-                    }
-                    SoftDivider(width: 300, opacity: 0.70)
-
-                    // Permissions (render only if missing).
-                    // Collapsed: slim banner (warning style — single row, ~44pt tall) so it
-                    //   signals "needs attention" without competing with the primary CTA.
-                    // Expanded: full card with per-permission Grant buttons (unchanged UX).
+                    // Permissions banner — kept inline because it has expand/collapse UX
                     if !(hasScreenTimePermission && hasNotificationPermission) {
                         let requiredCount = (hasScreenTimePermission ? 0 : 1) + (hasNotificationPermission ? 0 : 1)
                         VStack(spacing: 0) {
@@ -364,134 +276,114 @@ struct HomeView: View {
                         // full-card radius when expanded. The outer clip rounds the
                         // whole stack so banner + detail share a single outer shape.
                         .clipShape(RoundedRectangle(cornerRadius: permissionsExpanded ? 20 : 12))
-                        SoftDivider(width: 300, opacity: 0.70)
                     }
 
-                    // Lists
-                    VStack(alignment: .leading, spacing: 16) {
-                        HStack {
-                            Text(lang.isArabicEffective ? "قوائمك" : "Your Lists")
-                                .font(.nnSectionTitle)
-                                .foregroundColor(AppColors.textPrimary)
-                            Spacer()
-                            Button(action: { showingCreate = true }) {
-                                Image(systemName: "plus")
-                                    .foregroundColor(AppColors.accent)
-                                    .frame(width: 28, height: 28)
-                                    .background(AppColors.infoBg)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                            }
-                            .buttonStyle(.plain)
-                        }
+                    // Primary CTA — the single dominant action
+                    CreateBlocklistCard(lang: lang, useGradientCTA: false) {
+                        showingCreate = true
+                    }
+                    .sheet(isPresented: $showingCreate) {
+                        CreateListSheet().environmentObject(lang)
+                    }
 
-                        if lists.isEmpty {
-                            EmptyStateView(isArabic: lang.isArabicEffective)
-                        } else {
-                            VStack(spacing: 0) {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    if !activeLists.isEmpty {
-                                        Text(lang.isArabicEffective ? "القوائم النشطة" : "Active Lists")
-                                            .font(.caption)
-                                            .foregroundColor(AppColors.textSecondary)
-                                            .padding(.horizontal, 16)
-                                            .padding(.top, 12)
-                                    }
-                                    // Active lists first
+                    // ── LISTS ──
+                    if lists.isEmpty {
+                        EmptyStateView(isArabic: lang.isArabicEffective)
+                            .padding(.top, NNSpacing.xs)
+                    } else {
+                        // Active section — section header + flat rows in a single card
+                        if !activeLists.isEmpty {
+                            VStack(alignment: .leading, spacing: NNSpacing.xs) {
+                                Text(lang.isArabicEffective ? "النشطة الآن" : "Active now")
+                                    .font(.caption.weight(.medium))
+                                    .foregroundColor(AppColors.textSecondary)
+                                    .padding(.horizontal, NNSpacing.xxs)
+                                VStack(spacing: 0) {
                                     ForEach(activeLists) { item in
-                                        HStack(spacing: 12) {
-                                            if !lang.isArabicEffective && item.protection != "hard" {
-                                                Button(action: { toggleManual(for: item) }) {
-                                                    Image(systemName: isActiveNow(item) ? "pause.fill" : "play.fill")
-                                                        .font(.nnSmallButton)
-                                                        .foregroundColor(AppColors.accent)
-                                                        .frame(width: 32, height: 32)
-                                                        .background(AppColors.infoBg)
-                                                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                                                }
-                                                .buttonStyle(.plain)
-                                            }
-                                            NavigationLink(destination: ListDetailView(list: item)) {
-                                                ListRowCore(item: item, isActive: true)
-                                            }
-                                            if lang.isArabicEffective && item.protection != "hard" {
-                                                Button(action: { toggleManual(for: item) }) {
-                                                    Image(systemName: isActiveNow(item) ? "pause.fill" : "play.fill")
-                                                        .font(.nnSmallButton)
-                                                        .foregroundColor(AppColors.accent)
-                                                        .frame(width: 32, height: 32)
-                                                        .background(AppColors.infoBg)
-                                                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                                                }
-                                                .buttonStyle(.plain)
-                                            }
-                                        }
-                                        .padding(.horizontal, 16)
-                                        if item.id != activeLists.last?.id || !nonActiveLists.isEmpty {
-                                            Divider().background(AppColors.uiBorder.opacity(0.6)).padding(.horizontal, 16)
-                                        }
-                                    }
-                                    if !nonActiveLists.isEmpty {
-                                        Text(lang.isArabicEffective ? "قوائم أخرى" : "Other Lists")
-                                            .font(.caption)
-                                            .foregroundColor(AppColors.textSecondary)
-                                            .padding(.horizontal, 16)
-                                            .padding(.top, 12)
-                                    }
-                                    // Non-active lists
-                                    ForEach(nonActiveLists) { item in
-                                        HStack(spacing: 12) {
-                                            if !lang.isArabicEffective && item.protection != "hard" {
-                                                Button(action: { toggleManual(for: item) }) {
-                                                    Image(systemName: isActiveNow(item) ? "pause.fill" : "play.fill")
-                                                        .font(.nnSmallButton)
-                                                        .foregroundColor(AppColors.accent)
-                                                        .frame(width: 32, height: 32)
-                                                        .background(AppColors.infoBg)
-                                                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                                                }
-                                                .buttonStyle(.plain)
-                                            }
-                                            NavigationLink(destination: ListDetailView(list: item)) {
-                                                ListRowCore(item: item, isActive: false)
-                                            }
-                                            if lang.isArabicEffective && item.protection != "hard" {
-                                                Button(action: { toggleManual(for: item) }) {
-                                                    Image(systemName: isActiveNow(item) ? "pause.fill" : "play.fill")
-                                                        .font(.nnSmallButton)
-                                                        .foregroundColor(AppColors.accent)
-                                                        .frame(width: 32, height: 32)
-                                                        .background(AppColors.infoBg)
-                                                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                                                }
-                                                .buttonStyle(.plain)
-                                            }
-                                        }
-                                        .padding(.horizontal, 16)
-                                        if item.id != nonActiveLists.last?.id {
-                                            Divider().background(AppColors.uiBorder.opacity(0.6)).padding(.horizontal, 16)
+                                        listRow(item: item, isActive: true)
+                                        if item.id != activeLists.last?.id {
+                                            Divider()
+                                                .background(AppColors.uiBorder.opacity(0.5))
+                                                .padding(.horizontal, NNSpacing.md)
                                         }
                                     }
                                 }
                                 .background(AppColors.uiSurface)
-                                .cornerRadius(20)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 20)
-                                        .stroke(AppColors.uiBorder, lineWidth: 0.5)
-                                )
-                                .padding(.top, 8)
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                                .overlay(RoundedRectangle(cornerRadius: 16)
+                                    .stroke(AppColors.uiBorder, lineWidth: 0.5))
                             }
                         }
+
+                        // Other lists — collapsed by default to keep the home calm
+                        if !nonActiveLists.isEmpty {
+                            DisclosureGroup(isExpanded: $showOtherLists) {
+                                VStack(spacing: 0) {
+                                    ForEach(nonActiveLists) { item in
+                                        listRow(item: item, isActive: false)
+                                        if item.id != nonActiveLists.last?.id {
+                                            Divider()
+                                                .background(AppColors.uiBorder.opacity(0.5))
+                                                .padding(.horizontal, NNSpacing.md)
+                                        }
+                                    }
+                                }
+                                .background(AppColors.uiSurface)
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                                .overlay(RoundedRectangle(cornerRadius: 16)
+                                    .stroke(AppColors.uiBorder, lineWidth: 0.5))
+                                .padding(.top, NNSpacing.xs)
+                            } label: {
+                                Text(lang.isArabicEffective
+                                     ? "عرض \(nonActiveLists.count) قائمة أخرى"
+                                     : "Show \(nonActiveLists.count) other lists")
+                                    .font(.caption.weight(.medium))
+                                    .foregroundColor(AppColors.textSecondary)
+                            }
+                            .tint(AppColors.textSecondary)
+                            .padding(.horizontal, NNSpacing.xxs)
+                        }
+                    }
+
+                    // Subtle footer stats — only when there's real data to show
+                    if !activeLists.isEmpty {
+                        HStack(spacing: NNSpacing.sm) {
+                            Spacer()
+                            Image(systemName: "shield.lefthalf.filled")
+                                .font(.caption2)
+                                .foregroundColor(AppColors.textSecondary)
+                            Text(lang.isArabicEffective
+                                 ? "\(activeLists.count) قائمة نشطة الآن"
+                                 : "\(activeLists.count) active right now")
+                                .font(.footnote)
+                                .foregroundColor(AppColors.textSecondary)
+                            Spacer()
+                        }
+                        .padding(.top, NNSpacing.md)
                     }
 
                     Spacer(minLength: 0)
                 }
-                .padding(.horizontal, 24)
+                .padding(.horizontal, NNSpacing.xl)
+                .padding(.top, NNSpacing.sm)
                 .padding(.bottom, 28)
             }
             .background(AppColors.uiBackground)
-            .navigationTitle("")
+            .navigationTitle(homeNavTitle)
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar(.hidden, for: .navigationBar)
+            .toolbar {
+                // Share moved from inline button to toolbar — Apple HIG pattern
+                // for secondary actions on a content screen. Only renders when
+                // there's something worth sharing (at least one list exists).
+                if !lists.isEmpty {
+                    ToolbarItem(placement: .primaryAction) {
+                        ShareLink(item: shareMessage) {
+                            Image(systemName: "square.and.arrow.up")
+                                .foregroundColor(AppColors.accent)
+                        }
+                    }
+                }
+            }
             .alert(isPresented: $showDeleteConfirm) {
                 Alert(
                     title: Text(lang.isArabicEffective ? "حذف هذه القائمة؟" : "Delete this list?"),
@@ -520,7 +412,85 @@ struct HomeView: View {
             }
         }
     }
-    
+
+    // ─── View helpers (extracted to keep the body readable) ───
+
+    /// Inline navigation title — personalized greeting when the user provided
+    /// a name during onboarding, otherwise just the product name. Replaces the
+    /// old 204pt hero VStack (logo + title + subtitle) that was reclaiming
+    /// 33% of the iPhone SE viewport on every launch.
+    private var homeNavTitle: String {
+        let trimmedName = obName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedName.isEmpty {
+            return lang.isArabicEffective ? "أهلاً، \(trimmedName)" : "Welcome, \(trimmedName)"
+        }
+        return "NoNet"
+    }
+
+    /// Slim 44pt warning banner used by the consolidated alerts strip. Matches
+    /// the existing Permission-banner visual language (warningBg + warningFg
+    /// border, single row) so all home-screen alerts share one shape.
+    @ViewBuilder
+    private func slimAlertBanner(icon: String, title: String, detail: String) -> some View {
+        HStack(alignment: .top, spacing: NNSpacing.sm) {
+            Image(systemName: icon)
+                .foregroundColor(AppColors.alertRed)
+                .font(.callout)
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(AppColors.textPrimary)
+                Text(detail)
+                    .font(.footnote)
+                    .foregroundColor(AppColors.textSecondary)
+                    .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, NNSpacing.md)
+        .padding(.vertical, NNSpacing.sm)
+        .background(AppColors.alertRed.opacity(0.08))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(AppColors.alertRed.opacity(0.3), lineWidth: 0.5)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    /// Single list row — kept in one helper so Active and Other lists share
+    /// the exact same row visual. The play/pause toggle is hidden for Hard
+    /// Mode lists (you can't pause them by design) and the row swaps the
+    /// toggle side for RTL.
+    @ViewBuilder
+    private func listRow(item: ListEntity, isActive: Bool) -> some View {
+        HStack(spacing: NNSpacing.sm) {
+            if !lang.isArabicEffective && item.protection != "hard" {
+                toggleButton(for: item)
+            }
+            NavigationLink(destination: ListDetailView(list: item)) {
+                ListRowCore(item: item, isActive: isActive)
+            }
+            if lang.isArabicEffective && item.protection != "hard" {
+                toggleButton(for: item)
+            }
+        }
+        .padding(.horizontal, NNSpacing.md)
+        .padding(.vertical, NNSpacing.xs)
+    }
+
+    @ViewBuilder
+    private func toggleButton(for item: ListEntity) -> some View {
+        Button(action: { toggleManual(for: item) }) {
+            Image(systemName: isActiveNow(item) ? "pause.fill" : "play.fill")
+                .font(.nnSmallButton)
+                .foregroundColor(AppColors.accent)
+                .frame(width: 32, height: 32)
+                .background(AppColors.infoBg)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+        .buttonStyle(.plain)
+    }
+
     private func checkPermissions() {
         permissions.bootstrap()
     }
