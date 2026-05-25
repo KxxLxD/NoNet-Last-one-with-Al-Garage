@@ -699,7 +699,11 @@ struct HomeView: View {
                 toggleButton(for: item)
             }
             NavigationLink(destination: ListDetailView(list: item)) {
-                ListRowCore(item: item, isActive: isActive)
+                ListRowCore(
+                    item: item,
+                    isActive: isActive,
+                    pendingPartnerLabel: pendingPartnerLabel(for: item)
+                )
             }
             if lang.isArabicEffective && item.protection != "hard" {
                 toggleButton(for: item)
@@ -707,6 +711,16 @@ struct HomeView: View {
         }
         .padding(.horizontal, NNSpacing.md)
         .padding(.vertical, NNSpacing.xs)
+    }
+
+    /// Returns the localized "awaiting partner" badge label when there's a
+    /// pending outgoing approval request for this list, otherwise nil.
+    /// Drives the small chip rendered inside ListRowCore.
+    private func pendingPartnerLabel(for item: ListEntity) -> String? {
+        guard partnerStore.myOutgoingRequests.contains(where: { $0.listID == item.id && $0.status == .pending }) else {
+            return nil
+        }
+        return lang.isArabicEffective ? "بانتظار الشريك" : "Awaiting partner"
     }
 
     @ViewBuilder
@@ -758,9 +772,9 @@ struct HomeView: View {
 private extension HomeView {
     func toggleManual(for list: ListEntity) {
         // Hard Mode normally blocks the toggle — that's the whole point. But
-        // once an emergency-unlock request has matured (72h elapsed), the user
-        // has *earned* the right to release; let the toggle deactivate the
-        // list in that one specific case. Without this, the matured-unlock
+        // once an emergency-unlock request has matured (7 days elapsed), the
+        // user has *earned* the right to release; let the toggle deactivate
+        // the list in that one specific case. Without this, the matured-unlock
         // banner would say "use the toggle" but the toggle would silently
         // do nothing (the original P0).
         if list.protection == "hard" && !EmergencyUnlockStore.isGranted(for: list.id) {
@@ -771,7 +785,7 @@ private extension HomeView {
         if wasActive {
             BlockingEngine.shared.deactivate(list: list)
             // Consume the matured unlock so it isn't reusable indefinitely;
-            // a future re-block requires a fresh 72h request.
+            // a future re-block requires a fresh 7-day request.
             if list.protection == "hard" {
                 EmergencyUnlockStore.clear(for: list.id)
             }
@@ -1348,6 +1362,11 @@ struct ListDetailView: View {
     @State private var showCancelUnlockConfirm = false
     @State private var breakAttempts: [BreakAttempt] = []
     @State private var isLoadingAttempts = false
+    // Hard-Mode delete/disable routing through the gatekeeper of choice.
+    // Non-Hard lists use the inline "Delete" button below and never hit
+    // these flows — only Hard Mode goes through the gatekeeper.
+    @State private var gatekeeperSheetAction: GatekeeperAction?
+    @State private var partnerRequestSheetAction: GatekeeperAction?
     @Environment(\.dismiss) private var dismiss
 
     private struct Slot: Codable { let id: UUID; let day: Int; let fromMinutes: Int; let toMinutes: Int }
@@ -1379,6 +1398,14 @@ struct ListDetailView: View {
                     .background(AppColors.alertRed.opacity(0.10))
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.alertRed, lineWidth: 0.5))
                     .cornerRadius(12)
+                }
+
+                // Outgoing partner request — when there's a pending approval
+                // request for this list, show the partner's name + cancel
+                // button. Disappears the moment the partner approves/denies
+                // or the user cancels.
+                if let pending = outgoingPendingRequest() {
+                    pendingPartnerRequestBanner(request: pending)
                 }
 
                 // Emergency unlock — Forever + Hard only (D18)
@@ -1464,6 +1491,13 @@ struct ListDetailView: View {
                     partnerSection()
                 }
 
+                // Hard-Mode actions — gated by gatekeeperType. Hidden when a
+                // pending outgoing request already exists for this list (the
+                // request banner above handles the cancel flow instead).
+                if list.protection == "hard" && outgoingPendingRequest() == nil {
+                    hardModeActionsRow()
+                }
+
                 // Actions
                 if list.protection != "hard" {
                     HStack(spacing: 12) {
@@ -1516,7 +1550,7 @@ struct ListDetailView: View {
     /// D18 — Emergency unlock card for Forever + Hard lists.
     ///
     /// Three states surfaced to the user:
-    /// * No pending request → explanation + "Request unlock (72h delay)" button.
+    /// * No pending request → explanation + "Request unlock (7-day delay)" button.
     /// * Pending request → live countdown + "Cancel request" button.
     /// * Matured request → green confirmation + "Release lock now" button.
     ///
@@ -1566,8 +1600,8 @@ struct ListDetailView: View {
             Button(lang.isArabicEffective ? "إلغاء" : "Cancel", role: .cancel) {}
         } message: {
             Text(lang.isArabicEffective
-                 ? "سيُرفع الحجب تلقائياً بعد 72 ساعة من الآن. تقدر تلغي الطلب في أي وقت قبل ذلك."
-                 : "The block will release automatically 72 hours from now. You can cancel the request anytime before then.")
+                 ? "سيُرفع الحجب تلقائياً بعد ٧ أيام من الآن. تقدر تلغي الطلب في أي وقت قبل ذلك."
+                 : "The block will release automatically 7 days from now. You can cancel the request anytime before then.")
         }
         .alert(
             lang.isArabicEffective ? "إلغاء الطلب؟" : "Cancel request?",
@@ -1585,17 +1619,171 @@ struct ListDetailView: View {
         }
     }
 
+    /// Pending outgoing approval request scoped to this list. Used by
+    /// pendingPartnerRequestBanner to decide whether to render. Returns nil
+    /// when no request is in flight (the common case).
+    private func outgoingPendingRequest() -> BreakAttempt? {
+        partnerStore.myOutgoingRequests.first {
+            $0.listID == stableListId && $0.status == .pending
+        }
+    }
+
+    /// Side-by-side Delete + Disable buttons for Hard-Mode lists. Each routes
+    /// through the configured gatekeeper (NoNet ⇒ NoNetGatekeeperSheet,
+    /// Human ⇒ RequestActionSheet). The Disable button is hidden for Forever
+    /// lists since "pause" doesn't apply — Forever runs until the list itself
+    /// is deleted.
+    @ViewBuilder
+    private func hardModeActionsRow() -> some View {
+        VStack(spacing: NNSpacing.sm) {
+            Button(role: .destructive, action: { beginAction(.delete) }) {
+                Text(lang.isArabicEffective ? "اطلب حذف القائمة" : "Request to delete list")
+                    .font(.subheadline.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: NNHitTarget.minimum + 4)
+                    .background(Color.clear)
+                    .foregroundColor(AppColors.alertRed)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: NNRadius.control)
+                            .stroke(AppColors.alertRed, lineWidth: NNBorder.input)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+            }
+            .buttonStyle(.plain)
+
+            if list.blockType != "forever" {
+                Button(action: { beginAction(.disable) }) {
+                    Text(lang.isArabicEffective ? "اطلب إيقاف الحجب" : "Request to pause block")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: NNHitTarget.minimum + 4)
+                        .background(Color.clear)
+                        .foregroundColor(AppColors.textPrimary)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: NNRadius.control)
+                                .stroke(AppColors.uiBorder, lineWidth: NNBorder.input)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    /// Route a Hard-Mode action through the right gatekeeper sheet. Called by
+    /// Delete and Disable buttons; the sheet itself runs the local execution
+    /// once the gate is passed (NoNet path) or fires a CloudKit request and
+    /// the auto-executor takes over (Partner path).
+    private func beginAction(_ action: GatekeeperAction) {
+        if list.gatekeeperType == "partner" {
+            // Need an accepted partnership before a request can be sent.
+            // Without one the user is stuck — surface an error instead of
+            // silent no-op.
+            guard partnerStore.partnership(for: list.id)?.status == .accepted else {
+                partnerError = lang.isArabicEffective
+                    ? "لم يقبل أي شريك الدعوة بعد. أرسل دعوة جديدة أو حوّل الحارس إلى NoNet."
+                    : "No partner has accepted the invitation yet. Send a new invite or switch the gatekeeper to NoNet."
+                return
+            }
+            partnerRequestSheetAction = action
+        } else {
+            gatekeeperSheetAction = action
+        }
+    }
+
+    /// Performs the local side of a Hard-Mode action after the NoNet gate
+    /// has been passed. For delete: purge + Core Data delete + dismiss the
+    /// detail view (the entity is gone). For disable: deactivate the engine
+    /// + clear manual state — list stays in Core Data.
+    private func performLocalAction(_ action: GatekeeperAction) {
+        switch action {
+        case .delete:
+            let id = stableListId
+            BlockingEngine.shared.purge(listId: id)
+            if let ctx = list.managedObjectContext {
+                ctx.delete(list)
+                _ = ctx.saveIfNeeded()
+            }
+            BreaksStore.clear(for: id)
+            ManualStateStore.clear(for: id)
+            EmergencyUnlockStore.clear(for: id)
+            dismiss()
+        case .disable:
+            _ = BlockingEngine.shared.deactivate(list: list, force: true)
+            ManualStateStore.clear(for: list.id)
+        case .modify:
+            // Not surfaced today; left as a no-op so the enum is exhaustive.
+            break
+        }
+    }
+
+    /// Card displayed at the top of ListDetailView while a recovery-partner
+    /// approval request is outstanding. Lets the user back out before the
+    /// partner decides.
+    @ViewBuilder
+    private func pendingPartnerRequestBanner(request: BreakAttempt) -> some View {
+        let partnerName = partnerStore.partnerships
+            .first(where: { $0.id == request.partnershipID })
+            .flatMap { $0.partnerDisplayName }
+            ?? (lang.isArabicEffective ? "شريكك" : "your partner")
+
+        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.xs) {
+            HStack(spacing: NNSpacing.xs) {
+                Image(systemName: "hourglass")
+                    .foregroundColor(AppColors.accent)
+                    .font(.callout)
+                Text(lang.isArabicEffective
+                     ? "بانتظار موافقة \(partnerName)"
+                     : "Awaiting \(partnerName)'s approval")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(AppColors.textPrimary)
+                Spacer(minLength: 0)
+            }
+            if let reason = request.reason, !reason.isEmpty {
+                Text(lang.isArabicEffective ? "السبب الذي أرسلته: \(reason)" : "Your reason: \(reason)")
+                    .font(.footnote)
+                    .foregroundColor(AppColors.textSecondary)
+                    .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+            }
+            Button(action: {
+                Task {
+                    await partnerStore.cancelMyRequest(request.id)
+                }
+            }) {
+                Text(lang.isArabicEffective ? "إلغاء الطلب" : "Cancel request")
+                    .font(.footnote.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 36)
+                    .background(Color.clear)
+                    .foregroundColor(AppColors.alertRed)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: NNRadius.control)
+                            .stroke(AppColors.alertRed.opacity(0.4), lineWidth: NNBorder.input)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(NNSpacing.md)
+        .background(AppColors.infoBg)
+        .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
+        .overlay(
+            RoundedRectangle(cornerRadius: NNRadius.card)
+                .stroke(AppColors.accent.opacity(0.3), lineWidth: NNBorder.hairline)
+        )
+    }
+
     private func emergencyUnlockIdleView() -> some View {
         VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 10) {
             Text(lang.isArabicEffective
-                 ? "الحجب الدائم لا يمكن إيقافه فوراً. اطلب فك الحجب الآن وسيُرفع تلقائياً بعد 72 ساعة — وقت كافٍ ليمر الاندفاع، لكنك لست محبوساً للأبد."
-                 : "Forever blocks can't be deactivated instantly. Request unlock now and the block will release automatically after 72 hours — long enough for an impulse to pass, but not indefinitely locked.")
+                 ? "الحجب الدائم لا يمكن إيقافه فوراً. اطلب فك الحجب الآن وسيُرفع تلقائياً بعد ٧ أيام — وقت كافٍ ليمر الاندفاع، لكنك لست محبوساً للأبد."
+                 : "Forever blocks can't be deactivated instantly. Request unlock now and the block will release automatically after 7 days — long enough for an impulse to pass, but not indefinitely locked.")
                 .font(.footnote)
                 .foregroundColor(AppColors.textSecondary)
                 .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
 
             Button(action: { showRequestUnlockConfirm = true }) {
-                Text(lang.isArabicEffective ? "اطلب فك الحجب (تأخير 72 ساعة)" : "Request unlock (72-hour delay)")
+                Text(lang.isArabicEffective ? "اطلب فك الحجب (تأخير ٧ أيام)" : "Request unlock (7-day delay)")
                     .font(.subheadline.weight(.semibold))
                     .frame(maxWidth: .infinity)
                     .frame(height: 44)
@@ -1722,8 +1910,38 @@ struct ListDetailView: View {
         } message: {
             Text(partnerError ?? "")
         }
+        .sheet(item: $gatekeeperSheetAction) { action in
+            NoNetGatekeeperSheet(
+                listID: stableListId,
+                listName: list.name,
+                action: action,
+                onReasonAccepted: { performLocalAction(action) },
+                onWaitStarted: {
+                    // Refresh the unlock card so the new countdown appears.
+                    emergencyUnlockNonce = UUID()
+                }
+            )
+            .environmentObject(lang)
+        }
+        .sheet(item: $partnerRequestSheetAction) { action in
+            if let partnership = partnerStore.partnership(for: stableListId) {
+                RequestActionSheet(
+                    listID: stableListId,
+                    listName: list.name,
+                    action: action,
+                    partnership: partnership,
+                    onRequestSent: {
+                        Task { await partnerStore.fetchMyOutgoingRequests() }
+                    }
+                )
+                .environmentObject(lang)
+            }
+        }
         .onAppear {
-            Task { await partnerStore.fetchPartnerships() }
+            Task {
+                await partnerStore.fetchPartnerships()
+                await partnerStore.fetchMyOutgoingRequests()
+            }
         }
     }
 
@@ -1948,6 +2166,11 @@ private extension HomeView {
 private struct ListRowCore: View {
     let item: ListEntity
     let isActive: Bool
+    /// When non-nil, a small chip is shown next to the protection badge to
+    /// signal there's a pending recovery-partner approval request for this
+    /// list. The caller computes the localized label so this view doesn't
+    /// need a LanguageManager dependency.
+    var pendingPartnerLabel: String? = nil
     @Environment(\.layoutDirection) private var layoutDirection
     var body: some View {
         HStack(alignment: .center) {
@@ -1959,6 +2182,19 @@ private struct ListRowCore: View {
                     .truncationMode(.tail)
                 HStack(spacing: 8) {
                     ProtectionBadge(isHard: item.protection == "hard", isRTL: layoutDirection == .rightToLeft)
+                    if let label = pendingPartnerLabel {
+                        HStack(spacing: 4) {
+                            Image(systemName: "hourglass")
+                                .font(.caption2)
+                            Text(label)
+                                .font(.caption.weight(.semibold))
+                        }
+                        .foregroundColor(AppColors.accent)
+                        .padding(.vertical, 3)
+                        .padding(.horizontal, 8)
+                        .background(AppColors.infoBg)
+                        .clipShape(Capsule())
+                    }
                 }
             }
             Spacer()

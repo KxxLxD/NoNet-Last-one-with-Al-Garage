@@ -398,12 +398,16 @@ final class CloudKitPartnerStore: ObservableObject {
         }
     }
 
-    /// Fetch break-attempt records where the current device is the partner
-    /// (i.e. records in the sharedDB whose partnership.partnerUserID is us).
-    /// Populates `pendingPartnerRequests`.
+    /// Fetch break-attempt records addressed TO this device (i.e. ones where
+    /// the user acts as the recovery partner, not the sender). Populates
+    /// `pendingPartnerRequests` so HomeView can render approval banners.
+    ///
+    /// Filtering is done post-fetch by cross-referencing each record's
+    /// partnershipID against the cached `partnerships` array — the user is
+    /// the partner iff `partnership.partnerUserID == currentUserRecordID`.
+    /// Without this, the sender would see their own pending requests as
+    /// "approve/deny" prompts on their own device.
     func fetchPendingRequestsForMe() async {
-        // Look in sharedDB — that's where records arrive when someone shares
-        // a partnership with us. We filter to .pending status only.
         let query = CKQuery(
             recordType: PartnerRecordTypes.breakAttempt,
             predicate: NSPredicate(format: "status == %@", RequestStatus.pending.rawValue)
@@ -415,14 +419,15 @@ final class CloudKitPartnerStore: ObservableObject {
                 guard case .success(let record) = result else { return nil }
                 return BreakAttempt(from: record)
             }
-            self.pendingPartnerRequests = attempts
+            self.pendingPartnerRequests = attempts.filter { isIncoming($0) }
         } catch {
             log.error("fetchPendingRequestsForMe failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
-    /// Fetch break-attempt records the current device originated. Populates
-    /// `myOutgoingRequests` so HomeView can show "Awaiting partner" badges.
+    /// Fetch break-attempt records the current device originated (i.e. the
+    /// user is the owner in the partnership). Populates `myOutgoingRequests`
+    /// so HomeView can show "Awaiting partner" badges + a cancel action.
     func fetchMyOutgoingRequests() async {
         let query = CKQuery(
             recordType: PartnerRecordTypes.breakAttempt,
@@ -442,11 +447,29 @@ final class CloudKitPartnerStore: ObservableObject {
                 log.error("fetchMyOutgoingRequests in \(db.databaseScope.rawValue, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
             }
         }
-        // Only keep records where status indicates work in progress or recent
-        // resolution (so HomeView can show a transient banner for denied).
-        self.myOutgoingRequests = collected.filter {
-            $0.status == .pending || $0.status == .approved || $0.status == .denied
+        self.myOutgoingRequests = collected
+            .filter { isOutgoing($0) }
+            .filter { $0.status == .pending || $0.status == .approved || $0.status == .denied }
+    }
+
+    /// True if the BreakAttempt was sent TO this device (we're the partner).
+    /// False otherwise (we're the sender, or we have no partnership context).
+    private func isIncoming(_ request: BreakAttempt) -> Bool {
+        guard let myID = currentUserRecordID else { return false }
+        guard let p = partnerships.first(where: { $0.id == request.partnershipID }) else {
+            return false
         }
+        return p.partnerUserID == myID
+    }
+
+    /// True if this device originated the BreakAttempt (we're the sender,
+    /// i.e. the partnership owner). Opposite of isIncoming for sane records.
+    private func isOutgoing(_ request: BreakAttempt) -> Bool {
+        guard let myID = currentUserRecordID else { return false }
+        guard let p = partnerships.first(where: { $0.id == request.partnershipID }) else {
+            return false
+        }
+        return p.ownerUserID == myID
     }
 
     // MARK: - Break attempts (legacy log-only path)

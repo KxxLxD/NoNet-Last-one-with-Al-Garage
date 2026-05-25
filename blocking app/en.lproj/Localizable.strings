@@ -6,7 +6,11 @@
   emitted by the BlockingMonitor extension and CloudKitPartnerStore's
   CKQuerySubscription template). Apple displays the localized version that
   matches the recipient device's language, not the sender's.
+
+  %@ in PARTNER_BREAK_BODY is the list name (see notificationInfo.alertLocalizationArgs
+  in CloudKitPartnerStore.setupSubscriptions). Phrasing reads naturally when
+  the substitution is a list name, e.g. "Focus Time".
 */
 
-"PARTNER_BREAK_TITLE" = "Block break attempt";
-"PARTNER_BREAK_BODY" = "%@ tried to lift a Hard Mode block — check in with them.";
+"PARTNER_BREAK_TITLE" = "Request from your partner";
+"PARTNER_BREAK_BODY" = "New request about \"%@\" — open NoNet to review.";

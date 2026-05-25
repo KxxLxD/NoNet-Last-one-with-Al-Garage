@@ -84,7 +84,7 @@ final class BlockingEngine {
     ///
     /// Forever + Hard normally has no natural end. To satisfy Apple Guideline 5.1.1 (user
     /// control) we honour a matured `EmergencyUnlockStore` request — once the user has waited
-    /// the configured delay (default 72h), the lock releases. The delay is long enough that
+    /// the configured delay (default 7 days), the lock releases. The delay is long enough that
     /// the lock still serves its purpose against impulse, while bounded enough that the user
     /// is never permanently held.
     ///

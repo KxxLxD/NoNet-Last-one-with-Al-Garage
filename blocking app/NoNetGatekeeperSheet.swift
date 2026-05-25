@@ -23,10 +23,14 @@
 import SwiftUI
 
 /// Which Hard-Mode action triggered the gatekeeper sheet.
-enum GatekeeperAction {
+/// Identifiable so it can drive `.sheet(item:)` directly — the raw value
+/// (delete/disable/modify) is the stable id.
+enum GatekeeperAction: String, Identifiable {
     case delete
     case disable
     case modify
+
+    var id: String { rawValue }
 
     func title(isArabic: Bool) -> String {
         switch self {
@@ -37,13 +41,7 @@ enum GatekeeperAction {
     }
 
     /// Used as the "actionType" string in DeletionLogStore entries.
-    var rawLogKey: String {
-        switch self {
-        case .delete:  return "delete"
-        case .disable: return "disable"
-        case .modify:  return "modify"
-        }
-    }
+    var rawLogKey: String { rawValue }
 }
 
 struct NoNetGatekeeperSheet: View {
