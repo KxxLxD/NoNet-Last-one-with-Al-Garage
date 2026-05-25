@@ -72,11 +72,22 @@ final class StoreManager: ObservableObject {
     }
 
     /// Re-scan current entitlements and update `purchasedProductIDs`.
+    ///
+    /// `Transaction.currentEntitlements` returns every valid entitlement for
+    /// this Apple ID, including subscriptions shared into the user's iCloud
+    /// Family Group (`ownershipType == .familyShared`). We treat both
+    /// `.purchased` and `.familyShared` the same way — the user is Premium
+    /// either way. This is what makes the App Store Connect "Family Sharing
+    /// ON" toggle (matched by `familyShareable: true` in Products.storekit)
+    /// actually grant Premium to the secondary family members.
     func refreshEntitlements() async {
         var active: Set<String> = []
         for await result in Transaction.currentEntitlements {
-            if case .verified(let tx) = result, tx.revocationDate == nil {
-                active.insert(tx.productID)
+            guard case .verified(let tx) = result else { continue }
+            guard tx.revocationDate == nil else { continue }
+            active.insert(tx.productID)
+            if tx.ownershipType == .familyShared {
+                log.notice("entitlement (family-shared): \(tx.productID, privacy: .public)")
             }
         }
         purchasedProductIDs = active

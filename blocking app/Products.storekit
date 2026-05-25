@@ -32,7 +32,7 @@
           "adHocOffers" : [],
           "codeOffers" : [],
           "displayPrice" : "30.00",
-          "familyShareable" : false,
+          "familyShareable" : true,
           "groupNumber" : 1,
           "internalID" : "MO0001",
           "introductoryOffer" : {
@@ -62,7 +62,7 @@
           "adHocOffers" : [],
           "codeOffers" : [],
           "displayPrice" : "300.00",
-          "familyShareable" : false,
+          "familyShareable" : true,
           "groupNumber" : 1,
           "internalID" : "YR0001",
           "introductoryOffer" : {
