@@ -24,12 +24,31 @@ private let log = Logger(subsystem: "app.nonet.blocking", category: "Monitor")
 
 /// Must match the App Group ID in both .entitlements files and the main app's FamilySelectionStore.
 private let kSharedAppGroup = "group.com.nonetapp.shared"
-private let sharedDefaults: UserDefaults = UserDefaults(suiteName: kSharedAppGroup) ?? .standard
+
+/// Without an App Group the extension and the main app are looking at different
+/// `.standard` containers — writes from the extension are invisible to the app
+/// (and vice-versa). The earlier `?? .standard` fallback masked this. Treat the
+/// missing-suite case as a real failure: log loudly and skip the work, so the
+/// app's MonitorHealthcheck can flag it on the next foreground.
+private let sharedDefaults: UserDefaults? = {
+    if let suite = UserDefaults(suiteName: kSharedAppGroup) { return suite }
+    log.error("App Group \(kSharedAppGroup, privacy: .public) NOT GRANTED to extension — shields will not apply.")
+    return nil
+}()
+
+/// Heartbeat key shared with MonitorHealthcheck in the main app target.
+/// Keep this string in sync — the two files live in separate compile units.
+private let kHeartbeatKey = "v1:monitor:heartbeat"
+
+private func recordHeartbeat() {
+    sharedDefaults?.set(Date().timeIntervalSince1970, forKey: kHeartbeatKey)
+}
 
 class BlockingMonitor: DeviceActivityMonitor {
     override func intervalDidStart(for activity: DeviceActivityName) {
         super.intervalDidStart(for: activity)
         log.notice("intervalDidStart: \(activity.rawValue, privacy: .public)")
+        recordHeartbeat()
 
         guard let parsed = parseActivity(activity) else { return }
         let store = ManagedSettingsStore(named: .init(rawValue: "blocklist.\(parsed.id.uuidString)"))
@@ -49,6 +68,7 @@ class BlockingMonitor: DeviceActivityMonitor {
     override func intervalDidEnd(for activity: DeviceActivityName) {
         super.intervalDidEnd(for: activity)
         log.notice("intervalDidEnd: \(activity.rawValue, privacy: .public)")
+        recordHeartbeat()
 
         guard let parsed = parseActivity(activity) else { return }
         let store = ManagedSettingsStore(named: .init(rawValue: "blocklist.\(parsed.id.uuidString)"))
@@ -61,6 +81,7 @@ class BlockingMonitor: DeviceActivityMonitor {
     override func eventDidReachThreshold(_ event: DeviceActivityEvent.Name, activity: DeviceActivityName) {
         super.eventDidReachThreshold(event, activity: activity)
         log.notice("eventDidReachThreshold: \(event.rawValue, privacy: .public) in \(activity.rawValue, privacy: .public)")
+        recordHeartbeat()
 
         guard let parsed = parseActivity(activity), parsed.kind == .timeLimit else { return }
         let store = ManagedSettingsStore(named: .init(rawValue: "blocklist.\(parsed.id.uuidString)"))
@@ -70,7 +91,11 @@ class BlockingMonitor: DeviceActivityMonitor {
     private func applyShield(to store: ManagedSettingsStore, for id: UUID) {
         // Read the persisted FamilyActivitySelection from the shared App Group defaults
         // (same key the main app's FamilySelectionStore writes to).
-        guard let data = sharedDefaults.data(forKey: "v1:familySelection:\(id.uuidString)"),
+        guard let defaults = sharedDefaults else {
+            log.error("applyShield(\(id, privacy: .public)) skipped: App Group not granted to extension")
+            return
+        }
+        guard let data = defaults.data(forKey: "v1:familySelection:\(id.uuidString)"),
               let selection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) else {
             log.notice("applyShield(\(id, privacy: .public)) skipped: no persisted selection")
             return
