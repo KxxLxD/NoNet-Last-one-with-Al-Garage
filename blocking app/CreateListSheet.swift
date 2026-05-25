@@ -149,17 +149,17 @@ struct CreateListSheet: View {
                 Text(validationMessage)
             }
             .alert(lang.isArabicEffective ? "تفعيل الوضع الصارم" : "Enable Hard Mode", isPresented: $showHardConfirmAlert) {
-                Button(lang.isArabicEffective ? "فعّل الصارم" : "Enable Hard Mode") { save(totalSeconds: pendingSeconds, baseName: pendingBaseName) }
-                Button(lang.isArabicEffective ? "لا، رجّعني" : "No, go back", role: .cancel) {}
+                Button(lang.isArabicEffective ? "فعّل الوضع الصارم" : "Enable Hard Mode") { save(totalSeconds: pendingSeconds, baseName: pendingBaseName) }
+                Button(lang.isArabicEffective ? "تراجعت، رجّعني" : "No, go back", role: .cancel) {}
             } message: {
-                Text(lang.isArabicEffective ? "الوضع الصارم يقفل القائمة طوال المدة. ما تقدر تعدّل، تحذف، أو توقف الحجب حتى ينتهي الوقت. هذا متعمَّد لتعزيز التزامك." : "Hard Mode locks this list for the full duration. You can't edit, delete, or pause the block until time runs out. This is intentional, to strengthen your commitment.")
+                Text(lang.isArabicEffective ? "الوضع الصارم يقفل القائمة طوال المدّة. لا تستطيع تعديلها أو حذفها أو إيقاف الحجب حتى ينتهي الوقت. هذا الإلزام متعمَّد، لتعزيز التزامك بالقرار." : "Hard Mode locks this list for the full duration. You can't edit, delete, or pause the block until time runs out. This is intentional, to strengthen your commitment.")
             }
-            .alert(lang.isArabicEffective ? "الحجب الدائم خيار جدّي" : "Permanent block is serious", isPresented: $showForeverFirstAlert) {
-                Button(lang.isArabicEffective ? "فهمت، متابعة" : "I understand, continue") { /* keep blockType = forever */ }
+            .alert(lang.isArabicEffective ? "الحجب الدائم قرار جادّ" : "Permanent block is serious", isPresented: $showForeverFirstAlert) {
+                Button(lang.isArabicEffective ? "فهمت، أكمل" : "I understand, continue") { /* keep blockType = forever */ }
                 Button(lang.isArabicEffective ? "إلغاء" : "Cancel", role: .cancel) { blockType = "now" }
             } message: {
                 Text(lang.isArabicEffective
-                     ? "الحجب الدائم يبقى فعّالاً حتى تحذف القائمة. إذا اخترت الوضع الصارم أيضاً، ما راح تقدر تحذفها إطلاقاً."
+                     ? "الحجب الدائم يبقى فعّالاً حتى تحذف القائمة يدوياً. وإذا فعّلت الوضع الصارم أيضاً، فلن تستطيع حذفها على الإطلاق."
                      : "A permanent block stays active until you delete the list. With Hard Mode you cannot delete it at all.")
             }
             .alert(lang.isArabicEffective ? "تأكيد نهائي" : "Final Confirmation", isPresented: $showForeverConfirmAlert) {
@@ -174,7 +174,7 @@ struct CreateListSheet: View {
                 Button(lang.isArabicEffective ? "إلغاء" : "Cancel", role: .cancel) {}
             } message: {
                 Text(lang.isArabicEffective
-                     ? "بعد التفعيل، التطبيقات والمواقع المختارة ما راح تشتغل أبداً حتى تحذف القائمة يدوياً. مع الوضع الصارم، حتى الحذف ما راح يكون متاحاً."
+                     ? "بعد التفعيل، لن تعمل التطبيقات والمواقع المختارة على الإطلاق حتى تحذف القائمة يدوياً. ومع الوضع الصارم، حتى الحذف لن يكون متاحاً."
                      : "Once enabled, the selected apps and sites will never work until you manually delete this list. With Hard Mode, even deletion won't be available.")
             }
             .alert(

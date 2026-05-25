@@ -481,7 +481,7 @@ private struct PickerSheetWrapper: View {
                 }
                 Button(lang.isArabicEffective ? "متابعة التعديل" : "Keep editing", role: .cancel) {}
             } message: {
-                Text(lang.isArabicEffective ? "تغييراتك راح تتلاشى ولا يمكن استرجاعها." : "Your changes will be lost and can't be recovered.")
+                Text(lang.isArabicEffective ? "ستضيع تعديلاتك ولن يمكن استرجاعها." : "Your changes will be lost and can't be recovered.")
             }
         }
     }

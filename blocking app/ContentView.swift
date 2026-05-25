@@ -100,7 +100,7 @@ struct ContentView: View {
             }
             Button(lang.isArabicEffective ? "لاحقاً" : "Later", role: .cancel) {}
         } message: {
-            Text(lang.isArabicEffective ? "نأمل إن NoNet ساعدك خلال الـ 7 أيام. اختر خطّة عشان تكمل بالميزات الكاملة، أو استمر بالنسخة المجانية." : "We hope NoNet helped you during these 7 days. Choose a plan to keep all features, or continue with the free version.")
+            Text(lang.isArabicEffective ? "نأمل أن NoNet ساعدك خلال هذه الأيام السبعة. اختر خطّة لتحتفظ بجميع المزايا، أو استمرّ بالنسخة المجانية." : "We hope NoNet helped you during these 7 days. Choose a plan to keep all features, or continue with the free version.")
         }
         .preferredColorScheme(.light)
     }

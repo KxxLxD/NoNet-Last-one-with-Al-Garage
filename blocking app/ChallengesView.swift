@@ -61,7 +61,12 @@ struct ChallengesView: View {
                     ChallengeCardCompact(
                         title: lang.isArabicEffective ? "إشعارات أقل" : "Fewer notifications",
                         description: lang.isArabicEffective ? "اسكت المشتّتات" : "Mute distractors",
-                        options: simpleOptions(["4h","8h", lang.isArabicEffective ? "أيام العمل" : "Workdays", lang.isArabicEffective ? "دائماً" : "Always"], pts: [10,20,30,40]),
+                        options: simpleOptions([
+                            lang.isArabicEffective ? "4 ساعات" : "4h",
+                            lang.isArabicEffective ? "8 ساعات" : "8h",
+                            lang.isArabicEffective ? "أيام العمل" : "Workdays",
+                            lang.isArabicEffective ? "دائماً" : "Always"
+                        ], pts: [10,20,30,40]),
                         onChange: apply
                     )
                 }
@@ -137,9 +142,9 @@ struct ChallengesView: View {
 
     private func timeOptions() -> [ChallengeOption] {
         [
-            .option(label: "4h", points: 10),
-            .option(label: "2h", points: 20),
-            .option(label: "1h", points: 30),
+            .option(label: lang.isArabicEffective ? "4 ساعات" : "4h", points: 10),
+            .option(label: lang.isArabicEffective ? "ساعتان" : "2h", points: 20),
+            .option(label: lang.isArabicEffective ? "ساعة" : "1h", points: 30),
             .option(label: lang.isArabicEffective ? "حجب دائم" : "Block", points: 50)
         ]
     }

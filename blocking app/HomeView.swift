@@ -495,7 +495,7 @@ struct HomeView: View {
             .alert(isPresented: $showDeleteConfirm) {
                 Alert(
                     title: Text(lang.isArabicEffective ? "حذف هذه القائمة؟" : "Delete this list?"),
-                    message: Text(lang.isArabicEffective ? "الحجب راح يتوقّف فوراً، وما يمكن استعادة الإعدادات بعد الحذف." : "The block will stop immediately, and the settings can't be restored after deletion."),
+                    message: Text(lang.isArabicEffective ? "سيتوقّف الحجب فوراً، ولا يمكن استعادة الإعدادات بعد الحذف." : "The block will stop immediately, and the settings can't be restored after deletion."),
                     primaryButton: .destructive(Text(lang.isArabicEffective ? "احذف القائمة" : "Delete list")) {
                         if let toDelete = listToDelete {
                             deleteList(toDelete)
@@ -859,7 +859,7 @@ private struct EmptyStateView: View {
             Image(systemName: "square.and.pencil")
                 .font(.title)
                 .foregroundColor(AppColors.textSecondary)
-            Text(isArabic ? "رحلة تركيزك تبدأ من هنا. اضغط \"أنشئ قائمة\"." : "Your focus journey starts here. Tap Create List.")
+            Text(isArabic ? "ابدأ رحلتك بإنشاء أوّل قائمة حجب." : "Your focus journey starts here. Tap Create List.")
                 .font(.subheadline)
                 .multilineTextAlignment(isArabic ? .trailing : .center)
                 .foregroundColor(AppColors.textSecondary)

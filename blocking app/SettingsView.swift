@@ -98,7 +98,7 @@ struct SettingsView: View {
                             .font(.footnote)
                             .foregroundColor(AppColors.textSecondary)
                             .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
-                        Text(lang.isArabicEffective ? "ضمان ذهبي: استرجاع 14 يوماً شهري / شهرين سنوي." : "Golden Guarantee: refund in 14 days monthly / 2 months yearly.")
+                        Text(lang.isArabicEffective ? "ضمان ذهبي: استرجاع 14 يوم شهري / شهرين سنوي." : "Golden Guarantee: refund in 14 days monthly / 2 months yearly.")
                             .font(.caption)
                             .foregroundColor(AppColors.textSecondary)
                         Group {
@@ -376,7 +376,7 @@ struct FAQView: View {
                 // 11) Golden Guarantee
                 FAQItem(
                     question: lang.isArabicEffective ? "هل يوجد ضمان ذهبي؟" : "Is there a Golden Guarantee?",
-                    answer: lang.isArabicEffective ? "الشهري: استرجاع كامل خلال 14 يوماً. السنوي: خلال شهرين." : "Monthly: full refund within 14 days. Yearly: within two months."
+                    answer: lang.isArabicEffective ? "الشهري: استرجاع كامل خلال 14 يوم. السنوي: خلال شهرين." : "Monthly: full refund within 14 days. Yearly: within two months."
                 )
                 
                 Spacer()
