@@ -309,8 +309,8 @@ struct FAQView: View {
                 
                 // 1) What is NoNet?
                 FAQItem(
-                    question: lang.isArabicEffective ? "ما هو تطبيق نونت؟" : "What is NoNet?",
-                    answer: lang.isArabicEffective ? "نونت يساعدك على ضبط استخدامك للإنترنت، حجب التطبيقات والمواقع المشتتة، وبناء عادات تركيز صحية." : "NoNet helps you control internet use, block distracting apps/websites, and build healthy focus habits."
+                    question: lang.isArabicEffective ? "ما هو تطبيق NoNet؟" : "What is NoNet?",
+                    answer: lang.isArabicEffective ? "NoNet يساعدك على تنظيم استخدامك للإنترنت، وحجب التطبيقات والمواقع المشتّتة، وبناء عادات تركيز صحيّة." : "NoNet helps you control internet use, block distracting apps/websites, and build healthy focus habits."
                 )
                 
                 // 2) Privacy & Data
