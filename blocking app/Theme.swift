@@ -98,8 +98,8 @@ struct AppStrings {
     static func createList(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "أنشئ قائمة" : "Create List" }
     static func homeSubtitle(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "سيطر على حياتك الرقمية" : "Take control of your digital life" }
     static func heroTitle(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "حرر نفسك" : "Free Your Self" }
-    static func createBlocklistTitle(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "أنشئ قائمة حظر" : "Create Blocklist" }
-    static func createBlocklistDesc(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "احظر التطبيقات والمواقع المشتتة" : "Block distracting apps & websites" }
+    static func createBlocklistTitle(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "أنشئ قائمة حجب" : "Create Blocklist" }
+    static func createBlocklistDesc(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "احجب التطبيقات والمواقع المشتتة" : "Block distracting apps & websites" }
     static func viewAll(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "عرض الكل" : "View All" }
     static func permissionsTitle(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "الأذونات المطلوبة" : "Permissions required" }
     static func enableNotifications(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "تفعيل الإشعارات" : "Enable Notifications" }
@@ -107,5 +107,5 @@ struct AppStrings {
     static func challengesLabel(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "التحديات" : "Challenges" }
     static func shareProgress(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "مشاركة التقدّم" : "Share Progress" }
     static func progressTitle(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "التقدّم" : "Progress" }
-    static func progressDesc(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "ابدأ تحدّيًا لتحقق سلسلة وترفع مستواك." : "Start a challenge to build streaks and level up." }
+    static func progressDesc(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "ابدأ تحدّياً لتحقق سلسلة وترفع مستواك." : "Start a challenge to build streaks and level up." }
 }

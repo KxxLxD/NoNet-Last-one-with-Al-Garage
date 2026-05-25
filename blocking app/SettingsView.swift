@@ -84,7 +84,7 @@ struct SettingsView: View {
                         HStack {
                             Text(lang.isArabicEffective ? "الحالة" : "Status")
                             Spacer()
-                            let badgeText = isPremium ? (lang.isArabicEffective ? "Premium فعال" : "Premium active") : (lang.isArabicEffective ? "نسخة مجانية" : "Free version")
+                            let badgeText = isPremium ? (lang.isArabicEffective ? "Premium مفعَّل" : "Premium active") : (lang.isArabicEffective ? "نسخة مجانية" : "Free version")
                             Text(badgeText)
                                 .font(.footnote)
                                 .padding(.horizontal, 10)
@@ -94,11 +94,11 @@ struct SettingsView: View {
                                 )
                                 .foregroundColor(isPremium ? AppColors.successGreen : AppColors.accent)
                         }
-                        Text(lang.isArabicEffective ? "الترقية تفتح السكجوال والميزات المتقدمة." : "Upgrade unlocks scheduling and advanced features.")
+                        Text(lang.isArabicEffective ? "الترقية تفتح الجدولة والميزات المتقدمة." : "Upgrade unlocks scheduling and advanced features.")
                             .font(.footnote)
                             .foregroundColor(AppColors.textSecondary)
                             .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
-                        Text(lang.isArabicEffective ? "ضمان ذهبي: استرجاع 14 يومًا شهري / شهرين سنوي." : "Golden Guarantee: refund in 14 days monthly / 2 months yearly.")
+                        Text(lang.isArabicEffective ? "ضمان ذهبي: استرجاع 14 يوماً شهري / شهرين سنوي." : "Golden Guarantee: refund in 14 days monthly / 2 months yearly.")
                             .font(.caption)
                             .foregroundColor(AppColors.textSecondary)
                         Group {
@@ -316,13 +316,13 @@ struct FAQView: View {
                 // 2) Privacy & Data
                 FAQItem(
                     question: lang.isArabicEffective ? "ماذا عن الخصوصية والبيانات؟" : "What about privacy and data?",
-                    answer: lang.isArabicEffective ? "نحترم خصوصيتك — لا نبيع بياناتك. يعتمد التطبيق أساسًا على التخزين المحلي وعلى صلاحيات iOS." : "We respect your privacy — we don’t sell your data. The app relies primarily on local storage and iOS permissions."
+                    answer: lang.isArabicEffective ? "نحترم خصوصيتك — لا نبيع بياناتك. يعتمد التطبيق أساساً على التخزين المحلي وعلى أذونات iOS." : "We respect your privacy — we don’t sell your data. The app relies primarily on local storage and iOS permissions."
                 )
                 
                 // 3) Offline
                 FAQItem(
                     question: lang.isArabicEffective ? "هل يعمل بدون إنترنت؟" : "Does it work offline?",
-                    answer: lang.isArabicEffective ? "نعم، الحجب يعمل على الجهاز نفسه باستخدام صلاحيات Screen Time، حتى بدون اتصال." : "Yes. Blocking works on‑device via Screen Time permissions, even without internet."
+                    answer: lang.isArabicEffective ? "نعم، الحجب يعمل على الجهاز نفسه باستخدام إذن Screen Time، حتى بدون اتصال." : "Yes. Blocking works on‑device via Screen Time permissions, even without internet."
                 )
                 
                 SoftDivider(width: 280, opacity: 0.7)
@@ -362,7 +362,7 @@ struct FAQView: View {
                 // 9) App Picker permission
                 FAQItem(
                     question: lang.isArabicEffective ? "لماذا لا أرى كل التطبيقات عند الاختيار؟" : "Why don’t I see all apps in the picker?",
-                    answer: lang.isArabicEffective ? "يحتاج التطبيق إذن Screen Time. امنح الصلاحية من الإعدادات ثم أعد المحاولة." : "Screen Time permission is required. Grant access in Settings, then try again."
+                    answer: lang.isArabicEffective ? "يحتاج التطبيق إذن Screen Time. امنح الإذن من إعدادات الـ iPhone ثم أعد المحاولة." : "Screen Time permission is required. Grant access in Settings, then try again."
                 )
                 
                 SoftDivider(width: 280, opacity: 0.7)
@@ -376,7 +376,7 @@ struct FAQView: View {
                 // 11) Golden Guarantee
                 FAQItem(
                     question: lang.isArabicEffective ? "هل يوجد ضمان ذهبي؟" : "Is there a Golden Guarantee?",
-                    answer: lang.isArabicEffective ? "الشهري: استرجاع كامل خلال 14 يومًا. السنوي: خلال شهرين." : "Monthly: full refund within 14 days. Yearly: within two months."
+                    answer: lang.isArabicEffective ? "الشهري: استرجاع كامل خلال 14 يوماً. السنوي: خلال شهرين." : "Monthly: full refund within 14 days. Yearly: within two months."
                 )
                 
                 Spacer()

@@ -27,7 +27,7 @@ struct ChatBotView: View {
                 "كيف أقلل وقت الألعاب؟",
                 "أعطني خطة تركيز لمدة 7 أيام",
                 "كيف أتخلص من عادة السوشيال؟",
-                "اقترح جدول حظر 60 دقيقة",
+                "اقترح جدول حجب 60 دقيقة",
                 "بدائل صحية للهاتف"
             ]
         } else {
@@ -48,7 +48,7 @@ struct ChatBotView: View {
             return [
                 "ساعدني أرتب حياتي",
                 "أعطني خطة تركيز لمدة 7 أيام",
-                "اقترح جدول حظر 60 دقيقة",
+                "اقترح جدول حجب 60 دقيقة",
                 "روتين صباحي للتركيز",
                 "نصائح لإدارة الوقت"
             ]
@@ -86,9 +86,9 @@ struct ChatBotView: View {
     private var plansCategory: [String] {
         if lang.isArabicEffective {
             return [
-                "خطة حظر الإباحية للأبد",
+                "خطة حجب الإباحية للأبد",
                 "خطة التخلص من القمار للأبد",
-                "خطة نوم صحي (حظر النت ليلًا)",
+                "خطة نوم صحي (حجب النت ليلاً)",
                 "خطة التقليل من إدمان السوشيال",
                 "خطة التقليل من الريلز",
                 "خطة التقليل من الألعاب"
@@ -113,12 +113,12 @@ struct ChatBotView: View {
                         Image(systemName: "lock.shield")
                             .font(.system(size: 48))  /* TODO: icon — consider Image scale */
                             .foregroundColor(AppColors.accent)
-                        Text(lang.isArabicEffective ? "الشات بوت متاح فقط للمستخدمين المميزين" : "Chat Bot is available for Premium users")
+                        Text(lang.isArabicEffective ? "مساعد NoNet متاح لمشتركي Premium فقط" : "Chat Bot is available for Premium users")
                             .multilineTextAlignment(.center)
                             .foregroundColor(AppColors.textSecondary)
                             .padding(.horizontal)
                         Button(action: { selectedTab = 2 }) {
-                            Text(lang.isArabicEffective ? "اشترك الآن / Upgrade Now" : "Upgrade Now")
+                            Text(lang.isArabicEffective ? "اشترك الآن" : "Upgrade Now")
                                 .fontWeight(.semibold)
                                 .frame(maxWidth: .infinity)
                                 .padding()
@@ -303,7 +303,7 @@ struct ChatBotView: View {
 
     private func seedIfFirstTime() {
         if messages.isEmpty && isPremium {
-            let welcome = lang.isArabicEffective ? "مرحبًا! أنا رفيق NoNet الذكي. كيف أساعدك اليوم؟" : "Hi! I'm your NoNet assistant. How can I help today?"
+            let welcome = lang.isArabicEffective ? "مرحباً! أنا رفيق NoNet الذكي. كيف أساعدك اليوم؟" : "Hi! I'm your NoNet assistant. How can I help today?"
             messages.append(ChatMessage(isUser: false, text: welcome, timestamp: Date()))
         }
     }

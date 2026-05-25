@@ -36,7 +36,7 @@ struct ResourcesView: View {
                         ? ["البالغ يفتح هاتفه ~58 مرة يومياً.",
                            "متوسط استخدام السوشيال 2.5 ساعة/يوم.",
                            "55% يشعرون بقلق عند البعد عن الهاتف.",
-                           "كل تنبيه ينقطع التركيز ~23 دقيقة."]
+                           "كل إشعار يقطع التركيز نحو 23 دقيقة."]
                         : ["Adults unlock their phones ~58×/day.",
                            "Average social-media use: 2.5 hours/day.",
                            "55% report anxiety when away from their phone.",

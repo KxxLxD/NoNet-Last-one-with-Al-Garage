@@ -24,7 +24,7 @@ struct AuthView: View {
                     .frame(width: 72, height: 72)
                     .padding(.top, 12)
 
-                Text(lang.isArabicEffective ? "سجّل دخولك أو أنشئ حسابًا" : "Sign in or create an account")
+                Text(lang.isArabicEffective ? "سجّل دخولك أو أنشئ حساباً" : "Sign in or create an account")
                     .font(.nnCardTitle)
                     .multilineTextAlignment(.center)
                     .foregroundColor(AppColors.textPrimary)
@@ -155,7 +155,7 @@ struct AuthView: View {
 
                 Spacer(minLength: 12)
             }
-            .navigationTitle(lang.isArabicEffective ? "مرحبًا" : "Welcome")
+            .navigationTitle(lang.isArabicEffective ? "مرحباً" : "Welcome")
             .background(AppColors.uiBackground)
             .alert(
                 lang.isArabicEffective ? "استعادة كلمة المرور" : "Password recovery",

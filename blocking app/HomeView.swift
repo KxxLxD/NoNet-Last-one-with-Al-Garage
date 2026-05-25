@@ -1376,7 +1376,7 @@ struct ListDetailView: View {
                 EmergencyUnlockStore.clear(for: stableListId)
                 emergencyUnlockNonce = UUID()
             }
-            Button(lang.isArabicEffective ? "تراجع" : "Cancel", role: .cancel) {}
+            Button(lang.isArabicEffective ? "إلغاء" : "Cancel", role: .cancel) {}
         } message: {
             Text(lang.isArabicEffective
                  ? "سيبقى الحجب نشطاً ولن يُفك حتى تطلب من جديد."

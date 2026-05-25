@@ -17,14 +17,14 @@ struct ChallengesView: View {
                     Text(lang.isArabicEffective ? "التحديات" : "Challenges")
                         .font(.nnSectionTitle)
                         .foregroundColor(AppColors.textPrimary)
-                    Text(lang.isArabicEffective ? "اختر تحديات تكسب بها نقاطًا ثم احفظ." : "Pick challenges to earn points, then save.")
+                    Text(lang.isArabicEffective ? "اختر تحديات تكسب بها نقاطاً ثم احفظ." : "Pick challenges to earn points, then save.")
                         .font(.body)
                         .foregroundColor(AppColors.textSecondary)
 
                     ChallengeCardCompact(
-                        title: lang.isArabicEffective ? "حظر المحتوى للبالغين والمواعدة والقمار" : "Adult/Dating/Gambling",
+                        title: lang.isArabicEffective ? "حجب المحتوى للبالغين والمواعدة والقمار" : "Adult/Dating/Gambling",
                         description: lang.isArabicEffective ? "إيقاف دائم" : "Block forever",
-                        options: simpleOptions([lang.isArabicEffective ? "حظر دائم" : "Block forever"], pts: [60]),
+                        options: simpleOptions([lang.isArabicEffective ? "حجب دائم" : "Block forever"], pts: [60]),
                         onChange: apply
                     )
 
@@ -61,7 +61,7 @@ struct ChallengesView: View {
                     ChallengeCardCompact(
                         title: lang.isArabicEffective ? "إشعارات أقل" : "Fewer notifications",
                         description: lang.isArabicEffective ? "اسكت المشتّتات" : "Mute distractors",
-                        options: simpleOptions(["4h","8h", lang.isArabicEffective ? "أيام العمل" : "Workdays", lang.isArabicEffective ? "دائمًا" : "Always"], pts: [10,20,30,40]),
+                        options: simpleOptions(["4h","8h", lang.isArabicEffective ? "أيام العمل" : "Workdays", lang.isArabicEffective ? "دائماً" : "Always"], pts: [10,20,30,40]),
                         onChange: apply
                     )
                 }
@@ -140,7 +140,7 @@ struct ChallengesView: View {
             .option(label: "4h", points: 10),
             .option(label: "2h", points: 20),
             .option(label: "1h", points: 30),
-            .option(label: lang.isArabicEffective ? "حظر دائم" : "Block", points: 50)
+            .option(label: lang.isArabicEffective ? "حجب دائم" : "Block", points: 50)
         ]
     }
 

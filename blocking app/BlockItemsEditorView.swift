@@ -169,7 +169,7 @@ struct BlockItemsEditorView: View {
                 // Quick Apps after Apps
                 Section(header: HStack(spacing: 8) { Image(systemName: "bolt.fill").foregroundColor(AppColors.accent); Text(lang.isArabicEffective ? "Quick Apps Blocking" : "Quick Apps Blocking").font(.nnCardTitle) }) {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(lang.isArabicEffective ? "اختر الأكثر إدمانًا أولًا — سيتم إضافة الحجب كمواقع وتطبيقات." : "Pick the most addictive first — we’ll add both website and app entries.")
+                        Text(lang.isArabicEffective ? "اختر الأكثر إدماناً أولاً — سيتم إضافة الحجب كمواقع وتطبيقات." : "Pick the most addictive first — we’ll add both website and app entries.")
                             .font(.footnote)
                             .foregroundColor(AppColors.textSecondary)
                             .padding(.bottom, 4)

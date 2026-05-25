@@ -259,7 +259,7 @@ struct CreateListSheet: View {
                     categoriesListCard()
 
         if draft.websites.isEmpty && draft.apps.isEmpty && draft.categories.isEmpty {
-                        Text(lang.isArabicEffective ? "أضف عنصرًا واحدًا على الأقل" : "Add at least one item")
+                        Text(lang.isArabicEffective ? "أضف عنصراً واحداً على الأقل" : "Add at least one item")
                             .font(.footnote)
                             .foregroundColor(AppColors.textSecondary)
                     }
@@ -297,7 +297,7 @@ struct CreateListSheet: View {
                     .cornerRadius(12)
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.uiBorder, lineWidth: 0.5))
                 if !isNameValid, !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    Text(lang.isArabicEffective ? "الاسم قصير جدًا" : "Name is too short")
+                    Text(lang.isArabicEffective ? "الاسم قصير جداً" : "Name is too short")
                         .font(.footnote)
                         .foregroundColor(AppColors.textSecondary)
     }
