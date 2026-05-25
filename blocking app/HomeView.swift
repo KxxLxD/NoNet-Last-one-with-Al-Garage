@@ -146,6 +146,12 @@ struct HomeView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: NNSpacing.md) {
+                    // Welcome card — re-introduces the logo (removed in the
+                    // initial v1.3.0 redesign) at a much smaller scale than the
+                    // old 204pt hero. Costs ~88pt vs. the original 33% of the
+                    // iPhone SE viewport.
+                    welcomeCard()
+
                     // Consolidated alerts — at most one banner shows at a time
                     // (priority: Permissions → iCloud → Monitor). The Permissions
                     // case stays inline below to preserve its expand/collapse UX.
@@ -415,16 +421,59 @@ struct HomeView: View {
 
     // ─── View helpers (extracted to keep the body readable) ───
 
-    /// Inline navigation title — personalized greeting when the user provided
-    /// a name during onboarding, otherwise just the product name. Replaces the
-    /// old 204pt hero VStack (logo + title + subtitle) that was reclaiming
-    /// 33% of the iPhone SE viewport on every launch.
-    private var homeNavTitle: String {
+    /// Brand mark in the navigation bar. Personalization moved to the
+    /// welcomeCard() at the top of the ScrollView so the nav title stays
+    /// stable and the greeting only appears once.
+    private var homeNavTitle: String { "NoNet" }
+
+    /// Compact welcome card at the top of the ScrollView — re-introduces the
+    /// logo at a smaller scale than the removed 204pt hero. Layout:
+    ///   [⊙ 50×50 logo in 56pt infoBg circle]  Greeting (.headline)
+    ///                                          Sub-line (.subheadline)
+    /// RTL-safe (HStack auto-flips). ~88pt total (vs. old 204pt hero).
+    @ViewBuilder
+    private func welcomeCard() -> some View {
+        HStack(spacing: NNSpacing.sm) {
+            ZStack {
+                Circle()
+                    .fill(AppColors.infoBg)
+                    .frame(width: 56, height: 56)
+                Image("nonet_logo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 40, height: 40)
+                    .accessibilityHidden(true)
+            }
+
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 2) {
+                Text(welcomeGreeting)
+                    .font(.headline)
+                    .foregroundColor(AppColors.textPrimary)
+                    .lineLimit(1)
+                Text(lang.isArabicEffective ? "جاهز للتركيز؟" : "Ready to focus?")
+                    .font(.subheadline)
+                    .foregroundColor(AppColors.textSecondary)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+        }
+        .padding(NNSpacing.md)
+        .background(AppColors.uiSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(AppColors.uiBorder, lineWidth: 0.5)
+        )
+    }
+
+    /// Personalized greeting line for the welcome card. Falls back to a
+    /// brand welcome when no onboarding name is set.
+    private var welcomeGreeting: String {
         let trimmedName = obName.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedName.isEmpty {
             return lang.isArabicEffective ? "أهلاً، \(trimmedName)" : "Welcome, \(trimmedName)"
         }
-        return "NoNet"
+        return lang.isArabicEffective ? "أهلاً بك في NoNet" : "Welcome to NoNet"
     }
 
     /// Slim 44pt warning banner used by the consolidated alerts strip. Matches
