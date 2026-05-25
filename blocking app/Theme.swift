@@ -92,24 +92,24 @@ struct AppColors {
 }
 
 struct AppStrings {
-    static func isArabicLocale(_ lang: LanguageManager) -> Bool {
+    @MainActor static func isArabicLocale(_ lang: LanguageManager) -> Bool {
         lang.isArabicEffective
     }
 
-    static func homeTitle(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "الصفحة الرئيسية" : "Home" }
-    static func settingsTitle(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "الإعدادات" : "Settings" }
-    static func appTagline(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "حرر نفسك من إدمان الإنترنت" : "Free yourself from internet addiction" }
-    static func createList(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "أنشئ قائمة" : "Create List" }
-    static func homeSubtitle(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "سيطر على حياتك الرقمية" : "Take control of your digital life" }
-    static func heroTitle(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "حرر نفسك" : "Free Your Self" }
-    static func createBlocklistTitle(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "أنشئ قائمة حجب" : "Create Blocklist" }
-    static func createBlocklistDesc(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "احجب التطبيقات والمواقع المشتتة" : "Block distracting apps & websites" }
-    static func viewAll(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "عرض الكل" : "View All" }
-    static func permissionsTitle(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "الأذونات المطلوبة" : "Permissions required" }
-    static func enableNotifications(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "تفعيل الإشعارات" : "Enable Notifications" }
-    static func levelLabel(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "المستوى" : "Level" }
-    static func challengesLabel(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "التحديات" : "Challenges" }
-    static func shareProgress(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "مشاركة التقدّم" : "Share Progress" }
-    static func progressTitle(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "التقدّم" : "Progress" }
-    static func progressDesc(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "ابدأ تحدّياً لتحقق سلسلة وترفع مستواك." : "Start a challenge to build streaks and level up." }
+    @MainActor static func homeTitle(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "الصفحة الرئيسية" : "Home" }
+    @MainActor static func settingsTitle(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "الإعدادات" : "Settings" }
+    @MainActor static func appTagline(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "حرر نفسك من إدمان الإنترنت" : "Free yourself from internet addiction" }
+    @MainActor static func createList(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "أنشئ قائمة" : "Create List" }
+    @MainActor static func homeSubtitle(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "سيطر على حياتك الرقمية" : "Take control of your digital life" }
+    @MainActor static func heroTitle(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "حرر نفسك" : "Free Your Self" }
+    @MainActor static func createBlocklistTitle(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "أنشئ قائمة حجب" : "Create Blocklist" }
+    @MainActor static func createBlocklistDesc(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "احجب التطبيقات والمواقع المشتتة" : "Block distracting apps & websites" }
+    @MainActor static func viewAll(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "عرض الكل" : "View All" }
+    @MainActor static func permissionsTitle(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "الأذونات المطلوبة" : "Permissions required" }
+    @MainActor static func enableNotifications(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "تفعيل الإشعارات" : "Enable Notifications" }
+    @MainActor static func levelLabel(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "المستوى" : "Level" }
+    @MainActor static func challengesLabel(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "التحديات" : "Challenges" }
+    @MainActor static func shareProgress(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "مشاركة التقدّم" : "Share Progress" }
+    @MainActor static func progressTitle(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "التقدّم" : "Progress" }
+    @MainActor static func progressDesc(_ lang: LanguageManager) -> String { isArabicLocale(lang) ? "ابدأ تحدّياً لتحقق سلسلة وترفع مستواك." : "Start a challenge to build streaks and level up." }
 }
