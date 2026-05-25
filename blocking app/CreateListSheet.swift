@@ -842,8 +842,10 @@ struct CreateListSheet: View {
         switch context.saveIfNeeded() {
         case .failure(let error):
             // Log technical details internally; show the user a friendly, actionable message.
+            // List name is PII (user might pick a sensitive label) → .private.
+            // Error description may contain internal paths/keys → also .private.
             Logger(subsystem: "app.nonet.blocking", category: "CreateListSheet")
-                .error("Core Data save failed while creating list '\(pendingBaseName, privacy: .public)': \(error.localizedDescription, privacy: .public)")
+                .error("Core Data save failed while creating list '\(pendingBaseName, privacy: .private)': \(error.localizedDescription, privacy: .private)")
             saveErrorMessage = lang.isArabicEffective
                 ? "لم نتمكّن من حفظ القائمة الآن. جرّب مرّة ثانية، وإذا تكرّر الخطأ أعد تشغيل التطبيق."
                 : "We couldn't save the list right now. Try again, and if it keeps failing, restart the app."

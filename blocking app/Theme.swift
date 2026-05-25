@@ -1,5 +1,9 @@
 import SwiftUI
 
+/// Centralized language preference. Marked @MainActor because @Published
+/// changes must publish on the main thread — without this, modifying
+/// `selected` from a background actor would race with SwiftUI's diffing.
+@MainActor
 final class LanguageManager: ObservableObject {
     static let shared = LanguageManager()
 
