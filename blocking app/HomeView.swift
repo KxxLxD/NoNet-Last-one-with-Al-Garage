@@ -303,7 +303,7 @@ struct HomeView: View {
                                                 Text(lang.isArabicEffective ? "منح" : "Grant")
                                                     .font(.footnote.weight(.semibold))
                                                     .padding(.horizontal, 12)
-                                                    .frame(height: 30)
+                                                    .frame(minHeight: 44) // HIG minimum touch target
                                                     .background(AppColors.accent)
                                                     .foregroundColor(.white)
                                                     .cornerRadius(8)
@@ -334,7 +334,7 @@ struct HomeView: View {
                                                 Text(lang.isArabicEffective ? "تفعيل" : "Enable")
                                                     .font(.footnote.weight(.semibold))
                                                     .padding(.horizontal, 12)
-                                                    .frame(height: 30)
+                                                    .frame(minHeight: 44) // HIG minimum touch target
                                                     .background(AppColors.accent)
                                                     .foregroundColor(.white)
                                                     .cornerRadius(8)

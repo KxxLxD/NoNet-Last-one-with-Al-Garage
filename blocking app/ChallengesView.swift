@@ -240,8 +240,8 @@ private struct SleepChallengeCard: View {
             Button(action: { onChange(40) }) {
                 Text(lang.isArabicEffective ? "اعتمد هذه الأوقات" : "Apply these times")
                     .font(.nnSmallButton)
-                    .frame(height: 36)
-                    .padding(.horizontal, 12)
+                    .frame(minHeight: 44) // HIG minimum touch target
+                    .padding(.horizontal, 16)
                     .background(AppColors.accent)
                     .foregroundColor(.white)
                     .cornerRadius(12)

@@ -144,7 +144,7 @@ struct SettingsView: View {
                             HStack {
                                 Image(systemName: "questionmark.circle").foregroundColor(AppColors.accent)
                                     .font(.nnCardBody)
-                                Text("FAQ")
+                                Text(lang.isArabicEffective ? "الأسئلة الشائعة" : "FAQ")
                                 Spacer()
                             }
                         }

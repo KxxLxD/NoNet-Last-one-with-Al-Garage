@@ -133,8 +133,8 @@ struct BlockScreenView: View {
                 .font(.nnCaption)
                 .foregroundColor(AppColors.textSecondary)
         }
-        .padding(.horizontal, 12)
-        .frame(height: 32)
+        .padding(.horizontal, 16)
+        .frame(minHeight: 44) // HIG minimum touch target — break pill is tappable
         .background(flashBreak ? AppColors.accent.opacity(0.4) : Color.clear)
         .overlay(
             Capsule().stroke(AppColors.uiBorder, lineWidth: 0.5)
