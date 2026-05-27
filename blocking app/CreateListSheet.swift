@@ -412,10 +412,15 @@ struct CreateListSheet: View {
         .background(AppColors.uiBackground)
         .navigationTitle(lang.isArabicEffective ? "إنشاء قائمة" : "Create List")
         .listStyle(.insetGrouped)
-        // No manual bottom padding — safeAreaInset(edge: .bottom) on the Done
-        // bar already reserves the inset height in the List's scroll area.
-        // Previously had .padding(.bottom, 120) which double-reserved space
-        // and created a ~120pt empty gap between the last card and the button.
+        // Small bottom padding (24pt) so the last section's footer text
+        // (breaksCard's "Choose number of breaks…" line) doesn't crowd up
+        // against the sticky Done bar. safeAreaInset reserves the button's
+        // height in the scroll area, but Section footer text sits in a
+        // tighter zone that can read as "stuck on the button" without an
+        // explicit gap. Earlier this was 120pt — that was overkill and
+        // created a visible dead zone; 24pt is the sweet spot for a tidy
+        // visual break without a ghost gap.
+        .padding(.bottom, NNSpacing.xl)
     }
 
     /// "What to block" — replaces the previous nested-card structure.

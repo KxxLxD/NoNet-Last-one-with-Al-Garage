@@ -116,6 +116,10 @@ struct BlockItemsEditorView: View {
         .navigationTitle(navigationTitleWithCount)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbarContent }
+        // Match CreateListSheet's breathing-room: section footer text in
+        // the last section (currently Categories) gets some space above
+        // the sticky Save bar rather than crowding straight up to it.
+        .padding(.bottom, NNSpacing.xl)
         .safeAreaInset(edge: .bottom) { saveBar }
         .onAppear(perform: handleOnAppear)
         .onChange(of: selectedCategories) { _ in hasUnsavedChanges = true }
