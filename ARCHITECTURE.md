@@ -97,19 +97,30 @@ NoNet تطبيق iOS محلي بالكامل (offline-first). كل البيان�
 
 | الملف | الغرض |
 |------|-------|
-| **AppStorageKeys.swift** | كل سلاسل مفاتيح `@AppStorage` في مكان واحد — استبعاد الأخطاء الإملائية. |
-| **BlockingConstants.swift** | ثوابت مثل `breakDurationOptions = [5,10,15]`، `minBlockSeconds = 300`. |
-| **BlockingEngine.swift** | محرك الحجب — يدير `ManagedSettingsStore` لكل قائمة + `DeviceActivityCenter` للجدولة. |
+| **AppStorageKeys.swift** | كل سلاسل مفاتيح `@AppStorage` في مكان واحد، كلها `v1:` prefix. مع migration table في `PersistenceMigration` للترقية من الأسماء القديمة. |
+| **BlockingConstants.swift** | ثوابت (`breakDurationOptions = [5,10,15]`، `minBlockSeconds = 300`، `emergencyUnlockDelaySeconds = 7 أيام`، `challengePointsPerLevel = 200`، `seederDefaultDurationSeconds = 3600`). |
+| **BlockingEngine.swift** | محرك الحجب — يدير `ManagedSettingsStore` لكل قائمة + `DeviceActivityCenter` للجدولة (schedule per slot × weekday). `purge(listId:)` هو المسار الوحيد لتنظيف per-list state. |
 | **PermissionsManager.swift** | `@MainActor ObservableObject` يدير حالة Screen Time + Notifications، يستمع لـ `didBecomeActiveNotification`. |
-| **FamilySelectionStore.swift** | يحفظ `FamilyActivitySelection` (رموز التطبيقات/الفئات) في UserDefaults كـ JSON. |
+| **FamilySelectionStore.swift** | يحفظ `FamilyActivitySelection` (رموز التطبيقات/الفئات) في App Group UserDefaults كـ JSON. |
 | **SchedulePersistence.swift** | encode/decode لـ `scheduleSlots` مع payload `{version, slots}` للتطوّر المستقبلي. |
 | **CoreDataExtensions.swift** | `saveIfNeeded() -> Result<Void, Error>` — مع `os.Logger`. |
-| **StoreManager.swift** | StoreKit 2 — products/purchase/restore/redeem + `Transaction.updates` listener. |
+| **CloudKitPartnerStore.swift** | `@MainActor ObservableObject` يدير شريك التعافي عبر CloudKit (privateDB + sharedDB + CKShare). يخزّن `databaseScope` على كل Partnership ليجنب double-DB lookup في العمليات اللاحقة. |
+| **ApprovalExecutor.swift** | `executePendingApprovals()` — يطبّق الـ `.approved` requests محلياً (purge / deactivate / modify). Idempotent ضد الـ duplicate pushes. |
+| **PendingBreakAttemptQueue.swift** | طابور offline للـ BreakAttempt records فشل CloudKit upload. سعة 50، يدعم status + reason للـ approval workflow. |
+| **MonitorHealthcheck.swift** | يكشف إذا الـ BlockingMonitor extension متركّب بشكل صحيح عبر heartbeat key في App Group. |
+| **EmergencyUnlockStore** (`PersistenceHelpers.swift`) | `@MainActor ObservableObject` لـ 7-day delay على Hard + Forever lists. ضمان Apple 5.1.1 (user control). |
+| **TrialClock.swift** | حساب trial-elapsed math (isTrialActive / daysRemaining / hasTrialExpired) مع defense ضد clock rewind. |
+| **LanguageResolver.swift** | single source of truth لـ effective UI language. يستخدمه LanguageManager + SmartListSeeder بدون duplication. |
+| **DataReset.swift** | `signOutAndClear()` — تنظيف شامل عند logout (Keychain + AppStorage + per-list stores + Core Data + PendingQueue). |
+| **SmartListSeeder.swift** | بذر قائمة inactive من بيانات onboarding بعد التسجيل. |
+| **StoreManager.swift** | StoreKit 2 — products/purchase/restore/redeem + `Transaction.updates` listener. منتجات مرتبة بـ `ProductIDs.all` order (لا price assumption). |
 | **ProductIDs.swift** | IDs المنتجات (`com.nonetapp.monthly` / `.yearly`). |
 | **AppleSignInCoordinator.swift** | Sign in with Apple مع nonce/SHA256 — يحفظ `userIdentifier` في Keychain. |
 | **KeychainStore.swift** | Wrapper بسيط حول `Security` framework. |
-| **ChatResponder.swift** | `protocol ChatResponder` + `LocalChatResponder` (محلي بدون شبكة). |
+| **ChatResponder.swift** | `protocol ChatResponder` + `LocalChatResponder` (محلي بدون شبكة) مع token-aware keyword matching. |
 | **LegalContent.swift** | نصوص سياسة الخصوصية والشروط بالعربية والإنجليزية. |
+| **Components.swift** | مكتبة UI components مشتركة (SoftDivider, LabeledTextField, ProtectionBadge, EmptyState, ...). |
+| **DesignTokens.swift** | Typography + spacing + radius + border + hit-target tokens — single source of truth للـ design system. |
 
 ---
 
