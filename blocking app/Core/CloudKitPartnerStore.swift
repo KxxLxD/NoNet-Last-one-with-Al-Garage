@@ -408,35 +408,48 @@ final class CloudKitPartnerStore: ObservableObject {
 
     private func updateRequestStatus(requestID: String, to status: RequestStatus) async {
         let recordID = CKRecord.ID(recordName: requestID)
-        // The record lives wherever it was saved — try shared first (the
-        // common case: invitee approving) then private (sender cancelling).
+
+        // Resolve the preferred DB from cached state. The BreakAttempt's
+        // parent partnership knows its scope (set at fetch time), so we
+        // can route fetch + save to the right database directly instead
+        // of probing both. If the caches are cold (rare), fall back to
+        // the legacy try-shared-then-private order.
+        let cachedAttempt = myOutgoingRequests.first(where: { $0.id == requestID })
+            ?? pendingPartnerRequests.first(where: { $0.id == requestID })
+        let cachedPartnership = cachedAttempt.flatMap { attempt in
+            partnerships.first(where: { $0.id == attempt.partnershipID })
+        }
+        let dbOrder: [CKDatabase]
+        if let partnership = cachedPartnership {
+            let preferred = database(for: partnership)
+            let other: CKDatabase = (preferred === sharedDB) ? privateDB : sharedDB
+            dbOrder = [preferred, other]
+        } else {
+            dbOrder = [sharedDB, privateDB]
+        }
+
         var record: CKRecord?
-        for db in [sharedDB, privateDB] {
+        var foundIn: CKDatabase?
+        for db in dbOrder {
             if let r = try? await db.record(for: recordID) {
                 record = r
+                foundIn = db
                 break
             }
         }
-        guard let record = record else {
+        guard let record = record, let foundIn = foundIn else {
             log.error("updateRequestStatus: record \(requestID, privacy: .public) not found")
             return
         }
         record["status"] = status.rawValue as CKRecordValue
         record["decidedAt"] = Date() as CKRecordValue
         do {
-            // Save back to whichever DB owned the record — we test both.
-            for db in [sharedDB, privateDB] {
-                do {
-                    _ = try await db.save(record)
-                    log.notice("updateRequestStatus: \(requestID, privacy: .public) → \(status.rawValue, privacy: .public)")
-                    await fetchPendingRequestsForMe()
-                    await fetchMyOutgoingRequests()
-                    return
-                } catch {
-                    continue
-                }
-            }
-            log.error("updateRequestStatus: save failed in both DBs for \(requestID, privacy: .public)")
+            _ = try await foundIn.save(record)
+            log.notice("updateRequestStatus: \(requestID, privacy: .public) → \(status.rawValue, privacy: .public)")
+            await fetchPendingRequestsForMe()
+            await fetchMyOutgoingRequests()
+        } catch {
+            log.error("updateRequestStatus save in \(foundIn.databaseScope.rawValue, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -663,6 +676,10 @@ final class CloudKitPartnerStore: ObservableObject {
     }
 
     /// Fetch all break attempts for a given partnership, newest first.
+    /// Routes to the partnership's known database when possible (the common
+    /// case — caller fetched partnerships before this call), and falls back
+    /// to querying both DBs only when the partnership isn't in the local
+    /// cache (cold-start, race against fetchPartnerships).
     func fetchBreakAttempts(partnershipID: String) async -> [BreakAttempt] {
         let partnershipRecordID = CKRecord.ID(recordName: partnershipID)
         let ref = CKRecord.Reference(recordID: partnershipRecordID, action: .none)
@@ -672,8 +689,15 @@ final class CloudKitPartnerStore: ObservableObject {
         )
         query.sortDescriptors = [NSSortDescriptor(key: "attemptedAt", ascending: false)]
 
+        let databasesToQuery: [CKDatabase] = {
+            if let cached = partnerships.first(where: { $0.id == partnershipID }) {
+                return [database(for: cached)]
+            }
+            return [privateDB, sharedDB]
+        }()
+
         var attempts: [BreakAttempt] = []
-        for db in [privateDB, sharedDB] {
+        for db in databasesToQuery {
             do {
                 let (results, _) = try await db.records(matching: query)
                 let parsed = results.compactMap { _, result -> BreakAttempt? in
