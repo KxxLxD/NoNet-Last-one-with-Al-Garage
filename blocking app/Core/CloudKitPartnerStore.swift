@@ -351,6 +351,7 @@ final class CloudKitPartnerStore: ObservableObject {
         let record = makeBreakAttemptRecord(
             recordName: attemptID.uuidString,
             partnershipID: partnershipID,
+            ownerUserID: ownerUserID(for: partnershipID),
             listID: listID,
             listName: listName,
             attemptedAt: attemptedAt,
@@ -566,6 +567,7 @@ final class CloudKitPartnerStore: ObservableObject {
         let record = makeBreakAttemptRecord(
             recordName: attemptID.uuidString,
             partnershipID: partnershipID,
+            ownerUserID: ownerUserID(for: partnershipID),
             listID: listID,
             listName: listName,
             attemptedAt: attemptedAt,
@@ -618,6 +620,7 @@ final class CloudKitPartnerStore: ObservableObject {
             let record = makeBreakAttemptRecord(
                 recordName: attempt.id.uuidString,
                 partnershipID: attempt.partnershipID,
+                ownerUserID: ownerUserID(for: attempt.partnershipID),
                 listID: attempt.listID,
                 listName: attempt.listName,
                 attemptedAt: attempt.attemptedAt,
@@ -652,8 +655,16 @@ final class CloudKitPartnerStore: ObservableObject {
     /// Default values (status: .logOnly, reason: nil) preserve the legacy
     /// "fire and forget" semantics of recordBreakAttempt — the approval
     /// workflow path (createActionRequest) passes status: .pending + reason.
+    ///
+    /// `ownerUserID` is denormalised from the parent partnership for future
+    /// indexed queries. Today's `fetchMyOutgoingRequests` still scans-and-
+    /// filters in-memory (the legacy path); once a CloudKit Dashboard
+    /// queryable index is added on this field, the in-memory filter can be
+    /// replaced with a predicate like `NSPredicate(format: "ownerUserID == %@", myID)`
+    /// — a constant-time index lookup instead of O(records) scan.
     private func makeBreakAttemptRecord(recordName: String,
                                         partnershipID: String,
+                                        ownerUserID: String?,
                                         listID: UUID,
                                         listName: String,
                                         attemptedAt: Date,
@@ -672,7 +683,16 @@ final class CloudKitPartnerStore: ObservableObject {
         record["status"] = status.rawValue as CKRecordValue
         if let r = reachedThrough { record["reachedThrough"] = r as CKRecordValue }
         if let r = reason, !r.isEmpty { record["reason"] = r as CKRecordValue }
+        if let owner = ownerUserID { record["ownerUserID"] = owner as CKRecordValue }
         return record
+    }
+
+    /// Resolve the owner userID for a given partnershipID from the local cache.
+    /// Returns nil if the partnership isn't loaded yet — the field is then
+    /// omitted from the record, matching the pre-denormalization behavior so
+    /// older records (without the field) remain interchangeable.
+    private func ownerUserID(for partnershipID: String) -> String? {
+        partnerships.first(where: { $0.id == partnershipID })?.ownerUserID
     }
 
     /// Fetch all break attempts for a given partnership, newest first.
