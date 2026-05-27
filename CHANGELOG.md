@@ -7,6 +7,131 @@
 
 ## [Unreleased]
 
+### المُصلَح (Fixed)
+
+- **ChatResponder kept giving wrong replies on word boundaries** — naïve
+  `text.contains(keyword)` matched "organizations" against the stem
+  "organization" (false positive) and missed "organizing" against
+  "organize" (false negative). Replaced with token-aware matching:
+  whitespace + punctuation split, then exact token equality or prefix
+  match for stems ≥4 chars. Multi-word keywords still fall back to
+  literal contains so phrase triggers ("help me", "7 أيام") still work.
+- **ChallengesView lost progress on rotation** — `totalPoints` was a
+  plain @State that reset to 0 whenever SwiftUI re-instantiated the view.
+  Persisted now under `v1:challenges:totalPoints`. The level-up logic
+  also silently zeroed totalPoints at every level boundary, capping
+  visible points at perLevel-1 — fixed by deriving `level` from
+  `totalPoints / perLevel + 1`.
+- **PartnerAcceptSheet pre-fill empty if rootRecord not prefetched** —
+  CKShare.Metadata can arrive before CloudKit has pulled the
+  rootRecord, leaving the inviter name + suggested partner name blank.
+  Added a 1.5s retry that re-pulls the metadata values once the
+  record settles. Helper is idempotent — won't clobber a name the
+  user already started typing.
+- **PartnerInviteView froze on error** — when `createPartnership` threw,
+  the sheet's phase stayed at `.creating` (spinner overlay) until the
+  user dismissed the error alert. The dismiss button also rolled the
+  phase back, but the visual stall remained. Now the catch block rolls
+  the phase back immediately, so the alert appears on top of the
+  user's editable form, not a stuck spinner.
+- **RequestActionSheet error path became unreachable** after
+  createActionRequest started queueing offline failures. Captures
+  `wasOffline` before the await and keeps a defensive `guard id != nil`
+  so genuine pre-flight failures (malformed args) still surface.
+- **Free trial extended forever by clock rewind** — `Date()` reading
+  *earlier* than the recorded trial-start no longer counts as "trial
+  still active". StoreKit's `Transaction.currentEntitlements` was
+  always the source of truth for paid Premium, but the trial banner
+  used to obey a rewound clock.
+
+### المضاف (Added)
+
+- **`Core/LanguageResolver.swift`** — single source of truth for
+  resolving the effective UI language. Replaces a duplicated
+  resolution path that lived in both LanguageManager (SwiftUI side)
+  and SmartListSeeder (Core/-pure side); previously a tweak to one
+  could silently desync the other.
+- **`Core/TrialClock.swift`** — centralised trial-elapsed math
+  (isTrialActive / daysRemaining / hasTrialExpired) so UpgradeView,
+  HomeView, and ContentView don't each implement subtly-different
+  arithmetic. Includes the clock-rewind defense above.
+- **`Core/AppStorageKeys.challengeTotalPoints`** + a new
+  `BlockingConstants.challengePointsPerLevel` (200) — replaces the
+  inline magic number in ChallengesView.
+- **`Core/BlockingConstants.seederDefaultDurationSeconds`** (3600) —
+  replaces the same magic number in SmartListSeeder with rationale
+  attached.
+- **`Partnership.databaseScope`** + `database(for partnership:)`
+  helper — captures the originating CloudKit DB on each Partnership
+  DTO at fetch time, so operations route to the right database
+  without the previous try-private-then-shared trial pattern.
+  revokePartnership uses it directly; remaining call sites
+  (updateRequestStatus, fetchMyOutgoingRequests, fetchBreakAttempts)
+  are BreakAttempt-level and will be converted in a follow-up.
+- **`AdminDigitNormalization`** (DEBUG-only) — consolidates the
+  Arabic-Indic / Persian → Latin digit transliteration that was
+  duplicated in AuthView and AdminToolsSheet.
+
+### المُحسَّن (Changed)
+
+- **`BlockingEngine.purge` is now the single canonical exit point for
+  per-list cleanup.** Previously three call sites (HomeView,
+  ListDetailView, ApprovalExecutor) each repeated a stack of
+  BreaksStore.clear + ManualStateStore.clear + EmergencyUnlockStore.clear
+  after the purge. purge now owns the full contract — shield removal,
+  monitoring stop, FamilySelectionStore, EmergencyUnlockStore,
+  BreaksStore, ManualStateStore. Adding a new deletion path
+  can't accidentally leave orphan UserDefaults entries any more.
+- **`EmergencyUnlockStore` is now an `@MainActor ObservableObject`.**
+  Was a struct with static methods + UserDefaults reads, which forced
+  ListDetailView to maintain a `@State UUID` "nonce" property that
+  rotated on every requestUnlock / clear just to force a re-render.
+  The nonce churn is gone — views observe @Published requestedAtByID
+  directly, and any other view rendering off the store updates in
+  the same instant.
+- **All `AppStorageKeys` constants now carry the `v1:` schema-version
+  prefix.** Pre-v1 installs are migrated on next launch via a new
+  rename table in PersistenceMigration. The migrationKey was bumped to
+  `v1:migration-done.renames-v2` so installs that ran the old
+  (manual/breaks only) migration pick up the new renames.
+- **StoreManager.loadProducts orders products by `ProductIDs.all`
+  declaration order** instead of ascending price. A promotional
+  yearly discount that drops below monthly used to flip the paywall
+  layout silently.
+- **`HomeView.body` decomposed** — extracted `permissionsCard` (~110
+  lines, with `permissionsCardHeader` + `permissionsCardDetail` +
+  shared `permissionsRow` helper) and `listsSection` (~65 lines, with
+  `activeListsCard` + `inactiveListsDisclosure`). body shrunk from
+  ~330 lines to ~160. No behavior change — same logic, same layout.
+- **`LogoutButton` simplified** to a single `DataReset.signOutAndClear()`
+  call (already in v1.4.0). Bumped from in-place clears in this
+  release's prep work; tracked here for completeness.
+
+### الإزالات (Removed)
+
+- **Legacy non-optional `sharedDefaults` global** in
+  `FamilySelectionStore` (it fell back to `.standard` when the App
+  Group was missing — a documented trap that no caller actually used
+  any more).
+- **No-op `.onChange(of: selectedTab)` in PoliciesView**, plus its
+  stale comment explaining the body was intentionally empty.
+- **Unused `showComingSoonAlert` state + alert in SettingsView**
+  (the Community section that triggered it has been hidden since v1.3).
+- **Six dead helper functions in BlockItemsEditorView**
+  (`websiteInput` state, `addWebsite`, `websiteRow`, `removeWebsite`,
+  `websiteInputHelper`, `isValidDomain` instance + `isValidDomainStrict`
+  static) — left over from the typed-domain TextField removed in v1.4.0.
+- **Duplicate `fetchMyOutgoingRequests` call** in
+  `ContentView.bootstrapCloudKit`. ApprovalExecutor.executePendingApprovals
+  already calls it internally as its first step; the pre-fetch was a
+  redundant CloudKit round-trip on every cold launch.
+
+### تحت الفـغـاء (Internal / no user-visible change)
+
+- **`isAppGroupActive` is now a computed `var`** instead of a load-time
+  `let` snapshot, so a re-signed entitlement fix is picked up without a
+  process restart.
+
 ## [1.4.0] — 2026-05-27
 
 ### الإصدار الخامس — تصحيحات معمارية عميقة + offline-safety كامل + sign-out cleanup
