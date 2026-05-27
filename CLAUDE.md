@@ -119,3 +119,41 @@ After install, use skills like `/qa`, `/ship`, `/review`, `/investigate`, and `/
 - [GSTACK_GUIDE_AR.md](GSTACK_GUIDE_AR.md) — دليل gstack بالعربية
 - [BlockingMonitor/README.md](BlockingMonitor/README.md) — كيفية إضافة DeviceActivity extension
 - [blocking appTests/README.md](blocking appTests/README.md) — كيفية إضافة Tests target
+
+## GBrain Configuration (configured by /setup-gbrain)
+- Mode: local-stdio
+- Engine: pglite
+- Config file: ~/.gbrain/config.json (mode 0600)
+- Setup date: 2026-05-27
+- MCP registered: no (claude CLI not on PATH — register manually if needed)
+- Artifacts sync: off
+- Current repo policy: read-write
+
+## GBrain Search Guidance (configured by /sync-gbrain)
+<!-- gstack-gbrain-search-guidance:start -->
+
+GBrain is set up and synced on this machine. The agent should prefer gbrain
+over Grep when the question is semantic or when you don't know the exact
+identifier yet. Two indexed corpora available via the `gbrain` CLI:
+- This repo's docs/markdown (23 pages imported via `gbrain import`).
+- `~/.gstack/` curated memory (when artifacts sync is enabled — currently off).
+
+Prefer gbrain when:
+- "Where is X handled?" / semantic intent, no exact string yet:
+    `gbrain search "<terms>"` or `gbrain query "<question>"`
+- "Where is symbol Y defined?" / symbol-based code questions:
+    `gbrain code-def <symbol>` or `gbrain code-refs <symbol>`
+- "What calls Y?" / "What does Y depend on?":
+    `gbrain code-callers <symbol>` / `gbrain code-callees <symbol>`
+- "What did we decide last time?" / past plans, retros, learnings:
+    Search the markdown index.
+
+Grep is still right for known exact strings, regex, multiline patterns, and
+file globs. Run `/sync-gbrain` after meaningful code changes; for full code
+indexing (Swift symbols), run `/sync-gbrain --full` (~25-35 min on this repo).
+
+Note: embeddings currently use gbrain's default provider. For best semantic
+search quality, set `VOYAGE_API_KEY` (voyage-code-3) or `OPENAI_API_KEY`
+before running `/sync-gbrain --full`.
+
+<!-- gstack-gbrain-search-guidance:end -->
