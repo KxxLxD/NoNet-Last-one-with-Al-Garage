@@ -222,12 +222,19 @@ struct CreateListSheet: View {
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .frame(height: NNHitTarget.minimum + 6)
-                    .background(AppColors.accent)
+                    // Disabled state: lighter accent + reduced opacity so the
+                    // user gets a visual cue that the form isn't complete yet.
+                    // Without this, the button looked tappable but did nothing.
+                    .background(isFormValid ? AppColors.accent : AppColors.accent.opacity(0.4))
                     .foregroundColor(.white)
                     .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
             }
             .buttonStyle(.plain)
             .disabled(!isFormValid)
+            .accessibilityLabel(lang.isArabicEffective ? "تم" : "Done")
+            .accessibilityHint(isFormValid
+                ? (lang.isArabicEffective ? "إنشاء القائمة" : "Create the list")
+                : (lang.isArabicEffective ? "أكمل الاسم والعناصر والمدة لتفعيل الزر" : "Fill name, items, and duration to enable"))
             .padding(.horizontal, NNSpacing.md)
             .padding(.top, NNSpacing.xs)
             .padding(.bottom, NNSpacing.md)
@@ -308,7 +315,10 @@ struct CreateListSheet: View {
         .background(AppColors.uiBackground)
         .navigationTitle(lang.isArabicEffective ? "إنشاء قائمة" : "Create List")
         .listStyle(.insetGrouped)
-        .padding(.bottom, 120) // reserve space for the sticky Done bar (NNHitTarget + paddings)
+        // No manual bottom padding — safeAreaInset(edge: .bottom) on the Done
+        // bar already reserves the inset height in the List's scroll area.
+        // Previously had .padding(.bottom, 120) which double-reserved space
+        // and created a ~120pt empty gap between the last card and the button.
     }
 
     /// "What to block" — replaces the previous nested-card structure.
