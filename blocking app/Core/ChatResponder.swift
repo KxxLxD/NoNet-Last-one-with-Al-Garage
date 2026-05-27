@@ -74,7 +74,40 @@ struct LocalChatResponder: ChatResponder {
         return "💡 I'm here to help your focus journey! Try the bulb button 💡 for quick suggestions, or ask about:\n• Life organization\n• Digital addiction harms\n• Focus plans\n• Healthy alternatives"
     }
 
+    /// Token-aware keyword match. Splits the user message on whitespace +
+    /// punctuation, then checks each keyword in three passes:
+    ///
+    ///   1. Multi-word keywords (e.g. "help me", "7 أيام") — fall back to
+    ///      a literal substring match so the phrase still triggers.
+    ///   2. Exact token equality for single-word keywords — `"plan"` against
+    ///      "plan today" hits, "planning" doesn't (unlike the old contains).
+    ///   3. Prefix match for stems ≥4 chars — "addict" matches "addiction"
+    ///      and "addictive" but not "ad" or "ditch".
+    ///
+    /// This replaces a naive `text.contains(keyword)` which gave false
+    /// positives ("organizations" matched the stem "organization") and
+    /// false negatives ("organizing" never matched "organize"). Still
+    /// rule-based — not real morphology — but enough to stop the two
+    /// foot-guns the previous version had.
     private func matches(_ text: String, _ keywords: [String]) -> Bool {
-        keywords.contains { text.contains($0) }
+        let separators = CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters)
+        let tokens = text
+            .components(separatedBy: separators)
+            .filter { !$0.isEmpty }
+        let tokenSet = Set(tokens)
+
+        for keyword in keywords {
+            if keyword.contains(" ") {
+                if text.contains(keyword) { return true }
+                continue
+            }
+            if tokenSet.contains(keyword) { return true }
+            if keyword.count >= 4 {
+                for token in tokens where token.count >= keyword.count && token.hasPrefix(keyword) {
+                    return true
+                }
+            }
+        }
+        return false
     }
 }
