@@ -798,7 +798,7 @@ private extension HomeView {
         // the list in that one specific case. Without this, the matured-unlock
         // banner would say "use the toggle" but the toggle would silently
         // do nothing (the original P0).
-        if list.protection == "hard" && !EmergencyUnlockStore.isGranted(for: list.id) {
+        if list.protection == "hard" && !EmergencyUnlockStore.shared.isGranted(for: list.id) {
             return
         }
         let wasActive = ManualStateStore.isActive(for: list.id)
@@ -808,7 +808,7 @@ private extension HomeView {
             // Consume the matured unlock so it isn't reusable indefinitely;
             // a future re-block requires a fresh 7-day request.
             if list.protection == "hard" {
-                EmergencyUnlockStore.clear(for: list.id)
+                EmergencyUnlockStore.shared.clear(for: list.id)
             }
         } else {
             BlockingEngine.shared.activate(list: list)

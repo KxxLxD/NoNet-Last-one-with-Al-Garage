@@ -31,10 +31,10 @@ struct ListDetailView: View {
     // what they're about to put in a chat.
     @State private var showInviteDisclosure = false
     @State private var disclosureAccepted = false
-    // D18 — Emergency unlock request UI state. The store is the source of truth;
-    // this nonce just forces the view to re-render after a request / cancel,
-    // since EmergencyUnlockStore reads through UserDefaults (not @Published).
-    @State private var emergencyUnlockNonce = UUID()
+    // EmergencyUnlockStore is an ObservableObject; observing it here means
+    // the emergency-unlock card re-renders automatically when requestUnlock /
+    // clear fire, without the manual nonce churn we used before.
+    @ObservedObject private var unlockStore = EmergencyUnlockStore.shared
     @State private var showRequestUnlockConfirm = false
     @State private var showCancelUnlockConfirm = false
     @State private var breakAttempts: [BreakAttempt] = []
@@ -324,7 +324,6 @@ struct ListDetailView: View {
     @ViewBuilder
     private func emergencyUnlockCard() -> some View {
         let id = stableListId
-        let _ = emergencyUnlockNonce // re-evaluate when nonce changes
 
         VStack(alignment: .leading, spacing: NNSpacing.sm) {
             HStack(spacing: NNSpacing.xs) {
@@ -335,12 +334,12 @@ struct ListDetailView: View {
                     .foregroundColor(AppColors.textSecondary)
             }
 
-            if EmergencyUnlockStore.requestedAt(for: id) == nil {
+            if EmergencyUnlockStore.shared.requestedAt(for: id) == nil {
                 emergencyUnlockIdleView()
             } else {
                 TimelineView(.periodic(from: .now, by: 60)) { context in
-                    let granted = EmergencyUnlockStore.isGranted(for: id, now: context.date)
-                    let remaining = EmergencyUnlockStore.remainingSeconds(for: id, now: context.date)
+                    let granted = EmergencyUnlockStore.shared.isGranted(for: id, now: context.date)
+                    let remaining = EmergencyUnlockStore.shared.remainingSeconds(for: id, now: context.date)
                     if granted {
                         emergencyUnlockMaturedView()
                     } else {
@@ -358,8 +357,7 @@ struct ListDetailView: View {
             isPresented: $showRequestUnlockConfirm
         ) {
             Button(lang.isArabicEffective ? "اطلب الفك" : "Request unlock", role: .destructive) {
-                EmergencyUnlockStore.requestUnlock(for: stableListId)
-                emergencyUnlockNonce = UUID()
+                EmergencyUnlockStore.shared.requestUnlock(for: stableListId)
             }
             Button(lang.isArabicEffective ? "إلغاء" : "Cancel", role: .cancel) {}
         } message: {
@@ -372,8 +370,7 @@ struct ListDetailView: View {
             isPresented: $showCancelUnlockConfirm
         ) {
             Button(lang.isArabicEffective ? "نعم، أبقِ الحجب" : "Yes, keep blocked", role: .destructive) {
-                EmergencyUnlockStore.clear(for: stableListId)
-                emergencyUnlockNonce = UUID()
+                EmergencyUnlockStore.shared.clear(for: stableListId)
             }
             Button(lang.isArabicEffective ? "إلغاء" : "Cancel", role: .cancel) {}
         } message: {
@@ -684,8 +681,8 @@ struct ListDetailView: View {
                 action: action,
                 onReasonAccepted: { performLocalAction(action) },
                 onWaitStarted: {
-                    // Refresh the unlock card so the new countdown appears.
-                    emergencyUnlockNonce = UUID()
+                    // EmergencyUnlockStore is @Published — the card re-renders
+                    // automatically once requestUnlock fires inside the gate.
                 }
             )
             .environmentObject(lang)

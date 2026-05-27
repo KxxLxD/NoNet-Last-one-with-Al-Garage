@@ -291,7 +291,7 @@ struct NoNetGatekeeperSheet: View {
     }
 
     private func startWait() {
-        EmergencyUnlockStore.requestUnlock(for: listID)
+        EmergencyUnlockStore.shared.requestUnlock(for: listID)
         dismiss()
         DispatchQueue.main.async { onWaitStarted() }
     }

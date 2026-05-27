@@ -70,36 +70,66 @@ struct BreaksStore {
 /// Storing only the *request timestamp* (not the maturity time) means we can
 /// adjust the delay constant in a future release without invalidating
 /// in-flight requests.
-struct EmergencyUnlockStore {
+///
+/// `ObservableObject` so views observing the store see request / clear edits
+/// in real time. Previously this was a struct with static methods, which
+/// meant `ListDetailView` had to maintain a `@State` UUID "nonce" to force
+/// re-render after requestUnlock / clear — now the @Published `requestedAtByID`
+/// drives that automatically, and any view rendering off the same store
+/// (e.g. HomeView's countdown badge) updates together.
+@MainActor
+final class EmergencyUnlockStore: ObservableObject {
+    static let shared = EmergencyUnlockStore()
+
+    /// Source of truth for the request timestamps. Mirrors what's in
+    /// UserDefaults so views can observe; writes go both places at once.
+    @Published private(set) var requestedAtByID: [UUID: Date] = [:]
+
+    private static let keyPrefix = "\(persistenceVersion):emergencyUnlock:requestedAt:"
+
+    private init() {
+        // Hydrate from UserDefaults so a relaunch picks up in-flight requests.
+        let d = UserDefaults.standard
+        for k in d.dictionaryRepresentation().keys where k.hasPrefix(Self.keyPrefix) {
+            let uuidString = String(k.dropFirst(Self.keyPrefix.count))
+            guard let uuid = UUID(uuidString: uuidString) else { continue }
+            let ts = d.double(forKey: k)
+            if ts > 0 {
+                requestedAtByID[uuid] = Date(timeIntervalSince1970: ts)
+            }
+        }
+    }
+
     private static func key(_ id: UUID) -> String {
-        "\(persistenceVersion):emergencyUnlock:requestedAt:\(id.uuidString)"
+        "\(keyPrefix)\(id.uuidString)"
     }
 
-    static func requestUnlock(for id: UUID, now: Date = Date()) {
-        UserDefaults.standard.set(now.timeIntervalSince1970, forKey: key(id))
+    func requestUnlock(for id: UUID, now: Date = Date()) {
+        UserDefaults.standard.set(now.timeIntervalSince1970, forKey: Self.key(id))
+        requestedAtByID[id] = now
     }
 
-    static func requestedAt(for id: UUID) -> Date? {
-        let ts = UserDefaults.standard.double(forKey: key(id))
-        return ts > 0 ? Date(timeIntervalSince1970: ts) : nil
+    func requestedAt(for id: UUID) -> Date? {
+        requestedAtByID[id]
     }
 
     /// True once the request has aged past the configured delay.
-    static func isGranted(for id: UUID, delay: TimeInterval = BlockingConstants.emergencyUnlockDelaySeconds, now: Date = Date()) -> Bool {
-        guard let requested = requestedAt(for: id) else { return false }
+    func isGranted(for id: UUID, delay: TimeInterval = BlockingConstants.emergencyUnlockDelaySeconds, now: Date = Date()) -> Bool {
+        guard let requested = requestedAtByID[id] else { return false }
         return now.timeIntervalSince(requested) >= delay
     }
 
     /// Seconds remaining until the request matures, or 0 if already granted /
     /// no request pending.
-    static func remainingSeconds(for id: UUID, delay: TimeInterval = BlockingConstants.emergencyUnlockDelaySeconds, now: Date = Date()) -> TimeInterval {
-        guard let requested = requestedAt(for: id) else { return 0 }
+    func remainingSeconds(for id: UUID, delay: TimeInterval = BlockingConstants.emergencyUnlockDelaySeconds, now: Date = Date()) -> TimeInterval {
+        guard let requested = requestedAtByID[id] else { return 0 }
         let elapsed = now.timeIntervalSince(requested)
         return max(0, delay - elapsed)
     }
 
-    static func clear(for id: UUID) {
-        UserDefaults.standard.removeObject(forKey: key(id))
+    func clear(for id: UUID) {
+        UserDefaults.standard.removeObject(forKey: Self.key(id))
+        requestedAtByID.removeValue(forKey: id)
     }
 }
 

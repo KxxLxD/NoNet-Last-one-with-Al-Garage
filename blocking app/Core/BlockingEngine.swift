@@ -103,7 +103,7 @@ final class BlockingEngine {
     func isHardLocked(list: ListEntity) -> Bool {
         guard list.protection == "hard" else { return false }
         if list.blockType == "forever" {
-            if EmergencyUnlockStore.isGranted(for: list.id) { return false }
+            if EmergencyUnlockStore.shared.isGranted(for: list.id) { return false }
             return true
         }
         if list.blockType == "timeLimit" { return true }
@@ -132,7 +132,7 @@ final class BlockingEngine {
         // names that were never registered.
         center.stopMonitoring(allSlotActivityNames(for: id) + [limitActivityName(for: id)])
         FamilySelectionStore.clear(for: id)
-        EmergencyUnlockStore.clear(for: id)
+        EmergencyUnlockStore.shared.clear(for: id)
         BreaksStore.clear(for: id)
         ManualStateStore.clear(for: id)
     }
