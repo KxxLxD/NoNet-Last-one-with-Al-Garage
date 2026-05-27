@@ -102,6 +102,7 @@ coverage/
 # ─────────────────────────────────────────────────────────
 .claude/
 .gstack/
+.gbrain/
 .cursor/mcp.json
 *.session
 *.session.json

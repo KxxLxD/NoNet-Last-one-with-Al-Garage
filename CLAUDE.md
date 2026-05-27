@@ -120,14 +120,17 @@ After install, use skills like `/qa`, `/ship`, `/review`, `/investigate`, and `/
 - [BlockingMonitor/README.md](BlockingMonitor/README.md) — كيفية إضافة DeviceActivity extension
 - [blocking appTests/README.md](blocking appTests/README.md) — كيفية إضافة Tests target
 
-## GBrain Configuration (configured by /setup-gbrain)
-- Mode: local-stdio
-- Engine: pglite
-- Config file: ~/.gbrain/config.json (mode 0600)
-- Setup date: 2026-05-27
-- MCP registered: no (claude CLI not on PATH — register manually if needed)
-- Artifacts sync: off
-- Current repo policy: read-write
+## GBrain Configuration (per-machine, configured by /setup-gbrain)
+
+This block documents the team's expected gbrain setup. Per-machine state
+(actual paths, dates, MCP status) lives on each developer's local machine
+and is NEVER committed.
+
+- **Mode:** local-stdio (PGLite engine, fully offline)
+- **Repo policy:** read-write (gbrain may index this repo's markdown + code)
+- **Artifacts sync:** off (matches NoNet's offline-first philosophy)
+
+To set up gbrain on a new machine, run `/setup-gbrain` once.
 
 ## GBrain Search Guidance (configured by /sync-gbrain)
 <!-- gstack-gbrain-search-guidance:start -->
