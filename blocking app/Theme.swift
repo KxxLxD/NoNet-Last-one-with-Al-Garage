@@ -15,20 +15,17 @@ final class LanguageManager: ObservableObject {
 
     @Published var selected: LanguageOption
 
-    var isArabicEffective: Bool {
-        switch selected {
-        case .arabic:
-            return true
-        case .english:
-            return false
-        case .system:
-            let preferred = Locale.preferredLanguages.first?.lowercased() ?? "en"
-            return preferred.hasPrefix("ar")
-        }
-    }
+    /// Delegates to `LanguageResolver.isArabicEffective` so the answer
+    /// matches what non-SwiftUI modules (e.g. SmartListSeeder) see when
+    /// they read the same setting. Views still observe `selected` for
+    /// re-render triggering — `updateLanguage` writes through to the
+    /// resolver's storageKey before bumping `selected`, so observers
+    /// and resolver readers move in lockstep.
+    var isArabicEffective: Bool { LanguageResolver.isArabicEffective() }
 
     private init() {
-        if let raw = UserDefaults.standard.string(forKey: "AppLanguage"), let opt = LanguageOption(rawValue: raw) {
+        if let raw = UserDefaults.standard.string(forKey: LanguageResolver.storageKey),
+           let opt = LanguageOption(rawValue: raw) {
             selected = opt
         } else {
             selected = .system
@@ -36,8 +33,8 @@ final class LanguageManager: ObservableObject {
     }
 
     func updateLanguage(_ newLanguage: LanguageOption) {
+        UserDefaults.standard.set(newLanguage.rawValue, forKey: LanguageResolver.storageKey)
         selected = newLanguage
-        UserDefaults.standard.set(selected.rawValue, forKey: "AppLanguage")
     }
 }
 

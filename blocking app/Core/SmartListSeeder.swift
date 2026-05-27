@@ -55,7 +55,7 @@ enum SmartListSeeder {
             return
         }
 
-        let listName = goalDrivenName(goalsCSV: obGoals, isArabic: currentLanguageIsArabic())
+        let listName = goalDrivenName(goalsCSV: obGoals, isArabic: LanguageResolver.isArabicEffective())
 
         let entity = ListEntity(context: context)
         entity.id = UUID()
@@ -112,23 +112,4 @@ enum SmartListSeeder {
         return isArabic ? "قائمتي الأولى" : "My First List"
     }
 
-    /// Read LanguageManager's effective state without importing it here (this
-    /// file stays Core/-pure and doesn't depend on SwiftUI views). Mirrors the
-    /// resolution order in LanguageManager.isArabicEffective: explicit user
-    /// choice (LanguageOption raw value) first, then system locale fallback.
-    ///
-    /// Key + values must match `LanguageManager` exactly:
-    /// - Key: "AppLanguage" (Theme.swift:27,36)
-    /// - Values: "system" / "arabic" / "english"
-    private static func currentLanguageIsArabic() -> Bool {
-        if let stored = UserDefaults.standard.string(forKey: "AppLanguage") {
-            switch stored {
-            case "arabic": return true
-            case "english": return false
-            default: break // "system" or unknown → fall through to locale
-            }
-        }
-        let preferred = Locale.preferredLanguages.first ?? "en"
-        return preferred.hasPrefix("ar")
-    }
 }
