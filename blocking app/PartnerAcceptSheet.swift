@@ -236,9 +236,26 @@ struct PartnerAcceptSheet: View {
     // MARK: - Actions
 
     private func prefillFromMetadata() {
-        inviterName = prefilledInviterName
-        // Seed the name field with the inviter's suggestion so the most common
-        // case (invitee keeps the suggested nickname) is one tap.
+        applyMetadataValues()
+        // If CloudKit hadn't prefetched the rootRecord by the time the sheet
+        // appeared, both name fields land empty. Retry once after a short
+        // delay — by then the record has usually been pulled in by the
+        // delivery side-effect, so the user sees the real inviter name
+        // instead of a generic "Partner" fallback.
+        if prefilledInviterName.isEmpty {
+            Task {
+                try? await Task.sleep(nanoseconds: 1_500_000_000) // 1.5s
+                await MainActor.run { applyMetadataValues() }
+            }
+        }
+    }
+
+    /// Pull whatever the rootRecord currently has into the displayed fields.
+    /// Idempotent and safe to re-run after the metadata arrives late.
+    private func applyMetadataValues() {
+        if inviterName.isEmpty {
+            inviterName = prefilledInviterName
+        }
         if partnerDisplayName.isEmpty {
             partnerDisplayName = proposedName
         }
