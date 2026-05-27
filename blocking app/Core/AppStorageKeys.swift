@@ -51,4 +51,8 @@ enum AppStorageKeys {
     // conversation survives app restarts. The list is hard-capped at
     // ChatBotView.maxPersistedMessages to prevent UserDefaults bloat.
     static let chatMessagesJSON = "v1:chat:messagesJSON"
+
+    // Challenges gamification — cumulative points earned. Level is derived
+    // from this via BlockingConstants.challengePointsPerLevel.
+    static let challengeTotalPoints = "v1:challenges:totalPoints"
 }

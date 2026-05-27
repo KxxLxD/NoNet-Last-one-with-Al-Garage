@@ -22,6 +22,12 @@ enum BlockingConstants {
     /// short enough that a confused user isn't locked out for the whole day.
     static let seederDefaultDurationSeconds: Int64 = 3600
 
+    /// Points required to advance one challenge level. Level is computed
+    /// as `(totalPoints / challengePointsPerLevel) + 1`, so 200 points = level 2.
+    /// Tuned to make the first 3-4 challenges noticeable but level 5+ still
+    /// require sustained engagement.
+    static let challengePointsPerLevel: Int = 200
+
     /// Wheel-picker stride for minutes selection.
     static let minutePickerStride: Int = 5
 

@@ -4,9 +4,17 @@ struct ChallengesView: View {
     @EnvironmentObject var lang: LanguageManager
     @Environment(\.dismiss) private var dismiss
     @State private var showFooter: Bool = false
-    @State private var totalPoints: Int = 0
-    @State private var level: Int = 1
-    @State private var nextLevelPoints: Int = 200
+    /// Persisted across app launches + device rotations. Previously a `@State`
+    /// Int that reset to 0 whenever SwiftUI re-instantiated the view, so a
+    /// user who rotated mid-session lost their tally.
+    @AppStorage(AppStorageKeys.challengeTotalPoints) private var totalPoints: Int = 0
+
+    /// Derived from totalPoints — no separate stored state, so level
+    /// can't drift out of sync with the underlying counter.
+    private var level: Int { totalPoints / BlockingConstants.challengePointsPerLevel + 1 }
+    private var pointsToNextLevel: Int {
+        BlockingConstants.challengePointsPerLevel - (totalPoints % BlockingConstants.challengePointsPerLevel)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -115,7 +123,8 @@ struct ChallengesView: View {
     }
 
     private func pointsCard() -> some View {
-        let progress = min(1.0, Double(totalPoints % nextLevelPoints) / Double(nextLevelPoints))
+        let perLevel = BlockingConstants.challengePointsPerLevel
+        let progress = min(1.0, Double(totalPoints % perLevel) / Double(perLevel))
         return VStack(alignment: .leading, spacing: NNSpacing.sm) {
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: NNSpacing.xxs) {
@@ -154,9 +163,12 @@ struct ChallengesView: View {
     }
 
     private func apply(_ added: Int) {
+        // Accumulate. Level is derived from totalPoints — no need to manually
+        // bump anything; the computed `level` property reflects the new total
+        // immediately. Previously the view zeroed `totalPoints` at every
+        // level-up which silently capped points at perLevel - 1.
         totalPoints = max(0, totalPoints + added)
-        if totalPoints >= nextLevelPoints { level += 1; totalPoints = 0 }
-        if level >= 1 { showFooter = true }
+        if totalPoints > 0 { showFooter = true }
     }
 
     private func timeOptions() -> [ChallengeOption] {
