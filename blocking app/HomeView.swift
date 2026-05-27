@@ -131,14 +131,12 @@ struct HomeView: View {
     /// satisfied the 200-char gate.
     private func performHardDelete(_ list: ListEntity) {
         let id = list.id
+        // purge handles shield removal + monitoring stop + per-list satellite
+        // stores (FamilySelectionStore, EmergencyUnlockStore, BreaksStore,
+        // ManualStateStore). The only thing left is the Core Data row.
         BlockingEngine.shared.purge(listId: id)
         context.delete(list)
-        switch context.saveIfNeeded() {
-        case .success:
-            BreaksStore.clear(for: id)
-            ManualStateStore.clear(for: id)
-            EmergencyUnlockStore.clear(for: id)
-        case .failure(let error):
+        if case .failure(let error) = context.saveIfNeeded() {
             saveErrorMessage = lang.isArabicEffective
                 ? "تعذّر حذف القائمة: \(error.localizedDescription)"
                 : "Couldn't delete the list: \(error.localizedDescription)"

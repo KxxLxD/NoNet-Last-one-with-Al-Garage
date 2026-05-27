@@ -112,7 +112,14 @@ final class BlockingEngine {
         return Date() < end
     }
 
-    /// Cleanup on list deletion: clear stored selection + monitoring + shields.
+    /// Cleanup on list deletion: stop monitoring, drop shields, and wipe
+    /// every piece of per-list local state (selection tokens + UserDefaults
+    /// satellite stores). This is the single canonical exit point — call
+    /// sites that delete a list should call `purge` and then delete the
+    /// Core Data row, nothing else. The per-store clears were previously
+    /// duplicated across HomeView, ListDetailView, and ApprovalExecutor;
+    /// centralizing here makes orphaned state impossible when a new
+    /// deletion path is added.
     func purge(listId id: UUID) {
         if let store = stores.removeValue(forKey: id) {
             store.clearAllSettings()
@@ -126,6 +133,8 @@ final class BlockingEngine {
         center.stopMonitoring(allSlotActivityNames(for: id) + [limitActivityName(for: id)])
         FamilySelectionStore.clear(for: id)
         EmergencyUnlockStore.clear(for: id)
+        BreaksStore.clear(for: id)
+        ManualStateStore.clear(for: id)
     }
 
     // MARK: - Private helpers

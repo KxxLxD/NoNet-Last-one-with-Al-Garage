@@ -462,15 +462,13 @@ struct ListDetailView: View {
     private func performLocalAction(_ action: GatekeeperAction) {
         switch action {
         case .delete:
-            let id = stableListId
-            BlockingEngine.shared.purge(listId: id)
+            // purge wipes every per-list satellite store; we just need to
+            // remove the Core Data row and dismiss the now-orphan view.
+            BlockingEngine.shared.purge(listId: stableListId)
             if let ctx = list.managedObjectContext {
                 ctx.delete(list)
                 _ = ctx.saveIfNeeded()
             }
-            BreaksStore.clear(for: id)
-            ManualStateStore.clear(for: id)
-            EmergencyUnlockStore.clear(for: id)
             dismiss()
         case .disable:
             _ = BlockingEngine.shared.deactivate(list: list, force: true)

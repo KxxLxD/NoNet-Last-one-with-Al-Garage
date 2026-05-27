@@ -43,12 +43,11 @@ enum ApprovalExecutor {
         }
         switch request.type {
         case .delete:
+            // purge handles all per-list satellite stores; we just delete
+            // the Core Data row here.
             BlockingEngine.shared.purge(listId: entity.id)
             context.delete(entity)
             _ = context.saveIfNeeded()
-            BreaksStore.clear(for: entity.id)
-            ManualStateStore.clear(for: entity.id)
-            EmergencyUnlockStore.clear(for: entity.id)
             log.notice("executed .delete for \(request.listID, privacy: .public)")
         case .disable:
             _ = BlockingEngine.shared.deactivate(list: entity, force: true)
