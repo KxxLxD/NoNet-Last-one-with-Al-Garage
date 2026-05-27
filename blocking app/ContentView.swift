@@ -134,15 +134,12 @@ struct ContentView: View {
 
     private func expireTrialIfNeeded() {
         guard isPremium else { return }
-        guard trialStartTs > 0 else { return }
-        let start = Date(timeIntervalSince1970: trialStartTs)
-        if Date().timeIntervalSince(start) >= BlockingConstants.trialDurationSeconds {
-            isPremium = false
-            trialStartTs = 0
-            if !hasShownTrialExpiredAlert {
-                hasShownTrialExpiredAlert = true
-                showTrialExpiredAlert = true
-            }
+        guard TrialClock.hasTrialExpired(startTs: trialStartTs) else { return }
+        isPremium = false
+        trialStartTs = 0
+        if !hasShownTrialExpiredAlert {
+            hasShownTrialExpiredAlert = true
+            showTrialExpiredAlert = true
         }
     }
 

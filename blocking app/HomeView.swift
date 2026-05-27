@@ -48,14 +48,8 @@ struct HomeView: View {
     @ObservedObject private var partnerStore = CloudKitPartnerStore.shared
     @State private var refreshTick: Int = 0
     @State private var selectedListId: UUID? = nil
-    private var isTrialActive: Bool {
-        trialStartTs > 0 && Date().timeIntervalSince1970 < trialStartTs + BlockingConstants.trialDurationSeconds
-    }
-    private var trialRemainingDays: Int {
-        guard isTrialActive else { return 0 }
-        let remaining = (trialStartTs + BlockingConstants.trialDurationSeconds - Date().timeIntervalSince1970) / BlockingConstants.secondsPerDayInterval
-        return max(0, Int(ceil(remaining)))
-    }
+    private var isTrialActive: Bool { TrialClock.isTrialActive(startTs: trialStartTs) }
+    private var trialRemainingDays: Int { TrialClock.daysRemaining(startTs: trialStartTs) }
 
     // Schedule decoding
     private struct ScheduleSlot: Codable { let id: UUID; let day: Int; let fromMinutes: Int; let toMinutes: Int }

@@ -43,18 +43,8 @@ struct UpgradeView: View {
     private var monthlyProduct: Product? { store.products.first { $0.id == ProductIDs.monthly } }
     private var yearlyProduct: Product? { store.products.first { $0.id == ProductIDs.yearly } }
 
-    private var isTrialActive: Bool {
-        guard trialStartTs > 0 else { return false }
-        let start = Date(timeIntervalSince1970: trialStartTs)
-        return Date().timeIntervalSince(start) < BlockingConstants.trialDurationSeconds
-    }
-
-    private var trialDaysRemaining: Int {
-        guard isTrialActive else { return 0 }
-        let start = Date(timeIntervalSince1970: trialStartTs)
-        let remaining = BlockingConstants.trialDurationSeconds - Date().timeIntervalSince(start)
-        return max(0, Int(ceil(remaining / BlockingConstants.secondsPerDayInterval)))
-    }
+    private var isTrialActive: Bool { TrialClock.isTrialActive(startTs: trialStartTs) }
+    private var trialDaysRemaining: Int { TrialClock.daysRemaining(startTs: trialStartTs) }
 
     /// % savings on yearly vs. paying monthly for 12 months. Returns nil
     /// when either product hasn't loaded or the math doesn't yield a
