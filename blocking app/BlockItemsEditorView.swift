@@ -19,6 +19,16 @@ struct BlockItemsDraft {
     var familySelection: FamilyActivitySelection = FamilyActivitySelection()
 }
 
+/// Trailing accessory style for `editorRow`. Determines whether the row
+/// behaves like a multi-select toggle (`.checkmark`), an action that
+/// opens another sheet (`.chevron`), or an action that also displays
+/// the selection count (`.count(Int)`).
+private enum EditorRowTrailing {
+    case checkmark
+    case chevron
+    case count(Int)
+}
+
 struct BlockItemsEditorView: View {
     @EnvironmentObject var lang: LanguageManager
     @Environment(\.dismiss) private var dismiss
@@ -58,25 +68,25 @@ struct BlockItemsEditorView: View {
 
     var body: some View {
         NavigationStack {
-            // `ScrollViewReader` lets the chip navigator at the top of the
-            // editor scroll-to specific sections. Without it, users in
-            // testing got stuck on Categories and never realised Apps +
-            // Websites existed below the fold.
-            ScrollViewReader { proxy in
-                editorForm(proxy: proxy)
-            }
+            editorForm()
         }
     }
 
     // Splitting the form into a function keeps `body` short enough for the
     // Swift type-checker; chaining toolbar + 5 onChange + sheet + 2 alerts on
     // a single inline expression broke the inference budget.
-    private func editorForm(proxy: ScrollViewProxy) -> some View {
+    //
+    // ScrollViewReader + chip navigator removed: section headers are big
+    // enough to orient users on their own, and the chip row duplicated their
+    // function while adding ~80pt of vertical noise.
+    private func editorForm() -> some View {
         Form {
-            // Section navigator pinned at the top — 4 chips showing every
-            // possible way to add items, each with a live selection count
-            // and a tap-to-scroll affordance.
-            sectionNavigator(proxy: proxy)
+            // Single privacy banner at the top — replaces the two
+            // per-section info-icon rows under Apps + Websites. Apple's
+            // tokens are opaque across the whole sheet (apps, websites,
+            // and categories from the picker all return tokens), so one
+            // shared explainer is more honest about scope.
+            privacyBanner
 
             // Order reflects how real users in testing reached for what to
             // block: they think of named brand apps first ("block TikTok"),
@@ -89,19 +99,17 @@ struct BlockItemsEditorView: View {
             //   2. Websites       — explicit URLs to ban
             //   3. Specific Apps  — Family Activity Picker for device apps
             //   4. Categories     — broad fallback buckets
-            quickAppsSection.id("sec-quick")
-            websitesSection.id("sec-websites")
-            specificAppsSection.id("sec-apps")
-            categoriesSection.id("sec-categories")
-            // (Removed the empty-selection footer card: the chip navigator
-            // already shows zero counts on every chip and the Save button
-            // is visibly disabled, so the long explainer card was redundant.)
+            quickAppsSection
+            websitesSection
+            specificAppsSection
+            categoriesSection
         }
         .scrollContentBackground(.hidden)
         .background(AppColors.uiBackground)
         .navigationTitle(navigationTitleWithCount)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbarContent }
+        .safeAreaInset(edge: .bottom) { saveBar }
         .onAppear(perform: handleOnAppear)
         .onChange(of: selectedCategories) { _ in hasUnsavedChanges = true }
         .onChange(of: quickSelected)      { _ in hasUnsavedChanges = true }
@@ -139,6 +147,9 @@ struct BlockItemsEditorView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
+        // Only Cancel lives in the toolbar now. Save moved to a sticky
+        // safeAreaInset bar at the bottom of the form — bigger, shows the
+        // selection count, harder to miss than a small toolbar link.
         ToolbarItem(placement: .cancellationAction) {
             Button(lang.isArabicEffective ? "إلغاء" : "Cancel") {
                 if hasUnsavedChanges {
@@ -148,10 +159,37 @@ struct BlockItemsEditorView: View {
                 }
             }
         }
-        ToolbarItem(placement: .confirmationAction) {
-            Button(lang.isArabicEffective ? "حفظ" : "Save") { saveAndDismiss() }
-                .disabled(!hasAtLeastOneItem())
+    }
+
+    /// Sticky Save bar — full-width accent button at the bottom of the
+    /// editor, shows the live selection count in the label so the user
+    /// knows exactly what they're about to save. Disabled (40% opacity)
+    /// when nothing's picked yet, matching CreateListSheet's Done bar.
+    @ViewBuilder
+    private var saveBar: some View {
+        let count = totalSelectionCount
+        let isEnabled = count > 0
+        let saveLabelAr = count > 0 ? "حفظ (\(count) محدّد)" : "حفظ"
+        let saveLabelEn = count > 0 ? "Save (\(count) selected)" : "Save"
+        Button(action: { if isEnabled { saveAndDismiss() } }) {
+            Text(lang.isArabicEffective ? saveLabelAr : saveLabelEn)
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .frame(height: NNHitTarget.minimum + 6)
+                .background(isEnabled ? AppColors.accent : AppColors.accent.opacity(0.4))
+                .foregroundColor(.white)
+                .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
         }
+        .buttonStyle(.plain)
+        .disabled(!isEnabled)
+        .accessibilityLabel(lang.isArabicEffective ? "حفظ" : "Save")
+        .accessibilityHint(isEnabled
+                            ? (lang.isArabicEffective ? "حفظ \(count) عنصر" : "Save \(count) item\(count == 1 ? "" : "s")")
+                            : (lang.isArabicEffective ? "أضف عنصراً واحداً على الأقل لتفعيل الحفظ" : "Add at least one item to enable save"))
+        .padding(.horizontal, NNSpacing.md)
+        .padding(.top, NNSpacing.xs)
+        .padding(.bottom, NNSpacing.md)
+        .background(AppColors.uiBackground)
     }
 
     @ViewBuilder
@@ -194,255 +232,153 @@ struct BlockItemsEditorView: View {
         }
     }
 
-    // ─── Section navigator (4 chips — discoverability anchor) ─────
+    // ─── Top-of-form privacy banner ────────────────────────────────
     //
-    // Renders as the first Form section. The 4 chips correspond 1:1 to the
-    // sections below; tapping any chip scrolls smoothly to that section.
-    // Active state (count > 0) tints the chip with accent + adds a small
-    // count badge so users see their progress without scrolling back.
-    //
-    // Why this exists: user testing showed people stop after Categories and
-    // never discover the Apps + Websites sections. The chip row is the
-    // single visible affordance that all four methods exist.
-
-    private func sectionNavigator(proxy: ScrollViewProxy) -> some View {
-        // Floating chip row (no surrounding card). The four content sections
-        // below all use card backgrounds, so dropping the card here gives the
-        // navigator a different visual register — reads as a control bar
-        // rather than another content block. The label "Pick how to add" is
-        // also removed: after Pass 6 cleanup the chips are recognisable as
-        // tappable on their own, and an explainer above redundant.
+    // One unified explainer for the whole editor. Replaces the previous
+    // pair of per-section info-icon rows (one under Apps, one under
+    // Websites) which duplicated the same "Apple hides chosen names"
+    // message. Categories selected via picker have the same opacity
+    // constraint, so banner at top is the honest scope.
+    private var privacyBanner: some View {
         Section {
-            // Chip order mirrors the section render order below: Popular
-            // first, then Websites, then My Apps, then Categories. Matches
-            // the user-testing path so the leftmost chip is the most
-            // common starting point.
-            HStack(spacing: NNSpacing.xs) {
-                sectionChip(icon: "bolt.fill",
-                            titleAr: "شائعة", titleEn: "Popular",
-                            count: quickSelected.count,
-                            targetID: "sec-quick",
-                            proxy: proxy)
-                sectionChip(icon: "globe",
-                            titleAr: "مواقع", titleEn: "Websites",
-                            count: draft.websites.count,
-                            targetID: "sec-websites",
-                            proxy: proxy)
-                sectionChip(icon: "app.fill",
-                            titleAr: "تطبيقاتي", titleEn: "My Apps",
-                            count: draft.apps.count,
-                            targetID: "sec-apps",
-                            proxy: proxy)
-                sectionChip(icon: "square.grid.2x2.fill",
-                            titleAr: "فئات", titleEn: "Categories",
-                            count: selectedCategories.count,
-                            targetID: "sec-categories",
-                            proxy: proxy)
+            HStack(alignment: .top, spacing: NNSpacing.sm) {
+                Image(systemName: "lock.shield.fill")
+                    .font(.body)
+                    .foregroundColor(AppColors.accent)
+                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 2) {
+                    Text(lang.isArabicEffective ? "خصوصيتك محفوظة" : "Your privacy is protected")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundColor(AppColors.textPrimary)
+                    Text(lang.isArabicEffective
+                         ? "Apple تخفي أسماء التطبيقات والمواقع المحدّدة. يظهر العدد فقط."
+                         : "Apple hides the chosen app and website names. Only the count is shown.")
+                        .font(.footnote)
+                        .foregroundColor(AppColors.textSecondary)
+                        .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
             }
-            .padding(.vertical, NNSpacing.xs)
+            .padding(NNSpacing.md)
+            .background(AppColors.infoBg)
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
         }
         .listRowInsets(EdgeInsets())
         .listRowBackground(Color.clear)
     }
 
-    /// Single chip in the section navigator. Compact icon + label layout;
-    /// when the section has at least one selection the chip flips to the
-    /// active palette (accent icon, accent border, infoBg fill) and shows a
-    /// count badge in the top-trailing corner so the user can see at a
-    /// glance "I have 2 categories, 0 websites, 5 popular apps" without
-    /// scrolling through the whole form.
+    // ─── Unified row helper used by every section ─────────────────
+    //
+    // ONE visual register for every selectable item across the editor.
+    // Previously each section had its own treatment (hero cards for
+    // Categories, capsule chips for Quick Apps, full-width buttons for
+    // Apps + Websites). That visual sprawl was the "ugly" the user
+    // called out. Compact 56pt rows give the editor a flat, scannable
+    // list register and shrink the form's height by roughly half.
     @ViewBuilder
-    private func sectionChip(
+    private func editorRow(
         icon: String,
-        titleAr: String,
-        titleEn: String,
-        count: Int,
-        targetID: String,
-        proxy: ScrollViewProxy
+        title: String,
+        subtitle: String? = nil,
+        isSelected: Bool,
+        trailing: EditorRowTrailing = .checkmark,
+        action: @escaping () -> Void
     ) -> some View {
-        let isActive = count > 0
         Button(action: {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            withAnimation(.easeInOut(duration: 0.35)) {
-                proxy.scrollTo(targetID, anchor: .top)
-            }
+            action()
         }) {
-            VStack(spacing: NNSpacing.xxs) {
-                ZStack(alignment: .topTrailing) {
-                    Image(systemName: icon)
-                        .font(.title3)
-                        .foregroundColor(isActive ? AppColors.accent : AppColors.textSecondary)
-                        .frame(width: 36, height: 28)
-                    if count > 0 {
-                        Text("\(count)")
-                            .font(.caption2.weight(.bold))
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 1)
-                            .background(AppColors.accent)
-                            .foregroundColor(.white)
-                            .clipShape(Capsule())
-                            .offset(x: 8, y: -4)
+            HStack(spacing: NNSpacing.sm) {
+                Image(systemName: icon)
+                    .font(.body)
+                    .foregroundColor(isSelected ? AppColors.accent : AppColors.textSecondary)
+                    .frame(width: 24, height: 24, alignment: .center)
+                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 2) {
+                    Text(title)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundColor(AppColors.textPrimary)
+                        .lineLimit(1)
+                    if let subtitle = subtitle, !subtitle.isEmpty {
+                        Text(subtitle)
+                            .font(.caption2)
+                            .foregroundColor(AppColors.textSecondary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
                     }
                 }
-                Text(lang.isArabicEffective ? titleAr : titleEn)
-                    .font(.caption2.weight(.medium))
-                    .foregroundColor(isActive ? AppColors.textPrimary : AppColors.textSecondary)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
+                .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+                trailingView(for: trailing, isSelected: isSelected)
             }
-            .frame(maxWidth: .infinity)
+            .padding(.horizontal, NNSpacing.sm)
             .padding(.vertical, NNSpacing.xs)
-            .padding(.horizontal, NNSpacing.xxs)
-            .background(isActive ? AppColors.infoBg : Color.clear)
+            .frame(minHeight: NNHitTarget.minimum + 12)
+            .background(isSelected ? AppColors.infoBg : Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
-            .overlay(
-                RoundedRectangle(cornerRadius: NNRadius.control)
-                    .stroke(isActive ? AppColors.accent.opacity(0.5) : AppColors.uiBorder,
-                            lineWidth: isActive ? NNBorder.input : NNBorder.hairline)
-            )
         }
         .buttonStyle(.plain)
-        .accessibilityLabel({
-            let label = lang.isArabicEffective ? titleAr : titleEn
-            let suffix = count > 0
-                ? (lang.isArabicEffective ? " — \(count) محدّد" : " — \(count) selected")
-                : ""
-            return label + suffix
-        }())
-        .accessibilityHint(lang.isArabicEffective ? "ينتقل إلى قسم \(titleAr)" : "Scrolls to the \(titleEn) section")
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
+    }
+
+    @ViewBuilder
+    private func trailingView(for style: EditorRowTrailing, isSelected: Bool) -> some View {
+        switch style {
+        case .checkmark:
+            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                .font(.title3)
+                .foregroundColor(isSelected ? AppColors.accent : AppColors.textSecondary.opacity(0.4))
+        case .chevron:
+            Image(systemName: lang.isArabicEffective ? "chevron.left" : "chevron.right")
+                .font(.footnote.weight(.semibold))
+                .foregroundColor(AppColors.textSecondary)
+        case .count(let n):
+            HStack(spacing: NNSpacing.xxs) {
+                Text("\(n)")
+                    .font(.caption.weight(.semibold))
+                    .monospacedDigit()
+                    .foregroundColor(AppColors.accent)
+                Image(systemName: lang.isArabicEffective ? "chevron.left" : "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundColor(AppColors.textSecondary)
+            }
+        }
     }
 
     // ─── Section 1: Categories (broadest, fastest) ────────────────
 
     private var categoriesSection: some View {
         Section {
-            // 2-column grid replaces the previous 8-toggle vertical list.
-            // The flat list ran ~400pt tall and pushed everything else off
-            // the first viewport; the grid is ~280pt and lets the eye scan
-            // all 8 categories in one glance — matching common category-
-            // picker conventions (App Store category grid, Settings picker
-            // surfaces).
-            LazyVGrid(
-                columns: [
-                    GridItem(.flexible(), spacing: NNSpacing.sm),
-                    GridItem(.flexible(), spacing: NNSpacing.sm)
-                ],
-                spacing: NNSpacing.sm
-            ) {
-                ForEach(categoryOptions, id: \.self) { cat in
-                    categoryCard(for: cat)
+            VStack(spacing: 0) {
+                ForEach(Array(categoryOptions.enumerated()), id: \.element) { idx, cat in
+                    editorRow(
+                        icon: categoryIcon(for: cat),
+                        title: cat,
+                        subtitle: categoryExamples(for: cat),
+                        isSelected: selectedCategories.contains(cat),
+                        action: {
+                            withAnimation(.easeInOut(duration: 0.15)) {
+                                if selectedCategories.contains(cat) {
+                                    selectedCategories.remove(cat)
+                                } else {
+                                    selectedCategories.insert(cat)
+                                }
+                            }
+                        }
+                    )
+                    if idx < categoryOptions.count - 1 {
+                        Divider()
+                            .padding(.leading, NNSpacing.lg)
+                    }
                 }
             }
-            .padding(NNSpacing.md)
+            .padding(.vertical, NNSpacing.xxs)
             .background(AppColors.uiSurface)
             .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
-            // Section card border removed in Pass 9 — uiSurface bg + corner
-            // radius alone defines the section against the gray form bg.
-            // Reduces the stacked-borders ("white/gray/white/gray") effect
-            // the user flagged.
         } header: {
             sectionHeader(icon: "square.grid.2x2.fill", text: lang.isArabicEffective ? "الفئات" : "Categories")
         }
         .listRowInsets(EdgeInsets())
         .listRowBackground(Color.clear)
-    }
-
-    /// One cell in the Categories grid. Redesigned in Pass 5 to feel like a
-    /// magazine card rather than a settings row:
-    ///   - Large icon (40pt symbol) inside a 56pt accent-tinted circle at top
-    ///   - Centered title + caption below
-    ///   - Active state: solid accent circle with white icon + checkmark
-    ///     badge in top-trailing corner + accent border + tinted background
-    ///   - Tap target is the entire card (~130pt tall)
-    ///
-    /// The previous Pass-4 design used a horizontal toggle-style layout that
-    /// the user described as "مرصوصة رص بشكل بايخ" — eight near-identical
-    /// rows with the icon shrunk down beside the text. The hero-icon
-    /// treatment here gives each cell more visual weight and a clear focal
-    /// point.
-    @ViewBuilder
-    private func categoryCard(for category: String) -> some View {
-        let isSelected = selectedCategories.contains(category)
-        Button(action: {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            withAnimation(.easeInOut(duration: 0.18)) {
-                if isSelected {
-                    selectedCategories.remove(category)
-                } else {
-                    selectedCategories.insert(category)
-                }
-            }
-        }) {
-            VStack(spacing: NNSpacing.xs) {
-                ZStack(alignment: .topTrailing) {
-                    // Icon hero — big accent-tinted circle at the top of the
-                    // card. Diameter (56pt) was picked so the symbol inside
-                    // (24pt at .title weight) reads from across the screen
-                    // without the circle dominating the card's title.
-                    ZStack {
-                        Circle()
-                            .fill(isSelected ? AppColors.accent : AppColors.accent.opacity(0.12))
-                            .frame(width: 56, height: 56)
-                        Image(systemName: categoryIcon(for: category))
-                            .font(.title2.weight(.semibold))
-                            .foregroundColor(isSelected ? .white : AppColors.accent)
-                    }
-
-                    // Checkmark badge overlay — only when selected. Sits on
-                    // the top-trailing corner of the icon circle and uses a
-                    // surface-coloured ring so it stays legible regardless
-                    // of the card's background tint underneath.
-                    if isSelected {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.subheadline)
-                            .foregroundColor(AppColors.accent)
-                            .background(
-                                Circle()
-                                    .fill(AppColors.uiSurface)
-                                    .padding(2)
-                            )
-                            .offset(x: 4, y: -4)
-                    }
-                }
-                .padding(.top, NNSpacing.xs)
-
-                Text(category)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundColor(AppColors.textPrimary)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                if let example = categoryExamples(for: category) {
-                    // Strip the "يشمل: " / "e.g. " prefix so the caption
-                    // reads more like a compact tag list in the grid cell.
-                    Text(example
-                            .replacingOccurrences(of: "يشمل: ", with: "")
-                            .replacingOccurrences(of: "e.g. ", with: ""))
-                        .font(.caption2)
-                        .foregroundColor(AppColors.textSecondary)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            .frame(maxWidth: .infinity, minHeight: 134, alignment: .top)
-            .padding(.horizontal, NNSpacing.sm)
-            .padding(.vertical, NNSpacing.sm)
-            // Inactive: transparent so the cell blends into the section card
-            // (no more "gray cell inside white card" punch-through).
-            // Active: keeps the full visual treatment so selections still pop.
-            .background(isSelected ? AppColors.infoBg : Color.clear)
-            .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
-            .overlay(
-                RoundedRectangle(cornerRadius: NNRadius.card)
-                    .stroke(isSelected ? AppColors.accent : Color.clear,
-                            lineWidth: isSelected ? NNBorder.input : 0)
-            )
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(category)
-        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
     }
 
     /// SF Symbol icon for each category. Bilingual keys map to the same icon
@@ -503,23 +439,52 @@ struct BlockItemsEditorView: View {
 
     private var quickAppsSection: some View {
         Section {
-            VStack(alignment: .leading, spacing: NNSpacing.sm) {
-                // Three subgroups (Social & Video / Messaging / Entertainment)
-                // each rendered as a flow grid of capsule chips by
-                // `quickAppsGroup`. The chips communicate "tap to select"
-                // visually — no intro paragraph needed.
-                ForEach(QuickAppEditor.groups, id: \.title) { group in
-                    quickAppsGroup(title: lang.isArabicEffective ? group.titleAr : group.title,
-                                  items: group.items)
+            VStack(spacing: 0) {
+                ForEach(Array(QuickAppEditor.groups.enumerated()), id: \.element.title) { groupIdx, group in
+                    // Tiny group label between subgroups — quieter than the
+                    // previous bold subheaders + count chip.
+                    if groupIdx > 0 {
+                        Divider()
+                            .padding(.horizontal, NNSpacing.sm)
+                            .padding(.vertical, NNSpacing.xxs)
+                    }
+                    HStack {
+                        Text(lang.isArabicEffective ? group.titleAr : group.title)
+                            .font(.caption.weight(.semibold))
+                            .foregroundColor(AppColors.textSecondary)
+                            .textCase(.uppercase)
+                        Spacer()
+                    }
+                    .padding(.horizontal, NNSpacing.md)
+                    .padding(.top, NNSpacing.xs)
+                    .padding(.bottom, NNSpacing.xxs)
+
+                    ForEach(Array(group.items.enumerated()), id: \.element.key) { idx, qa in
+                        editorRow(
+                            icon: qa.icon,
+                            title: qa.title,
+                            subtitle: nil,
+                            isSelected: quickSelected.contains(qa.key),
+                            action: {
+                                withAnimation(.easeInOut(duration: 0.15)) {
+                                    if quickSelected.contains(qa.key) {
+                                        quickSelected.remove(qa.key)
+                                    } else {
+                                        quickSelected.insert(qa.key)
+                                    }
+                                }
+                            }
+                        )
+                        if idx < group.items.count - 1 {
+                            Divider()
+                                .padding(.leading, NNSpacing.lg)
+                        }
+                    }
                 }
             }
-            .padding(NNSpacing.md)
+            .padding(.vertical, NNSpacing.xxs)
             .background(AppColors.uiSurface)
             .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
-            // Section card border removed in Pass 9 — uiSurface bg + corner
-            // radius alone defines the section against the gray form bg.
-            // Reduces the stacked-borders ("white/gray/white/gray") effect
-            // the user flagged.
         } header: {
             sectionHeader(icon: "bolt.fill", text: lang.isArabicEffective ? "تطبيقات شائعة" : "Popular Apps")
         }
@@ -527,168 +492,29 @@ struct BlockItemsEditorView: View {
         .listRowBackground(Color.clear)
     }
 
-    /// A single Quick Apps subgroup rendered as a flow-grid of capsule chips.
-    /// Replaces the previous DisclosureGroup pattern where all 20 apps were
-    /// hidden behind 3 collapsed accordions — users in testing didn't know
-    /// the apps existed until they tapped each group. With chips, every app
-    /// in the group is visible at a glance.
-    ///
-    /// The grid uses `.adaptive(minimum:)` so chips auto-wrap based on the
-    /// device width (≈ 3 columns on iPhone, more on iPad). Each chip toggles
-    /// independently and flips to an accent fill + checkmark prefix when
-    /// active so selection state is visible without relying on color alone.
-    @ViewBuilder
-    private func quickAppsGroup(title: String, items: [QuickAppEditor]) -> some View {
-        let selectedInGroup = items.filter { quickSelected.contains($0.key) }.count
-        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.xs) {
-            HStack(spacing: NNSpacing.xs) {
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundColor(AppColors.textPrimary)
-                if selectedInGroup > 0 {
-                    Text("\(selectedInGroup)/\(items.count)")
-                        .font(.caption.weight(.semibold))
-                        .foregroundColor(AppColors.accent)
-                        .monospacedDigit()
-                        .padding(.horizontal, NNSpacing.xs - 2)
-                        .padding(.vertical, 1)
-                        .background(AppColors.accent.opacity(0.12))
-                        .clipShape(Capsule())
-                } else {
-                    Text("\(items.count)")
-                        .font(.caption)
-                        .foregroundColor(AppColors.textSecondary)
-                        .monospacedDigit()
-                }
-                Spacer(minLength: 0)
-            }
-            .padding(.top, NNSpacing.xs)
-
-            LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: 110), spacing: NNSpacing.xs)],
-                alignment: lang.isArabicEffective ? .trailing : .leading,
-                spacing: NNSpacing.xs
-            ) {
-                ForEach(items, id: \.key) { qa in
-                    quickAppChip(for: qa)
-                }
-            }
-        }
-    }
-
-    /// Single capsule chip for a Quick App. Inactive uses the page-bg fill so
-    /// chips visually punch out of the surrounding section card; active uses
-    /// the accent fill with a leading checkmark to encode selection without
-    /// relying on color alone.
-    @ViewBuilder
-    private func quickAppChip(for qa: QuickAppEditor) -> some View {
-        let isSelected = quickSelected.contains(qa.key)
-        Button(action: {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            withAnimation(.easeInOut(duration: 0.15)) {
-                if isSelected {
-                    quickSelected.remove(qa.key)
-                } else {
-                    quickSelected.insert(qa.key)
-                }
-            }
-        }) {
-            HStack(spacing: NNSpacing.xxs) {
-                Image(systemName: isSelected ? "checkmark" : qa.icon)
-                    .font(.caption.weight(isSelected ? .bold : .regular))
-                    .foregroundColor(isSelected ? .white : AppColors.accent)
-                    .frame(width: 14, alignment: .center)
-                Text(qa.title)
-                    .font(.caption.weight(.medium))
-                    .foregroundColor(isSelected ? .white : AppColors.textPrimary)
-                    .lineLimit(1)
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, NNSpacing.sm)
-            .padding(.vertical, NNSpacing.xs)
-            .frame(maxWidth: .infinity, minHeight: NNHitTarget.minimum - 8)
-            // Inactive: transparent so the chip doesn't fill with form-bg
-            // gray inside the white section card. The hairline outline alone
-            // keeps it readable as a tappable capsule. Active stays solid
-            // accent + white text.
-            .background(isSelected ? AppColors.accent : Color.clear)
-            .clipShape(Capsule())
-            .overlay(
-                Capsule()
-                    .stroke(isSelected ? Color.clear : AppColors.uiBorder, lineWidth: NNBorder.hairline)
-            )
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(qa.title)
-        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
-    }
-
     // ─── Section 3: Specific Apps via Family Activity Picker ─────
 
     private var specificAppsSection: some View {
         Section {
-            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
-                if #available(iOS 16.0, *) {
-                    Button(action: { handleAppsButtonTap() }) {
-                        HStack(spacing: NNSpacing.xs) {
-                            Image(systemName: "square.stack.3d.up.fill")
-                            Text(draft.apps.isEmpty
-                                ? (lang.isArabicEffective ? "اختر تطبيقات من جهازك" : "Pick apps from your device")
-                                : (lang.isArabicEffective ? "تعديل الاختيار" : "Edit selection"))
-                        }
-                        .font(.nnButton)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: NNHitTarget.minimum)
-                        .foregroundColor(AppColors.accent)
-                        .background(AppColors.infoBg)
-                        .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                if !draft.apps.isEmpty {
-                    // The FamilyActivityPicker returns opaque tokens; we can
-                    // only count them, not name them. Previously the UI
-                    // rendered "Selected App #1, #2…" which was useless.
-                    // Show a single count summary instead.
-                    HStack(spacing: NNSpacing.xs) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(AppColors.successGreen)
-                            .font(.subheadline)
-                        Text(lang.isArabicEffective
-                            ? "تم اختيار \(draft.apps.count) تطبيق"
-                            : "\(draft.apps.count) app\(draft.apps.count == 1 ? "" : "s") selected")
-                            .font(.footnote)
-                            .foregroundColor(AppColors.textSecondary)
-                        Spacer()
-                    }
-                }
-
-                // Privacy explainer — compacted to a single line with an
-                // inline info icon. Apple doesn't expose chosen app names
-                // back to us, so without this hint users think the selection
-                // silently failed. Single-line layout keeps the section
-                // tighter when the picker hasn't been used yet.
-                HStack(alignment: .top, spacing: NNSpacing.xxs) {
-                    Image(systemName: "info.circle")
-                        .font(.caption2)
-                        .foregroundColor(AppColors.textSecondary)
-                    Text(lang.isArabicEffective
-                        ? "Apple تخفي أسماء التطبيقات المحدّدة — يظهر العدد فقط."
-                        : "Apple hides the chosen app names — only the count is shown.")
-                        .font(.caption2)
-                        .foregroundColor(AppColors.textSecondary)
-                        .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
-                        .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
-                }
+            if #available(iOS 16.0, *) {
+                editorRow(
+                    icon: "square.stack.3d.up.fill",
+                    title: lang.isArabicEffective
+                        ? (draft.apps.isEmpty ? "اختر تطبيقات من جهازك" : "تعديل الاختيار")
+                        : (draft.apps.isEmpty ? "Pick apps from your device" : "Edit selection"),
+                    subtitle: draft.apps.isEmpty
+                        ? nil
+                        : (lang.isArabicEffective
+                            ? "\(draft.apps.count) تطبيق محدّد"
+                            : "\(draft.apps.count) app\(draft.apps.count == 1 ? "" : "s") selected"),
+                    isSelected: !draft.apps.isEmpty,
+                    trailing: draft.apps.isEmpty ? .chevron : .count(draft.apps.count),
+                    action: { handleAppsButtonTap() }
+                )
+                .padding(.vertical, NNSpacing.xxs)
+                .background(AppColors.uiSurface)
+                .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
             }
-            .padding(NNSpacing.md)
-            .background(AppColors.uiSurface)
-            .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
-            // Section card border removed in Pass 9 — uiSurface bg + corner
-            // radius alone defines the section against the gray form bg.
-            // Reduces the stacked-borders ("white/gray/white/gray") effect
-            // the user flagged.
         } header: {
             sectionHeader(icon: "app.fill", text: lang.isArabicEffective ? "تطبيقات محدّدة" : "Specific Apps")
         }
@@ -708,60 +534,25 @@ struct BlockItemsEditorView: View {
 
     private var websitesSection: some View {
         Section {
-            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
-                if #available(iOS 16.0, *) {
-                    Button(action: { handleAppsButtonTap() }) {
-                        HStack(spacing: NNSpacing.xs) {
-                            Image(systemName: "globe")
-                            Text(draft.websites.isEmpty
-                                ? (lang.isArabicEffective ? "اختر مواقع من Apple Picker" : "Pick websites via Apple Picker")
-                                : (lang.isArabicEffective ? "تعديل الاختيار" : "Edit selection"))
-                        }
-                        .font(.nnButton)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: NNHitTarget.minimum)
-                        .foregroundColor(AppColors.accent)
-                        .background(AppColors.infoBg)
-                        .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                if !draft.websites.isEmpty {
-                    // Same opacity-from-tokens limitation as Specific Apps —
-                    // Apple returns opaque WebDomainTokens, so we can only
-                    // show a count, not the actual domains.
-                    HStack(spacing: NNSpacing.xs) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(AppColors.successGreen)
-                            .font(.subheadline)
-                        Text(lang.isArabicEffective
-                            ? "تم اختيار \(draft.websites.count) موقع"
-                            : "\(draft.websites.count) website\(draft.websites.count == 1 ? "" : "s") selected")
-                            .font(.footnote)
-                            .foregroundColor(AppColors.textSecondary)
-                        Spacer()
-                    }
-                }
-
-                // Privacy explainer mirroring the Specific Apps section —
-                // sets expectations that the picker returns opaque tokens.
-                HStack(alignment: .top, spacing: NNSpacing.xxs) {
-                    Image(systemName: "info.circle")
-                        .font(.caption2)
-                        .foregroundColor(AppColors.textSecondary)
-                    Text(lang.isArabicEffective
-                        ? "اختر من تبويب «مواقع» داخل الـ Picker. تظهر بالعدد فقط لحماية الخصوصية."
-                        : "Choose from the picker's \"Websites\" tab. Shown by count only for privacy.")
-                        .font(.caption2)
-                        .foregroundColor(AppColors.textSecondary)
-                        .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
-                        .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
-                }
+            if #available(iOS 16.0, *) {
+                editorRow(
+                    icon: "globe",
+                    title: lang.isArabicEffective
+                        ? (draft.websites.isEmpty ? "اختر مواقع من Apple Picker" : "تعديل الاختيار")
+                        : (draft.websites.isEmpty ? "Pick websites via Apple Picker" : "Edit selection"),
+                    subtitle: draft.websites.isEmpty
+                        ? nil
+                        : (lang.isArabicEffective
+                            ? "\(draft.websites.count) موقع محدّد"
+                            : "\(draft.websites.count) website\(draft.websites.count == 1 ? "" : "s") selected"),
+                    isSelected: !draft.websites.isEmpty,
+                    trailing: draft.websites.isEmpty ? .chevron : .count(draft.websites.count),
+                    action: { handleAppsButtonTap() }
+                )
+                .padding(.vertical, NNSpacing.xxs)
+                .background(AppColors.uiSurface)
+                .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
             }
-            .padding(NNSpacing.md)
-            .background(AppColors.uiSurface)
-            .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
         } header: {
             sectionHeader(icon: "globe", text: lang.isArabicEffective ? "مواقع" : "Websites")
         }
