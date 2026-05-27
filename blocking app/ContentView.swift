@@ -123,13 +123,12 @@ struct ContentView: View {
         await store.setupSubscriptions()
         await store.fetchPartnerships()
         await store.flushPendingBreakAttempts()
-        // Approval workflow surfaces (PR 2).
+        // Approval workflow surfaces (PR 2). executePendingApprovals does its
+        // own fetchMyOutgoingRequests internally, so we don't pre-fetch here —
+        // a single round-trip per cold-launch / CKAccountChanged event is
+        // enough to drain approvals received while the app was closed (e.g.
+        // partner approved while we were offline, or background push failed).
         await store.fetchPendingRequestsForMe()
-        await store.fetchMyOutgoingRequests()
-        // Drain any approved requests we may have missed while the app was
-        // closed — e.g. partner approved while we were offline, or the
-        // background push delivery failed. fetchMyOutgoingRequests above
-        // populated the list this reads from.
         await ApprovalExecutor.executePendingApprovals()
     }
 

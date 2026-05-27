@@ -218,6 +218,12 @@ struct PartnerInviteView: View {
                 }
             } catch {
                 await MainActor.run {
+                    // Roll the phase back immediately so the user sees their
+                    // own name form (with values preserved) behind the alert
+                    // instead of a stuck spinner. The alert's "OK" button
+                    // also flips phase → .form, but only fires after dismiss;
+                    // resetting here removes the visual stall.
+                    self.phase = .form
                     self.errorMessage = error.localizedDescription
                 }
             }
