@@ -9,36 +9,39 @@
 import Foundation
 
 enum AppStorageKeys {
+    // Every key carries the `v1:` schema-version prefix. Pre-v1 installations
+    // get migrated to this naming in `PersistenceMigration.runIfNeeded()`.
+
     // Auth & onboarding
-    static let isAuthenticated = "isAuthenticated"
-    static let showOnboardingAfterLogin = "showOnboardingAfterLogin"
+    static let isAuthenticated = "v1:isAuthenticated"
+    static let showOnboardingAfterLogin = "v1:showOnboardingAfterLogin"
 
     // Subscription / trial
-    static let isPremium = "isPremium"
-    static let trialStartTs = "trialStartTs"
-    static let hasShownTrialExpiredAlert = "hasShownTrialExpiredAlert"
+    static let isPremium = "v1:isPremium"
+    static let trialStartTs = "v1:trialStartTs"
+    static let hasShownTrialExpiredAlert = "v1:hasShownTrialExpiredAlert"
 
     // Role marker for DEBUG-only admin/QA flows (admin login in AuthView,
     // admin-only Settings section). Never set in Release builds.
     static let isAdmin = "v1:isAdmin"
 
     // UI state
-    static let selectedTab = "selectedTab"
+    static let selectedTab = "v1:selectedTab"
     static let permissionsExpanded = "v1:permissionsExpanded"
 
     // Onboarding profile
-    static let obName = "ob_name"
-    static let obGender = "ob_gender"
-    static let obAgeGroup = "ob_age_group"
-    static let obApps = "ob_apps"
-    static let obAppsOther = "ob_apps_other"
-    static let obCats = "ob_cats"
-    static let obCatsOther = "ob_cats_other"
-    static let obGoals = "ob_goals"
-    static let obGoalsOther = "ob_goals_other"
+    static let obName = "v1:obName"
+    static let obGender = "v1:obGender"
+    static let obAgeGroup = "v1:obAgeGroup"
+    static let obApps = "v1:obApps"
+    static let obAppsOther = "v1:obAppsOther"
+    static let obCats = "v1:obCats"
+    static let obCatsOther = "v1:obCatsOther"
+    static let obGoals = "v1:obGoals"
+    static let obGoalsOther = "v1:obGoalsOther"
 
     // Seed bookkeeping
-    static let seedV1Done = "seed_v1_done"
+    static let seedV1Done = "v1:seedDone"
 
     // ChatBot free-tier rate limiting (resets at midnight per-device)
     static let chatFreeMessagesUsedToday = "v1:chat:freeMessagesUsedToday"

@@ -103,26 +103,73 @@ struct EmergencyUnlockStore {
     }
 }
 
-/// One-time migration: rewrite pre-versioned keys to versioned form so existing users
-/// don't lose their breaks/manual-state data when upgrading.
+/// One-time migration: rewrite pre-versioned keys to the `v1:` schema so
+/// existing users don't lose data when AppStorageKeys names change.
+///
+/// Two key families are migrated:
+///
+///   1. Per-list satellite stores (`manual:`, `breaks:`) that used to live
+///      without a version prefix — they're now `v1:manual:...`, `v1:breaks:...`.
+///
+///   2. Single AppStorage values whose names changed from unversioned ↔ v1:
+///      prefixed. The mapping is explicit (not a scan) so adding a key
+///      in the future is a conscious decision and untouched legacy keys
+///      can't accidentally be migrated.
 enum PersistenceMigration {
-    private static let migrationKey = "\(persistenceVersion):migration-done"
+    /// Bump this suffix every time the migration body changes in a way that
+    /// existing installs need to re-run. The pre-rename installs have
+    /// `v1:migration-done` set from a prior release, but those installs
+    /// also need the AppStorage key renames added here — they get them on
+    /// next launch via this new key.
+    private static let migrationKey = "\(persistenceVersion):migration-done.renames-v2"
+
+    /// Per-key (old → new) renames for AppStorage settings. The right-hand
+    /// side must match `AppStorageKeys` exactly. When you bump the schema,
+    /// add to this list rather than scanning all keys — a typo in one
+    /// constant would silently drop user data on next launch.
+    private static let appStorageRenames: [(legacy: String, current: String)] = [
+        ("isAuthenticated",          "v1:isAuthenticated"),
+        ("showOnboardingAfterLogin", "v1:showOnboardingAfterLogin"),
+        ("isPremium",                "v1:isPremium"),
+        ("trialStartTs",             "v1:trialStartTs"),
+        ("hasShownTrialExpiredAlert", "v1:hasShownTrialExpiredAlert"),
+        ("selectedTab",              "v1:selectedTab"),
+        ("ob_name",                  "v1:obName"),
+        ("ob_gender",                "v1:obGender"),
+        ("ob_age_group",             "v1:obAgeGroup"),
+        ("ob_apps",                  "v1:obApps"),
+        ("ob_apps_other",            "v1:obAppsOther"),
+        ("ob_cats",                  "v1:obCats"),
+        ("ob_cats_other",            "v1:obCatsOther"),
+        ("ob_goals",                 "v1:obGoals"),
+        ("ob_goals_other",           "v1:obGoalsOther"),
+        ("seed_v1_done",             "v1:seedDone"),
+    ]
 
     static func runIfNeeded() {
         let d = UserDefaults.standard
         guard !d.bool(forKey: migrationKey) else { return }
 
+        // Per-list satellite stores (UUID-keyed).
         for k in d.dictionaryRepresentation().keys {
-            // Old format: "manual:active:<UUID>" / "breaks:count:<UUID>" (no version prefix).
             guard k.hasPrefix("manual:") || k.hasPrefix("breaks:") else { continue }
             let newKey = "\(persistenceVersion):\(k)"
-            if d.object(forKey: newKey) == nil {
-                if let v = d.object(forKey: k) {
-                    d.set(v, forKey: newKey)
-                }
+            if d.object(forKey: newKey) == nil, let v = d.object(forKey: k) {
+                d.set(v, forKey: newKey)
             }
             d.removeObject(forKey: k)
         }
+
+        // Single-value AppStorage renames.
+        for (legacy, current) in appStorageRenames {
+            // Don't clobber a value the user already wrote to the new key
+            // (would happen if migration ran partially before failing).
+            if d.object(forKey: current) == nil, let v = d.object(forKey: legacy) {
+                d.set(v, forKey: current)
+            }
+            d.removeObject(forKey: legacy)
+        }
+
         d.set(true, forKey: migrationKey)
     }
 }
