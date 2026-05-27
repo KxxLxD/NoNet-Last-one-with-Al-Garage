@@ -59,10 +59,6 @@ struct PoliciesView: View {
         }
         .navigationTitle(isArabic ? "السياسات والشروط" : "Policies & Terms")
         .navigationBarTitleDisplayMode(.inline)
-        .onChange(of: selectedTab) { _ in
-            // No-op — the .id(top) anchor stays valid because the ScrollView's
-            // top is always at the picker. ForEach refresh handles the rest.
-        }
     }
 
     // ─── Tab picker ───────────────────────────────────────────────

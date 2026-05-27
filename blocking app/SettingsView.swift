@@ -5,10 +5,6 @@ struct SettingsView: View {
     @EnvironmentObject var lang: LanguageManager
     @AppStorage(AppStorageKeys.isPremium) private var isPremium: Bool = false
     @State private var navigateToUpgrade = false
-    // showComingSoonAlert is kept (still wired to the FAQItem patterns) but
-    // the Community section that used to trigger it is hidden until v1.4 —
-    // see the inline comment in body where the section used to live.
-    @State private var showComingSoonAlert = false
 
     #if DEBUG
     @AppStorage(AppStorageKeys.isAdmin) private var isAdmin: Bool = false
@@ -166,13 +162,6 @@ struct SettingsView: View {
             }
             .background(AppColors.uiBackground)
             .navigationTitle(AppStrings.settingsTitle(lang))
-        }
-        .alert(lang.isArabicEffective ? "قريباً" : "Coming Soon", isPresented: $showComingSoonAlert) {
-            Button(lang.isArabicEffective ? "حسناً" : "OK", role: .cancel) {}
-        } message: {
-            Text(lang.isArabicEffective
-                 ? "ستفتح هذه القناة قريباً. شكراً لصبرك!"
-                 : "This channel will open soon. Thanks for your patience!")
         }
         #if DEBUG
         .sheet(isPresented: $showAdminSheet) {
