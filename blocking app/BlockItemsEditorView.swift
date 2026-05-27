@@ -935,50 +935,62 @@ private struct PickerSheetWrapper: View {
     @State private var showCancelAlert = false
 
     var body: some View {
+        // Previously used ZStack(alignment: .bottom) to overlay the Done
+        // button on top of FamilyActivityPicker. That caused the last items
+        // in the picker's scroll list to be hidden BEHIND the floating Done
+        // button — the user's complaint ("text is hidden between them").
+        //
+        // safeAreaInset properly reserves space in the picker's scroll area
+        // for the bottom Done bar, so the last item can scroll fully into
+        // view above the button instead of getting masked by it.
         NavigationView {
-            ZStack(alignment: .bottom) {
-                FamilyActivityPicker(selection: $selection)
-                    .navigationTitle(title)
-                    .navigationBarTitleDisplayMode(.large)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button(lang.isArabicEffective ? "إلغاء" : "Cancel") {
-                                handleCancel()
-                            }
-                        }
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button(lang.isArabicEffective ? "تم" : "Done") {
-                                onDone(); dismiss()
-                            }
-                            .font(.headline)
+            FamilyActivityPicker(selection: $selection)
+                .navigationTitle(title)
+                .navigationBarTitleDisplayMode(.large)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(lang.isArabicEffective ? "إلغاء" : "Cancel") {
+                            handleCancel()
                         }
                     }
-
-                // Bottom sticky Done
-                Button(action: { onDone(); dismiss() }) {
-                    Text(lang.isArabicEffective ? "تم" : "Done")
+                    // Top toolbar Done kept for users who reach for Apple's
+                    // standard navigation pattern. The bottom Done below is
+                    // for thumb reach after scrolling.
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(lang.isArabicEffective ? "تم" : "Done") {
+                            onDone(); dismiss()
+                        }
                         .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(AppColors.accent)
-                        .foregroundColor(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
-                        .padding(.horizontal)
-                        .padding(.bottom, NNSpacing.sm)
+                    }
                 }
-            }
-            .interactiveDismissDisabled(hasChanges)
-            .onAppear { initialSelection = selection }
-            .alert(lang.isArabicEffective ? "تجاهل التعديلات؟" : "Discard changes?", isPresented: $showCancelAlert) {
-                Button(lang.isArabicEffective ? "تجاهلها" : "Discard", role: .destructive) {
-                    // revert
-                    selection = initialSelection
-                    onCancel(); dismiss()
+                .safeAreaInset(edge: .bottom) {
+                    Button(action: { onDone(); dismiss() }) {
+                        Text(lang.isArabicEffective ? "تم" : "Done")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: NNHitTarget.minimum + 6)
+                            .background(AppColors.accent)
+                            .foregroundColor(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, NNSpacing.md)
+                    .padding(.top, NNSpacing.xs)
+                    .padding(.bottom, NNSpacing.sm)
+                    .background(AppColors.uiBackground)
                 }
-                Button(lang.isArabicEffective ? "متابعة التعديل" : "Keep editing", role: .cancel) {}
-            } message: {
-                Text(lang.isArabicEffective ? "ستضيع تعديلاتك ولن يمكن استرجاعها." : "Your changes will be lost and can't be recovered.")
-            }
+                .interactiveDismissDisabled(hasChanges)
+                .onAppear { initialSelection = selection }
+                .alert(lang.isArabicEffective ? "تجاهل التعديلات؟" : "Discard changes?", isPresented: $showCancelAlert) {
+                    Button(lang.isArabicEffective ? "تجاهلها" : "Discard", role: .destructive) {
+                        // revert
+                        selection = initialSelection
+                        onCancel(); dismiss()
+                    }
+                    Button(lang.isArabicEffective ? "متابعة التعديل" : "Keep editing", role: .cancel) {}
+                } message: {
+                    Text(lang.isArabicEffective ? "ستضيع تعديلاتك ولن يمكن استرجاعها." : "Your changes will be lost and can't be recovered.")
+                }
         }
     }
 
