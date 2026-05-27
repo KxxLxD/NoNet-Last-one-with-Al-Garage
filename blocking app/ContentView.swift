@@ -40,7 +40,7 @@ struct ContentView: View {
                         .tag(0)
 
                     ChatBotView()
-                            .tabItem { Label(lang.isArabicEffective ? "NoNet AI" : "NoNet AI", systemImage: "sparkles") }
+                        .tabItem { Label("NoNet AI", systemImage: "message") }
                         .tag(1)
 
                     Group {
@@ -68,7 +68,6 @@ struct ContentView: View {
         .onAppear {
             applySemanticDirection(isArabic: lang.isArabicEffective)
             expireTrialIfNeeded()
-            configureTabBarAppearance()
             Task { await bootstrapCloudKit() }
         }
         .onReceive(NotificationCenter.default.publisher(for: .CKAccountChanged)) { _ in
@@ -76,7 +75,6 @@ struct ContentView: View {
         }
         .onChange(of: lang.isArabicEffective) { isArabic in
             applySemanticDirection(isArabic: isArabic)
-            configureTabBarAppearance()
         }
         .alert(lang.isArabicEffective ? "انتهت تجربتك المجانية" : "Your free trial ended", isPresented: $showTrialExpiredAlert) {
             Button(lang.isArabicEffective ? "اشترك الآن" : "Subscribe now") {
@@ -152,26 +150,6 @@ struct ContentView: View {
     private func applySemanticDirection(isArabic: Bool) {
         UIView.appearance().semanticContentAttribute = isArabic ? .forceRightToLeft : .forceLeftToRight
     }
-
-    private func configureTabBarAppearance() {
-        let appearance = UITabBarAppearance()
-        appearance.configureWithOpaqueBackground()
-
-        // Item appearance with slight title offset (moves label down a bit → إحساس مسافة فوق الأيقونة)
-        let itemAppearance = UITabBarItemAppearance()
-        itemAppearance.normal.titlePositionAdjustment = UIOffset(horizontal: 0, vertical: 6)
-        itemAppearance.selected.titlePositionAdjustment = UIOffset(horizontal: 0, vertical: 6)
-        appearance.stackedLayoutAppearance = itemAppearance
-        appearance.inlineLayoutAppearance = itemAppearance
-        appearance.compactInlineLayoutAppearance = itemAppearance
-
-        UITabBar.appearance().standardAppearance = appearance
-        if #available(iOS 15.0, *) {
-            UITabBar.appearance().scrollEdgeAppearance = appearance
-        }
-        // Unselected tint for elegance
-        UITabBar.appearance().unselectedItemTintColor = UIColor(red: 107/255, green: 114/255, blue: 128/255, alpha: 1)
-    }
 }
 
 #Preview {
@@ -190,14 +168,44 @@ struct ContentView: View {
 struct CustomTabBar: View {
     @Binding var selectedTab: Int
     @EnvironmentObject private var lang: LanguageManager
+    // Drives the Home-tab badge when partners send new break-attempt
+    // requests. Observed here (not just in ContentView) so the dot
+    // appears/disappears live without a full view rebuild.
+    @ObservedObject private var partnerStore = CloudKitPartnerStore.shared
 
-    private struct Item: Identifiable { let id: Int; let title: String; let systemImage: String }
+    private struct Item: Identifiable {
+        let id: Int
+        let title: String
+        // Outline + fill pair: the swap is the non-color signal of
+        // selection (works for color-blind users).
+        let unselectedImage: String
+        let selectedImage: String
+        let badgeCount: Int
+    }
 
     private var items: [Item] {
         [
-            Item(id: 0, title: AppStrings.homeTitle(lang), systemImage: "house.fill"),
-            Item(id: 1, title: "NoNet AI", systemImage: "sparkles"),
-            Item(id: 2, title: AppStrings.settingsTitle(lang), systemImage: "gearshape.fill")
+            Item(
+                id: 0,
+                title: AppStrings.homeTitle(lang),
+                unselectedImage: "house",
+                selectedImage: "house.fill",
+                badgeCount: partnerStore.pendingPartnerRequests.count
+            ),
+            Item(
+                id: 1,
+                title: "NoNet AI",
+                unselectedImage: "message",
+                selectedImage: "message.fill",
+                badgeCount: 0
+            ),
+            Item(
+                id: 2,
+                title: AppStrings.settingsTitle(lang),
+                unselectedImage: "gearshape",
+                selectedImage: "gearshape.fill",
+                badgeCount: 0
+            )
         ]
     }
 
@@ -236,13 +244,28 @@ struct CustomTabBar: View {
             withAnimation(.easeOut(duration: 0.12)) { selectedTab = item.id }
         }) {
             VStack(spacing: 2) {
-                Image(systemName: item.systemImage)
-                    .symbolRenderingMode(.monochrome)
-                    .font(.system(size: 22, weight: .regular))
-                    .foregroundColor(isSelected ? AppColors.accent : AppColors.textSecondary)
-                    .scaleEffect(isPressed ? 0.92 : 1.0)
+                ZStack(alignment: .topTrailing) {
+                    Image(systemName: isSelected ? item.selectedImage : item.unselectedImage)
+                        .symbolRenderingMode(.monochrome)
+                        // .system(.title2) scales with Dynamic Type — fixed
+                        // .system(size: 22) did not.
+                        .font(.system(.title2, weight: .regular))
+                        .foregroundColor(isSelected ? AppColors.accent : AppColors.textSecondary)
+                        .scaleEffect(isPressed ? 0.92 : 1.0)
+
+                    if item.badgeCount > 0 {
+                        Circle()
+                            .fill(AppColors.alertRed)
+                            .frame(width: 8, height: 8)
+                            .overlay(
+                                Circle().stroke(AppColors.uiSurface, lineWidth: 1.5)
+                            )
+                            .offset(x: 6, y: -2)
+                            .accessibilityHidden(true)
+                    }
+                }
                 Text(item.title)
-                    .font(.caption2.weight(isSelected ? .semibold : .regular))
+                    .font(.caption.weight(isSelected ? .semibold : .regular))
                     .foregroundColor(isSelected ? AppColors.accent : AppColors.textSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
@@ -262,7 +285,19 @@ struct CustomTabBar: View {
                     withAnimation(.easeIn(duration: 0.15)) { pressedID = nil }
                 }
         )
-        .accessibilityLabel(item.title)
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityLabel(accessibilityLabel(for: item))
+        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
+        .accessibilityHint(isSelected
+                           ? (lang.isArabicEffective ? "محددة حالياً" : "Currently selected")
+                           : (lang.isArabicEffective ? "اضغط للانتقال إلى \(item.title)" : "Tap to switch to \(item.title)"))
+    }
+
+    private func accessibilityLabel(for item: Item) -> String {
+        guard item.badgeCount > 0 else { return item.title }
+        if lang.isArabicEffective {
+            return "\(item.title)، \(item.badgeCount) طلب جديد"
+        }
+        let noun = item.badgeCount == 1 ? "new request" : "new requests"
+        return "\(item.title), \(item.badgeCount) \(noun)"
     }
 }

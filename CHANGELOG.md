@@ -7,6 +7,73 @@
 
 ## [Unreleased]
 
+## [1.4.0] — 2026-05-27
+
+### الإصدار الخامس — تصحيحات معمارية عميقة + offline-safety كامل + sign-out cleanup
+
+#### المُصلَح (Fixed)
+
+- **Multi-slot scheduling لم يحترم الـ slots المتعددة** — قائمة بـ slot
+  السبت 9-12 + السبت 18-22 كان يُسجَّل كـ schedule واحد من 9-22، فالـ
+  shield يبقى مفعَّل خلال فجوة 12-18 رغم سماح المستخدم. والأسوأ: حقل
+  `day` كان مُهمَلاً تماماً (`repeats: true` يومياً). الآن
+  `BlockingEngine.scheduleMonitoring` يُسجِّل `DeviceActivitySchedule`
+  منفصل لكل slot مع `weekday` صحيح (1=Sunday…7=Saturday). الأسماء
+  بنمط `schedule.<UUID>.<slotIndex>` لاحترام أبل's per-name uniqueness.
+  حد per-list: 14 slot (DeviceActivity per-extension cap ~20).
+  `BlockingMonitor.parseActivity` يدعم النمط الجديد.
+- **typed websites كانت لا تحجب فعلياً** — الـ TextField في
+  `BlockItemsEditorView.websitesSection` كان يقبل نصوص (مثل
+  "youtube.com") تُحفَظ في Core Data، لكن `ManagedSettings.shield.webDomains`
+  يقبل `WebDomainToken` opaque tokens فقط (لا strings). النتيجة: حجب
+  وهمي. الـ UI الآن زر "اختر مواقع من Apple Picker" يفتح
+  FamilyActivityPicker (الذي يدعم apps + categories + websites في
+  selection موحَّد). `handleFamilySelectionChange` يحدِّث
+  `draft.websites` count من `webDomainTokens.count`.
+  `BlockingEngine.applyShields` نُظِّفت من branch الـ typed-domain
+  warning. حُذِف 6 helpers ميتة (`websiteInput`, `addWebsite`,
+  `websiteRow`, `removeWebsite`, `websiteInputHelper`, `isValidDomain`,
+  `isValidDomainStrict`).
+- **`createActionRequest` يضيع طلبات الشريك في وضع offline أو CloudKit
+  failure** — كان يرجع `nil` ويعرض الـ UI خطأ، رغم أن
+  `recordBreakAttempt` (المسار الأقل أهمية) يستخدم `PendingBreakAttemptQueue`.
+  الآن `createActionRequest` يحفظ في الـ queue على offline أو error،
+  ويرجع `attemptID.uuidString` non-nil (queue handles delivery). الـ
+  `flushPendingBreakAttempts` يحترم `status + reason` للـ approval
+  requests (لا تتحول الـ `.pending` إلى `.logOnly` عند الـ replay).
+- **`scheduled + hard` semantics غامضة** — `BlockingEngine.isHardLocked`
+  كان يرجع `false` بصمت لـ scheduled+hard، فالـ "Hard Mode" بلا أثر
+  عملي. أُضيف comment صريح: Hard Mode على scheduled lists يحمي
+  configuration (delete/modify يمر بالـ gatekeeper) وليس runtime
+  (الـ schedule يحرّر نفسه عند نهاية النافذة).
+- **`RequestActionSheet.sendRequest` كانت تبتلع pre-flight failures**
+  بعد أن جعلت `createActionRequest` يُرجع non-nil دائماً. الآن تُلتقط
+  `wasOffline` قبل الـ await، الـ `guard id != nil` يحافظ على defensive
+  path للـ malformed-arg failures، وفرع `wasOffline` يستدعي
+  `onRequestSent()` (queue يضمن التسليم).
+
+### المضاف (Added)
+
+- **`Core/DataReset.signOutAndClear()`** — تنظيف مركزي عند الـ logout
+  يمسح: Keychain (Apple userID)، كل AppStorage keys بنطاق المستخدم
+  (auth/premium/trial/onboarding profile/admin/chat history)، per-list
+  stores (`v1:manual:`, `v1:breaks:`, `v1:emergencyUnlock:` orphans،
+  + `v1:deletionLog:entries`)، Core Data lists (force-deactivated عبر
+  `BlockingEngine.purge` حتى Hard Mode)، PendingBreakAttemptQueue. الـ
+  CloudKit data يبقى مرتبطاً بـ Apple ID — خارج النطاق. النية: مستخدم
+  B الذي يدخل بعد A لا يرث قوائمه/بياناته.
+
+### المُحسَّن (Changed)
+
+- **`PendingBreakAttempt` يدعم approval workflow** — حقول optional
+  `statusRaw` + `reason` تُضمَّن في الـ queue (backward-compatible:
+  الـ records القديمة بدون `statusRaw` تُعتبر `.logOnly` تلقائياً).
+  الـ `flush` يبني الـ CKRecord بنفس الـ status الأصلي.
+- **`LogoutButton` مبسَّط** — يستدعي `DataReset.signOutAndClear()` فقط
+  بدل الـ in-place clears. الـ alert message محدَّث للشفافية: "راح
+  تنحذف قوائمك وحساب الاشتراك والملف الشخصي من هذا الجهاز. (الشركاء في
+  iCloud يبقون مرتبطين بحسابك.)"
+
 ## [1.3.0] — 2026-05-25
 
 ### الإصدار الرابع — Home Page أهدأ + شريك التعافي صار جزء من إنشاء القائمة

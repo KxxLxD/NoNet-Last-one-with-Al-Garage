@@ -114,13 +114,21 @@ class BlockingMonitor: DeviceActivityMonitor {
 
     private enum ActivityKind { case scheduled, timeLimit }
 
-    /// Activity names are "schedule.<UUID>" for time-window monitoring or
-    /// "limit.<UUID>" for daily quota monitoring (different shield semantics).
+    /// Activity names use one of two patterns:
+    ///   • "schedule.<UUID>.<slotIndex>" — multi-slot scheduled lists. Each
+    ///     slot in the editor registers its own DeviceActivitySchedule with a
+    ///     unique index so per-day, per-window shields fire correctly.
+    ///   • "limit.<UUID>" — daily quota monitoring (different shield semantics).
+    /// We only need the list UUID downstream; the slot index is purely for
+    /// disambiguating Apple's per-name uniqueness requirement.
     private func parseActivity(_ activity: DeviceActivityName) -> (id: UUID, kind: ActivityKind)? {
         let raw = activity.rawValue
         if raw.hasPrefix("schedule.") {
-            let idStr = String(raw.dropFirst("schedule.".count))
-            if let id = UUID(uuidString: idStr) { return (id, .scheduled) }
+            // Strip the prefix, then take the leading 36-char UUID. Anything
+            // after (".<index>") is ignored — the shield is per-list, not per-slot.
+            let body = String(raw.dropFirst("schedule.".count))
+            let uuidPart = String(body.prefix(36))
+            if let id = UUID(uuidString: uuidPart) { return (id, .scheduled) }
         }
         if raw.hasPrefix("limit.") {
             let idStr = String(raw.dropFirst("limit.".count))

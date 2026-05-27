@@ -39,7 +39,10 @@ struct CreateListSheet: View {
 
     // Confirm sheet
     @State private var showConfirmSheet = false
-    @State private var startImmediately: Bool = false
+    /// Default ON for "now" blocks — if the user picked a fixed-duration
+    /// immediate block, the expected behavior is "start it now." Off-by-default
+    /// turned the most common path into a 2-step dance.
+    @State private var startImmediately: Bool = true
     @State private var showSuccessToast: Bool = false
 
     // Alerts
@@ -110,7 +113,7 @@ struct CreateListSheet: View {
         v.sheet(isPresented: $showingEditor) {
             BlockItemsEditorView(draft: draft, onSave: { newDraft in self.draft = newDraft })
                 .environmentObject(lang)
-                .padding(16)
+                .padding(NNSpacing.md)
                 .presentationDetents([.medium, .large])
             }
     }
@@ -119,14 +122,14 @@ struct CreateListSheet: View {
             ScheduleEditorSheet(isArabic: lang.isArabicEffective, initialSlots: slots.map { ScheduleSlotModel(id: $0.id, day: $0.day, fromMinutes: $0.fromMinutes, toMinutes: $0.toMinutes) }) { newSlots in
                     slots = newSlots
                 }
-                .padding(16)
+                .padding(NNSpacing.md)
                 .presentationDetents([.medium, .large])
             }
     }
     private func attachUpgradeSheet<V: View>(_ v: V) -> some View {
         v.sheet(isPresented: $showUpgradeSheet) {
                 NavigationView { UpgradeView().environmentObject(lang) }
-                    .padding(16)
+                    .padding(NNSpacing.md)
                     .presentationDetents([.medium, .large])
             }
     }
@@ -137,14 +140,14 @@ struct CreateListSheet: View {
                     name: name,
                     protection: protection,
                     blockType: blockType,
-                    durationSeconds: Int64(days * 86400 + hours * 3600 + minutes * 60),
+                    durationSeconds: Int64(days * BlockingConstants.secondsPerDay + hours * BlockingConstants.secondsPerHour + minutes * BlockingConstants.secondsPerMinute),
                     websites: draft.websites.map { $0.displayName ?? $0.value },
                     apps: draft.apps.map { $0.displayName ?? $0.value },
                     categories: draft.categories.map { $0.displayName ?? $0.value },
                     slots: slots.map { ($0.day, $0.fromMinutes, $0.toMinutes) },
                     onBack: { showConfirmSheet = false },
                     onConfirm: {
-                        let totalSeconds = Int64(days * 86400 + hours * 3600 + minutes * 60)
+                        let totalSeconds = Int64(days * BlockingConstants.secondsPerDay + hours * BlockingConstants.secondsPerHour + minutes * BlockingConstants.secondsPerMinute)
                         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
                         pendingSeconds = totalSeconds
                         pendingBaseName = trimmedName
@@ -157,7 +160,7 @@ struct CreateListSheet: View {
                     },
                     startImmediately: $startImmediately
                 )
-                .padding(16)
+                .padding(NNSpacing.md)
                 .presentationDetents([.medium, .large])
             }
     }
@@ -214,23 +217,20 @@ struct CreateListSheet: View {
     }
     private func attachDoneBar<V: View>(_ v: V) -> some View {
         v.safeAreaInset(edge: .bottom) {
-                VStack(spacing: 8) {
-                    EmptyView()
-                    Button(action: { attemptConfirm() }) {
-                        Text(lang.isArabicEffective ? "تم" : "Done")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                        .background(AppColors.accent)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(!isFormValid)
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 8)
-                .padding(.bottom, 16)
+            Button(action: { attemptConfirm() }) {
+                Text(lang.isArabicEffective ? "تم" : "Done")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: NNHitTarget.minimum + 6)
+                    .background(AppColors.accent)
+                    .foregroundColor(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+            }
+            .buttonStyle(.plain)
+            .disabled(!isFormValid)
+            .padding(.horizontal, NNSpacing.md)
+            .padding(.top, NNSpacing.xs)
+            .padding(.bottom, NNSpacing.md)
             .background(AppColors.uiBackground)
         }
     }
@@ -253,8 +253,14 @@ struct CreateListSheet: View {
                             showShareSheet = false
                             pendingInviteListID = nil
                             Task { await partnerStore.fetchPartnerships() }
-                            // Return to HomeView after a beat.
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { dismiss() }
+                            // Return to HomeView after a beat — Task.sleep
+                            // is cancellation-safe (dismiss on a dismissed
+                            // sheet is a harmless no-op anyway, but this
+                            // matches the modern pattern used elsewhere).
+                            Task { @MainActor in
+                                try? await Task.sleep(nanoseconds: 200_000_000)
+                                dismiss()
+                            }
                         }
                     )
                     .environmentObject(lang)
@@ -302,7 +308,7 @@ struct CreateListSheet: View {
         .background(AppColors.uiBackground)
         .navigationTitle(lang.isArabicEffective ? "إنشاء قائمة" : "Create List")
         .listStyle(.insetGrouped)
-        .padding(.bottom, 120)
+        .padding(.bottom, 120) // reserve space for the sticky Done bar (NNHitTarget + paddings)
     }
 
     /// "What to block" — replaces the previous nested-card structure.
@@ -311,7 +317,7 @@ struct CreateListSheet: View {
     /// three sub-cards (websitesListCard, appsListCard, categoriesListCard)
     /// in favour of a single readable surface.
     private func whatToBlockCard() -> some View {
-        Section(header: HStack(spacing: 8) {
+        Section(header: HStack(spacing: NNSpacing.xs) {
             Image(systemName: "square.and.pencil")
                 .font(.nnCardBody)
                 .foregroundColor(AppColors.accent)
@@ -320,11 +326,11 @@ struct CreateListSheet: View {
         }) {
             VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.md) {
                 if let suggestion = onboardingSuggestionText() {
-                    HStack(alignment: .top, spacing: 10) {
+                    HStack(alignment: .top, spacing: NNSpacing.xs + 2) {
                         Image(systemName: "sparkles")
                             .foregroundColor(AppColors.accent)
                             .font(.body)
-                        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 4) {
+                        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.xxs) {
                             Text(lang.isArabicEffective ? "اقتراحات بناءً على تفضيلاتك" : "Based on your preferences")
                                 .font(.footnote.weight(.semibold))
                                 .foregroundColor(AppColors.accent)
@@ -335,24 +341,24 @@ struct CreateListSheet: View {
                         }
                         Spacer(minLength: 0)
                     }
-                    .padding(12)
+                    .padding(NNSpacing.sm)
                     .background(AppColors.infoBg)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
                 }
 
                 Button(action: { openEditor() }) {
-                    HStack(spacing: 8) {
+                    HStack(spacing: NNSpacing.xs) {
                         Image(systemName: "plus.circle.fill")
                         Text(draft.websites.isEmpty && draft.apps.isEmpty && draft.categories.isEmpty
                              ? (lang.isArabicEffective ? "أضف عناصر الحجب" : "Add items to block")
                              : (lang.isArabicEffective ? "تعديل العناصر" : "Edit items"))
                     }
-                    .font(.subheadline.weight(.semibold))
+                    .font(.nnButton)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 44)
+                    .frame(height: NNHitTarget.minimum)
                     .background(AppColors.accent)
                     .foregroundColor(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
                 }
                 .buttonStyle(.plain)
 
@@ -368,8 +374,11 @@ struct CreateListSheet: View {
             }
             .padding(NNSpacing.md)
             .background(AppColors.uiSurface)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(AppColors.uiBorder, lineWidth: 0.5))
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
+            .overlay(
+                RoundedRectangle(cornerRadius: NNRadius.card)
+                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+            )
         }
         .listRowBackground(Color.clear)
     }
@@ -388,7 +397,7 @@ struct CreateListSheet: View {
                 Spacer(minLength: 0)
             }
             ForEach(allSelectedItems, id: \.id) { item in
-                HStack(spacing: 8) {
+                HStack(spacing: NNSpacing.xs) {
                     Image(systemName: iconFor(kind: item.kind))
                         .foregroundColor(AppColors.textSecondary)
                         .font(.caption)
@@ -399,7 +408,7 @@ struct CreateListSheet: View {
                         .truncationMode(.tail)
                     Spacer(minLength: 0)
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, NNSpacing.xxs)
             }
         }
     }
@@ -419,28 +428,31 @@ struct CreateListSheet: View {
 
     @ViewBuilder
     private func itemTypeChip(icon: String, count: Int, label: String) -> some View {
-        HStack(spacing: 4) {
+        HStack(spacing: NNSpacing.xxs) {
             Image(systemName: icon).font(.caption2)
             Text("\(count)").font(.caption.weight(.semibold)).monospacedDigit()
             Text(label).font(.caption)
         }
         .foregroundColor(AppColors.accent)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, NNSpacing.xs)
+        .padding(.vertical, NNSpacing.xxs)
         .background(AppColors.infoBg)
         .clipShape(Capsule())
     }
 
     private func nameCard() -> some View {
         Section(header: Text(lang.isArabicEffective ? "اسم القائمة" : "List Name")) {
-            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
                 TextField(lang.isArabicEffective ? "مثال: وقت التركيز" : "e.g., Focus Time", text: $name)
                     .textInputAutocapitalization(.words)
                     .disableAutocorrection(true)
-                    .padding(12)
+                    .padding(NNSpacing.sm)
                     .background(AppColors.uiSurface)
-                    .cornerRadius(12)
-                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.uiBorder, lineWidth: 0.5))
+                    .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: NNRadius.control)
+                            .stroke(AppColors.uiBorder, lineWidth: NNBorder.input)
+                    )
                     // Cap at 40 chars so the list name fits visually on
                     // HomeView cards without truncation. Clamp via onChange
                     // rather than .textField API (which lacks a maxLength).
@@ -462,29 +474,32 @@ struct CreateListSheet: View {
                         .monospacedDigit()
                 }
             }
-            .padding(20)
+            .padding(NNSpacing.lg)
             .background(AppColors.uiSurface)
-            .cornerRadius(20)
-            .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
+            .overlay(
+                RoundedRectangle(cornerRadius: NNRadius.container)
+                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+            )
         }
         .listRowBackground(Color.clear)
     }
 
     // MARK: - Cards (unchanged)
     private func timeToBlockCard() -> some View {
-        Section(header: HStack(spacing: 8) {
+        Section(header: HStack(spacing: NNSpacing.xs) {
             Image(systemName: "clock")
                 .font(.nnCardBody)
                 .foregroundColor(AppColors.accent)
             Text(lang.isArabicEffective ? "وقت الحجب" : "Time to block")
                 .font(.nnCardTitle)
         }) {
-            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
                 Picker("Time", selection: $blockType) {
                     Text(lang.isArabicEffective ? "فوري" : "Now").tag("now")
                     Text(lang.isArabicEffective ? "مجدول" : "Scheduled").tag("scheduled")
                     Text(lang.isArabicEffective ? "حد يومي" : "Daily Limit").tag("timeLimit")
-                    Text(lang.isArabicEffective ? "دائم ♾️" : "Forever ♾️").tag("forever")
+                    Text(lang.isArabicEffective ? "دائم" : "Forever").tag("forever")
                 }
                 .pickerStyle(.segmented)
                 .frame(maxWidth: 420, alignment: .center)
@@ -524,8 +539,11 @@ struct CreateListSheet: View {
                     }
                     .padding(NNSpacing.sm)
                     .background(AppColors.alertRed.opacity(0.08))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppColors.alertRed.opacity(0.25), lineWidth: 0.5))
+                    .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: NNRadius.control)
+                            .stroke(AppColors.alertRed.opacity(0.25), lineWidth: NNBorder.hairline)
+                    )
                 }
 
                 if !isPremium {
@@ -566,16 +584,19 @@ struct CreateListSheet: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
-            .padding(20)
+            .padding(NNSpacing.lg)
             .background(AppColors.uiSurface)
-            .cornerRadius(20)
-            .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
+            .overlay(
+                RoundedRectangle(cornerRadius: NNRadius.container)
+                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+            )
         }
         .listRowBackground(Color.clear)
     }
 
     private func durationCard() -> some View {
-        Section(header: HStack(spacing: 8) {
+        Section(header: HStack(spacing: NNSpacing.xs) {
             Image(systemName: "hourglass")
                 .font(.nnCardBody)
                 .foregroundColor(AppColors.accent)
@@ -604,10 +625,13 @@ struct CreateListSheet: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .padding(20)
+            .padding(NNSpacing.lg)
             .background(AppColors.uiSurface)
-            .cornerRadius(20)
-            .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
+            .overlay(
+                RoundedRectangle(cornerRadius: NNRadius.container)
+                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+            )
         }
         .listRowBackground(Color.clear)
     }
@@ -617,7 +641,7 @@ struct CreateListSheet: View {
     /// the minutes column which steps by 5).
     @ViewBuilder
     private func durationWheelColumn(label: String, binding: Binding<Int>, range: ClosedRange<Int>) -> some View {
-        VStack(alignment: .center, spacing: 4) {
+        VStack(alignment: .center, spacing: NNSpacing.xxs) {
             Text(label).font(.caption).foregroundColor(AppColors.textSecondary)
             Picker(label, selection: binding) {
                 ForEach(Array(range), id: \.self) { Text("\($0)").monospacedDigit() }
@@ -631,7 +655,7 @@ struct CreateListSheet: View {
 
     @ViewBuilder
     private func durationWheelColumn(label: String, binding: Binding<Int>, values: [Int]) -> some View {
-        VStack(alignment: .center, spacing: 4) {
+        VStack(alignment: .center, spacing: NNSpacing.xxs) {
             Text(label).font(.caption).foregroundColor(AppColors.textSecondary)
             Picker(label, selection: binding) {
                 ForEach(values, id: \.self) { Text("\($0)").monospacedDigit() }
@@ -644,7 +668,7 @@ struct CreateListSheet: View {
     }
 
     private func timeLimitCard() -> some View {
-        Section(header: HStack(spacing: 8) {
+        Section(header: HStack(spacing: NNSpacing.xs) {
             Image(systemName: "hourglass.bottomhalf.filled")
                 .font(.nnCardBody)
                 .foregroundColor(AppColors.accent)
@@ -658,7 +682,7 @@ struct CreateListSheet: View {
             .foregroundColor(AppColors.textSecondary)
             .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
         ) {
-            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
                 Picker("DailyLimit", selection: $timeLimitMinutes) {
                     ForEach(BlockingConstants.timeLimitOptions, id: \.self) { v in
                         Text(lang.isArabicEffective ? "\(v) دقيقة" : "\(v) min").tag(v)
@@ -673,30 +697,33 @@ struct CreateListSheet: View {
                     .foregroundColor(AppColors.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
-            .padding(20)
+            .padding(NNSpacing.lg)
             .background(AppColors.uiSurface)
-            .cornerRadius(20)
-            .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
+            .overlay(
+                RoundedRectangle(cornerRadius: NNRadius.container)
+                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+            )
         }
         .listRowBackground(Color.clear)
     }
 
     private func protectionCard() -> some View {
-        Section(header: HStack(spacing: 8) {
+        Section(header: HStack(spacing: NNSpacing.xs) {
             Image(systemName: "shield.checkered")
                 .font(.nnCardBody)
                 .foregroundColor(AppColors.accent)
             Text(lang.isArabicEffective ? "الحماية" : "Protection")
                 .font(.nnCardTitle)
         }) {
-            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
                 Picker("Protection", selection: $protection) {
                     Text(lang.isArabicEffective ? "بدون حماية" : "No Protection").tag("noProtection")
                     Text(lang.isArabicEffective ? "الوضع الصارم" : "Hard Mode").tag("hard")
                 }
                 .pickerStyle(.segmented)
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: NNSpacing.xxs) {
                     Text(lang.isArabicEffective ? "بدون حماية: تعديل/حذف في أي وقت." : "No Protection: Edit/Delete anytime.")
                         .font(.footnote)
                         .foregroundColor(AppColors.textSecondary)
@@ -707,10 +734,13 @@ struct CreateListSheet: View {
                 .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
                     }
             .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
-            .padding(20)
+            .padding(NNSpacing.lg)
             .background(AppColors.uiSurface)
-            .cornerRadius(20)
-            .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
+            .overlay(
+                RoundedRectangle(cornerRadius: NNRadius.container)
+                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+            )
         }
         .listRowBackground(Color.clear)
     }
@@ -728,7 +758,7 @@ struct CreateListSheet: View {
     @ViewBuilder
     private func partnerCard() -> some View {
         if protection == "hard" {
-            Section(header: HStack(spacing: 8) {
+            Section(header: HStack(spacing: NNSpacing.xs) {
                 Image(systemName: "shield.lefthalf.filled")
                     .font(.nnCardBody)
                     .foregroundColor(AppColors.accent)
@@ -776,10 +806,13 @@ struct CreateListSheet: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
-                .padding(20)
+                .padding(NNSpacing.lg)
                 .background(AppColors.uiSurface)
-                .cornerRadius(20)
-                .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+                .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
+                .overlay(
+                    RoundedRectangle(cornerRadius: NNRadius.container)
+                        .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+                )
             }
             .listRowBackground(Color.clear)
         }
@@ -834,7 +867,7 @@ struct CreateListSheet: View {
     @ViewBuilder
     private func partnerOptionRow(title: String, subtitle: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack(spacing: 12) {
+            HStack(spacing: NNSpacing.sm) {
                 VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 2) {
                     Text(title)
                         .font(.subheadline.weight(.medium))
@@ -852,19 +885,20 @@ struct CreateListSheet: View {
             }
             .padding(.horizontal, NNSpacing.md)
             .padding(.vertical, NNSpacing.sm)
-            .frame(minHeight: 44)
+            .frame(minHeight: NNHitTarget.minimum)
             .background(isSelected ? AppColors.infoBg : AppColors.uiBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? AppColors.accent : AppColors.uiBorder, lineWidth: isSelected ? 1 : 0.5)
+                RoundedRectangle(cornerRadius: NNRadius.control)
+                    .stroke(isSelected ? AppColors.accent : AppColors.uiBorder,
+                            lineWidth: isSelected ? NNBorder.strong : NNBorder.hairline)
             )
         }
         .buttonStyle(.plain)
     }
 
     private func breaksCard() -> some View {
-        Section(header: HStack(spacing: 8) {
+        Section(header: HStack(spacing: NNSpacing.xs) {
             Image(systemName: "cup.and.saucer")
                 .font(.nnCardBody)
                 .foregroundColor(AppColors.accent)
@@ -876,8 +910,8 @@ struct CreateListSheet: View {
             .foregroundColor(AppColors.textSecondary)
             .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
         ) {
-            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
-                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 6) {
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
+                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.xs - 2) {
                     Text(lang.isArabicEffective ? "العدد" : "Count")
                         .font(.footnote)
                         .foregroundColor(AppColors.textSecondary)
@@ -888,7 +922,7 @@ struct CreateListSheet: View {
                     }
                     .pickerStyle(.segmented)
                 }
-                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 6) {
+                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.xs - 2) {
                     Text(lang.isArabicEffective ? "مدة كل استراحة" : "Duration of each break")
                         .font(.footnote)
                         .foregroundColor(AppColors.textSecondary)
@@ -906,10 +940,13 @@ struct CreateListSheet: View {
                                                 .foregroundColor(AppColors.textSecondary)
                                         }
             .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
-            .padding(20)
+            .padding(NNSpacing.lg)
             .background(AppColors.uiSurface)
-            .cornerRadius(20)
-            .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
+            .overlay(
+                RoundedRectangle(cornerRadius: NNRadius.container)
+                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+            )
         }
         .listRowBackground(Color.clear)
     }
@@ -1090,7 +1127,7 @@ struct CreateListSheet: View {
                 Task {
                     await partnerStore.attachPartnership(chosenPartnerID, toList: savedID)
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { dismiss() }
+                dismissAfterToastDelay()
             } else if pendingNewInvite {
                 // Defer dismissal — the share flow needs to present first.
                 Task { await beginNewInviteFlow(listID: savedID, listName: savedName) }
@@ -1098,11 +1135,22 @@ struct CreateListSheet: View {
                 // attemptConfirm() guards against this case (refuses to save
                 // when "Human partner" is picked with no sub-option), so we
                 // never reach here in normal flow. Dismiss defensively.
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { dismiss() }
+                dismissAfterToastDelay()
             }
         } else {
             // Non-Hard list, OR Hard list with NoNet gatekeeper — no partner consideration.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { dismiss() }
+            dismissAfterToastDelay()
+        }
+    }
+
+    /// 1.2s pause then dismiss — gives the success toast time to be seen
+    /// before the sheet slides out. Task.sleep replaces DispatchQueue.main.
+    /// asyncAfter so the dismiss is cancellation-safe if the view goes away
+    /// for any other reason in the meantime.
+    private func dismissAfterToastDelay() {
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            dismiss()
         }
     }
 
@@ -1148,7 +1196,7 @@ struct CreateListSheet: View {
     }
     private var isDurationValid: Bool {
         if blockType == "now" {
-            let total = days * 86400 + hours * 3600 + minutes * 60
+            let total = days * BlockingConstants.secondsPerDay + hours * BlockingConstants.secondsPerHour + minutes * BlockingConstants.secondsPerMinute
             return total >= 300 // >= 5 minutes
         }
         if blockType == "timeLimit" {
@@ -1209,16 +1257,16 @@ extension View {
                     Spacer()
                     Text(message)
                         .font(.subheadline.weight(.semibold))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
+                        .padding(.horizontal, NNSpacing.md)
+                        .padding(.vertical, NNSpacing.sm)
                         .background(Color.black.opacity(0.8))
                         .foregroundColor(.white)
-                        .cornerRadius(12)
-                        .padding(.bottom, 24)
+                        .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+                        .padding(.bottom, NNSpacing.lg + 4)
                 }
                 .transition(.opacity)
                 .animation(.easeInOut(duration: 0.2), value: isPresented.wrappedValue)
             }
         }
     }
-} 
+}

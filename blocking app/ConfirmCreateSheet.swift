@@ -66,19 +66,26 @@ struct ConfirmCreateSheet: View {
                 if !categories.isEmpty { Section(header: Text(isArabic ? "الفئات" : "Categories")) { ForEach(categories, id: \.self) { Text($0).frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading) } } }
             }
             .scrollContentBackground(.hidden)
+            .background(AppColors.uiBackground)
             .navigationTitle(isArabic ? "تأكيد الإنشاء" : "Confirm Create")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button(isArabic ? "رجوع للتعديل" : "Edit") { onBack() } }
-                ToolbarItem(placement: .confirmationAction) { Button(isArabic ? "أنشئ القائمة" : "Create list") { onConfirm() } }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(isArabic ? "رجوع للتعديل" : "Edit") { onBack() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(isArabic ? "أنشئ القائمة" : "Create list") { onConfirm() }
+                        .fontWeight(.semibold)
+                }
             }
         }
     }
 
     private var durationLabel: String {
         let total = Int(durationSeconds)
-        let d = total / 86400
-        let h = (total % 86400) / 3600
-        let m = (total % 3600) / 60
+        let d = total / BlockingConstants.secondsPerDay
+        let h = (total % BlockingConstants.secondsPerDay) / BlockingConstants.secondsPerHour
+        let m = (total % BlockingConstants.secondsPerHour) / BlockingConstants.secondsPerMinute
         if isArabic { return "\(d) يوم، \(h) ساعة، \(m) دقيقة" }
         return "\(d)d \(h)h \(m)m"
     }

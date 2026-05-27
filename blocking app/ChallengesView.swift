@@ -12,7 +12,7 @@ struct ChallengesView: View {
         VStack(spacing: 0) {
             header()
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: NNSpacing.md) {
                     pointsCard()
                     Text(lang.isArabicEffective ? "التحديات" : "Challenges")
                         .font(.nnSectionTitle)
@@ -40,11 +40,11 @@ struct ChallengesView: View {
                         options: timeOptions(), onChange: apply
                     )
 
-                    SoftDivider(width: 300, opacity: 0.70)
+                    SoftDivider(maxWidth: 300, opacity: 0.7)
 
                     SleepChallengeCard(lang: lang, onChange: apply)
 
-                    SoftDivider(width: 300, opacity: 0.70)
+                    SoftDivider(maxWidth: 300, opacity: 0.7)
 
                     ChallengeCardCompact(
                         title: lang.isArabicEffective ? "ألعاب" : "Games",
@@ -70,9 +70,9 @@ struct ChallengesView: View {
                         onChange: apply
                     )
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 8)
-                .padding(.bottom, showFooter ? 120 : 28)
+                .padding(.horizontal, NNSpacing.xl)
+                .padding(.top, NNSpacing.xs)
+                .padding(.bottom, showFooter ? 120 : NNSpacing.xxl - 4)
                 .background(AppColors.uiBackground)
             }
         }
@@ -87,30 +87,38 @@ struct ChallengesView: View {
     }
 
     private func header() -> some View {
+        // Single "Done" — the previous header had both "Close" and "Done"
+        // doing the exact same dismiss(), which was confusing twin actions.
+        // Title on the leading side, Done on the trailing — standard iOS
+        // modal pattern.
         HStack {
-            Button(action: { dismiss() }) {
-                Text(lang.isArabicEffective ? "إغلاق" : "Close")
-                    .font(.subheadline)
-                    .foregroundColor(AppColors.accent)
-            }
+            Text(lang.isArabicEffective ? "التحديات" : "Challenges")
+                .font(.headline)
+                .foregroundColor(AppColors.textPrimary)
             Spacer()
             Button(action: { dismiss() }) {
                 Text(lang.isArabicEffective ? "تم" : "Done")
                     .font(.subheadline.weight(.semibold))
                     .foregroundColor(AppColors.accent)
             }
+            .frame(minHeight: NNHitTarget.minimum)
         }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 12)
+        .padding(.horizontal, NNSpacing.xl)
+        .padding(.vertical, NNSpacing.sm)
         .background(AppColors.uiSurface)
-        .overlay(Rectangle().frame(height: 0.5).foregroundColor(AppColors.uiBorder), alignment: .bottom)
+        .overlay(
+            Rectangle()
+                .frame(height: NNBorder.hairline)
+                .foregroundColor(AppColors.uiBorder),
+            alignment: .bottom
+        )
     }
 
     private func pointsCard() -> some View {
         let progress = min(1.0, Double(totalPoints % nextLevelPoints) / Double(nextLevelPoints))
-        return VStack(alignment: .leading, spacing: 12) {
+        return VStack(alignment: .leading, spacing: NNSpacing.sm) {
             HStack(alignment: .center) {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: NNSpacing.xxs) {
                     Text((lang.isArabicEffective ? "النقاط" : "Points") + ": \(totalPoints)")
                         .font(.title3.weight(.semibold))
                         .foregroundColor(AppColors.textPrimary)
@@ -136,10 +144,13 @@ struct ChallengesView: View {
             }
             .frame(height: 8)
         }
-        .padding(16)
+        .padding(NNSpacing.md)
         .background(AppColors.uiSurface)
-        .cornerRadius(16)
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(AppColors.uiBorder, lineWidth: 0.5))
+        .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
+        .overlay(
+            RoundedRectangle(cornerRadius: NNRadius.card)
+                .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+        )
     }
 
     private func apply(_ added: Int) {
@@ -172,7 +183,7 @@ private struct ChallengeCardCompact: View {
     @State private var selected: ChallengeOption? = nil
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: NNSpacing.sm) {
             Text(title)
                 .font(.nnSubheader.weight(.semibold))
                 .foregroundColor(AppColors.textPrimary)
@@ -182,10 +193,13 @@ private struct ChallengeCardCompact: View {
                 .lineLimit(1)
             ChipGrid(options: options, selected: $selected) { opt in if case let .option(_, p) = opt { onChange(p) } }
         }
-        .padding(16)
+        .padding(NNSpacing.md)
         .background(AppColors.uiSurface)
-        .cornerRadius(16)
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(AppColors.uiBorder, lineWidth: 0.5))
+        .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
+        .overlay(
+            RoundedRectangle(cornerRadius: NNRadius.card)
+                .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+        )
     }
 }
 
@@ -194,10 +208,10 @@ private struct ChipGrid: View {
     @Binding var selected: ChallengeOption?
     var onPick: (ChallengeOption) -> Void
 
-    private var columns: [GridItem] { [GridItem(.adaptive(minimum: 120), spacing: 8)] }
+    private var columns: [GridItem] { [GridItem(.adaptive(minimum: 120), spacing: NNSpacing.xs)] }
 
     var body: some View {
-        LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
+        LazyVGrid(columns: columns, alignment: .leading, spacing: NNSpacing.xs) {
             ForEach(options, id: \.self) { opt in
                 let isSel = selected == opt
                 Button(action: { selected = opt; onPick(opt) }) {
@@ -205,12 +219,16 @@ private struct ChipGrid: View {
                         .font(.nnSmallButton)
                         .lineLimit(1)
                         .truncationMode(.tail)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
+                        .padding(.horizontal, NNSpacing.sm)
+                        .padding(.vertical, NNSpacing.xs)
+                        .frame(minHeight: NNHitTarget.minimum - 8)
                         .background(isSel ? AppColors.accent : AppColors.uiSurface)
                         .foregroundColor(isSel ? .white : AppColors.textPrimary)
-                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppColors.uiBorder, lineWidth: isSel ? 0 : 0.5))
-                        .cornerRadius(12)
+                        .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: NNRadius.control)
+                                .stroke(AppColors.uiBorder, lineWidth: isSel ? 0 : NNBorder.hairline)
+                        )
                 }
                 .buttonStyle(.plain)
             }
@@ -231,7 +249,7 @@ private struct SleepChallengeCard: View {
     @State private var allDays: Bool = true
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: NNSpacing.sm) {
             Text(lang.isArabicEffective ? "نوم بلا إنترنت" : "No‑Internet Sleep")
                 .font(.nnSubheader.weight(.semibold))
                 .foregroundColor(AppColors.textPrimary)
@@ -239,7 +257,7 @@ private struct SleepChallengeCard: View {
                 .font(.footnote)
                 .foregroundColor(AppColors.textSecondary)
                 .lineLimit(1)
-            HStack(spacing: 12) {
+            HStack(spacing: NNSpacing.sm) {
                 DatePicker(lang.isArabicEffective ? "من" : "From", selection: $from, displayedComponents: .hourAndMinute)
                 DatePicker(lang.isArabicEffective ? "إلى" : "To", selection: $to, displayedComponents: .hourAndMinute)
             }
@@ -258,20 +276,20 @@ private struct SleepChallengeCard: View {
             Button(action: { onChange(40) }) {
                 Text(lang.isArabicEffective ? "اعتمد هذه الأوقات" : "Apply these times")
                     .font(.nnSmallButton)
-                    .frame(minHeight: 44) // HIG minimum touch target
-                    .padding(.horizontal, 16)
+                    .frame(minHeight: NNHitTarget.minimum)
+                    .padding(.horizontal, NNSpacing.md)
                     .background(isZeroDuration ? AppColors.textDisabled : AppColors.accent)
                     .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
             }
             .disabled(isZeroDuration)
         }
-        .padding(16)
+        .padding(NNSpacing.md)
         .background(AppColors.uiSurface)
-        .cornerRadius(16)
+        .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(AppColors.uiBorder, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: NNRadius.card)
+                .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
         )
     }
 
@@ -289,7 +307,7 @@ private struct Footer: View {
     let onDone: () -> Void
     @ObservedObject var lang: LanguageManager
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: NNSpacing.sm) {
             HStack {
                 Text((lang.isArabicEffective ? "النقاط: " : "Points: ") + "\(totalPoints)")
                     .foregroundColor(AppColors.textPrimary)
@@ -301,17 +319,22 @@ private struct Footer: View {
                 Text(lang.isArabicEffective ? "حفظ وإغلاق" : "Save & close")
                     .font(.nnButton)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 44)
+                    .frame(height: NNHitTarget.minimum)
                     .background(AppColors.accent)
                     .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
             }
         }
-        .padding(.horizontal, 24)
-        .padding(.top, 12)
-        .padding(.bottom, 24)
+        .padding(.horizontal, NNSpacing.xl)
+        .padding(.top, NNSpacing.sm)
+        .padding(.bottom, NNSpacing.lg + 4)
         .background(AppColors.uiSurface)
-        .overlay(Rectangle().frame(height: 0.5).foregroundColor(AppColors.uiBorder), alignment: .top)
+        .overlay(
+            Rectangle()
+                .frame(height: NNBorder.hairline)
+                .foregroundColor(AppColors.uiBorder),
+            alignment: .top
+        )
     }
 }
 

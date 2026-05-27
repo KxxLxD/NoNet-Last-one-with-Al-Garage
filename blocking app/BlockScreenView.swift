@@ -17,16 +17,25 @@ import SwiftUI
 /// .padding(.top, -24) which made the layout unpredictable on different
 /// screen sizes.
 struct BlockScreenView: View {
-    let isArabic: Bool
+    @EnvironmentObject var lang: LanguageManager
     var onClose: () -> Void
     var isOnBreak: Bool = false
     var upcomingBreakMinutes: Int? = nil
+    // Context props — when provided, surface the list name + remaining time
+    // under the title so the user knows WHICH commitment is firing and WHEN
+    // it ends. Both optional so legacy call sites still compile.
+    var listName: String? = nil
+    var minutesRemaining: Int? = nil
     // Break button UI-only props
     var totalBreaks: Int? = nil
     var remainingBreaks: Int? = nil
     var breakDurationMinutes: Int? = nil
     var onTakeBreak: (() -> Void)? = nil
     @State private var flashBreak: Bool = false
+    /// Gentle breathing animation on the hero logo so the screen feels alive
+    /// rather than frozen — the user is meant to pause here for a beat, not
+    /// stare at static pixels.
+    @State private var heroBreath: Bool = false
 
     var body: some View {
         ZStack {
@@ -69,13 +78,13 @@ struct BlockScreenView: View {
     @ViewBuilder
     private func topBar() -> some View {
         HStack(spacing: 0) {
-            if isArabic { Spacer(minLength: 0) }
+            if lang.isArabicEffective { Spacer(minLength: 0) }
             if let total = totalBreaks, let remain = remainingBreaks, let minutes = breakDurationMinutes, total > 0 {
                 breakButton(total: total, remain: remain, minutes: minutes)
             }
-            if !isArabic { Spacer(minLength: 0) }
+            if !lang.isArabicEffective { Spacer(minLength: 0) }
         }
-        .frame(minHeight: 44) // reserve the top-bar slot even when no pill — stable hero position
+        .frame(minHeight: NNHitTarget.minimum) // reserve the top-bar slot even when no pill — stable hero position
     }
 
     @ViewBuilder
@@ -93,32 +102,26 @@ struct BlockScreenView: View {
             }
             onTakeBreak?()
         }) {
-            HStack(spacing: 6) {
+            // Compact label: "Break (2 left)" — duration lives in
+            // accessibility only. The dense "Break · 2/2 · 15m" version was
+            // ~28 chars and visually cluttered for a moment-of-friction screen.
+            HStack(spacing: NNSpacing.xxs) {
                 Image(systemName: "cup.and.saucer.fill")
                     .font(.footnote)
-                Text(isArabic ? "استراحة" : "Break")
+                Text(lang.isArabicEffective ? "استراحة (\(remain) متبقية)" : "Break (\(remain) left)")
                     .font(.footnote.weight(.semibold))
-                Text("\(remain)/\(total)")
-                    .font(.caption)
-                    .foregroundColor(AppColors.textSecondary)
-                    .monospacedDigit()
-                Text("·")
-                    .foregroundColor(AppColors.textSecondary)
-                Text(isArabic ? "\(minutes) د" : "\(minutes)m")
-                    .font(.caption)
-                    .foregroundColor(AppColors.textSecondary)
                     .monospacedDigit()
             }
             .foregroundColor(AppColors.textPrimary)
-            .padding(.horizontal, NNSpacing.md)
-            .frame(minHeight: 44) // HIG touch target
+            .padding(.horizontal, NNSpacing.sm + 2)
+            .frame(minHeight: NNHitTarget.minimum)
             .background(flashBreak ? AppColors.accent.opacity(0.18) : AppColors.infoBg)
-            .overlay(Capsule().stroke(AppColors.accent.opacity(0.25), lineWidth: 0.5))
+            .overlay(Capsule().stroke(AppColors.accent.opacity(0.25), lineWidth: NNBorder.hairline))
             .clipShape(Capsule())
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(isArabic
+        .accessibilityLabel(lang.isArabicEffective
             ? "استراحة \(remain) من \(total)، \(minutes) دقيقة لكل استراحة"
             : "Break \(remain) of \(total), \(minutes) minutes each")
     }
@@ -129,8 +132,11 @@ struct BlockScreenView: View {
     /// width. The clamp keeps it readable on iPhone SE and not absurdly large
     /// on iPad/Plus models.
     private func heroView() -> some View {
+        // Clamped 160-200pt (tighter than the previous 180-220pt) so the
+        // hero leaves room for the listName + minutesRemaining context lines
+        // without pushing the CTA off-screen on iPhone SE.
         let screenWidth = UIScreen.main.bounds.width
-        let diameter = max(180, min(screenWidth * 0.42, 220))
+        let diameter = max(160, min(screenWidth * 0.42, 200))
         let logoSize = diameter * 0.75
         return ZStack {
             Circle()
@@ -141,6 +147,15 @@ struct BlockScreenView: View {
                 .scaledToFit()
                 .frame(width: logoSize, height: logoSize)
                 .accessibilityHidden(true)
+        }
+        // Subtle "breath" — scale 1.0↔1.02 on a 4s cycle. Too small to
+        // notice consciously, but lifts the screen from "frozen" to "alive"
+        // — matches the meditation-app pattern of always-moving negative space.
+        .scaleEffect(heroBreath ? 1.02 : 1.0)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 4.0).repeatForever(autoreverses: true)) {
+                heroBreath = true
+            }
         }
     }
 
@@ -154,17 +169,58 @@ struct BlockScreenView: View {
     @ViewBuilder
     private func titleBlock() -> some View {
         VStack(spacing: NNSpacing.xs) {
-            Text(isArabic ? "وضع التركيز مفعَّل" : "Focus mode is on")
+            Text(lang.isArabicEffective ? "وضع التركيز مفعَّل" : "Focus mode is on")
                 .font(.title2.weight(.semibold))
                 .foregroundColor(AppColors.textPrimary)
                 .multilineTextAlignment(.center)
 
-            Text(isArabic ? "استمرّ — أنت ماضٍ في الطريق الصحيح ✨" : "Keep going — you're on track ✨")
-                .font(.subheadline)
-                .foregroundColor(AppColors.textSecondary)
-                .multilineTextAlignment(.center)
+            // Context lines: list name + remaining time as a single quiet
+            // chip beneath the title — answers "which commitment is firing
+            // and when does it end" without dominating the hierarchy.
+            if listName != nil || minutesRemaining != nil {
+                contextChip
+            }
+
+            // SF Symbol sparkles renders consistently across fonts and
+            // Dynamic Type sizes; the ✨ emoji rendered inconsistently
+            // (some fonts fell back to a monochrome glyph).
+            HStack(spacing: NNSpacing.xxs) {
+                Text(lang.isArabicEffective ? "استمرّ — أنت ماضٍ في الطريق الصحيح" : "Keep going — you're on track")
+                    .font(.subheadline)
+                    .foregroundColor(AppColors.textSecondary)
+                Image(systemName: "sparkles")
+                    .font(.footnote)
+                    .foregroundColor(AppColors.accent)
+            }
+            .multilineTextAlignment(.center)
+            .accessibilityElement(children: .combine)
         }
         .padding(.horizontal, NNSpacing.xl)
+    }
+
+    /// Compact chip combining the list name and remaining time, separated
+    /// by a soft middot. Hidden when both inputs are nil so we don't render
+    /// an empty pill.
+    @ViewBuilder
+    private var contextChip: some View {
+        let nameText: String? = listName.flatMap { $0.isEmpty ? nil : $0 }
+        let timeText: String? = minutesRemaining.flatMap { mins in
+            guard mins > 0 else { return nil }
+            return lang.isArabicEffective ? "متبقي \(mins) دقيقة" : "\(mins)m remaining"
+        }
+        let parts = [nameText, timeText].compactMap { $0 }
+        if !parts.isEmpty {
+            Text(parts.joined(separator: " · "))
+                .font(.caption.weight(.semibold))
+                .foregroundColor(AppColors.accent)
+                .monospacedDigit()
+                .padding(.horizontal, NNSpacing.sm)
+                .padding(.vertical, NNSpacing.xxs + 2)
+                .background(AppColors.infoBg)
+                .clipShape(Capsule())
+                .accessibilityElement()
+                .accessibilityLabel(parts.joined(separator: ", "))
+        }
     }
 
     // MARK: - Hint
@@ -173,16 +229,16 @@ struct BlockScreenView: View {
     /// relevant message: break-in-progress > break-upcoming > general purpose.
     private func displayHint() -> String? {
         if isOnBreak {
-            return isArabic
+            return lang.isArabicEffective
                 ? "هذه فترة استراحة — ارجع للتركيز بعد انتهائها."
                 : "This is a break — get back to focus once it's over."
         }
         if let minutes = upcomingBreakMinutes, minutes > 0 {
-            return isArabic
+            return lang.isArabicEffective
                 ? "استراحة قصيرة بعد قليل — ابقَ على التركيز حتى تبدأ."
                 : "A short break is coming soon — stay focused until it starts."
         }
-        return isArabic
+        return lang.isArabicEffective
             ? "نحجب المشتّتات لنحمي تركيزك."
             : "Distractions are blocked to protect your focus."
     }
@@ -195,18 +251,28 @@ struct BlockScreenView: View {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             onClose()
         }) {
-            Text(isArabic ? "تمام — لنكمل" : "Okay — let's continue")
+            Text(lang.isArabicEffective ? "أعدني للتركيز" : "Get back to focus")
                 .font(.nnButton)
                 .frame(maxWidth: .infinity)
-                .frame(height: 50)
+                .frame(height: NNHitTarget.minimum + 6)
                 .background(AppColors.accent)
                 .foregroundColor(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
         }
         .buttonStyle(.plain)
     }
 }
 
 #Preview {
-    BlockScreenView(isArabic: true, onClose: {}, isOnBreak: false, upcomingBreakMinutes: nil, totalBreaks: 2, remainingBreaks: 2, breakDurationMinutes: 15)
+    BlockScreenView(
+        onClose: {},
+        isOnBreak: false,
+        upcomingBreakMinutes: nil,
+        listName: "وقت التركيز",
+        minutesRemaining: 38,
+        totalBreaks: 2,
+        remainingBreaks: 2,
+        breakDurationMinutes: 15
+    )
+    .environmentObject(LanguageManager.shared)
 }

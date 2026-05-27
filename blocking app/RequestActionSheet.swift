@@ -108,26 +108,44 @@ struct RequestActionSheet: View {
 
     private var reasonField: some View {
         VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.xs) {
+            // Reframe from "optional" to "important" — most partners need
+            // context to make a real call; "optional" framing invites lazy
+            // empty submissions that get auto-denied.
             Text(lang.isArabicEffective
-                 ? "السبب (اختياري)"
-                 : "Reason (optional)")
+                 ? "السبب (مهم لقرار شريكك)"
+                 : "Reason (important for your partner's decision)")
                 .font(.footnote.weight(.semibold))
                 .foregroundColor(AppColors.textPrimary)
 
-            TextEditor(text: $reason)
-                .frame(minHeight: 120)
-                .padding(NNSpacing.xs)
-                .background(AppColors.uiSurface)
-                .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
-                .overlay(
-                    RoundedRectangle(cornerRadius: NNRadius.control)
-                        .stroke(AppColors.uiBorder, lineWidth: NNBorder.input)
-                )
-                .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+            ZStack(alignment: lang.isArabicEffective ? .topTrailing : .topLeading) {
+                TextEditor(text: $reason)
+                    .frame(minHeight: 120)
+                    .padding(NNSpacing.xs)
+                    .background(AppColors.uiSurface)
+                    .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: NNRadius.control)
+                            .stroke(AppColors.uiBorder, lineWidth: NNBorder.input)
+                    )
+                    .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+
+                // SwiftUI TextEditor doesn't support a native placeholder;
+                // overlay a faded Text and hide it once the user types.
+                if reason.isEmpty {
+                    Text(lang.isArabicEffective
+                         ? "مثال: أحتاج التواصل مع شخص للعمل…"
+                         : "Example: I need to contact someone for work…")
+                        .font(.body)
+                        .foregroundColor(AppColors.textDisabled)
+                        .padding(.horizontal, NNSpacing.sm)
+                        .padding(.top, NNSpacing.sm + 4)
+                        .allowsHitTesting(false)
+                }
+            }
 
             Text(lang.isArabicEffective
-                 ? "اكتب أي تفاصيل تساعد شريكك على القرار. يمكنك تركها فارغة."
-                 : "Any details that help your partner decide. You can leave it empty.")
+                 ? "كلما كان السبب أوضح، كان قرار شريكك أسرع وأعدل."
+                 : "Clearer reasons get faster, fairer decisions from your partner.")
                 .font(.caption)
                 .foregroundColor(AppColors.textSecondary)
                 .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
@@ -157,6 +175,12 @@ struct RequestActionSheet: View {
 
     private func sendRequest() {
         let trimmed = reason.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Capture connectivity BEFORE the await so a state flip mid-call
+        // doesn't change which UX branch runs. createActionRequest now queues
+        // when offline (returns non-nil so the caller can treat it as success);
+        // we still want to know whether the actual CloudKit write happened so
+        // the user isn't surprised when the partner notification is delayed.
+        let wasOffline = !CloudKitPartnerStore.shared.isAccountAvailable
         isSending = true
         Task {
             let breakType: BreakAttemptType
@@ -174,9 +198,24 @@ struct RequestActionSheet: View {
             )
             await MainActor.run {
                 isSending = false
-                if id == nil {
+                // Non-nil = either sent live or enqueued for later flush via
+                // PendingBreakAttemptQueue (handled by createActionRequest
+                // itself). A nil return is reserved for pre-flight failures
+                // we can't recover from (malformed args, etc.) — surface those.
+                guard id != nil else {
                     errorMessage = CloudKitPartnerStore.shared.lastError
                         ?? (lang.isArabicEffective ? "تعذّر الإرسال" : "Send failed")
+                    return
+                }
+                if wasOffline {
+                    // The request is in the local queue; flushPendingBreakAttempts
+                    // replays it on the next CKAccountChanged / foreground tick.
+                    // Tell the parent to surface a "queued" indicator if it wants
+                    // to — for now we just dismiss with the same callback as the
+                    // online path so the badge updates immediately and the user
+                    // sees their request appear in "awaiting partner".
+                    onRequestSent()
+                    dismiss()
                 } else {
                     onRequestSent()
                     dismiss()

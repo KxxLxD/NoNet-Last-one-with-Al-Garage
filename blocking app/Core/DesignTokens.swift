@@ -82,7 +82,7 @@ enum NNRadius {
     static let chip: CGFloat = 8
     /// 12pt — buttons, inputs, small cards
     static let control: CGFloat = 12
-    /// 16pt — medium cards (PermissionCard size)
+    /// 16pt — medium cards (default card size)
     static let card: CGFloat = 16
     /// 20pt — large containers (Home sections, sheets)
     static let container: CGFloat = 20

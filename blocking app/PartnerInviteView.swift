@@ -101,17 +101,20 @@ struct PartnerInviteView: View {
                     title: lang.isArabicEffective ? "اسمك كما تريد ظهوره عند الشريك" : "Your name as the partner will see it",
                     placeholder: lang.isArabicEffective ? "مثال: خالد" : "e.g. Khalid",
                     text: $ownerDisplayName,
-                    required: true
+                    required: true,
+                    helper: lang.isArabicEffective
+                        ? "سيظهر هذا الاسم في إشعار كل طلب يستلمه شريكك."
+                        : "Shown in every notification your partner receives from you."
                 )
 
                 fieldBlock(
-                    title: lang.isArabicEffective ? "لقب الشريك (سيُحفظ عندك)" : "Partner's nickname (saved on your device)",
+                    title: lang.isArabicEffective ? "كيف تريد أن تخاطب شريكك في طلباتك؟" : "How would you like to address your partner?",
                     placeholder: lang.isArabicEffective ? "مثال: أبو محمد" : "e.g. Abu Mohammed",
                     text: $proposedPartnerName,
                     required: false,
                     helper: lang.isArabicEffective
-                        ? "اقتراح فقط — الشريك يستطيع تعديله عند القبول."
-                        : "Just a suggestion — the partner can change it when accepting."
+                        ? "اقتراح فقط — يستطيع شريكك تعديله عند القبول."
+                        : "Just a suggestion — your partner can edit it on accept."
                 )
 
                 Button(action: createInvitation) {

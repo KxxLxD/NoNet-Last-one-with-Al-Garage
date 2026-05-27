@@ -36,9 +36,22 @@ struct PendingBreakAttempt: Codable, Identifiable, Equatable {
     let attemptedAt: Date
     let typeRaw: String
     let reachedThrough: String?
+    /// Approval-workflow status. nil on records enqueued before this field
+    /// existed — those all originated from `recordBreakAttempt`, which is the
+    /// .logOnly path. Decode treats nil as `.logOnly` so legacy queue entries
+    /// keep flushing unchanged.
+    let statusRaw: String?
+    /// Optional user-written reason — only set for `.pending` requests from
+    /// `createActionRequest`. Legacy records have nil.
+    let reason: String?
 
     var type: BreakAttemptType {
         BreakAttemptType(rawValue: typeRaw) ?? .disable
+    }
+
+    var status: RequestStatus {
+        guard let raw = statusRaw else { return .logOnly }
+        return RequestStatus(rawValue: raw) ?? .logOnly
     }
 }
 

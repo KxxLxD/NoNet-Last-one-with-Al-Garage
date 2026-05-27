@@ -13,21 +13,25 @@ struct AboutView: View {
         let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
         return isArabic ? "بناء \(b)" : "Build \(b)"
     }
+    private var currentYear: String {
+        String(Calendar.current.component(.year, from: Date()))
+    }
 
     var body: some View {
         ZStack {
             AppColors.uiBackground.ignoresSafeArea()
             ScrollView {
-                VStack(alignment: isArabic ? .trailing : .leading, spacing: 24) {
+                VStack(alignment: isArabic ? .trailing : .leading, spacing: NNSpacing.xl) {
                     heroSection
                     privacyBadge
                     featuresGrid
                     appInfoCard
+                    entityCard
                     linksCard
                     creditsFooter
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 24)
+                .padding(.horizontal, NNSpacing.lg)
+                .padding(.vertical, NNSpacing.xl)
             }
         }
         .navigationTitle(isArabic ? "عن التطبيق" : "About App")
@@ -36,12 +40,12 @@ struct AboutView: View {
     // MARK: - Hero
 
     private var heroSection: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: NNSpacing.sm) {
             Image("nonet_logo")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 84, height: 84)
-                .clipShape(RoundedRectangle(cornerRadius: 18))
+                .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
                 .shadow(color: AppColors.accent.opacity(0.15), radius: 12, y: 4)
 
             Text(appName)
@@ -56,22 +60,38 @@ struct AboutView: View {
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
+        .padding(.vertical, NNSpacing.md)
     }
 
     // MARK: - Privacy badge
 
     private var privacyBadge: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "lock.shield.fill")
-                .foregroundColor(AppColors.warningFg)
-            Text(isArabic ? "خصوصية 100% — محلي على جهازك" : "100% Privacy — Local on your device")
-                .font(.footnote.weight(.semibold))
-                .foregroundColor(AppColors.warningFg)
+        // The previous "100% Privacy" claim was demoted to a more defensible
+        // "Privacy-first" wording: the optional Recovery Partner uses Apple's
+        // iCloud (a backend, even if not ours), and local email accounts do
+        // persist user data on-device. The footnote acknowledges the
+        // iCloud caveat plainly so the badge isn't read as misleading under
+        // EU UCPD or KSA consumer-protection law.
+        VStack(spacing: NNSpacing.xxs) {
+            HStack(spacing: NNSpacing.xs) {
+                Image(systemName: "lock.shield.fill")
+                    .font(.subheadline)
+                    .foregroundColor(AppColors.warningFg)
+                Text(isArabic ? "خصوصية أولوية — بياناتك على جهازك*" : "Privacy-first — your data stays on your device*")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(AppColors.warningFg)
+            }
+            .padding(.horizontal, NNSpacing.md)
+            .padding(.vertical, NNSpacing.sm)
+            .background(Capsule().fill(AppColors.warningBg))
+
+            Text(isArabic
+                 ? "* ميزة \"شريك التعافي\" الاختيارية تستخدم iCloud من Apple فقط."
+                 : "* Optional Recovery Partner uses Apple's iCloud only.")
+                .font(.caption2)
+                .foregroundColor(AppColors.textSecondary)
+                .multilineTextAlignment(.center)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
-        .background(Capsule().fill(AppColors.warningBg))
         .frame(maxWidth: .infinity)
     }
 
@@ -93,8 +113,8 @@ struct AboutView: View {
                         description: "قوائم متعددة بأوقات وأيام مختلفة. وقت العمل، وقت النوم."),
                 Feature(icon: "globe", title: "عربي وإنجليزي",
                         description: "دعم RTL كامل. واجهة طبيعية للقارئ العربي."),
-                Feature(icon: "lock.fill", title: "خصوصية مطلقة",
-                        description: "لا تتبع، لا تحليلات، لا backend. كل بياناتك على جهازك."),
+                Feature(icon: "lock.fill", title: "خصوصية أولوية",
+                        description: "لا متتبعات خارجية، لا تحليلات، لا خوادمنا. iCloud اختياري للشريك."),
                 Feature(icon: "bolt.fill", title: "حجب حقيقي عبر Apple",
                         description: "يستخدم Screen Time API الرسمي. حجب على مستوى النظام."),
                 Feature(icon: "gift.fill", title: "تجربة مجانية 7 أيام",
@@ -108,8 +128,8 @@ struct AboutView: View {
                         description: "Multiple lists with different times and days."),
                 Feature(icon: "globe", title: "Arabic & English",
                         description: "Full RTL support. Natural for Arabic readers."),
-                Feature(icon: "lock.fill", title: "Absolute Privacy",
-                        description: "No tracking, no analytics, no backend. All on-device."),
+                Feature(icon: "lock.fill", title: "Privacy-first",
+                        description: "No third-party trackers, no analytics, no servers of ours. iCloud optional for Recovery Partner."),
                 Feature(icon: "bolt.fill", title: "Real Blocking via Apple",
                         description: "Uses official Screen Time API. System-level blocking."),
                 Feature(icon: "gift.fill", title: "7-Day Free Trial",
@@ -119,22 +139,22 @@ struct AboutView: View {
     }
 
     private var featuresGrid: some View {
-        VStack(alignment: isArabic ? .trailing : .leading, spacing: 12) {
+        VStack(alignment: isArabic ? .trailing : .leading, spacing: NNSpacing.sm) {
             Text(isArabic ? "ما يميّز NoNet" : "What makes NoNet different")
                 .font(.nnCardTitle)
                 .foregroundColor(AppColors.textPrimary)
                 .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
-                .padding(.bottom, 4)
+                .padding(.bottom, NNSpacing.xxs)
 
             ForEach(features) { feature in
-                HStack(alignment: .top, spacing: 12) {
+                HStack(alignment: .top, spacing: NNSpacing.sm) {
                     Image(systemName: feature.icon)
                         .font(.title2)
                         .foregroundColor(AppColors.accent)
                         .frame(width: 32, height: 32)
                         .background(AppColors.infoBg)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                    VStack(alignment: isArabic ? .trailing : .leading, spacing: 4) {
+                        .clipShape(RoundedRectangle(cornerRadius: NNRadius.chip))
+                    VStack(alignment: isArabic ? .trailing : .leading, spacing: NNSpacing.xxs) {
                         Text(feature.title)
                             .font(.nnButton)
                             .foregroundColor(AppColors.textPrimary)
@@ -146,24 +166,27 @@ struct AboutView: View {
                             .multilineTextAlignment(isArabic ? .trailing : .leading)
                     }
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, NNSpacing.xxs)
             }
         }
-        .padding(20)
+        .padding(NNSpacing.lg)
         .background(AppColors.uiSurface)
-        .cornerRadius(20)
-        .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+        .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
+        .overlay(
+            RoundedRectangle(cornerRadius: NNRadius.container)
+                .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+        )
     }
 
     // MARK: - App info card
 
     private var appInfoCard: some View {
-        VStack(alignment: isArabic ? .trailing : .leading, spacing: 10) {
+        VStack(alignment: isArabic ? .trailing : .leading, spacing: NNSpacing.xs + 2) {
             Text(isArabic ? "معلومات التطبيق" : "App Information")
                 .font(.nnSubheader.weight(.semibold))
                 .foregroundColor(AppColors.textPrimary)
                 .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
-                .padding(.bottom, 4)
+                .padding(.bottom, NNSpacing.xxs)
 
             infoRow(label: isArabic ? "الاسم" : "Name", value: appName)
             Divider().background(AppColors.uiBorder.opacity(0.4))
@@ -175,10 +198,13 @@ struct AboutView: View {
             Divider().background(AppColors.uiBorder.opacity(0.4))
             infoRow(label: isArabic ? "الأجهزة" : "Devices", value: "iPhone + iPad")
         }
-        .padding(20)
+        .padding(NNSpacing.lg)
         .background(AppColors.uiSurface)
-        .cornerRadius(20)
-        .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+        .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
+        .overlay(
+            RoundedRectangle(cornerRadius: NNRadius.container)
+                .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+        )
     }
 
     private func infoRow(label: String, value: String) -> some View {
@@ -189,10 +215,62 @@ struct AboutView: View {
         }
     }
 
+    // MARK: - Entity (Data Controller) card
+    //
+    // GDPR Article 13, PDPL, and CCPA all require the operating legal entity
+    // to be identifiable to the user. Surfacing this in About — alongside the
+    // full text in PoliciesView — makes the controller discoverable from any
+    // entry point without burying it inside the policy document.
+    private var entityCard: some View {
+        VStack(alignment: isArabic ? .trailing : .leading, spacing: NNSpacing.xs + 2) {
+            Text(isArabic ? "الكيان المُشغِّل" : "Operating Entity")
+                .font(.nnSubheader.weight(.semibold))
+                .foregroundColor(AppColors.textPrimary)
+                .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
+                .padding(.bottom, NNSpacing.xxs)
+
+            infoRow(label: isArabic ? "الاسم القانوني" : "Legal name", value: LegalContent.entityName)
+            Divider().background(AppColors.uiBorder.opacity(0.4))
+            infoRow(label: isArabic ? "السجل التجاري" : "Registration", value: LegalContent.entityRegistration)
+            Divider().background(AppColors.uiBorder.opacity(0.4))
+            VStack(alignment: isArabic ? .trailing : .leading, spacing: 2) {
+                HStack {
+                    Text(isArabic ? "العنوان" : "Address").foregroundColor(AppColors.textPrimary)
+                    Spacer()
+                }
+                Text(LegalContent.entityAddress)
+                    .font(.footnote)
+                    .foregroundColor(AppColors.textSecondary)
+                    .multilineTextAlignment(isArabic ? .trailing : .leading)
+                    .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
+            }
+            Divider().background(AppColors.uiBorder.opacity(0.4))
+            Link(destination: URL(string: "mailto:\(LegalContent.privacyContactEmail)")!) {
+                HStack {
+                    Text(isArabic ? "بريد الخصوصية" : "Privacy contact")
+                        .foregroundColor(AppColors.textPrimary)
+                    Spacer()
+                    Text(LegalContent.privacyContactEmail)
+                        .foregroundColor(AppColors.accent)
+                        .font(.footnote)
+                }
+                .frame(minHeight: NNHitTarget.minimum)
+            }
+        }
+        .textSelection(.enabled)
+        .padding(NNSpacing.lg)
+        .background(AppColors.uiSurface)
+        .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
+        .overlay(
+            RoundedRectangle(cornerRadius: NNRadius.container)
+                .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+        )
+    }
+
     // MARK: - Links
 
     private var linksCard: some View {
-        VStack(alignment: isArabic ? .trailing : .leading, spacing: 12) {
+        VStack(alignment: isArabic ? .trailing : .leading, spacing: NNSpacing.sm) {
             Text(isArabic ? "روابط" : "Links")
                 .font(.nnSubheader.weight(.semibold))
                 .foregroundColor(AppColors.textPrimary)
@@ -210,10 +288,13 @@ struct AboutView: View {
                 linkRow(icon: "questionmark.circle.fill", text: isArabic ? "الأسئلة الشائعة" : "FAQ")
             }
         }
-        .padding(20)
+        .padding(NNSpacing.lg)
         .background(AppColors.uiSurface)
-        .cornerRadius(20)
-        .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+        .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
+        .overlay(
+            RoundedRectangle(cornerRadius: NNRadius.container)
+                .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+        )
     }
 
     private func linkRow(icon: String, text: String) -> some View {
@@ -228,16 +309,14 @@ struct AboutView: View {
                 .font(.caption)
                 .foregroundColor(AppColors.textSecondary)
         }
+        .frame(minHeight: NNHitTarget.minimum)
     }
 
     // MARK: - Credits footer
 
     private var creditsFooter: some View {
-        VStack(spacing: 8) {
-            // SF Symbol heart renders consistently across fonts and Dynamic
-            // Type sizes; the emoji 💙 was font-dependent and could fall back
-            // to a black-and-white glyph on some configurations.
-            HStack(spacing: 4) {
+        VStack(spacing: NNSpacing.xs) {
+            HStack(spacing: NNSpacing.xxs) {
                 Text(isArabic ? "شكراً لاستخدامك NoNet" : "Thanks for using NoNet")
                 Image(systemName: "heart.fill")
                     .foregroundColor(AppColors.accent)
@@ -251,13 +330,17 @@ struct AboutView: View {
                  : "Made with care to help you focus deeper.")
                 .font(.caption)
                 .foregroundColor(AppColors.textSecondary)
-            Text("© 2026 NoNet App")
+            // Year computed at render time so the footer never goes stale.
+            // Copyright line names the legal entity for IP-ownership clarity
+            // (a generic brand name like "NoNet App" would be weaker in any
+            // future infringement dispute).
+            Text("© \(currentYear) \(LegalContent.entityName)")
                 .font(.caption2)
                 .foregroundColor(AppColors.textSecondary.opacity(0.7))
-                .padding(.top, 4)
+                .padding(.top, NNSpacing.xxs)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 20)
+        .padding(.vertical, NNSpacing.lg)
     }
 }
 

@@ -75,7 +75,9 @@ final class BlockingEngine {
         }
         let store = store(for: list.id)
         store.clearAllSettings()
-        center.stopMonitoring([activityName(for: list.id)])
+        // Stop both the per-slot scheduled activities AND the time-limit activity.
+        // Names that were never registered are silently ignored by stopMonitoring.
+        center.stopMonitoring(allSlotActivityNames(for: list.id) + [limitActivityName(for: list.id)])
         return true
     }
 
@@ -91,6 +93,13 @@ final class BlockingEngine {
     /// TimeLimit + Hard also returns true (lock until midnight when the daily window resets),
     /// but does NOT honour emergency unlock — the daily reset already provides natural escape
     /// and the time-bounded nature avoids the 5.1.1 concern.
+    ///
+    /// Scheduled + Hard intentionally returns false here: Hard Mode on a scheduled list
+    /// protects the *configuration* (delete / modify gated through the gatekeeper sheet),
+    /// not the runtime shield. Pausing the block mid-window is allowed — the schedule itself
+    /// releases the shield at interval end, so a "no deactivate" lock would offer no extra
+    /// safety against impulse and just block legitimate pauses (e.g. quickly checking a
+    /// blocked site during the user's own allowed-hours edit).
     func isHardLocked(list: ListEntity) -> Bool {
         guard list.protection == "hard" else { return false }
         if list.blockType == "forever" {
@@ -111,9 +120,10 @@ final class BlockingEngine {
             // Recreate to make sure no settings linger
             ManagedSettingsStore(named: storeName(id)).clearAllSettings()
         }
-        // Stop both schedule kinds — only the one that was registered actually exists,
-        // but stopMonitoring tolerates unknown names.
-        center.stopMonitoring([activityName(for: id), limitActivityName(for: id)])
+        // Stop every possible activity name we might have registered for this
+        // list (N per-slot scheduled + one time-limit). stopMonitoring tolerates
+        // names that were never registered.
+        center.stopMonitoring(allSlotActivityNames(for: id) + [limitActivityName(for: id)])
         FamilySelectionStore.clear(for: id)
         EmergencyUnlockStore.clear(for: id)
     }
@@ -131,8 +141,8 @@ final class BlockingEngine {
         ManagedSettingsStore.Name(rawValue: "blocklist.\(id.uuidString)")
     }
 
-    private func activityName(for id: UUID) -> DeviceActivityName {
-        DeviceActivityName(rawValue: "schedule.\(id.uuidString)")
+    private func activityName(for id: UUID, slotIndex: Int) -> DeviceActivityName {
+        DeviceActivityName(rawValue: "schedule.\(id.uuidString).\(slotIndex)")
     }
 
     /// Separate name prefix so the monitor extension can tell scheduled-window
@@ -143,31 +153,21 @@ final class BlockingEngine {
     }
 
     private func applyShields(for list: ListEntity, in store: ManagedSettingsStore) {
-        // Apps + categories come from the saved FamilyActivitySelection if any.
-        if let selection = FamilySelectionStore.load(for: list.id) {
-            if !selection.applicationTokens.isEmpty {
-                store.shield.applications = selection.applicationTokens
-            }
-            if !selection.categoryTokens.isEmpty {
-                store.shield.applicationCategories = .specific(selection.categoryTokens)
-                store.shield.webDomainCategories = .specific(selection.categoryTokens)
-            }
-            if !selection.webDomainTokens.isEmpty {
-                // Merge with user-typed domains below
-                store.shield.webDomains = selection.webDomainTokens
-            }
+        // All three shield targets (apps, categories, web domains) come from
+        // the FamilyActivitySelection persisted by FamilySelectionStore.
+        // ManagedSettings.shield.webDomains only accepts opaque WebDomainTokens
+        // produced by FamilyActivityPicker — there is no string-based path, so
+        // the website-blocking UI funnels through the picker (see BlockItemsEditorView).
+        guard let selection = FamilySelectionStore.load(for: list.id) else { return }
+        if !selection.applicationTokens.isEmpty {
+            store.shield.applications = selection.applicationTokens
         }
-
-        // User-typed websites stored as BlockItemEntity(kind=="website") aren't tokens — they
-        // map to WebDomain shields by string. ManagedSettings doesn't accept raw strings
-        // here in 16+, so we keep this as the path through the token-based selection. We log
-        // an informational note so it's clear to maintainers why typed-only domains may not
-        // shield without a picker selection.
-        let typedDomains = (list.items ?? [])
-            .filter { $0.kind == "website" }
-            .map { $0.value }
-        if !typedDomains.isEmpty {
-            log.notice("List \(list.id, privacy: .public) has \(typedDomains.count) typed domains; tokens-only shielding will not cover them until they're picked via FamilyActivityPicker.")
+        if !selection.categoryTokens.isEmpty {
+            store.shield.applicationCategories = .specific(selection.categoryTokens)
+            store.shield.webDomainCategories = .specific(selection.categoryTokens)
+        }
+        if !selection.webDomainTokens.isEmpty {
+            store.shield.webDomains = selection.webDomainTokens
         }
     }
 
@@ -207,30 +207,76 @@ final class BlockingEngine {
         }
     }
 
+    /// Maximum slots we'll register per list. DeviceActivity has an undocumented
+    /// per-extension cap (~20 active monitors); pinning per-list usage here
+    /// keeps a few concurrent scheduled lists from quietly hitting that ceiling.
+    /// UI in `ScheduleEditorSheet` should refuse to add more than this anyway.
+    private static let maxSlotsPerList = 14
+
     private func scheduleMonitoring(for list: ListEntity) {
         guard let data = list.scheduleSlots else { return }
         let slots = SchedulePersistence.decode(data)
         guard !slots.isEmpty else { return }
 
-        // Combine slots into a single schedule per list; DeviceActivity supports
-        // one schedule per `DeviceActivityName`, so we pick the earliest start
-        // and latest end as the activity window. The actual minute-by-minute logic
-        // is enforced via the monitor extension callback (see TODO at bottom).
-        let earliestStart = slots.map { $0.fromMinutes }.min() ?? 0
-        let latestEnd = slots.map { $0.toMinutes }.max() ?? 0
-        let startComps = DateComponents(hour: earliestStart / 60, minute: earliestStart % 60)
-        let endComps = DateComponents(hour: latestEnd / 60, minute: latestEnd % 60)
-
-        let schedule = DeviceActivitySchedule(
-            intervalStart: startComps,
-            intervalEnd: endComps,
-            repeats: true
-        )
-        do {
-            try center.startMonitoring(activityName(for: list.id), during: schedule)
-        } catch {
-            log.error("startMonitoring failed for \(list.id, privacy: .public): \(error.localizedDescription, privacy: .public)")
+        // One DeviceActivitySchedule per slot. The previous "earliest start /
+        // latest end" merge collapsed multi-slot lists into a single window
+        // (e.g. Sat 9-12 + Sat 18-22 became Sat 9-22, shielding the user
+        // through their own allowed midday gap) and ignored per-day routing
+        // entirely. Apple's API requires a unique `DeviceActivityName` per
+        // schedule, so we encode the slot index into the name. The monitor
+        // extension still gets the list UUID via prefix-stripping (see
+        // BlockingMonitor.parseActivity).
+        //
+        // ScheduleSlotV1.day is 0=Sunday…6=Saturday; DateComponents.weekday
+        // is 1=Sunday…7=Saturday, so we add 1.
+        let bounded = Array(slots.prefix(Self.maxSlotsPerList))
+        if slots.count > Self.maxSlotsPerList {
+            log.notice("scheduleMonitoring(\(list.id, privacy: .public)): truncating \(slots.count) slots to first \(Self.maxSlotsPerList, privacy: .public) (DeviceActivity per-extension cap)")
         }
+        for (index, slot) in bounded.enumerated() {
+            guard slot.day >= 0 && slot.day <= 6 else {
+                log.error("scheduleMonitoring: slot day=\(slot.day, privacy: .public) out of range, skipping")
+                continue
+            }
+            // Apple requires intervalStart < intervalEnd within a single weekday.
+            // Cross-midnight slots aren't a Picker-supported input (the editor
+            // forces from < to), so we treat any inverted slot as a data error
+            // and skip rather than guessing the user's intent.
+            guard slot.fromMinutes < slot.toMinutes else {
+                log.error("scheduleMonitoring: slot \(slot.id, privacy: .public) inverted (\(slot.fromMinutes, privacy: .public)→\(slot.toMinutes, privacy: .public)), skipping")
+                continue
+            }
+            var start = DateComponents(
+                hour: slot.fromMinutes / 60,
+                minute: slot.fromMinutes % 60
+            )
+            var end = DateComponents(
+                hour: slot.toMinutes / 60,
+                minute: slot.toMinutes % 60
+            )
+            start.weekday = slot.day + 1
+            end.weekday = slot.day + 1
+
+            let schedule = DeviceActivitySchedule(
+                intervalStart: start,
+                intervalEnd: end,
+                repeats: true
+            )
+            let activity = activityName(for: list.id, slotIndex: index)
+            do {
+                try center.startMonitoring(activity, during: schedule)
+            } catch {
+                log.error("startMonitoring failed for \(activity.rawValue, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            }
+        }
+    }
+
+    /// Stop every scheduled slot for a list. Names are deterministic
+    /// (`schedule.<UUID>.<index>`) so we don't need to remember the slot count —
+    /// `stopMonitoring` tolerates unknown names, and the upper bound matches
+    /// `maxSlotsPerList`.
+    private func allSlotActivityNames(for id: UUID) -> [DeviceActivityName] {
+        (0..<Self.maxSlotsPerList).map { activityName(for: id, slotIndex: $0) }
     }
 }
 

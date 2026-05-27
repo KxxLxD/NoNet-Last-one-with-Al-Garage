@@ -48,7 +48,10 @@ struct PartnerAcceptSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(lang.isArabicEffective ? "لاحقاً" : "Later") { finish() }
+                    // "Close" reads more honestly than "Later" — closing this
+                    // sheet without picking accept/decline doesn't queue
+                    // anything; the inviter has to re-send the link.
+                    Button(lang.isArabicEffective ? "إغلاق" : "Close") { finish() }
                         .disabled(isProcessing)
                 }
             }
@@ -80,6 +83,23 @@ struct PartnerAcceptSheet: View {
                 .foregroundColor(AppColors.textPrimary)
                 .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
                 .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+
+            // Safety net: CKShare links can be forwarded. If the recipient
+            // doesn't recognize the inviter, they should not accept blindly.
+            if !inviterName.isEmpty {
+                HStack(alignment: .top, spacing: NNSpacing.xs) {
+                    Image(systemName: "info.circle")
+                        .font(.caption)
+                        .foregroundColor(AppColors.textSecondary)
+                    Text(lang.isArabicEffective
+                         ? "إن لم تكن تعرف \(inviterName)، ارفض الدعوة."
+                         : "If you don't know \(inviterName), decline the invitation.")
+                        .font(.caption)
+                        .foregroundColor(AppColors.textSecondary)
+                        .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                }
+                .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+            }
         }
     }
 

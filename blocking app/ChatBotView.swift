@@ -32,28 +32,76 @@ struct ChatBotView: View {
     /// Free-tier daily message budget. Resets at midnight per-device. We
     /// store the count + last-used date as separate AppStorage keys so the
     /// rollover logic stays simple (compare day-component only).
-    @AppStorage("v1:chat:freeMessagesUsedToday") private var freeMessagesUsedToday: Int = 0
-    @AppStorage("v1:chat:freeMessagesLastDayKey") private var freeMessagesLastDayKey: String = ""
+    @AppStorage(AppStorageKeys.chatFreeMessagesUsedToday) private var freeMessagesUsedToday: Int = 0
+    @AppStorage(AppStorageKeys.chatFreeMessagesLastDayKey) private var freeMessagesLastDayKey: String = ""
 
     /// How many free messages a non-premium user gets per day. Picked as
     /// "enough to evaluate the assistant" without giving away the premium
     /// experience. Tune via experiment if conversion data warrants it.
     static let freeDailyMessageBudget: Int = 3
 
+    /// Hard cap on persisted messages — UserDefaults isn't meant for
+    /// unbounded payloads, and a 50-message window covers ~a week of
+    /// casual use without bloating launch-time JSON decode.
+    static let maxPersistedMessages: Int = 50
+
     private let responder: ChatResponder = LocalChatResponder()
 
-    struct ChatMessage: Identifiable {
-        let id = UUID()
+    struct ChatMessage: Identifiable, Codable {
+        var id: UUID
         let isUser: Bool
         let text: String
         let timestamp: Date
+
+        init(isUser: Bool, text: String, timestamp: Date) {
+            self.id = UUID()
+            self.isUser = isUser
+            self.text = text
+            self.timestamp = timestamp
+        }
     }
 
-    @State private var messages: [ChatMessage] = []
+    /// Tiny Identifiable wrapper so a single shared String can drive
+    /// `.sheet(item:)` for the system Share Sheet.
+    struct ShareableText: Identifiable {
+        let id = UUID()
+        let text: String
+    }
+
+    /// Persistence-backing for the conversation. We store JSON in AppStorage
+    /// rather than holding `[ChatMessage]` as a pseudo-property because
+    /// AppStorage demands a `RawRepresentable` value. The computed `messages`
+    /// var keeps the rest of the view talking about an array.
+    @AppStorage(AppStorageKeys.chatMessagesJSON) private var messagesJSON: String = "[]"
     @State private var inputText: String = ""
     @State private var showSuggestions = false
     @State private var isTyping: Bool = false
     @State private var showFreeLimitReached: Bool = false
+    /// Drives the destructive confirmation dialog before wiping the
+    /// conversation. Necessary now that persistence keeps up to 50 messages —
+    /// a single mis-tap could discard a week of saved AI plans.
+    @State private var showClearConfirm: Bool = false
+    /// Backing for the `ShareLink` invoked from a bubble's contextMenu.
+    /// Non-nil = sheet visible. Wrapping a String in Identifiable lets us
+    /// drive `.sheet(item:)` directly.
+    @State private var shareItem: ShareableText?
+
+    /// In-memory mirror of `messagesJSON`. Reading parses JSON; writing
+    /// re-encodes back to `messagesJSON` so AppStorage persists across
+    /// launches. Capped at `maxPersistedMessages` on write so UserDefaults
+    /// stays small.
+    private var messages: [ChatMessage] {
+        get {
+            guard let data = messagesJSON.data(using: .utf8) else { return [] }
+            return (try? JSONDecoder().decode([ChatMessage].self, from: data)) ?? []
+        }
+        nonmutating set {
+            let bounded = newValue.suffix(Self.maxPersistedMessages)
+            guard let data = try? JSONEncoder().encode(Array(bounded)),
+                  let str = String(data: data, encoding: .utf8) else { return }
+            messagesJSON = str
+        }
+    }
 
     /// Day-stable key (YYYY-MM-DD) used to detect when to reset the daily
     /// free-message counter. Computed every access — cheap, no caching.
@@ -174,6 +222,23 @@ struct ChatBotView: View {
                  ? "استخدمت \(Self.freeDailyMessageBudget) رسائل مجانية اليوم. سيتجدّد الرصيد منتصف الليل، أو اشترك في Premium لرسائل غير محدودة."
                  : "You've used your \(Self.freeDailyMessageBudget) free messages for today. Your quota resets at midnight, or subscribe to Premium for unlimited messages.")
         }
+        .confirmationDialog(
+            lang.isArabicEffective ? "احذف كل المحادثة؟" : "Clear conversation?",
+            isPresented: $showClearConfirm,
+            titleVisibility: .visible
+        ) {
+            Button(lang.isArabicEffective ? "احذف المحادثة" : "Delete conversation", role: .destructive) {
+                clearChat()
+            }
+            Button(lang.isArabicEffective ? "إلغاء" : "Cancel", role: .cancel) {}
+        } message: {
+            Text(lang.isArabicEffective
+                 ? "سيتم حذف كل الرسائل المحفوظة (حتى \(Self.maxPersistedMessages) رسالة). لا يمكن التراجع."
+                 : "All saved messages (up to \(Self.maxPersistedMessages)) will be removed. This can't be undone.")
+        }
+        .sheet(item: $shareItem) { item in
+            ShareSheet(text: item.text)
+        }
     }
 
     // ─── Chat surface (header + messages + input) ─────────────────
@@ -196,12 +261,24 @@ struct ChatBotView: View {
             Text("NoNet AI")
                 .font(.headline)
                 .foregroundColor(AppColors.textPrimary)
+            // Small Premium tag next to the title so gating is visible up
+            // front. The daily-limit chip below it already implies premium
+            // gating, but a labelled badge is the convention used on
+            // paywalls / Settings, so showing it here makes the screen
+            // legible to a user landing on it cold.
+            Text(lang.isArabicEffective ? "Premium" : "Premium")
+                .font(.caption2.weight(.semibold))
+                .padding(.horizontal, NNSpacing.xs - 2)
+                .padding(.vertical, 2)
+                .background(AppColors.accent.opacity(0.12))
+                .foregroundColor(AppColors.accent)
+                .clipShape(Capsule())
             // Free-tier counter chip — gives non-premium users visibility
             // into how many messages they have left today + a tap-target
             // that jumps to the upgrade tab. Hidden for premium.
             if !isPremium {
                 Button(action: { selectedTab = 2 }) {
-                    HStack(spacing: 4) {
+                    HStack(spacing: NNSpacing.xxs) {
                         Image(systemName: "sparkle")
                             .font(.caption2)
                         Text(lang.isArabicEffective
@@ -211,8 +288,8 @@ struct ChatBotView: View {
                             .monospacedDigit()
                     }
                     .foregroundColor(freeRemainingToday > 0 ? AppColors.accent : AppColors.alertRed)
-                    .padding(.vertical, 4)
-                    .padding(.horizontal, 8)
+                    .padding(.vertical, NNSpacing.xxs)
+                    .padding(.horizontal, NNSpacing.xs)
                     .background((freeRemainingToday > 0 ? AppColors.accent : AppColors.alertRed).opacity(0.10))
                     .clipShape(Capsule())
                 }
@@ -221,13 +298,17 @@ struct ChatBotView: View {
             }
             Spacer()
             if !messages.isEmpty {
-                Button(action: clearChat) {
-                    Image(systemName: "arrow.counterclockwise")
+                // `trash` reads as "delete" semantically — counter-clockwise
+                // is "undo" in iOS convention. Combined with the confirmation
+                // dialog below, mis-taps no longer wipe the conversation.
+                Button(action: { showClearConfirm = true }) {
+                    Image(systemName: "trash")
                         .foregroundColor(AppColors.textSecondary)
-                        .frame(width: 44, height: 44)
+                        .frame(width: NNHitTarget.minimum, height: NNHitTarget.minimum)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(lang.isArabicEffective ? "مسح المحادثة" : "Clear conversation")
+                .accessibilityHint(lang.isArabicEffective ? "يحذف كل الرسائل بعد التأكيد" : "Deletes every message after confirmation")
             }
         }
         .padding(.horizontal, NNSpacing.md)
@@ -244,17 +325,31 @@ struct ChatBotView: View {
                         emptyStateChips
                             .padding(.top, NNSpacing.xxl)
                     }
-                    ForEach(messages) { msg in
+                    // Render with day separators interleaved when consecutive
+                    // messages cross a calendar day boundary — without these,
+                    // persisted conversations from earlier days look like
+                    // they all happened "now."
+                    ForEach(Array(messages.enumerated()), id: \.element.id) { idx, msg in
+                        if shouldShowDaySeparator(at: idx, messages: messages) {
+                            daySeparator(for: msg.timestamp)
+                                .id("sep-\(msg.id)")
+                        }
                         messageRow(msg)
                             .id(msg.id)
                     }
                     if isTyping {
-                        HStack {
+                        HStack(alignment: .bottom, spacing: NNSpacing.xs) {
                             typingIndicator
+                            Text(lang.isArabicEffective ? "NoNet يكتب…" : "NoNet is typing…")
+                                .font(.caption2)
+                                .foregroundColor(AppColors.textSecondary)
+                                .padding(.bottom, NNSpacing.xxs)
                             Spacer(minLength: 0)
                         }
                         .padding(.horizontal, NNSpacing.md)
                         .id("typing")
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel(lang.isArabicEffective ? "NoNet يكتب رداً" : "NoNet is typing a reply")
                     }
                 }
                 .padding(.vertical, NNSpacing.md)
@@ -295,16 +390,78 @@ struct ChatBotView: View {
                             .foregroundColor(AppColors.accent)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, NNSpacing.md)
-                            .frame(minHeight: 44)
+                            .frame(minHeight: NNHitTarget.minimum)
                             .frame(maxWidth: .infinity)
                             .background(AppColors.infoBg)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
                     }
                     .buttonStyle(.plain)
                 }
+                // Surface the full suggestion sheet right next to the starters
+                // so users discover the 16-prompt catalog without hunting for
+                // the lightbulb icon down at the input bar.
+                Button(action: { showSuggestions = true }) {
+                    HStack(spacing: NNSpacing.xxs) {
+                        Image(systemName: "lightbulb")
+                            .font(.caption)
+                        Text(lang.isArabicEffective ? "اقتراحات أكثر" : "More suggestions")
+                            .font(.caption.weight(.semibold))
+                    }
+                    .foregroundColor(AppColors.textSecondary)
+                    .frame(minHeight: NNHitTarget.minimum - 8)
+                }
+                .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, NNSpacing.lg)
+    }
+
+    /// True when the message at `idx` is on a different calendar day than
+    /// the message before it (or when it's the first message). Used to
+    /// decide whether to insert a day separator above it.
+    private func shouldShowDaySeparator(at idx: Int, messages: [ChatMessage]) -> Bool {
+        guard idx > 0 else { return true } // first message always gets a header
+        let cal = Calendar.current
+        return !cal.isDate(messages[idx].timestamp, inSameDayAs: messages[idx - 1].timestamp)
+    }
+
+    /// "Today" / "Yesterday" / formatted weekday + date — a single quiet
+    /// centered chip between messages from different days.
+    @ViewBuilder
+    private func daySeparator(for date: Date) -> some View {
+        HStack {
+            Spacer(minLength: 0)
+            Text(formattedSeparator(for: date))
+                .font(.caption2.weight(.semibold))
+                .foregroundColor(AppColors.textSecondary)
+                .padding(.horizontal, NNSpacing.sm)
+                .padding(.vertical, NNSpacing.xxs)
+                .background(AppColors.uiSurface)
+                .clipShape(Capsule())
+                .overlay(
+                    Capsule().stroke(AppColors.uiBorder.opacity(0.6), lineWidth: NNBorder.hairline)
+                )
+            Spacer(minLength: 0)
+        }
+        .padding(.vertical, NNSpacing.xs)
+        .accessibilityElement()
+        .accessibilityLabel(formattedSeparator(for: date))
+    }
+
+    /// Localized "today" / "yesterday" / "EEEE، d MMM" — Calendar-based so
+    /// timezone changes don't shift the label.
+    private func formattedSeparator(for date: Date) -> String {
+        let cal = Calendar.current
+        if cal.isDateInToday(date) {
+            return lang.isArabicEffective ? "اليوم" : "Today"
+        }
+        if cal.isDateInYesterday(date) {
+            return lang.isArabicEffective ? "أمس" : "Yesterday"
+        }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: lang.isArabicEffective ? "ar" : "en_US")
+        formatter.dateFormat = lang.isArabicEffective ? "EEEE، d MMMM" : "EEEE, MMM d"
+        return formatter.string(from: date)
     }
 
     @ViewBuilder
@@ -317,6 +474,11 @@ struct ChatBotView: View {
         .padding(.horizontal, NNSpacing.md)
     }
 
+    /// Slightly larger bubble radius (NNRadius.card + 2 = 18) than the standard
+    /// card corner; bubbles read more "speech-like" when their corners are
+    /// rounder than surrounding cards. Kept consistent with typingIndicator.
+    private static let bubbleRadius: CGFloat = NNRadius.card + 2
+
     @ViewBuilder
     private func bubble(for msg: ChatMessage) -> some View {
         let bg = msg.isUser ? AppColors.accent : AppColors.uiSurface
@@ -327,19 +489,34 @@ struct ChatBotView: View {
             .padding(.horizontal, NNSpacing.sm + 2)
             .padding(.vertical, NNSpacing.sm - 2)
             .background(bg)
-            .clipShape(RoundedRectangle(cornerRadius: 18))
+            .clipShape(RoundedRectangle(cornerRadius: Self.bubbleRadius))
             .overlay(
-                RoundedRectangle(cornerRadius: 18)
-                    .stroke(msg.isUser ? Color.clear : AppColors.uiBorder, lineWidth: 0.5)
+                RoundedRectangle(cornerRadius: Self.bubbleRadius)
+                    .stroke(msg.isUser ? Color.clear : AppColors.uiBorder, lineWidth: NNBorder.hairline)
             )
             .textSelection(.enabled)
+            // Long-press menu so users can pull AI plans (7-day focus, etc.)
+            // into other apps without manual highlight-and-copy.
+            .contextMenu {
+                Button {
+                    UIPasteboard.general.string = msg.text
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                } label: {
+                    Label(lang.isArabicEffective ? "نسخ" : "Copy", systemImage: "doc.on.doc")
+                }
+                Button {
+                    shareItem = ShareableText(text: msg.text)
+                } label: {
+                    Label(lang.isArabicEffective ? "مشاركة" : "Share", systemImage: "square.and.arrow.up")
+                }
+            }
     }
 
     /// Three-dot indicator with a staggered bounce — actually communicates
     /// "the AI is typing", unlike the previous static capsule.
     @ViewBuilder
     private var typingIndicator: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: NNSpacing.xxs) {
             ForEach(0..<3, id: \.self) { idx in
                 TypingDot(delay: Double(idx) * 0.18)
             }
@@ -347,10 +524,10 @@ struct ChatBotView: View {
         .padding(.horizontal, NNSpacing.sm + 2)
         .padding(.vertical, NNSpacing.sm - 2)
         .background(AppColors.uiSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .clipShape(RoundedRectangle(cornerRadius: Self.bubbleRadius))
         .overlay(
-            RoundedRectangle(cornerRadius: 18)
-                .stroke(AppColors.uiBorder, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: Self.bubbleRadius)
+                .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
         )
     }
 
@@ -361,9 +538,9 @@ struct ChatBotView: View {
             Button(action: { showSuggestions = true }) {
                 Image(systemName: "lightbulb.fill")
                     .foregroundColor(AppColors.accent)
-                    .frame(width: 44, height: 44)
+                    .frame(width: NNHitTarget.minimum, height: NNHitTarget.minimum)
                     .background(AppColors.infoBg)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
             }
             .buttonStyle(.plain)
             .accessibilityLabel(lang.isArabicEffective ? "اقتراحات" : "Suggestions")
@@ -379,19 +556,19 @@ struct ChatBotView: View {
             .padding(.horizontal, NNSpacing.sm + 2)
             .padding(.vertical, NNSpacing.xs + 2)
             .background(AppColors.uiBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(AppColors.uiBorder, lineWidth: 0.5)
+                RoundedRectangle(cornerRadius: NNRadius.control)
+                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
             )
 
             // Send — primary action; visually disabled when empty
             Button(action: send) {
                 Image(systemName: "paperplane.fill")
                     .foregroundColor(.white)
-                    .frame(width: 44, height: 44)
+                    .frame(width: NNHitTarget.minimum, height: NNHitTarget.minimum)
                     .background(canSend ? AppColors.accent : AppColors.textDisabled)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
             }
             .buttonStyle(.plain)
             .disabled(!canSend)
@@ -431,8 +608,14 @@ struct ChatBotView: View {
         messages.append(ChatMessage(isUser: true, text: trimmed, timestamp: Date()))
         inputText = ""
         isTyping = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-            let reply = responder.reply(to: trimmed, isArabic: lang.isArabicEffective)
+        // Simulated thinking delay — Task.sleep cooperates with task
+        // cancellation (if the view disappears mid-typing, the reply
+        // append is skipped instead of mutating after dismiss).
+        let isArabicNow = lang.isArabicEffective
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 600_000_000)
+            guard !Task.isCancelled else { return }
+            let reply = responder.reply(to: trimmed, isArabic: isArabicNow)
             messages.append(ChatMessage(isUser: false, text: reply, timestamp: Date()))
             isTyping = false
         }
@@ -474,7 +657,9 @@ private struct TypingDot: View {
 
     var body: some View {
         Circle()
-            .fill(AppColors.textSecondary.opacity(0.6))
+            // accent at 60% lifts the indicator above AA contrast on the
+            // surface bg (where textSecondary @ 60% sat at ~2.1:1, failing).
+            .fill(AppColors.accent.opacity(0.6))
             .frame(width: 7, height: 7)
             .offset(y: bouncing ? -3 : 0)
             .onAppear {
@@ -557,7 +742,7 @@ struct SuggestionsSheet: View {
                                 .font(.caption)
                         }
                         .padding(.horizontal, NNSpacing.md)
-                        .frame(minHeight: 48)
+                        .frame(minHeight: NNHitTarget.minimum + 4)
                     }
                     .buttonStyle(.plain)
                     if idx < items.count - 1 {
@@ -568,10 +753,10 @@ struct SuggestionsSheet: View {
                 }
             }
             .background(AppColors.uiSurface)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(AppColors.uiBorder, lineWidth: 0.5)
+                RoundedRectangle(cornerRadius: NNRadius.card)
+                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
             )
         }
     }
@@ -579,4 +764,19 @@ struct SuggestionsSheet: View {
 
 #Preview {
     ChatBotView().environmentObject(LanguageManager.shared)
+}
+
+// MARK: - ShareSheet
+
+/// UIActivityViewController wrapper for SwiftUI. Used by the bubble
+/// contextMenu's Share action so the user can pipe an AI reply into
+/// Messages / Notes / WhatsApp / etc. without leaving the app.
+private struct ShareSheet: UIViewControllerRepresentable {
+    let text: String
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: [text], applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }

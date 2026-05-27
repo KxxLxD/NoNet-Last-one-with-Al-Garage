@@ -319,12 +319,36 @@ final class CloudKitPartnerStore: ObservableObject {
                              type: BreakAttemptType,
                              reason: String?) async -> String? {
         let attemptID = UUID()
+        let attemptedAt = Date()
+
+        // Offline-safety: an approval request is the *most* important kind of
+        // BreakAttempt to land — the user is actively waiting for a partner
+        // decision and the UI shows "request sent". Dropping it silently was
+        // the original bug. Mirror the offline-aware path that recordBreakAttempt
+        // already uses: queue locally if iCloud is unreachable, replay on the
+        // next foreground / account-change event via flushPendingBreakAttempts.
+        guard isAccountAvailable else {
+            log.notice("createActionRequest: account unavailable, queuing locally")
+            PendingBreakAttemptQueue.enqueue(PendingBreakAttempt(
+                id: attemptID,
+                partnershipID: partnershipID,
+                listID: listID,
+                listName: listName,
+                attemptedAt: attemptedAt,
+                typeRaw: type.rawValue,
+                reachedThrough: "approval_request",
+                statusRaw: RequestStatus.pending.rawValue,
+                reason: reason
+            ))
+            return attemptID.uuidString
+        }
+
         let record = makeBreakAttemptRecord(
             recordName: attemptID.uuidString,
             partnershipID: partnershipID,
             listID: listID,
             listName: listName,
-            attemptedAt: Date(),
+            attemptedAt: attemptedAt,
             type: type,
             reachedThrough: "approval_request",
             status: .pending,
@@ -336,9 +360,22 @@ final class CloudKitPartnerStore: ObservableObject {
             await fetchMyOutgoingRequests()
             return attemptID.uuidString
         } catch {
-            log.error("createActionRequest failed: \(error.localizedDescription, privacy: .public)")
-            self.lastError = error.localizedDescription
-            return nil
+            // Same enqueue-on-failure path as recordBreakAttempt. The user's
+            // UI already committed to "request sent"; deferring the actual
+            // CloudKit write keeps that promise once connectivity returns.
+            log.error("createActionRequest failed, enqueuing: \(error.localizedDescription, privacy: .public)")
+            PendingBreakAttemptQueue.enqueue(PendingBreakAttempt(
+                id: attemptID,
+                partnershipID: partnershipID,
+                listID: listID,
+                listName: listName,
+                attemptedAt: attemptedAt,
+                typeRaw: type.rawValue,
+                reachedThrough: "approval_request",
+                statusRaw: RequestStatus.pending.rawValue,
+                reason: reason
+            ))
+            return attemptID.uuidString
         }
     }
 
@@ -501,7 +538,9 @@ final class CloudKitPartnerStore: ObservableObject {
                 listName: listName,
                 attemptedAt: attemptedAt,
                 typeRaw: type.rawValue,
-                reachedThrough: reachedThrough
+                reachedThrough: reachedThrough,
+                statusRaw: nil,    // .logOnly path
+                reason: nil
             ))
             return
         }
@@ -530,7 +569,9 @@ final class CloudKitPartnerStore: ObservableObject {
                 listName: listName,
                 attemptedAt: attemptedAt,
                 typeRaw: type.rawValue,
-                reachedThrough: reachedThrough
+                reachedThrough: reachedThrough,
+                statusRaw: nil,    // .logOnly path
+                reason: nil
             ))
         }
     }
@@ -550,7 +591,12 @@ final class CloudKitPartnerStore: ObservableObject {
         }
 
         log.notice("flushPendingBreakAttempts: \(pending.count) entries to replay")
+        var didFlushAnyApproval = false
         for attempt in pending {
+            // Replay with the original status / reason so approval requests
+            // come out the other side as .pending (not .logOnly) — otherwise
+            // a deferred approval request would land as a log entry and the
+            // partner would never see the approve/deny prompt.
             let record = makeBreakAttemptRecord(
                 recordName: attempt.id.uuidString,
                 partnershipID: attempt.partnershipID,
@@ -558,12 +604,15 @@ final class CloudKitPartnerStore: ObservableObject {
                 listName: attempt.listName,
                 attemptedAt: attempt.attemptedAt,
                 type: attempt.type,
-                reachedThrough: attempt.reachedThrough
+                reachedThrough: attempt.reachedThrough,
+                status: attempt.status,
+                reason: attempt.reason
             )
             do {
                 try await save(records: [record])
                 PendingBreakAttemptQueue.remove(id: attempt.id)
-                log.notice("flushed pending attempt \(attempt.id, privacy: .public)")
+                log.notice("flushed pending attempt \(attempt.id, privacy: .public) (status=\(attempt.status.rawValue, privacy: .public))")
+                if attempt.status == .pending { didFlushAnyApproval = true }
             } catch {
                 // Stop on first persistent failure; we'll try the rest next
                 // time the trigger fires. Avoids hammering CloudKit if iCloud
@@ -571,6 +620,11 @@ final class CloudKitPartnerStore: ObservableObject {
                 log.error("flush stalled on attempt \(attempt.id, privacy: .public): \(error.localizedDescription, privacy: .public)")
                 return
             }
+        }
+        // Refresh the outgoing-requests cache so HomeView's "awaiting partner"
+        // badge correctly reflects the now-uploaded approval requests.
+        if didFlushAnyApproval {
+            await fetchMyOutgoingRequests()
         }
     }
 

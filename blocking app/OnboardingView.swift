@@ -124,21 +124,27 @@ struct OnboardingView: View {
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 16) {
+            VStack(spacing: NNSpacing.md) {
                 TabView(selection: $page) {
                     // Page 1: Name + Gender
-                    VStack(spacing: 16) {
+                    VStack(spacing: NNSpacing.md) {
                         Text(lang.isArabicEffective ? "تعريف بسيط" : "Quick intro")
                             .font(.nnSectionTitle)
                             .foregroundColor(AppColors.textPrimary)
-                        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
+                        whyHint(lang.isArabicEffective
+                                ? "نستخدم اسمك في الترحيب فقط. بياناتك تبقى على جهازك — iCloud اختياري لميزة شريك التعافي فقط."
+                                : "We use your name for greetings only. Your data stays on your device — iCloud is optional for the Recovery Partner feature only.")
+                        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
                             TextField(lang.isArabicEffective ? "اسمك" : "Your name", text: $obName)
                                 .textInputAutocapitalization(.words)
                                 .disableAutocorrection(true)
-                                .padding(12)
+                                .padding(NNSpacing.sm)
                                 .background(AppColors.uiSurface)
-                                .cornerRadius(12)
-                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.uiBorder, lineWidth: 0.5))
+                                .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: NNRadius.control)
+                                        .stroke(AppColors.uiBorder, lineWidth: NNBorder.input)
+                                )
                             Picker("", selection: Binding<String>(
                                 get: { obGender },
                                 set: { obGender = $0 }
@@ -148,31 +154,40 @@ struct OnboardingView: View {
                             }
                             .pickerStyle(.segmented)
                         }
-                        .padding(16)
+                        .padding(NNSpacing.md)
                         .background(AppColors.uiSurface)
-                        .cornerRadius(20)
-                        .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
-                        .padding(.horizontal, 24)
+                        .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: NNRadius.container)
+                                .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+                        )
+                        .padding(.horizontal, NNSpacing.xl)
                     }
                     .tag(0)
 
                     // Page 2: Age group
-                    VStack(spacing: 16) {
+                    VStack(spacing: NNSpacing.md) {
                         Text(lang.isArabicEffective ? "العمر" : "Age")
                             .font(.nnSectionTitle)
                             .foregroundColor(AppColors.textPrimary)
-                        VStack(alignment: .center, spacing: 12) {
+                        whyHint(lang.isArabicEffective
+                                ? "يساعدنا على اقتراح خطط مناسبة (مثل وقت النوم للمراهقين أو ساعات العمل للبالغين)."
+                                : "Helps us suggest plans that fit your stage (e.g. sleep schedules for teens, work hours for adults).")
+                        VStack(alignment: .center, spacing: NNSpacing.sm) {
                             ageChip(title: lang.isArabicEffective ? "13–17" : "13–17", value: "13-17")
                             ageChip(title: lang.isArabicEffective ? "18–24" : "18–24", value: "18-24")
                             ageChip(title: lang.isArabicEffective ? "25–34" : "25–34", value: "25-34")
                             ageChip(title: lang.isArabicEffective ? "35–44" : "35–44", value: "35-44")
                             ageChip(title: lang.isArabicEffective ? "45+" : "45+", value: "45+")
                         }
-                        .padding(16)
+                        .padding(NNSpacing.md)
                         .background(AppColors.uiSurface)
-                        .cornerRadius(20)
-                        .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
-                        .padding(.horizontal, 24)
+                        .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: NNRadius.container)
+                                .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+                        )
+                        .padding(.horizontal, NNSpacing.xl)
                         Text(lang.isArabicEffective ? "اختيار تقريبي" : "Approximate selection")
                             .font(.footnote)
                             .foregroundColor(AppColors.textSecondary)
@@ -180,100 +195,89 @@ struct OnboardingView: View {
                     .tag(1)
 
                     // Page 3: Addictive apps/categories
-                    VStack(spacing: 16) {
+                    VStack(spacing: NNSpacing.md) {
                         Text(lang.isArabicEffective ? "مصادر الإدمان" : "Addictive sources")
                             .font(.nnSectionTitle)
                             .foregroundColor(AppColors.textPrimary)
-                        VStack(spacing: 16) {
+                        whyHint(lang.isArabicEffective
+                                ? "اختياراتك تظهر كاقتراحات جاهزة عند إنشاء أول قائمة حجب."
+                                : "Your picks appear as ready-made suggestions when you create your first blocklist.")
+                        VStack(spacing: NNSpacing.md) {
                             // Apps section
-                            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
+                            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
                                 Text(lang.isArabicEffective ? "تطبيقات" : "Apps")
                                     .font(.headline)
                                     .foregroundColor(AppColors.textPrimary)
                                 ChipGrid(items: appOptions, selectedCSV: $obApps, isRTL: lang.isArabicEffective)
                                 if obApps.split(separator: ",").contains("other") {
-                                    TextField(lang.isArabicEffective ? "أخرى — اكتب هنا" : "Other — type here", text: $obAppsOther)
-                                        .textInputAutocapitalization(.sentences)
-                                        .disableAutocorrection(false)
-                                        .padding(12)
-                                        .background(AppColors.uiSurface)
-                                        .cornerRadius(12)
-                                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.uiBorder, lineWidth: 0.5))
+                                    otherTextField(placeholder: lang.isArabicEffective ? "أخرى — اكتب هنا" : "Other — type here", text: $obAppsOther)
                                 }
                             }
-                            .padding(16)
+                            .padding(NNSpacing.md)
                             .background(AppColors.uiSurface)
-                            .cornerRadius(20)
-                            .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+                            .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: NNRadius.container)
+                                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+                            )
 
-                            // Divider between sections (soft)
-                            // Responsive divider — replaces the fixed-width 300pt
-                            // version which overflowed on iPhone SE (335pt safe width).
                             SoftDivider(maxWidth: 320, opacity: 0.7)
 
                             // Categories section
-                            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
+                            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
                                 Text(lang.isArabicEffective ? "فئات" : "Categories")
                                     .font(.headline)
                                     .foregroundColor(AppColors.textPrimary)
                                 ChipGrid(items: catOptions, selectedCSV: $obCats, isRTL: lang.isArabicEffective)
                                 if obCats.split(separator: ",").contains("other") {
-                                    TextField(lang.isArabicEffective ? "أخرى — اكتب هنا" : "Other — type here", text: $obCatsOther)
-                                        .textInputAutocapitalization(.sentences)
-                                        .disableAutocorrection(false)
-                                        .padding(12)
-                                        .background(AppColors.uiSurface)
-                                        .cornerRadius(12)
-                                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.uiBorder, lineWidth: 0.5))
+                                    otherTextField(placeholder: lang.isArabicEffective ? "أخرى — اكتب هنا" : "Other — type here", text: $obCatsOther)
                                 }
                             }
-                            .padding(16)
+                            .padding(NNSpacing.md)
                             .background(AppColors.uiSurface)
-                            .cornerRadius(20)
-                            .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+                            .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: NNRadius.container)
+                                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+                            )
                         }
-                        .padding(.horizontal, 24)
+                        .padding(.horizontal, NNSpacing.xl)
                     }
                     .tag(2)
 
                     // Page 4: Goals
-                    VStack(spacing: 16) {
+                    VStack(spacing: NNSpacing.md) {
                         Text(lang.isArabicEffective ? "هدفك من التطبيق؟" : "Your goal with the app?")
                             .font(.nnSectionTitle)
                             .foregroundColor(AppColors.textPrimary)
                         Text(lang.isArabicEffective ? "يمكنك اختيار أكثر من هدف." : "You can pick more than one goal.")
                             .font(.footnote)
                             .foregroundColor(AppColors.textSecondary)
-                        VStack(spacing: 16) {
+                        VStack(spacing: NNSpacing.md) {
                             ForEach(Array(goalSections.enumerated()), id: \.offset) { idx, section in
-                                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
+                                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
                                     Text(section.title)
                                         .font(.headline)
                                         .foregroundColor(AppColors.textPrimary)
                                     ChipGrid(items: section.items + [.init(id: "other", title: lang.isArabicEffective ? "أخرى" : "Other")], selectedCSV: $obGoals, isRTL: lang.isArabicEffective)
                                 }
-                                .padding(16)
+                                .padding(NNSpacing.md)
                                 .background(AppColors.uiSurface)
-                                .cornerRadius(20)
-                                .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppColors.uiBorder, lineWidth: 0.5))
+                                .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: NNRadius.container)
+                                        .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+                                )
                                 if idx != goalSections.count - 1 {
-                                    // Responsive divider — replaces the fixed-width 300pt
-                            // version which overflowed on iPhone SE (335pt safe width).
-                            SoftDivider(maxWidth: 320, opacity: 0.7)
+                                    SoftDivider(maxWidth: 320, opacity: 0.7)
                                 }
                             }
                             if obGoals.split(separator: ",").contains("other") {
-                                TextField(lang.isArabicEffective ? "أخرى — اكتب هدفك" : "Other — your goal", text: $obGoalsOther)
-                                    .textInputAutocapitalization(.sentences)
-                                    .disableAutocorrection(false)
-                                    .padding(12)
-                                    .background(AppColors.uiSurface)
-                                    .cornerRadius(12)
-                                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.uiBorder, lineWidth: 0.5))
-                                    .padding(.horizontal, 24)
+                                otherTextField(placeholder: lang.isArabicEffective ? "أخرى — اكتب هدفك" : "Other — your goal", text: $obGoalsOther)
+                                    .padding(.horizontal, NNSpacing.xl)
                             }
                         }
-                        .padding(.horizontal, 24)
+                        .padding(.horizontal, NNSpacing.xl)
                     }
                     .tag(3)
                 }
@@ -289,19 +293,25 @@ struct OnboardingView: View {
                     .monospacedDigit()
 
                 HStack {
+                    // Skip is a quiet text link — secondary action. Capitalized
+                    // text size + no background keeps "Next" the obvious primary
+                    // even at a glance.
                     Button(action: { showOnboardingAfterLogin = false }) {
                         Text(lang.isArabicEffective ? "تخطي" : "Skip")
-                            .font(.footnote)
+                            .font(.caption)
                             .foregroundColor(AppColors.textSecondary)
+                            .padding(.horizontal, NNSpacing.sm)
                     }
+                    .frame(minHeight: NNHitTarget.minimum)
+                    .accessibilityLabel(lang.isArabicEffective ? "تخطي التعريف والذهاب للرئيسية" : "Skip intro and go to home")
                     Spacer()
                     Button(action: { withAnimation { page = min(page + 1, 3) } }) {
                         Text(page < 3 ? (lang.isArabicEffective ? "التالي" : "Next") : (lang.isArabicEffective ? "إنهاء" : "Finish"))
-                            .font(.subheadline.weight(.semibold))
-                            .frame(width: 120, height: 44)
+                            .font(.nnButton)
+                            .frame(width: 120, height: NNHitTarget.minimum)
                             .background(AppColors.accent)
                             .foregroundColor(.white)
-                            .cornerRadius(12)
+                            .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
                     }
                     .simultaneousGesture(TapGesture().onEnded {
                         if page == 3 {
@@ -314,13 +324,49 @@ struct OnboardingView: View {
                         }
                     })
                 }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 8)
+                .padding(.horizontal, NNSpacing.xl)
+                .padding(.bottom, NNSpacing.xs)
             }
             .navigationTitle("")
             .toolbar(.hidden, for: .navigationBar)
             .background(AppColors.uiBackground)
         }
+    }
+
+    /// Small "why we're asking" line shown under each onboarding step title.
+    /// Builds trust before personal information — users are far more willing
+    /// to share when they understand the purpose. info.circle icon signals
+    /// "this is context, not required reading."
+    @ViewBuilder
+    private func whyHint(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: NNSpacing.xs) {
+            Image(systemName: "info.circle")
+                .font(.caption)
+                .foregroundColor(AppColors.accent)
+                .accessibilityHidden(true)
+            Text(text)
+                .font(.caption)
+                .foregroundColor(AppColors.textSecondary)
+                .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+        }
+        .padding(.horizontal, NNSpacing.xl)
+    }
+
+    /// "Other — write here" text field — shared so the four pages don't each
+    /// reimplement the same TextField + border + radius.
+    @ViewBuilder
+    private func otherTextField(placeholder: String, text: Binding<String>) -> some View {
+        TextField(placeholder, text: text)
+            .textInputAutocapitalization(.sentences)
+            .disableAutocorrection(false)
+            .padding(NNSpacing.sm)
+            .background(AppColors.uiSurface)
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+            .overlay(
+                RoundedRectangle(cornerRadius: NNRadius.control)
+                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.input)
+            )
     }
 
     private func ageChip(title: String, value: String) -> some View {
@@ -329,13 +375,13 @@ struct OnboardingView: View {
                 .font(.subheadline)
                 .foregroundColor(obAgeGroup == value ? .white : AppColors.textPrimary)
                 .frame(maxWidth: .infinity)
-                .frame(height: 40)
+                .frame(height: NNHitTarget.minimum)
                 .background(obAgeGroup == value ? AppColors.accent : AppColors.uiSurface)
+                .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(AppColors.uiBorder, lineWidth: obAgeGroup == value ? 0 : 0.5)
+                    RoundedRectangle(cornerRadius: NNRadius.control)
+                        .stroke(AppColors.uiBorder, lineWidth: obAgeGroup == value ? 0 : NNBorder.hairline)
                 )
-                .cornerRadius(12)
         }
         .buttonStyle(.plain)
     }
@@ -346,11 +392,11 @@ private struct ChipGrid: View {
     @Binding var selectedCSV: String
     let isRTL: Bool
 
-    private var columns: [GridItem] { [GridItem(.adaptive(minimum: 140), spacing: 8)] }
+    private var columns: [GridItem] { [GridItem(.adaptive(minimum: 140), spacing: NNSpacing.xs)] }
 
     var body: some View {
         let selected = Set(selectedCSV.split(separator: ",").map { String($0) })
-        LazyVGrid(columns: columns, alignment: isRTL ? .trailing : .leading, spacing: 8) {
+        LazyVGrid(columns: columns, alignment: isRTL ? .trailing : .leading, spacing: NNSpacing.xs) {
             ForEach(items, id: \.self) { item in
                 let isSelected = selected.contains(item.id)
                 Button(action: { toggle(item.id) }) {
@@ -359,14 +405,14 @@ private struct ChipGrid: View {
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .foregroundColor(isSelected ? .white : AppColors.textPrimary)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
+                        .padding(.horizontal, NNSpacing.sm)
+                        .padding(.vertical, NNSpacing.xs)
                         .background(isSelected ? AppColors.accent : AppColors.uiSurface)
+                        .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(AppColors.uiBorder, lineWidth: isSelected ? 0 : 0.5)
+                            RoundedRectangle(cornerRadius: NNRadius.control)
+                                .stroke(AppColors.uiBorder, lineWidth: isSelected ? 0 : NNBorder.hairline)
                         )
-                        .cornerRadius(12)
                 }
                 .buttonStyle(.plain)
             }

@@ -129,14 +129,17 @@ struct NoNetGatekeeperSheet: View {
             }
             .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
 
-            // Option A
+            // Option A — accent (not destructive). Destructive coloring is
+            // reserved for the FINAL "Confirm reason" button inside reasonView;
+            // showing it here can discourage the user from picking the faster
+            // path even when it's the right one for their situation.
             optionCard(
                 icon: "square.and.pencil",
                 title: lang.isArabicEffective ? "أكتب عذراً قوياً" : "Write a strong reason",
                 subtitle: lang.isArabicEffective
                     ? "اشرح بـ \(BlockingConstants.strongReasonMinCharacters)+ حرف، وسيُنفَّذ فوراً"
                     : "Explain in \(BlockingConstants.strongReasonMinCharacters)+ characters; executes immediately",
-                isDestructive: true
+                isDestructive: false
             ) {
                 mode = .writingReason
             }
@@ -224,14 +227,23 @@ struct NoNetGatekeeperSheet: View {
                     }
                 }
 
-            // Live character counter
-            HStack {
-                if lang.isArabicEffective { Spacer() }
-                Text("\(reason.count) / \(BlockingConstants.strongReasonMinCharacters)")
-                    .font(.caption)
+            // Live character counter + outcome hint
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 2) {
+                HStack {
+                    if lang.isArabicEffective { Spacer() }
+                    Text("\(reason.count) / \(BlockingConstants.strongReasonMinCharacters)")
+                        .font(.caption)
+                        .foregroundColor(reasonIsLongEnough ? AppColors.successGreen : AppColors.textSecondary)
+                        .monospacedDigit()
+                    if !lang.isArabicEffective { Spacer() }
+                }
+                Text(reasonIsLongEnough
+                     ? (lang.isArabicEffective ? "✓ جاهز — التنفيذ فوري بعد التأكيد" : "✓ Ready — runs immediately after confirm")
+                     : (lang.isArabicEffective ? "اكتب \(BlockingConstants.strongReasonMinCharacters - reason.trimmingCharacters(in: .whitespacesAndNewlines).count) حرف إضافي على الأقل" : "\(BlockingConstants.strongReasonMinCharacters - reason.trimmingCharacters(in: .whitespacesAndNewlines).count) more character\(BlockingConstants.strongReasonMinCharacters - reason.trimmingCharacters(in: .whitespacesAndNewlines).count == 1 ? "" : "s") to go"))
+                    .font(.caption2)
                     .foregroundColor(reasonIsLongEnough ? AppColors.successGreen : AppColors.textSecondary)
-                    .monospacedDigit()
-                if !lang.isArabicEffective { Spacer() }
+                    .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                    .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
             }
 
             Button(action: { showFinalConfirm = true }) {

@@ -12,7 +12,7 @@ import SwiftUI
 ///
 /// `maxWidth` (default 300) caps the divider on large screens. On small
 /// devices (e.g., iPhone SE) the divider auto-shrinks to the available
-/// space — replaces the old `width: 300` which used to overflow.
+/// space — replaces the old fixed-width version which used to overflow.
 ///
 /// Example:
 /// ```
@@ -23,21 +23,6 @@ struct SoftDivider: View {
     var maxWidth: CGFloat = 300
     var opacity: Double = 0.7
     var verticalPadding: CGFloat = NNSpacing.xs
-
-    // Backwards-compatible alias for the old `width:` parameter name. The
-    // old API used a fixed width that overflowed on small screens; this
-    // alias preserves the call sites while gaining responsive behaviour.
-    init(width: CGFloat, opacity: Double, verticalPadding: CGFloat = NNSpacing.xs) {
-        self.maxWidth = width
-        self.opacity = opacity
-        self.verticalPadding = verticalPadding
-    }
-
-    init(maxWidth: CGFloat = 300, opacity: Double = 0.7, verticalPadding: CGFloat = NNSpacing.xs) {
-        self.maxWidth = maxWidth
-        self.opacity = opacity
-        self.verticalPadding = verticalPadding
-    }
 
     var body: some View {
         HStack {
@@ -202,6 +187,226 @@ struct InfoBanner: View {
                 .stroke(tone.border, lineWidth: NNBorder.hairline)
         )
         .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+    }
+}
+
+// MARK: - Badge
+
+/// Visual semantic for `Badge` — drives fg/bg/border palette without
+/// hard-coding colors at call sites.
+enum BadgeStyle { case neutral, warning, danger, success }
+
+/// Small icon+text chip used for protection state, list type, status, and
+/// other inline state indicators. Stays under 24pt tall to slot inside a
+/// list row without bumping line height.
+///
+/// Lives in Components so both HomeView (ListRowCore) and ListDetailView
+/// can use the same visual without duplicating the definition.
+struct Badge: View {
+    let icon: String
+    let text: String
+    let style: BadgeStyle
+
+    var body: some View {
+        HStack(spacing: NNSpacing.xs - 2) {
+            Image(systemName: icon)
+                .font(.caption.weight(.semibold))
+            Text(text)
+                .font(.caption.weight(.semibold))
+                .lineLimit(1)
+                .monospacedDigit()
+        }
+        .padding(.horizontal, NNSpacing.sm - 2)
+        .frame(height: 24)
+        .foregroundColor(fg)
+        .background(bg)
+        .overlay(
+            RoundedRectangle(cornerRadius: NNRadius.chip)
+                .stroke(border, lineWidth: NNBorder.hairline)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: NNRadius.chip))
+    }
+
+    private var fg: Color {
+        switch style {
+        case .neutral: return AppColors.textPrimary
+        case .warning: return AppColors.warningFg
+        case .danger:  return AppColors.alertRed
+        case .success: return AppColors.successGreen
+        }
+    }
+    private var bg: Color {
+        switch style {
+        case .neutral: return AppColors.uiSurface
+        case .warning: return AppColors.warningBg
+        case .danger:  return AppColors.alertRed.opacity(0.10)
+        case .success: return AppColors.successBg
+        }
+    }
+    private var border: Color {
+        switch style {
+        case .neutral: return AppColors.uiBorder
+        case .warning: return AppColors.warningFg.opacity(0.6)
+        case .danger:  return AppColors.alertRed
+        case .success: return AppColors.successGreen.opacity(0.6)
+        }
+    }
+}
+
+/// Pre-configured Badge for "Hard Mode" vs "No Protection" — the most common
+/// badge in the app, used in HomeView rows and ListDetailView header. Wraps
+/// `Badge` rather than duplicating its style logic.
+struct ProtectionBadge: View {
+    let isHard: Bool
+    let isRTL: Bool
+
+    var body: some View {
+        let label = isHard
+            ? (isRTL ? "الوضع الصارم" : "Hard Mode")
+            : (isRTL ? "بدون حماية" : "No Protection")
+        Group {
+            if isHard {
+                Badge(icon: "lock.fill", text: label, style: .danger)
+            } else {
+                Badge(icon: "lock.open", text: label, style: .neutral)
+            }
+        }
+        // Combine icon + text into one VoiceOver element so the badge reads
+        // as "Hard Mode" instead of "Image. Hard Mode."
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(label)
+        .accessibilityHint(isHard
+                           ? (isRTL ? "لا يمكن إيقاف هذه القائمة بدون الحارس" : "This list can't be paused without the gatekeeper")
+                           : (isRTL ? "يمكن إيقاف أو حذف هذه القائمة في أي وقت" : "This list can be paused or deleted anytime"))
+    }
+}
+
+// MARK: - EmptyState
+
+/// Standard empty-state card: SF Symbol + title + optional message + optional
+/// CTA button. Used wherever a screen has no rows/items yet. Replaces the
+/// per-screen ad-hoc empty placeholders (HomeView's EmptyStateView, etc.)
+/// so the language and rhythm match everywhere.
+///
+/// Example:
+/// ```
+/// EmptyState(
+///     icon: "trophy",
+///     title: "No challenges yet",
+///     message: "Pick a challenge to start earning points.",
+///     actionTitle: "Add a challenge",
+///     action: { showPicker = true }
+/// )
+/// ```
+struct EmptyState: View {
+    let icon: String
+    let title: String
+    var message: String? = nil
+    var actionTitle: String? = nil
+    var action: (() -> Void)? = nil
+
+    @EnvironmentObject private var lang: LanguageManager
+
+    var body: some View {
+        VStack(spacing: NNSpacing.sm) {
+            Image(systemName: icon)
+                .font(.title)
+                .foregroundColor(AppColors.textSecondary)
+                .accessibilityHidden(true)
+            Text(title)
+                .font(.headline)
+                .foregroundColor(AppColors.textPrimary)
+                .multilineTextAlignment(.center)
+            if let message = message {
+                Text(message)
+                    .font(.subheadline)
+                    .foregroundColor(AppColors.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
+            if let actionTitle = actionTitle, let action = action {
+                Button(action: action) {
+                    Text(actionTitle)
+                        .font(.nnSmallButton)
+                        .padding(.horizontal, NNSpacing.md)
+                        .frame(minHeight: NNHitTarget.minimum - 8)
+                        .background(AppColors.accent)
+                        .foregroundColor(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+                }
+                .buttonStyle(.plain)
+                .padding(.top, NNSpacing.xs)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(NNSpacing.lg)
+        .background(AppColors.uiSurface)
+        .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
+        .overlay(
+            RoundedRectangle(cornerRadius: NNRadius.container)
+                .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+        )
+    }
+}
+
+// MARK: - FlowChipsRow
+
+/// Tiny chip with an icon + label — single building block for the
+/// `FlowChipsRow` below. Kept private to this file since the wrapped row
+/// is the only sanctioned use; raw chips would invite divergent styles.
+private struct FlowChip: View {
+    let icon: String
+    let text: String
+
+    var body: some View {
+        HStack(spacing: NNSpacing.xxs) {
+            Image(systemName: icon)
+                .font(.caption2)
+            Text(text)
+                .font(.caption.weight(.semibold))
+                .lineLimit(1)
+                .truncationMode(.tail)
+        }
+        .foregroundColor(AppColors.textPrimary)
+        .padding(.horizontal, NNSpacing.xs + 2)
+        .padding(.vertical, NNSpacing.xxs + 2)
+        .background(AppColors.uiBackground)
+        .overlay(
+            Capsule()
+                .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+        )
+        .clipShape(Capsule())
+    }
+}
+
+/// Horizontal wrap of chips with an optional "+N more" trailing chip.
+/// Used in ListDetailView's items preview and anywhere else the app needs
+/// to show a few representative items + an overflow count.
+///
+/// Items are passed as tuples (id, icon, text) so the caller doesn't have
+/// to introduce a new model type for one display.
+struct FlowChipsRow: View {
+    let items: [(id: UUID, icon: String, text: String)]
+    let extraCount: Int
+    let extraLabel: String
+    let isRTL: Bool
+
+    var body: some View {
+        // FlowLayout-style wrap via HStack-of-LazyVGrid replacement: we use a
+        // single-line HStack that scrolls horizontally on overflow, which is
+        // the simplest cross-version solution (true FlowLayout needs iOS 16+
+        // and care around RTL).
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: NNSpacing.xs) {
+                ForEach(items, id: \.id) { item in
+                    FlowChip(icon: item.icon, text: item.text)
+                }
+                if extraCount > 0 {
+                    FlowChip(icon: "ellipsis", text: extraLabel)
+                }
+            }
+            .padding(.horizontal, NNSpacing.xxs)
+        }
+        .environment(\.layoutDirection, isRTL ? .rightToLeft : .leftToRight)
     }
 }
 

@@ -44,8 +44,8 @@ struct ScheduleEditorSheet: View {
                     }
                 }
                 Section {
-                    HStack(alignment: .top, spacing: 16) {
-                        VStack(alignment: .leading, spacing: 8) {
+                    HStack(alignment: .top, spacing: NNSpacing.md) {
+                        VStack(alignment: .leading, spacing: NNSpacing.xs) {
                             Text(isArabic ? "من" : "From").font(.footnote).foregroundColor(AppColors.textSecondary)
                             HStack {
                                 Picker("h", selection: $fromHour) { ForEach(0...23, id: \.self) { Text("\($0)") } }
@@ -57,7 +57,7 @@ struct ScheduleEditorSheet: View {
                             }
                         }
                         .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: NNSpacing.xs) {
                             Text(isArabic ? "إلى" : "To").font(.footnote).foregroundColor(AppColors.textSecondary)
                             HStack {
                                 Picker("h", selection: $toHour) { ForEach(0...23, id: \.self) { Text("\($0)") } }
@@ -70,17 +70,26 @@ struct ScheduleEditorSheet: View {
                         }
                         .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, NNSpacing.xxs)
                     Text(totalDurationLabel)
                         .font(.footnote)
                         .foregroundColor(AppColors.textSecondary)
-                        .padding(.top, 6)
+                        .padding(.top, NNSpacing.xxs + 2)
                         .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
                 }
                 Button(action: addSlotsForSelectedDays) {
                     Label(isArabic ? "إضافة فترة" : "Add Slot", systemImage: "plus.circle")
                 }
                 .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
+                .disabled(selectedDays.isEmpty)
+                if selectedDays.isEmpty {
+                    // Without this hint the disabled Add button looks like a
+                    // bug — users couldn't tell they needed to pick days first.
+                    Text(isArabic ? "اختر يوماً واحداً على الأقل قبل الإضافة" : "Pick at least one day before adding")
+                        .font(.caption)
+                        .foregroundColor(AppColors.warningFg)
+                        .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
+                }
                 if working.isEmpty {
                     Text(isArabic ? "لا توجد فترات" : "No slots").foregroundColor(AppColors.textSecondary)
                         .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)

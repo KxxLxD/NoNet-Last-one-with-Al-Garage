@@ -50,4 +50,15 @@ enum BlockingConstants {
     /// NoNetGatekeeperSheet. High enough that an impulsive user can't blow
     /// through it, low enough that a genuinely motivated user can.
     static let strongReasonMinCharacters: Int = 200
+
+    // MARK: - Time units (named to kill magic numbers across the app)
+
+    /// Seconds in one minute.
+    static let secondsPerMinute: Int = 60
+    /// Seconds in one hour.
+    static let secondsPerHour: Int = 3600
+    /// Seconds in one day.
+    static let secondsPerDay: Int = 86_400
+    /// Seconds in one day, as `TimeInterval` for date math.
+    static let secondsPerDayInterval: TimeInterval = 86_400
 }

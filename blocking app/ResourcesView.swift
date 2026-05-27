@@ -15,7 +15,7 @@ struct ResourcesView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: isArabic ? .trailing : .leading, spacing: 16) {
+            VStack(alignment: isArabic ? .trailing : .leading, spacing: NNSpacing.md) {
                 Text(isArabic ? "موارد ومعرفة" : "Resources & Knowledge")
                     .font(.nnSectionTitle)
                     .foregroundColor(AppColors.textPrimary)
@@ -65,20 +65,20 @@ struct ResourcesView: View {
                     title: isArabic ? "كيف يعمل NoNet" : "How NoNet works",
                     bullets: isArabic
                         ? ["يستخدم Screen Time من Apple — حماية رسمية.",
-                           "البيانات محلية، لا تُرسل لأي خادم خارجي.",
+                           "البيانات تبقى على جهازك افتراضياً. iCloud يُستخدم فقط عند تفعيل شريك التعافي (اختياري).",
                            "وضع صارم يمنعك من فك الحجب أثناء التركيز.",
                            "شريك التعافي يستلم إشعاراً عند محاولات الكسر."]
                         : ["Uses Apple Screen Time — official OS protection.",
-                           "All data stays local; nothing is sent to a backend.",
+                           "Data stays local by default. iCloud is used only when Recovery Partner is enabled (optional).",
                            "Hard Mode prevents you from disabling mid-session.",
                            "Your recovery partner is notified on break attempts."]
                 )
 
-                Spacer(minLength: 8)
+                Spacer(minLength: NNSpacing.xs)
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 16)
-            .padding(.bottom, 28)
+            .padding(.horizontal, NNSpacing.xl)
+            .padding(.top, NNSpacing.md)
+            .padding(.bottom, NNSpacing.xxl - 4)
         }
         .background(AppColors.uiBackground)
         .navigationTitle(isArabic ? "الموارد" : "Resources")
@@ -91,23 +91,23 @@ struct ResourcesView: View {
     /// filled-circle SF Symbol instead of the bullet character, which kept
     /// rendering inconsistently across font fallbacks.
     private func infographicCard(icon: String, accentColor: Color, title: String, bullets: [String]) -> some View {
-        VStack(alignment: isArabic ? .trailing : .leading, spacing: 12) {
-            HStack(spacing: 10) {
+        VStack(alignment: isArabic ? .trailing : .leading, spacing: NNSpacing.sm) {
+            HStack(spacing: NNSpacing.xs + 2) {
                 Image(systemName: icon)
                     .font(.title3)
                     .foregroundColor(accentColor)
                     .frame(width: 36, height: 36)
                     .background(accentColor.opacity(0.12))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: NNRadius.chip))
                 Text(title)
                     .font(.headline)
                     .foregroundColor(AppColors.textPrimary)
                     .multilineTextAlignment(isArabic ? .trailing : .leading)
                 Spacer(minLength: 0)
             }
-            VStack(alignment: isArabic ? .trailing : .leading, spacing: 8) {
+            VStack(alignment: isArabic ? .trailing : .leading, spacing: NNSpacing.xs) {
                 ForEach(bullets, id: \.self) { line in
-                    HStack(alignment: .top, spacing: 8) {
+                    HStack(alignment: .top, spacing: NNSpacing.xs) {
                         if isArabic {
                             Spacer(minLength: 0)
                             Text(line)
@@ -115,14 +115,14 @@ struct ResourcesView: View {
                                 .foregroundColor(AppColors.textSecondary)
                                 .multilineTextAlignment(.trailing)
                             Image(systemName: "circle.fill")
-                                .font(.system(size: 5))
+                                .font(.caption2)
                                 .foregroundColor(accentColor)
-                                .padding(.top, 7)
+                                .padding(.top, NNSpacing.xxs + 1)
                         } else {
                             Image(systemName: "circle.fill")
-                                .font(.system(size: 5))
+                                .font(.caption2)
                                 .foregroundColor(accentColor)
-                                .padding(.top, 7)
+                                .padding(.top, NNSpacing.xxs + 1)
                             Text(line)
                                 .font(.footnote)
                                 .foregroundColor(AppColors.textSecondary)
@@ -133,12 +133,12 @@ struct ResourcesView: View {
                 }
             }
         }
-        .padding(20)
+        .padding(NNSpacing.lg)
         .background(AppColors.uiSurface)
-        .cornerRadius(20)
+        .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
         .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(accentColor.opacity(0.25), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: NNRadius.container)
+                .stroke(accentColor.opacity(0.25), lineWidth: NNBorder.hairline)
         )
     }
 }
