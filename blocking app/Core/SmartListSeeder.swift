@@ -65,9 +65,7 @@ enum SmartListSeeder {
         // BlockingMonitor dependency, no surprises if the extension isn't bound yet.
         // The user can convert to Scheduled / TimeLimit / Forever afterwards.
         entity.blockType = "now"
-        // 1 hour — long enough to feel meaningful, short enough that a confused
-        // user isn't accidentally locked out for the whole day.
-        entity.durationSeconds = 3600
+        entity.durationSeconds = BlockingConstants.seederDefaultDurationSeconds
         entity.createdAt = Date()
         entity.updatedAt = Date()
 

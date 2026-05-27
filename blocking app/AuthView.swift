@@ -272,8 +272,8 @@ struct AuthView: View {
         //               straight to the main app, simulating a normal session.
         // Both branches normalize Arabic-Indic digits so an Arabic keyboard
         // doesn't silently break the match. Compiled out in Release.
-        let normalizedEmail = adminNormalize(email).lowercased()
-        let normalizedPassword = adminNormalize(password)
+        let normalizedEmail = AdminDigitNormalization.normalize(email).lowercased()
+        let normalizedPassword = AdminDigitNormalization.normalize(password)
         if !normalizedPassword.isEmpty {
             if normalizedEmail == "admin" {
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
@@ -348,23 +348,6 @@ struct AuthView: View {
         return score
     }
 
-    #if DEBUG
-    /// Mirrors the normalization in `AdminToolsSheet`: Arabic keyboards
-    /// auto-translate ASCII digits → Arabic-Indic (٠-٩) or Persian (۰-۹),
-    /// which would silently break the admin-bypass check. Trim + transliterate
-    /// to ASCII before comparing.
-    fileprivate func adminNormalize(_ s: String) -> String {
-        var out = s.trimmingCharacters(in: .whitespacesAndNewlines)
-        let arabicIndic = Array("٠١٢٣٤٥٦٧٨٩")
-        let persian = Array("۰۱۲۳۴۵۶۷۸۹")
-        let ascii = Array("0123456789")
-        for i in 0..<10 {
-            out = out.replacingOccurrences(of: String(arabicIndic[i]), with: String(ascii[i]))
-            out = out.replacingOccurrences(of: String(persian[i]), with: String(ascii[i]))
-        }
-        return out
-    }
-    #endif
 }
 
 #Preview {

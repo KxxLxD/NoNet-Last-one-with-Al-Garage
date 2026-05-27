@@ -61,8 +61,16 @@ final class StoreManager: ObservableObject {
         state = .loading
         do {
             let fetched = try await Product.products(for: ProductIDs.all)
-            // Sort by price ascending so monthly appears before yearly when both fetched.
-            self.products = fetched.sorted { $0.price < $1.price }
+            // Order by the canonical ProductIDs.all sequence (monthly → yearly →
+            // lifetime if added later). Previously we sorted by price, but a
+            // promotional yearly discount that drops below monthly would flip
+            // the order and confuse the paywall layout (which expects "less
+            // committed first"). Tying to the declaration order keeps the UX
+            // intent independent of regional pricing.
+            let indexFor: [String: Int] = Dictionary(uniqueKeysWithValues: ProductIDs.all.enumerated().map { ($1, $0) })
+            self.products = fetched.sorted {
+                (indexFor[$0.id] ?? Int.max) < (indexFor[$1.id] ?? Int.max)
+            }
             await refreshEntitlements()
             state = .idle
         } catch {

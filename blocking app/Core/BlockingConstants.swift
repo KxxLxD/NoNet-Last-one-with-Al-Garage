@@ -17,6 +17,11 @@ enum BlockingConstants {
     /// Minimum blocking duration in seconds (5 minutes).
     static let minBlockSeconds: Int = 300
 
+    /// Default duration in seconds for lists materialized by `SmartListSeeder`
+    /// from onboarding answers. 1 hour — long enough to feel meaningful,
+    /// short enough that a confused user isn't locked out for the whole day.
+    static let seederDefaultDurationSeconds: Int64 = 3600
+
     /// Wheel-picker stride for minutes selection.
     static let minutePickerStride: Int = 5
 

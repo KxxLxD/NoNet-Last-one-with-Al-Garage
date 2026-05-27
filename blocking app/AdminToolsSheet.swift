@@ -163,27 +163,9 @@ struct AdminToolsSheet: View {
         !enteredPassword.isEmpty
     }
 
-    /// Arabic keyboards auto-translate Western digits → Arabic-Indic digits
-    /// (٠١٢٣٤٥٦٧٨٩). The user typing "1234" with Arabic active gets "١٢٣٤"
-    /// which fails a naive `==` check. Normalize both ways before comparing
-    /// so the developer doesn't have to switch keyboards mid-login.
-    private func normalize(_ s: String) -> String {
-        var out = s.trimmingCharacters(in: .whitespacesAndNewlines)
-        // Arabic-Indic digits (U+0660–U+0669)
-        let arabicIndic = Array("٠١٢٣٤٥٦٧٨٩")
-        // Extended Arabic-Indic / Persian digits (U+06F0–U+06F9)
-        let persian = Array("۰۱۲۳۴۵۶۷۸۹")
-        let ascii = Array("0123456789")
-        for i in 0..<10 {
-            out = out.replacingOccurrences(of: String(arabicIndic[i]), with: String(ascii[i]))
-            out = out.replacingOccurrences(of: String(persian[i]), with: String(ascii[i]))
-        }
-        return out
-    }
-
     private func attemptLogin() {
-        let u = normalize(enteredUsername).lowercased()
-        let p = normalize(enteredPassword)
+        let u = AdminDigitNormalization.normalize(enteredUsername).lowercased()
+        let p = AdminDigitNormalization.normalize(enteredPassword)
         if u == Self.adminUsername && p == Self.adminPassword {
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             withAnimation(.easeInOut(duration: 0.2)) {
@@ -401,5 +383,27 @@ struct AdminToolsSheet: View {
 
 #Preview {
     AdminToolsSheet().environmentObject(LanguageManager.shared)
+}
+
+/// Arabic keyboards auto-translate Western digits → Arabic-Indic digits
+/// (٠١٢٣٤٥٦٧٨٩) or Extended Arabic-Indic / Persian (۰۱۲۳۴۵۶۷۸۹). A user
+/// typing "1234" with Arabic active gets "١٢٣٤" which fails a naive `==`
+/// against a Latin-digit constant. Normalize both ways before comparing
+/// so the developer doesn't have to switch keyboards mid-login.
+///
+/// Shared between `AdminToolsSheet.attemptLogin` and `AuthView.primaryAction`
+/// (the DEBUG admin-bypass login).
+enum AdminDigitNormalization {
+    static func normalize(_ s: String) -> String {
+        var out = s.trimmingCharacters(in: .whitespacesAndNewlines)
+        let arabicIndic = Array("٠١٢٣٤٥٦٧٨٩")
+        let persian = Array("۰۱۲۳۴۵۶۷۸۹")
+        let ascii = Array("0123456789")
+        for i in 0..<10 {
+            out = out.replacingOccurrences(of: String(arabicIndic[i]), with: String(ascii[i]))
+            out = out.replacingOccurrences(of: String(persian[i]), with: String(ascii[i]))
+        }
+        return out
+    }
 }
 #endif
