@@ -220,114 +220,7 @@ struct HomeView: View {
                     }
 
                     // Permissions banner — kept inline because it has expand/collapse UX
-                    if !(hasScreenTimePermission && hasNotificationPermission) {
-                        let requiredCount = (hasScreenTimePermission ? 0 : 1) + (hasNotificationPermission ? 0 : 1)
-                        VStack(spacing: 0) {
-                            HStack(spacing: NNSpacing.sm) {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundColor(AppColors.warningFg)
-                                    .font(.callout)
-                                Text(lang.isArabicEffective
-                                     ? "أذونات ناقصة (\(requiredCount))"
-                                     : "Missing permissions (\(requiredCount))")
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundColor(AppColors.textPrimary)
-                                Spacer()
-                                Text(lang.isArabicEffective
-                                     ? (permissionsExpanded ? "إخفاء" : "إصلاح")
-                                     : (permissionsExpanded ? "Hide" : "Fix"))
-                                    .font(.footnote.weight(.semibold))
-                                    .foregroundColor(AppColors.accent)
-                                Image(systemName: permissionsExpanded ? "chevron.up" : "chevron.down")
-                                    .foregroundColor(AppColors.accent)
-                                    .font(.caption.weight(.semibold))
-                            }
-                            .contentShape(Rectangle())
-                            .onTapGesture { withAnimation(.easeInOut(duration: 0.2)) { permissionsExpanded.toggle() } }
-                            .padding(.horizontal, NNSpacing.md)
-                            .frame(minHeight: 44) // HIG minimum touch target
-                            .padding(.vertical, NNSpacing.xs)
-                            .background(AppColors.warningBg)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: permissionsExpanded ? 0 : 12)
-                                    .stroke(AppColors.warningFg.opacity(0.3), lineWidth: NNBorder.hairline)
-                            )
-                            if permissionsExpanded {
-                                VStack(spacing: 0) {
-                                    // Screen Time row
-                                    HStack(spacing: NNSpacing.sm) {
-                                        Image(systemName: "lock.iphone").foregroundColor(AppColors.accent)
-                                        Text(lang.isArabicEffective ? "Screen Time" : "Screen Time")
-                                            .font(.subheadline)
-                                            .foregroundColor(AppColors.textPrimary)
-                                        Spacer()
-                                        if !hasScreenTimePermission {
-                                            Button(action: { requestScreenTimeAuth() }) {
-                                                Text(lang.isArabicEffective ? "منح" : "Grant")
-                                                    .font(.footnote.weight(.semibold))
-                                                    .padding(.horizontal, NNSpacing.sm)
-                                                    .frame(minHeight: 44) // HIG minimum touch target
-                                                    .background(AppColors.accent)
-                                                    .foregroundColor(.white)
-                                                    .clipShape(RoundedRectangle(cornerRadius: NNRadius.chip))
-                                            }
-                                            .buttonStyle(.plain)
-                                        } else {
-                                            HStack(spacing: NNSpacing.xxs) {
-                                                Image(systemName: "checkmark.circle.fill")
-                                                    .foregroundColor(AppColors.successGreen)
-                                                    .font(.caption)
-                                                Text(lang.isArabicEffective ? "مُفعَّل" : "Granted")
-                                                    .font(.footnote)
-                                                    .foregroundColor(AppColors.textSecondary)
-                                            }
-                                        }
-                                    }
-                                    .padding(NNSpacing.md)
-                                    Divider().background(AppColors.uiBorder.opacity(0.35))
-                                    // Notifications row
-                                    HStack(spacing: NNSpacing.sm) {
-                                        Image(systemName: "bell").foregroundColor(AppColors.accent)
-                                        Text(lang.isArabicEffective ? "الإشعارات" : "Notifications")
-                                            .font(.subheadline)
-                                            .foregroundColor(AppColors.textPrimary)
-                                        Spacer()
-                                        if !hasNotificationPermission {
-                                            Button(action: { requestNotificationsAuth() }) {
-                                                Text(lang.isArabicEffective ? "تفعيل" : "Enable")
-                                                    .font(.footnote.weight(.semibold))
-                                                    .padding(.horizontal, NNSpacing.sm)
-                                                    .frame(minHeight: 44) // HIG minimum touch target
-                                                    .background(AppColors.accent)
-                                                    .foregroundColor(.white)
-                                                    .clipShape(RoundedRectangle(cornerRadius: NNRadius.chip))
-                                            }
-                                            .buttonStyle(.plain)
-                                        } else {
-                                            HStack(spacing: NNSpacing.xxs) {
-                                                Image(systemName: "checkmark.circle.fill")
-                                                    .foregroundColor(AppColors.successGreen)
-                                                    .font(.caption)
-                                                Text(lang.isArabicEffective ? "مُفعَّل" : "Enabled")
-                                                    .font(.footnote)
-                                                    .foregroundColor(AppColors.textSecondary)
-                                            }
-                                        }
-                                    }
-                                    .padding(NNSpacing.md)
-                                }
-                                .background(AppColors.uiSurface)
-                                .overlay(
-                                    // Side+bottom border only (top edge meets the banner).
-                                    Rectangle().stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
-                                )
-                            }
-                        }
-                        // Outer container: slim banner radius when collapsed,
-                        // full-card radius when expanded. The outer clip rounds the
-                        // whole stack so banner + detail share a single outer shape.
-                        .clipShape(RoundedRectangle(cornerRadius: permissionsExpanded ? 20 : 12))
-                    }
+                    permissionsCard()
 
                     // Primary CTA — the single dominant action
                     CreateBlocklistCard(lang: lang, useGradientCTA: false) {
@@ -338,71 +231,7 @@ struct HomeView: View {
                     }
 
                     // ── LISTS ──
-                    if lists.isEmpty {
-                        EmptyState(
-                            icon: "square.and.pencil",
-                            title: lang.isArabicEffective ? "لا توجد قوائم بعد" : "No lists yet",
-                            message: lang.isArabicEffective
-                                ? "ابدأ رحلتك بإنشاء أوّل قائمة حجب."
-                                : "Tap Create List above to start your focus journey.",
-                            actionTitle: lang.isArabicEffective ? "أنشئ قائمتك الأولى" : "Create your first list",
-                            action: { showingCreate = true }
-                        )
-                        .padding(.top, NNSpacing.xs)
-                    } else {
-                        // Active section — section header + flat rows in a single card
-                        if !activeLists.isEmpty {
-                            VStack(alignment: .leading, spacing: NNSpacing.xs) {
-                                Text(lang.isArabicEffective ? "النشطة الآن" : "Active now")
-                                    .font(.caption.weight(.medium))
-                                    .foregroundColor(AppColors.textSecondary)
-                                    .padding(.horizontal, NNSpacing.xxs)
-                                VStack(spacing: 0) {
-                                    ForEach(activeLists) { item in
-                                        listRow(item: item, isActive: true)
-                                        if item.id != activeLists.last?.id {
-                                            Divider()
-                                                .background(AppColors.uiBorder.opacity(0.5))
-                                                .padding(.horizontal, NNSpacing.md)
-                                        }
-                                    }
-                                }
-                                .background(AppColors.uiSurface)
-                                .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
-                                .overlay(RoundedRectangle(cornerRadius: NNRadius.card)
-                                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline))
-                            }
-                        }
-
-                        // Other lists — collapsed by default to keep the home calm
-                        if !nonActiveLists.isEmpty {
-                            DisclosureGroup(isExpanded: $showOtherLists) {
-                                VStack(spacing: 0) {
-                                    ForEach(nonActiveLists) { item in
-                                        listRow(item: item, isActive: false)
-                                        if item.id != nonActiveLists.last?.id {
-                                            Divider()
-                                                .background(AppColors.uiBorder.opacity(0.5))
-                                                .padding(.horizontal, NNSpacing.md)
-                                        }
-                                    }
-                                }
-                                .background(AppColors.uiSurface)
-                                .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
-                                .overlay(RoundedRectangle(cornerRadius: NNRadius.card)
-                                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline))
-                                .padding(.top, NNSpacing.xs)
-                            } label: {
-                                Text(lang.isArabicEffective
-                                     ? "عرض \(nonActiveLists.count) قائمة غير نشطة"
-                                     : "Show \(nonActiveLists.count) inactive lists")
-                                    .font(.caption.weight(.medium))
-                                    .foregroundColor(AppColors.textSecondary)
-                            }
-                            .tint(AppColors.textSecondary)
-                            .padding(.horizontal, NNSpacing.xxs)
-                        }
-                    }
+                    listsSection()
 
                     // Subtle footer stats — only when there's real data to show
                     if !activeLists.isEmpty {
@@ -556,6 +385,207 @@ struct HomeView: View {
         .frame(maxWidth: .infinity)
         .padding(.top, NNSpacing.xs)
         .padding(.bottom, NNSpacing.xs)
+    }
+
+    /// Permissions banner with expand/collapse UX. Slim 44pt row when collapsed
+    /// (so it doesn't compete with the primary CTA below), full card layout
+    /// when expanded so the user can see exactly which permission is missing
+    /// and grant it with one tap. Renders nothing when both permissions are
+    /// already granted — there's nothing for the user to do.
+    @ViewBuilder
+    private func permissionsCard() -> some View {
+        if !(hasScreenTimePermission && hasNotificationPermission) {
+            let requiredCount = (hasScreenTimePermission ? 0 : 1) + (hasNotificationPermission ? 0 : 1)
+            VStack(spacing: 0) {
+                permissionsCardHeader(requiredCount: requiredCount)
+                if permissionsExpanded {
+                    permissionsCardDetail
+                }
+            }
+            // Outer container: slim banner radius when collapsed, full-card
+            // radius when expanded. The outer clip rounds the whole stack so
+            // banner + detail share a single outer shape.
+            .clipShape(RoundedRectangle(cornerRadius: permissionsExpanded ? 20 : 12))
+        }
+    }
+
+    @ViewBuilder
+    private func permissionsCardHeader(requiredCount: Int) -> some View {
+        HStack(spacing: NNSpacing.sm) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundColor(AppColors.warningFg)
+                .font(.callout)
+            Text(lang.isArabicEffective
+                 ? "أذونات ناقصة (\(requiredCount))"
+                 : "Missing permissions (\(requiredCount))")
+                .font(.subheadline.weight(.semibold))
+                .foregroundColor(AppColors.textPrimary)
+            Spacer()
+            Text(lang.isArabicEffective
+                 ? (permissionsExpanded ? "إخفاء" : "إصلاح")
+                 : (permissionsExpanded ? "Hide" : "Fix"))
+                .font(.footnote.weight(.semibold))
+                .foregroundColor(AppColors.accent)
+            Image(systemName: permissionsExpanded ? "chevron.up" : "chevron.down")
+                .foregroundColor(AppColors.accent)
+                .font(.caption.weight(.semibold))
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { withAnimation(.easeInOut(duration: 0.2)) { permissionsExpanded.toggle() } }
+        .padding(.horizontal, NNSpacing.md)
+        .frame(minHeight: 44) // HIG minimum touch target
+        .padding(.vertical, NNSpacing.xs)
+        .background(AppColors.warningBg)
+        .overlay(
+            RoundedRectangle(cornerRadius: permissionsExpanded ? 0 : 12)
+                .stroke(AppColors.warningFg.opacity(0.3), lineWidth: NNBorder.hairline)
+        )
+    }
+
+    private var permissionsCardDetail: some View {
+        VStack(spacing: 0) {
+            permissionsRow(
+                icon: "lock.iphone",
+                title: lang.isArabicEffective ? "Screen Time" : "Screen Time",
+                granted: hasScreenTimePermission,
+                grantedLabel: lang.isArabicEffective ? "مُفعَّل" : "Granted",
+                grantTitle: lang.isArabicEffective ? "منح" : "Grant",
+                onGrant: requestScreenTimeAuth
+            )
+            Divider().background(AppColors.uiBorder.opacity(0.35))
+            permissionsRow(
+                icon: "bell",
+                title: lang.isArabicEffective ? "الإشعارات" : "Notifications",
+                granted: hasNotificationPermission,
+                grantedLabel: lang.isArabicEffective ? "مُفعَّل" : "Enabled",
+                grantTitle: lang.isArabicEffective ? "تفعيل" : "Enable",
+                onGrant: requestNotificationsAuth
+            )
+        }
+        .background(AppColors.uiSurface)
+        .overlay(
+            // Side+bottom border only (top edge meets the banner).
+            Rectangle().stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+        )
+    }
+
+    @ViewBuilder
+    private func permissionsRow(
+        icon: String,
+        title: String,
+        granted: Bool,
+        grantedLabel: String,
+        grantTitle: String,
+        onGrant: @escaping () -> Void
+    ) -> some View {
+        HStack(spacing: NNSpacing.sm) {
+            Image(systemName: icon).foregroundColor(AppColors.accent)
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(AppColors.textPrimary)
+            Spacer()
+            if granted {
+                HStack(spacing: NNSpacing.xxs) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(AppColors.successGreen)
+                        .font(.caption)
+                    Text(grantedLabel)
+                        .font(.footnote)
+                        .foregroundColor(AppColors.textSecondary)
+                }
+            } else {
+                Button(action: onGrant) {
+                    Text(grantTitle)
+                        .font(.footnote.weight(.semibold))
+                        .padding(.horizontal, NNSpacing.sm)
+                        .frame(minHeight: 44) // HIG minimum touch target
+                        .background(AppColors.accent)
+                        .foregroundColor(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: NNRadius.chip))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(NNSpacing.md)
+    }
+
+    /// Lists section: empty state when no lists exist, otherwise an
+    /// "Active now" card on top plus a collapsed DisclosureGroup of inactive
+    /// lists below. Splitting the two surfaces keeps the home screen calm —
+    /// the active card is short and instantly scannable, and the inactive
+    /// list stays out of view until the user taps to see it.
+    @ViewBuilder
+    private func listsSection() -> some View {
+        if lists.isEmpty {
+            EmptyState(
+                icon: "square.and.pencil",
+                title: lang.isArabicEffective ? "لا توجد قوائم بعد" : "No lists yet",
+                message: lang.isArabicEffective
+                    ? "ابدأ رحلتك بإنشاء أوّل قائمة حجب."
+                    : "Tap Create List above to start your focus journey.",
+                actionTitle: lang.isArabicEffective ? "أنشئ قائمتك الأولى" : "Create your first list",
+                action: { showingCreate = true }
+            )
+            .padding(.top, NNSpacing.xs)
+        } else {
+            if !activeLists.isEmpty {
+                activeListsCard
+            }
+            if !nonActiveLists.isEmpty {
+                inactiveListsDisclosure
+            }
+        }
+    }
+
+    private var activeListsCard: some View {
+        VStack(alignment: .leading, spacing: NNSpacing.xs) {
+            Text(lang.isArabicEffective ? "النشطة الآن" : "Active now")
+                .font(.caption.weight(.medium))
+                .foregroundColor(AppColors.textSecondary)
+                .padding(.horizontal, NNSpacing.xxs)
+            VStack(spacing: 0) {
+                ForEach(activeLists) { item in
+                    listRow(item: item, isActive: true)
+                    if item.id != activeLists.last?.id {
+                        Divider()
+                            .background(AppColors.uiBorder.opacity(0.5))
+                            .padding(.horizontal, NNSpacing.md)
+                    }
+                }
+            }
+            .background(AppColors.uiSurface)
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
+            .overlay(RoundedRectangle(cornerRadius: NNRadius.card)
+                .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline))
+        }
+    }
+
+    private var inactiveListsDisclosure: some View {
+        DisclosureGroup(isExpanded: $showOtherLists) {
+            VStack(spacing: 0) {
+                ForEach(nonActiveLists) { item in
+                    listRow(item: item, isActive: false)
+                    if item.id != nonActiveLists.last?.id {
+                        Divider()
+                            .background(AppColors.uiBorder.opacity(0.5))
+                            .padding(.horizontal, NNSpacing.md)
+                    }
+                }
+            }
+            .background(AppColors.uiSurface)
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
+            .overlay(RoundedRectangle(cornerRadius: NNRadius.card)
+                .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline))
+            .padding(.top, NNSpacing.xs)
+        } label: {
+            Text(lang.isArabicEffective
+                 ? "عرض \(nonActiveLists.count) قائمة غير نشطة"
+                 : "Show \(nonActiveLists.count) inactive lists")
+                .font(.caption.weight(.medium))
+                .foregroundColor(AppColors.textSecondary)
+        }
+        .tint(AppColors.textSecondary)
+        .padding(.horizontal, NNSpacing.xxs)
     }
 
     /// Slim 44pt warning banner used by the consolidated alerts strip. Matches
