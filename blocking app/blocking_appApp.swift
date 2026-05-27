@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreData
+import os
 
 final class CoreDataStack {
     static let shared = CoreDataStack()
@@ -124,12 +125,59 @@ final class CoreDataStack {
 
         model.entities = [listEntity, itemEntity]
 
-        container = NSPersistentContainer(name: "Model", managedObjectModel: model)
-        container.loadPersistentStores { _, error in
-            if let error = error { fatalError("Unresolved error: \(error)") }
+        let newContainer = NSPersistentContainer(name: "Model", managedObjectModel: model)
+        newContainer.loadPersistentStores { _, error in
+            if let error = error {
+                // The store file is unreadable — typically a corrupted SQLite
+                // (rare; can happen after an aborted migration or disk-full
+                // crash mid-write). The Apple-recommended fallback for a
+                // model we own end-to-end is: delete the file, reload fresh.
+                // The user loses local lists but the app still launches,
+                // which beats a hard crash on every launch.
+                //
+                // We do NOT fatalError in production: an unbootable app on
+                // App Store has no recovery path for the user other than
+                // reinstall. A fresh empty store at least lets them recreate
+                // their lists. CloudKit-stored data (partnerships, break
+                // attempts) is untouched — it lives on iCloud, not in the
+                // local store.
+                Self.log.error("Core Data load failed: \(error.localizedDescription, privacy: .public). Attempting fresh-store recovery.")
+                Self.recoverFromCorruptStore(container: newContainer)
+            }
         }
+        container = newContainer
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         container.viewContext.automaticallyMergesChangesFromParent = true
+    }
+
+    private static let log = Logger(subsystem: "app.nonet.blocking", category: "CoreDataStack")
+
+    /// Delete every persistent store the container knows about and reload
+    /// fresh. Called only when the initial loadPersistentStores threw. If
+    /// recovery itself fails (e.g. read-only filesystem), we fall through
+    /// to fatalError — at that point the device is in worse shape than the
+    /// app can handle, and a clean crash is better than a half-working app.
+    private static func recoverFromCorruptStore(container: NSPersistentContainer) {
+        let coordinator = container.persistentStoreCoordinator
+        for store in coordinator.persistentStores {
+            if let url = store.url {
+                try? coordinator.remove(store)
+                try? FileManager.default.removeItem(at: url)
+                // SQLite also drops -shm and -wal sidecars; clean them up so
+                // the next load doesn't reattach to a half-deleted store.
+                let parent = url.deletingLastPathComponent()
+                let base = url.lastPathComponent
+                ["\(base)-shm", "\(base)-wal"].forEach { sidecar in
+                    try? FileManager.default.removeItem(at: parent.appendingPathComponent(sidecar))
+                }
+            }
+        }
+        container.loadPersistentStores { _, error in
+            if let error = error {
+                fatalError("Core Data fresh-store reload also failed: \(error)")
+            }
+            log.notice("Core Data recovered with fresh empty store")
+        }
     }
 }
 
