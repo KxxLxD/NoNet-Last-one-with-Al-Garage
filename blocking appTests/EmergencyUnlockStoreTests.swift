@@ -34,7 +34,12 @@ final class EmergencyUnlockStoreTests: XCTestCase {
     func testRequestUnlockRecordsTimestamp() {
         let now = Date()
         store.requestUnlock(for: listA, now: now)
-        XCTAssertEqual(store.requestedAt(for: listA), now)
+        // Date round-trips through `timeIntervalSince1970: Double` in the
+        // store. Floating-point conversion can shave microseconds, so we
+        // compare time-intervals with a tight accuracy instead of asserting
+        // exact equality (which flakes under scheduler load).
+        let recorded = try? XCTUnwrap(store.requestedAt(for: listA))
+        XCTAssertEqual(recorded?.timeIntervalSince1970 ?? -1, now.timeIntervalSince1970, accuracy: 0.001)
     }
 
     func testIsGrantedFalseBeforeDelayElapsed() {
@@ -91,6 +96,21 @@ final class EmergencyUnlockStoreTests: XCTestCase {
         store.requestUnlock(for: listA, now: now)
         let persistedRaw = UserDefaults.standard.double(forKey: "v1:emergencyUnlock:requestedAt:\(listA.uuidString)")
         XCTAssertEqual(persistedRaw, now.timeIntervalSince1970, accuracy: 0.001)
-        XCTAssertEqual(store.requestedAtByID[listA], now)
+        // Compare time-intervals (Double) instead of Dates so micro-precision
+        // drift through the UserDefaults round-trip doesn't flake the test.
+        XCTAssertEqual(store.requestedAtByID[listA]?.timeIntervalSince1970 ?? -1,
+                       now.timeIntervalSince1970, accuracy: 0.001)
+    }
+
+    func testRequestTwiceWithoutClearOverwrites() {
+        // Defensive: requesting unlock for the same id twice (without clearing)
+        // should overwrite the first timestamp. The user re-requesting starts
+        // the 7-day countdown over — that's the intended semantic.
+        let first = Date()
+        store.requestUnlock(for: listA, now: first)
+        let second = first.addingTimeInterval(3_600) // 1 hour later
+        store.requestUnlock(for: listA, now: second)
+        XCTAssertEqual(store.requestedAt(for: listA)?.timeIntervalSince1970 ?? -1,
+                       second.timeIntervalSince1970, accuracy: 0.001)
     }
 }

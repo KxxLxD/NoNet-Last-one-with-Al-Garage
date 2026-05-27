@@ -70,17 +70,61 @@ final class PendingBreakAttemptQueueTests: XCTestCase {
 
     func testQueueCapDropsOldestOnOverflow() {
         // The hardcoded cap is 50; a user offline for months shouldn't grow
-        // UserDefaults unboundedly. Insert 55, expect the first 5 to be
-        // dropped (suffix kept).
-        var first: UUID?
-        for i in 0..<55 {
+        // UserDefaults unboundedly. Insert 55, expect the FIRST 5 to be
+        // dropped and the LAST 50 kept — `Array(current.suffix(50))` is the
+        // implementation. A bad implementation that kept the first 50 and
+        // dropped the last 5 would lose the *most recent* break attempts,
+        // which is exactly the wrong direction.
+        var insertedIDs: [UUID] = []
+        for _ in 0..<55 {
             let attempt = makeAttempt(typeRaw: "delete")
-            if i == 0 { first = attempt.id }
+            insertedIDs.append(attempt.id)
             PendingBreakAttemptQueue.enqueue(attempt)
         }
         let loaded = PendingBreakAttemptQueue.load()
         XCTAssertEqual(loaded.count, 50)
-        XCTAssertFalse(loaded.contains(where: { $0.id == first }), "Oldest entry should be dropped on overflow")
+        // The first 5 (indices 0…4) must all be absent. Asserting only that
+        // index 0 is gone would let a regression slip if the cap dropped a
+        // random subset.
+        let droppedIDs = Set(insertedIDs.prefix(5))
+        for dropped in droppedIDs {
+            XCTAssertFalse(loaded.contains(where: { $0.id == dropped }),
+                           "Entry inserted at position \(insertedIDs.firstIndex(of: dropped) ?? -1) should be evicted")
+        }
+        // The last 50 (indices 5…54) must all be present, and in insertion order.
+        let expectedKeptIDs = Array(insertedIDs.suffix(50))
+        XCTAssertEqual(loaded.map { $0.id }, expectedKeptIDs,
+                       "Surviving entries must be the newest 50, in insertion order")
+    }
+
+    func testEncodingPreservesAllFields() {
+        // Round-trip exercises every optional + required field on a single
+        // record, so a stray Codable customization that misses a field
+        // (e.g. forgot to encode `reason`) gets caught here even if the
+        // happy-path tests never set that field.
+        let attempt = PendingBreakAttempt(
+            id: UUID(),
+            partnershipID: "partner-\(UUID().uuidString)",
+            listID: UUID(),
+            listName: "Full-fields list",
+            attemptedAt: Date(timeIntervalSince1970: 1_700_000_000),
+            typeRaw: "delete",
+            reachedThrough: "ui-test-path",
+            statusRaw: RequestStatus.pending.rawValue,
+            reason: "Detailed explanation that must survive the round-trip"
+        )
+        PendingBreakAttemptQueue.enqueue(attempt)
+        let loaded = try? XCTUnwrap(PendingBreakAttemptQueue.load().first)
+        XCTAssertEqual(loaded?.id, attempt.id)
+        XCTAssertEqual(loaded?.partnershipID, attempt.partnershipID)
+        XCTAssertEqual(loaded?.listID, attempt.listID)
+        XCTAssertEqual(loaded?.listName, attempt.listName)
+        XCTAssertEqual(loaded?.attemptedAt.timeIntervalSince1970,
+                       attempt.attemptedAt.timeIntervalSince1970, accuracy: 0.001)
+        XCTAssertEqual(loaded?.typeRaw, "delete")
+        XCTAssertEqual(loaded?.reachedThrough, "ui-test-path")
+        XCTAssertEqual(loaded?.statusRaw, RequestStatus.pending.rawValue)
+        XCTAssertEqual(loaded?.reason, attempt.reason)
     }
 
     func testClearEmptiesQueue() {

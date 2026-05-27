@@ -115,4 +115,15 @@ final class TrialClockTests: XCTestCase {
         // No trial ever started.
         XCTAssertFalse(TrialClock.hasTrialExpired(startTs: 0))
     }
+
+    // MARK: - Defensive corner cases
+
+    func testFutureStartTsIsNotActive() {
+        // Both the device clock and the recorded startTs are tampered into
+        // the future. Elapsed reads negative; isTrialActive must refuse.
+        let futureStart = Date().addingTimeInterval(86_400 * 365).timeIntervalSince1970
+        let now = Date()
+        XCTAssertFalse(TrialClock.isTrialActive(startTs: futureStart, now: now))
+        XCTAssertEqual(TrialClock.daysRemaining(startTs: futureStart, now: now), 0)
+    }
 }

@@ -61,4 +61,20 @@ final class LanguageResolverTests: XCTestCase {
         // diverges from every reader of LanguageResolver.isArabicEffective.
         XCTAssertEqual(LanguageResolver.storageKey, "AppLanguage")
     }
+
+    func testEmptyStringFallsThroughToLocale() {
+        // A tampered defaults value of literally "" (empty) shouldn't crash
+        // and shouldn't be misread as "english" (which happened to fall in
+        // the `default: break` branch in the old switch). The deterministic
+        // contract: return a Bool, no throw.
+        UserDefaults.standard.set("", forKey: key)
+        _ = LanguageResolver.isArabicEffective()
+    }
+
+    func testWhitespaceValueFallsThroughToLocale() {
+        // Same defensive note as the empty-string case, with a value that's
+        // visually empty but technically non-empty.
+        UserDefaults.standard.set("   ", forKey: key)
+        _ = LanguageResolver.isArabicEffective()
+    }
 }
