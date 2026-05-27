@@ -2,6 +2,14 @@
 
 > **الملخّص:** كل الكود جاهز ✅. تبقّى **9 إجراءات** تحتاج تسجيل دخولك الشخصي على Apple أو فتح Xcode UI. لا يستطيع أي AI تنفيذها نيابة عنك.
 
+> **تحديث 2026-05-27:** الكود انتقل من v1.1.0 إلى v1.4.0 (post v1.2 cleanup pass — 23 cleanups
+> + refactors معمارية، أنظر `CHANGELOG.md` قسم `[Unreleased]`). الـ checklist أدناه ساري
+> لكل ما لم يُؤشَّر. بنود جديدة v1.4.0:
+> - **تركيب الـ Tests target** الآن أهم لأن في 32+ unit test جديد (TrialClock + LanguageResolver
+>   + EmergencyUnlockStore + PendingBreakAttemptQueue).
+> - **CloudKit Dashboard: أضف queryable index على `BreakAttempt.ownerUserID`** (اختياري لكن
+>   مطلوب لتحويل `fetchMyOutgoingRequests` من full scan إلى indexed query).
+
 ---
 
 ## 🆕 v1.3.x — مراجعة الأذونات (Engineering Review)
