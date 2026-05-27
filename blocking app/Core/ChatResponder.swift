@@ -89,6 +89,14 @@ struct LocalChatResponder: ChatResponder {
     /// false negatives ("organizing" never matched "organize"). Still
     /// rule-based — not real morphology — but enough to stop the two
     /// foot-guns the previous version had.
+    ///
+    /// TODO(arabic-morphology): if user testing surfaces Arabic edge cases
+    /// (e.g. "أرتب" the imperative vs "أرتبت" the perfective, or
+    /// suffix-attached pronouns like "تنظيمهم"), switch to NSLinguisticTagger
+    /// with `.lemma` scheme for proper word-stem normalisation. Apple's
+    /// tagger handles Arabic morphology natively. Not needed today because
+    /// the chatbot's keyword set is intentionally small and the prefix-≥4
+    /// rule already covers the common Arabic stems used in the responder.
     private func matches(_ text: String, _ keywords: [String]) -> Bool {
         let separators = CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters)
         let tokens = text

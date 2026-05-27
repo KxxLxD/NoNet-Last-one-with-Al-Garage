@@ -157,6 +157,18 @@ final class CoreDataStack {
     /// recovery itself fails (e.g. read-only filesystem), we fall through
     /// to fatalError — at that point the device is in worse shape than the
     /// app can handle, and a clean crash is better than a half-working app.
+    ///
+    /// Threading: Apple's `loadPersistentStores` completion is not formally
+    /// documented to run on a specific thread, but in practice it fires on
+    /// the same queue that called the load (the main queue when invoked
+    /// from `CoreDataStack.init`, which is itself called once during
+    /// `@main` app startup). The file operations below use FileManager,
+    /// which is documented as thread-safe for the methods we call. The
+    /// only multi-thread hazard would be a second `loadPersistentStores`
+    /// running concurrently against the same URL — but we deliberately do
+    /// not call the recovery from anywhere else, and the container is
+    /// captured by the closure so no other code path can re-enter it
+    /// while these deletions run.
     private static func recoverFromCorruptStore(container: NSPersistentContainer) {
         let coordinator = container.persistentStoreCoordinator
         for store in coordinator.persistentStores {
