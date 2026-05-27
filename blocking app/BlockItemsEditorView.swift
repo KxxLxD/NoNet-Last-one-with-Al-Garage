@@ -50,6 +50,13 @@ struct BlockItemsEditorView: View {
     // of silently failing to open the picker.
     @State private var showPermissionAlert = false
 
+    // Manual website entries — string domains the user typed directly. Kept
+    // separate from picker-selected websites because `handleFamilySelectionChange`
+    // rebuilds the picker-side entries from `familySelection.webDomainTokens`
+    // every time the picker fires. Manual entries persist across picker runs.
+    @State private var manualWebsites: [String] = []
+    @State private var websiteURLInput: String = ""
+
     // Quick Apps in editor
     private let quickApps: [QuickAppEditor] = QuickAppEditor.defaultSet
     @State private var quickSelected: Set<String> = []
@@ -88,20 +95,20 @@ struct BlockItemsEditorView: View {
             // shared explainer is more honest about scope.
             privacyBanner
 
-            // Order reflects how real users in testing reached for what to
-            // block: they think of named brand apps first ("block TikTok"),
-            // then specific URLs they want to ban, then the broader
-            // categories as a catch-all. The previous "broadest first"
-            // ordering forced everyone through the 8-category list before
-            // they could surface the specific items they actually came in
-            // to block.
-            //   1. Popular Apps   — recognisable brands by name (TikTok, IG…)
-            //   2. Websites       — explicit URLs to ban
-            //   3. Specific Apps  — Family Activity Picker for device apps
+            // Order (post-user-feedback): Specific Apps → Websites →
+            // Popular Apps → Categories. The user wanted Specific Apps
+            // (Apple picker) at the top because that's how they think
+            // about "what apps do I want to block right now" — the
+            // device's own apps. Popular Apps drops to third (still
+            // surfaced, but as a quick-pick layer after the primary
+            // device picker). Categories stays last as the catch-all.
+            //   1. Specific Apps  — Apple Family Activity Picker (device apps)
+            //   2. Websites       — manual URL entry (with iOS constraint note)
+            //   3. Popular Apps   — quick toggles for TikTok, Instagram, etc.
             //   4. Categories     — broad fallback buckets
-            quickAppsSection
-            websitesSection
             specificAppsSection
+            websitesSection
+            quickAppsSection
             categoriesSection
         }
         .scrollContentBackground(.hidden)
@@ -207,6 +214,14 @@ struct BlockItemsEditorView: View {
 
     private func handleOnAppear() {
         selectedCategories = Set(draft.categories.map { $0.displayName ?? $0.value })
+        // Restore manually-typed websites from a previous edit session.
+        // We distinguish manual entries from picker entries by the value
+        // shape: picker entries start with "picker:" (UUID-shaped legacy
+        // entries from earlier builds also count as picker), while manual
+        // entries are bare domain strings.
+        manualWebsites = draft.websites
+            .map { $0.value }
+            .filter { !$0.hasPrefix("picker:") && $0.contains(".") && !$0.contains("-") }
         // Reset the unsaved-changes flag every time the editor opens —
         // the initial state IS the saved state.
         hasUnsavedChanges = false
@@ -214,21 +229,16 @@ struct BlockItemsEditorView: View {
 
     private func handleFamilySelectionChange() {
         if #available(iOS 16.0, *) {
-            // Apps and websites both come from the same FamilyActivitySelection;
-            // they're separated here only for UI count display. The actual
-            // shielding uses the full selection via FamilySelectionStore.
+            // Apps come from FamilyActivitySelection only — no manual path
+            // for those, so straight replacement is fine.
             let appCount = familySelection.applicationTokens.count
-            let webCount = familySelection.webDomainTokens.count
-            // Use half-open `..<` (empty when count is 0) instead of
-            // closed `1...count` (which crashes when count is 0).
             draft.apps = (0..<appCount).map { idx in
                 let name = lang.isArabicEffective ? "تطبيق محدد #\(idx + 1)" : "Selected App #\(idx + 1)"
                 return DraftBlockItem(kind: .app, value: UUID().uuidString, displayName: name)
             }
-            draft.websites = (0..<webCount).map { idx in
-                let name = lang.isArabicEffective ? "موقع محدد #\(idx + 1)" : "Selected Website #\(idx + 1)"
-                return DraftBlockItem(kind: .website, value: UUID().uuidString, displayName: name)
-            }
+            // Websites have two sources (manual entries + picker tokens), so
+            // delegate to the merge function rather than replacing the array.
+            rebuildWebsitesDraft()
         }
     }
 
@@ -532,32 +542,221 @@ struct BlockItemsEditorView: View {
     // tapping the picker's "Websites" tab. One picker, three input modes
     // (Apps / Categories / Websites) — matches Apple's own pattern.
 
+    // Websites section — manual URL entry (primary) + Apple Picker (secondary).
+    //
+    // Why manual entry is primary: the user feedback said they couldn't find
+    // a "Pick Websites" affordance in Apple's picker and wanted to type URLs
+    // directly. The HONEST truth is that iOS's ManagedSettings.Shield.webDomains
+    // only accepts opaque WebDomainTokens which come from FamilyActivityPicker
+    // (which surfaces sites the user has visited in Safari). So:
+    //   1. Manual URLs are accepted into the list (matches user mental model)
+    //   2. A short helper line tells the user that iOS may need them to visit
+    //      the URL in Safari before the actual shield engages — no silent lies
+    //   3. The Apple Picker stays available for sites already in Safari history
     private var websitesSection: some View {
         Section {
-            if #available(iOS 16.0, *) {
-                editorRow(
-                    icon: "globe",
-                    title: lang.isArabicEffective
-                        ? (draft.websites.isEmpty ? "اختر مواقع من Apple Picker" : "تعديل الاختيار")
-                        : (draft.websites.isEmpty ? "Pick websites via Apple Picker" : "Edit selection"),
-                    subtitle: draft.websites.isEmpty
-                        ? nil
-                        : (lang.isArabicEffective
-                            ? "\(draft.websites.count) موقع محدّد"
-                            : "\(draft.websites.count) website\(draft.websites.count == 1 ? "" : "s") selected"),
-                    isSelected: !draft.websites.isEmpty,
-                    trailing: draft.websites.isEmpty ? .chevron : .count(draft.websites.count),
-                    action: { handleAppsButtonTap() }
-                )
-                .padding(.vertical, NNSpacing.xxs)
-                .background(AppColors.uiSurface)
-                .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
+            VStack(spacing: 0) {
+                // Manual URL input — TextField + Add button as one row.
+                manualURLInputRow
+
+                if !manualWebsites.isEmpty {
+                    Divider().padding(.leading, NNSpacing.lg)
+                    ForEach(Array(manualWebsites.enumerated()), id: \.element) { idx, domain in
+                        manualWebsiteRow(domain: domain)
+                        if idx < manualWebsites.count - 1 {
+                            Divider().padding(.leading, NNSpacing.lg)
+                        }
+                    }
+                }
+
+                // Honest constraint note — only shows when the user has at
+                // least one manual URL or the picker has at least one site,
+                // so it doesn't preempt the empty state.
+                if !manualWebsites.isEmpty {
+                    Divider().padding(.leading, NNSpacing.lg)
+                    iOSConstraintNote
+                }
+
+                // Apple Picker as secondary option — visible always so users
+                // who DO have sites in Safari history can use that path.
+                if #available(iOS 16.0, *) {
+                    Divider().padding(.leading, NNSpacing.lg)
+                    let pickerWebsiteCount = max(0, draft.websites.count - manualWebsites.count)
+                    editorRow(
+                        icon: "safari",
+                        title: lang.isArabicEffective ? "اختر من سجل Safari" : "Pick from Safari history",
+                        subtitle: pickerWebsiteCount > 0
+                            ? (lang.isArabicEffective
+                                ? "\(pickerWebsiteCount) موقع من الـ picker"
+                                : "\(pickerWebsiteCount) site\(pickerWebsiteCount == 1 ? "" : "s") via picker")
+                            : (lang.isArabicEffective ? "للمواقع اللي زرتها مؤخراً" : "For sites you've visited recently"),
+                        isSelected: pickerWebsiteCount > 0,
+                        trailing: pickerWebsiteCount > 0 ? .count(pickerWebsiteCount) : .chevron,
+                        action: { handleAppsButtonTap() }
+                    )
+                }
             }
+            .padding(.vertical, NNSpacing.xxs)
+            .background(AppColors.uiSurface)
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
         } header: {
             sectionHeader(icon: "globe", text: lang.isArabicEffective ? "مواقع" : "Websites")
         }
         .listRowInsets(EdgeInsets())
         .listRowBackground(Color.clear)
+    }
+
+    /// TextField + Add row at the top of the Websites section. Validates the
+    /// typed string as a plausible domain (has a dot, no spaces) before
+    /// accepting; otherwise the Add button stays disabled.
+    @ViewBuilder
+    private var manualURLInputRow: some View {
+        HStack(spacing: NNSpacing.sm) {
+            Image(systemName: "link")
+                .font(.body)
+                .foregroundColor(AppColors.textSecondary)
+                .frame(width: 24, height: 24, alignment: .center)
+            TextField(lang.isArabicEffective ? "مثلاً: tiktok.com" : "e.g., tiktok.com",
+                      text: $websiteURLInput)
+                .textInputAutocapitalization(.never)
+                .disableAutocorrection(true)
+                .keyboardType(.URL)
+                .submitLabel(.done)
+                .onSubmit { addManualWebsite() }
+            Button(action: { addManualWebsite() }) {
+                Text(lang.isArabicEffective ? "أضف" : "Add")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(canAddManualWebsite ? .white : AppColors.textSecondary)
+                    .padding(.horizontal, NNSpacing.md)
+                    .padding(.vertical, NNSpacing.xs)
+                    .background(canAddManualWebsite ? AppColors.accent : AppColors.uiBorder)
+                    .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .disabled(!canAddManualWebsite)
+        }
+        .padding(.horizontal, NNSpacing.sm)
+        .padding(.vertical, NNSpacing.sm)
+        .frame(minHeight: NNHitTarget.minimum + 12)
+    }
+
+    /// Row for a manually-added website. Tap-target is the whole row; the
+    /// trailing icon is an X that removes the entry. Visual register matches
+    /// the unified editorRow shape used by every other selectable item.
+    @ViewBuilder
+    private func manualWebsiteRow(domain: String) -> some View {
+        HStack(spacing: NNSpacing.sm) {
+            Image(systemName: "globe")
+                .font(.body)
+                .foregroundColor(AppColors.accent)
+                .frame(width: 24, height: 24, alignment: .center)
+            Text(domain)
+                .font(.subheadline.weight(.medium))
+                .foregroundColor(AppColors.textPrimary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+            Button(action: { removeManualWebsite(domain) }) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title3)
+                    .foregroundColor(AppColors.textSecondary.opacity(0.6))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(lang.isArabicEffective ? "حذف \(domain)" : "Remove \(domain)")
+        }
+        .padding(.horizontal, NNSpacing.sm)
+        .padding(.vertical, NNSpacing.xs)
+        .frame(minHeight: NNHitTarget.minimum + 12)
+    }
+
+    /// Honest helper note about Apple's iOS API constraint. Doesn't pretend
+    /// — tells the user that manual URLs are captured in the list but may
+    /// require visiting in Safari before the shield engages, which is how
+    /// the underlying ManagedSettings.shield.webDomains API actually behaves.
+    @ViewBuilder
+    private var iOSConstraintNote: some View {
+        HStack(alignment: .top, spacing: NNSpacing.sm) {
+            Image(systemName: "info.circle.fill")
+                .font(.caption)
+                .foregroundColor(AppColors.textSecondary)
+                .frame(width: 24, height: 24, alignment: .center)
+                .padding(.top, 1)
+            Text(lang.isArabicEffective
+                 ? "iOS يحجب المواقع اللي زرتها في Safari فقط. للحجب الفعلي: افتح الموقع مرة في Safari، ثم استخدم \"اختر من سجل Safari\" تحت."
+                 : "iOS can only shield sites you've visited in Safari. For real blocking: open the site once in Safari, then use \"Pick from Safari history\" below.")
+                .font(.caption2)
+                .foregroundColor(AppColors.textSecondary)
+                .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+        }
+        .padding(.horizontal, NNSpacing.sm)
+        .padding(.vertical, NNSpacing.xs)
+    }
+
+    /// Validates the typed input as a plausible domain — has at least one
+    /// dot and no whitespace. Doesn't validate TLD or DNS; that's the iOS
+    /// runtime's job once the shield engages.
+    private var canAddManualWebsite: Bool {
+        let trimmed = websiteURLInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        guard !trimmed.contains(" ") else { return false }
+        guard trimmed.contains(".") else { return false }
+        let cleaned = cleanDomain(trimmed)
+        return !manualWebsites.contains(cleaned)
+    }
+
+    /// Strips http://, https://, www., trailing slash, and lowercases. Stable
+    /// representation so duplicates ("Tiktok.com" + "tiktok.com/") don't both
+    /// end up in the list.
+    private func cleanDomain(_ raw: String) -> String {
+        var s = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        for prefix in ["https://", "http://", "www."] {
+            if s.hasPrefix(prefix) { s.removeFirst(prefix.count) }
+        }
+        if s.hasSuffix("/") { s.removeLast() }
+        return s
+    }
+
+    private func addManualWebsite() {
+        guard canAddManualWebsite else { return }
+        let cleaned = cleanDomain(websiteURLInput)
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        withAnimation(.easeInOut(duration: 0.15)) {
+            manualWebsites.append(cleaned)
+            websiteURLInput = ""
+        }
+        rebuildWebsitesDraft()
+        hasUnsavedChanges = true
+    }
+
+    private func removeManualWebsite(_ domain: String) {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        withAnimation(.easeInOut(duration: 0.15)) {
+            manualWebsites.removeAll { $0 == domain }
+        }
+        rebuildWebsitesDraft()
+        hasUnsavedChanges = true
+    }
+
+    /// Rebuilds `draft.websites` from the current `manualWebsites` + picker
+    /// websites. Called whenever either source changes. The save-time path
+    /// already iterates `draft.websites` so manual + picker entries both
+    /// reach Core Data; the BlockingEngine integration for actually
+    /// shielding manual URLs is a known iOS API gap, documented in
+    /// iOSConstraintNote.
+    private func rebuildWebsitesDraft() {
+        var rebuilt: [DraftBlockItem] = manualWebsites.map {
+            DraftBlockItem(kind: .website, value: $0, displayName: $0)
+        }
+        if #available(iOS 16.0, *) {
+            let pickerCount = familySelection.webDomainTokens.count
+            for idx in 0..<pickerCount {
+                let name = lang.isArabicEffective ? "موقع محدد #\(idx + 1)" : "Selected Website #\(idx + 1)"
+                rebuilt.append(DraftBlockItem(kind: .website, value: "picker:\(idx)", displayName: name))
+            }
+        }
+        draft.websites = rebuilt
     }
 
     /// Single section-header style shared by all four sections — icon +
