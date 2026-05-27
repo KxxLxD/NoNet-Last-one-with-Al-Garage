@@ -45,6 +45,11 @@ struct Partnership: Identifiable, Hashable {
     var createdAt: Date
     var acceptedAt: Date?
     var associatedListIDs: [UUID]
+    /// Which CloudKit database this Partnership (and its child BreakAttempts)
+    /// lives in. Owner-created partnerships are in `.private`; partnerships
+    /// the user accepted from someone else are in `.shared`. Captured at
+    /// fetch time so subsequent operations don't have to try both DBs.
+    var databaseScope: CKDatabase.Scope
 }
 
 enum BreakAttemptType: String, Codable {
@@ -690,18 +695,33 @@ final class CloudKitPartnerStore: ObservableObject {
         partnerships.first { $0.associatedListIDs.contains(listID) }
     }
 
-    /// Delete a Partnership record. Best-effort: tries the private DB first
-    /// (the owner side), falls back to shared DB (the partner side, who can only
-    /// "leave" their side of the share).
+    /// Delete a Partnership record. If we have the partnership cached, we
+    /// know which DB owns it (databaseScope captured at fetch time) and go
+    /// straight there. Otherwise fall back to the classic private-then-shared
+    /// trial — happens when revoke is called against an id that hasn't been
+    /// loaded into the local cache yet.
     func revokePartnership(id: String) async {
         let recordID = CKRecord.ID(recordName: id)
-        do {
-            _ = try await privateDB.deleteRecord(withID: recordID)
-        } catch {
-            do { _ = try await sharedDB.deleteRecord(withID: recordID) }
-            catch {
-                log.error("revokePartnership failed: \(error.localizedDescription, privacy: .public)")
+        if let partnership = partnerships.first(where: { $0.id == id }) {
+            let db = database(for: partnership)
+            do {
+                _ = try await db.deleteRecord(withID: recordID)
+            } catch {
+                log.error("revokePartnership in \(db.databaseScope.rawValue, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
                 self.lastError = error.localizedDescription
+            }
+        } else {
+            // No cached scope — fall back to the old try-private-then-shared
+            // path so a revoke from an old code path / cold-cache case still
+            // works.
+            do {
+                _ = try await privateDB.deleteRecord(withID: recordID)
+            } catch {
+                do { _ = try await sharedDB.deleteRecord(withID: recordID) }
+                catch {
+                    log.error("revokePartnership fallback failed: \(error.localizedDescription, privacy: .public)")
+                    self.lastError = error.localizedDescription
+                }
             }
         }
         await fetchPartnerships()
@@ -865,11 +885,23 @@ final class CloudKitPartnerStore: ObservableObject {
             let (matchResults, _) = try await db.records(matching: query)
             return matchResults.compactMap { _, result in
                 guard case .success(let record) = result else { return nil }
-                return Partnership(from: record)
+                return Partnership(from: record, in: db.databaseScope)
             }
         } catch {
             log.error("fetchPartnerships from \(db.databaseScope.rawValue, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
             return []
+        }
+    }
+
+    /// Look up the CloudKit database that owns the given partnership's records.
+    /// Falls back to `privateDB` if the partnership isn't cached — the common
+    /// case for early callers is owner-side, so private is the safer default.
+    func database(for partnership: Partnership) -> CKDatabase {
+        switch partnership.databaseScope {
+        case .public:  return container.publicCloudDatabase
+        case .shared:  return sharedDB
+        case .private: return privateDB
+        @unknown default: return privateDB
         }
     }
 }
@@ -877,7 +909,11 @@ final class CloudKitPartnerStore: ObservableObject {
 // MARK: - Partnership <-> CKRecord bridging
 
 extension Partnership {
-    init?(from record: CKRecord) {
+    /// Build a Partnership DTO from a CKRecord. `scope` is captured at the
+    /// fetch site (whichever DB the record was queried from) so operations
+    /// on this partnership can route to the correct database without a
+    /// trial-and-error double lookup.
+    init?(from record: CKRecord, in scope: CKDatabase.Scope) {
         guard let ownerUserID = record["ownerUserID"] as? String,
               let ownerDisplayName = record["ownerDisplayName"] as? String,
               let statusRaw = record["status"] as? String,
@@ -895,6 +931,7 @@ extension Partnership {
         self.acceptedAt = record["acceptedAt"] as? Date
         let listIDStrings = (record["associatedListIDs"] as? [String]) ?? []
         self.associatedListIDs = listIDStrings.compactMap(UUID.init)
+        self.databaseScope = scope
     }
 }
 
