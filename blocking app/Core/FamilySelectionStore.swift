@@ -23,26 +23,18 @@ private let prefix = "v1:familySelection"
 /// Must match the value in both `.entitlements` files and be registered in Apple Developer Portal.
 let kSharedAppGroup = "group.com.nonetapp.shared"
 
-/// True once the App Group capability has been granted to this process. Read by
-/// HomeView to surface the "extension can't see data" banner. Computed once at
-/// load — process restart picks up newly granted capabilities.
-let isAppGroupActive: Bool = (UserDefaults(suiteName: kSharedAppGroup) != nil)
+/// True when the App Group capability is granted to this process. Read by
+/// HomeView to surface the "extension can't see data" banner. Computed on
+/// every access (cheap — `UserDefaults(suiteName:)` returns nil immediately
+/// on missing capability), so a re-signed entitlement fix is picked up
+/// without a process restart.
+var isAppGroupActive: Bool { UserDefaults(suiteName: kSharedAppGroup) != nil }
 
-/// App Group suite, or `nil` if the capability isn't granted yet. Prefer this
-/// over `sharedDefaults` for new code — checking for nil makes the data-isolation
-/// hazard explicit at the call site.
+/// App Group suite, or `nil` if the capability isn't granted yet. Always
+/// branch on this — when the App Group is missing, writes to the legacy
+/// `.standard` fallback are invisible to the BlockingMonitor extension and
+/// Scheduled/Time-Limit blocks fail silently.
 let sharedDefaultsOptional: UserDefaults? = UserDefaults(suiteName: kSharedAppGroup)
-
-/// Legacy alias that returns the App Group suite or `.standard` as fallback.
-/// **Hazard**: when the capability is missing, writes here are NOT visible to
-/// the extension — Scheduled and Time-Limit blocks will silently apply no shield.
-/// Existing callers tolerated this during initial dev; new callers should branch
-/// on `isAppGroupActive` and refuse to persist when false.
-let sharedDefaults: UserDefaults = {
-    if let shared = sharedDefaultsOptional { return shared }
-    log.error("App Group \(kSharedAppGroup, privacy: .public) NOT GRANTED — extension will not see writes. Scheduled/Time-Limit blocks will silently fail until capability is added in Xcode and entitlements provisioned.")
-    return .standard
-}()
 
 enum FamilySelectionStore {
     private static func key(for id: UUID) -> String { "\(prefix):\(id.uuidString)" }
