@@ -606,11 +606,11 @@ final class CloudKitPartnerStore: ObservableObject {
         let pending = PendingBreakAttemptQueue.load()
         guard !pending.isEmpty else { return }
         guard isAccountAvailable else {
-            log.notice("flushPendingBreakAttempts: account still unavailable, deferring \(pending.count) entries")
+            log.notice("flushPendingBreakAttempts: account still unavailable, deferring \(pending.count, privacy: .public) entries")
             return
         }
 
-        log.notice("flushPendingBreakAttempts: \(pending.count) entries to replay")
+        log.notice("flushPendingBreakAttempts: \(pending.count, privacy: .public) entries to replay")
         var didFlushAnyApproval = false
         for attempt in pending {
             // Replay with the original status / reason so approval requests
