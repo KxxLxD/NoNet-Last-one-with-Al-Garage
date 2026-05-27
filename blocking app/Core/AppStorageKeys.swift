@@ -55,4 +55,9 @@ enum AppStorageKeys {
     // Challenges gamification — cumulative points earned. Level is derived
     // from this via BlockingConstants.challengePointsPerLevel.
     static let challengeTotalPoints = "v1:challenges:totalPoints"
+
+    // CreateListSheet draft auto-save — JSON blob of the in-progress list so
+    // a mid-flow interruption (phone call, app switch, accidental dismiss)
+    // doesn't waste the user's setup. Cleared on successful save.
+    static let createListDraft = "v1:createList:draft"
 }

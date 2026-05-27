@@ -3,6 +3,41 @@ import CoreData
 import CloudKit
 import os
 
+/// Codable snapshot of CreateListSheet's in-progress state. Persisted to
+/// AppStorage so an interruption (phone call, app switch, accidental dismiss)
+/// doesn't waste the user's setup. Cleared on successful save.
+///
+/// Items (DraftBlockItem + FamilyActivitySelection) are intentionally NOT
+/// persisted — Apple's opaque tokens require an active picker session to
+/// round-trip reliably. Restoring those would silently produce a broken
+/// selection. The user re-picks items; everything else is filled.
+private struct CreateListDraftSnapshot: Codable {
+    var name: String
+    var protection: String
+    var blockType: String
+    var days: Int
+    var hours: Int
+    var minutes: Int
+    var timeLimitMinutes: Int
+    var breaksCount: Int
+    var breakDurationMinutes: Int
+    var selectedGatekeeper: String
+    var savedAt: Date
+
+    /// Drafts older than 24 hours are auto-discarded — if the user didn't come
+    /// back the next day, they almost certainly forgot what they were doing.
+    var isFresh: Bool {
+        Date().timeIntervalSince(savedAt) < 24 * 3600
+    }
+
+    /// "Empty enough to ignore" — if the user opened the sheet, touched
+    /// nothing, then dismissed, we don't want to offer to restore that.
+    var isEmpty: Bool {
+        name.isEmpty && blockType == "now" && protection == "noProtection"
+            && days == 0 && hours == 0 && minutes == 15
+    }
+}
+
 struct CreateListSheet: View {
     @EnvironmentObject var lang: LanguageManager
     @Environment(\.managedObjectContext) private var context
@@ -12,6 +47,10 @@ struct CreateListSheet: View {
     // Personalization from onboarding (read-only, used to surface suggestions)
     @AppStorage(AppStorageKeys.obApps) private var obApps: String = ""
     @AppStorage(AppStorageKeys.obCats) private var obCats: String = ""
+
+    // Auto-save draft (JSON blob of CreateListDraftSnapshot)
+    @AppStorage(AppStorageKeys.createListDraft) private var draftJSON: String = ""
+    @State private var showRestoreDraftAlert: Bool = false
 
     @State private var name: String = ""
     @State private var protection: String = "noProtection" // hard | noProtection
@@ -49,9 +88,12 @@ struct CreateListSheet: View {
     @State private var showLimitAlert = false
     @State private var showValidationAlert = false
     @State private var validationMessage = ""
-    @State private var showHardConfirmAlert = false
     @State private var showForeverFirstAlert = false   // First warning when user picks "Forever"
-    @State private var showForeverConfirmAlert = false // Second warning before saving Forever
+    /// Unified "danger confirm" sheet — replaces the previous pair of
+    /// showHardConfirmAlert + showForeverConfirmAlert. When either Hard Mode
+    /// or Forever is in play at save time, this single sheet lists every
+    /// consequence and requires explicit checkbox acknowledgement for each.
+    @State private var showDangerConfirmSheet = false
     @State private var pendingSeconds: Int64 = 0
     @State private var pendingBaseName: String = ""
     @State private var saveErrorMessage: String? = nil
@@ -104,8 +146,50 @@ struct CreateListSheet: View {
         let s5 = attachAlerts(s4)
         let s6 = attachDoneBar(s5)
         let s7 = attachPartnerSheets(s6)
-        return s7
+        let s8 = attachDraftPersistence(s7)
+        return s8
             .successToast(isPresented: $showSuccessToast, message: lang.isArabicEffective ? "تم إنشاء القائمة" : "List created")
+    }
+
+    /// Wires up auto-save draft: onAppear shows restore prompt if a fresh
+    /// draft is on disk, onChange hooks save the simple form state to
+    /// AppStorage on every meaningful edit, and the restore alert offers
+    /// "Restore" / "Discard" with a one-line preview of what's saved.
+    private func attachDraftPersistence<V: View>(_ v: V) -> some View {
+        v
+            .onAppear { handleAppearForDraft() }
+            .onChange(of: name) { _ in saveDraft() }
+            .onChange(of: protection) { _ in saveDraft() }
+            .onChange(of: blockType) { _ in saveDraft() }
+            .onChange(of: days) { _ in saveDraft() }
+            .onChange(of: hours) { _ in saveDraft() }
+            .onChange(of: minutes) { _ in saveDraft() }
+            .onChange(of: timeLimitMinutes) { _ in saveDraft() }
+            .onChange(of: breaksCount) { _ in saveDraft() }
+            .onChange(of: breakDurationMinutes) { _ in saveDraft() }
+            .onChange(of: selectedGatekeeper) { _ in saveDraft() }
+            .alert(
+                lang.isArabicEffective ? "استعادة المسوّدة؟" : "Restore draft?",
+                isPresented: $showRestoreDraftAlert
+            ) {
+                Button(lang.isArabicEffective ? "استعادة" : "Restore") {
+                    if let snap = readDraft() { applyDraft(snap) }
+                }
+                Button(lang.isArabicEffective ? "ابدأ من جديد" : "Start fresh", role: .destructive) {
+                    clearDraft()
+                }
+            } message: {
+                if let snap = readDraft() {
+                    let preview = snap.name.isEmpty
+                        ? (lang.isArabicEffective ? "بدون اسم" : "no name")
+                        : "\"\(snap.name)\""
+                    Text(lang.isArabicEffective
+                         ? "وجدنا مسوّدة سابقة (\(preview)). تبي تكمّل من حيث وقفت؟ ملاحظة: عناصر الحجب لن تُسترجع — لازم تختارها مرة ثانية."
+                         : "Found a previous draft (\(preview)). Continue where you left off? Note: blocked items won't be restored — you'll need to pick them again.")
+                } else {
+                    Text("")
+                }
+            }
     }
 
     // MARK: - Attach helpers to reduce type-checking cost
@@ -152,8 +236,10 @@ struct CreateListSheet: View {
                         pendingSeconds = totalSeconds
                         pendingBaseName = trimmedName
                         if protection == "hard" {
+                            // Funnel into the unified danger sheet — replaces
+                            // the old showHardConfirmAlert path.
                             showConfirmSheet = false
-                            showHardConfirmAlert = true
+                            showDangerConfirmSheet = true
                         } else {
                             save(totalSeconds: totalSeconds, baseName: trimmedName)
                         }
@@ -177,12 +263,6 @@ struct CreateListSheet: View {
             } message: {
                 Text(validationMessage)
             }
-            .alert(lang.isArabicEffective ? "تفعيل الوضع الصارم" : "Enable Hard Mode", isPresented: $showHardConfirmAlert) {
-                Button(lang.isArabicEffective ? "فعّل الوضع الصارم" : "Enable Hard Mode") { save(totalSeconds: pendingSeconds, baseName: pendingBaseName) }
-                Button(lang.isArabicEffective ? "تراجعت، رجّعني" : "No, go back", role: .cancel) {}
-            } message: {
-                Text(lang.isArabicEffective ? "الوضع الصارم يقفل القائمة طوال المدّة. لا تستطيع تعديلها أو حذفها أو إيقاف الحجب حتى ينتهي الوقت. هذا الإلزام متعمَّد، لتعزيز التزامك بالقرار." : "Hard Mode locks this list for the full duration. You can't edit, delete, or pause the block until time runs out. This is intentional, to strengthen your commitment.")
-            }
             .alert(lang.isArabicEffective ? "الحجب الدائم قرار جادّ" : "Permanent block is serious", isPresented: $showForeverFirstAlert) {
                 Button(lang.isArabicEffective ? "فهمت، أكمل" : "I understand, continue") { /* keep blockType = forever */ }
                 Button(lang.isArabicEffective ? "إلغاء" : "Cancel", role: .cancel) { blockType = "now" }
@@ -191,21 +271,6 @@ struct CreateListSheet: View {
                      ? "الحجب الدائم يبقى فعّالاً حتى تحذف القائمة يدوياً. وإذا فعّلت الوضع الصارم أيضاً، فلن تستطيع حذفها على الإطلاق."
                      : "A permanent block stays active until you delete the list. With Hard Mode you cannot delete it at all.")
             }
-            .alert(lang.isArabicEffective ? "تأكيد نهائي" : "Final Confirmation", isPresented: $showForeverConfirmAlert) {
-                Button(lang.isArabicEffective ? "أوافق، فعّل الحجب الدائم" : "I agree — enable permanent block", role: .destructive) {
-                    if protection == "hard" {
-                        showForeverConfirmAlert = false
-                        showHardConfirmAlert = true
-                    } else {
-                        save(totalSeconds: 0, baseName: pendingBaseName)
-                    }
-                }
-                Button(lang.isArabicEffective ? "إلغاء" : "Cancel", role: .cancel) {}
-            } message: {
-                Text(lang.isArabicEffective
-                     ? "بعد التفعيل، لن تعمل التطبيقات والمواقع المختارة على الإطلاق حتى تحذف القائمة يدوياً. ومع الوضع الصارم، حتى الحذف لن يكون متاحاً."
-                     : "Once enabled, the selected apps and sites will never work until you manually delete this list. With Hard Mode, even deletion won't be available.")
-            }
             .alert(
                 lang.isArabicEffective ? "تعذّر حفظ القائمة" : "Couldn't save list",
                 isPresented: Binding(get: { saveErrorMessage != nil }, set: { if !$0 { saveErrorMessage = nil } })
@@ -213,6 +278,19 @@ struct CreateListSheet: View {
                 Button(lang.isArabicEffective ? "حاول مجدّداً" : "Try again", role: .cancel) { saveErrorMessage = nil }
             } message: {
                 Text(saveErrorMessage ?? "")
+            }
+            .sheet(isPresented: $showDangerConfirmSheet) {
+                ConfirmDangerSheet(
+                    isArabic: lang.isArabicEffective,
+                    isForever: blockType == "forever",
+                    isHardMode: protection == "hard",
+                    onCancel: { showDangerConfirmSheet = false },
+                    onConfirm: {
+                        showDangerConfirmSheet = false
+                        save(totalSeconds: pendingSeconds, baseName: pendingBaseName)
+                    }
+                )
+                .presentationDetents([.medium, .large])
             }
     }
     private func attachDoneBar<V: View>(_ v: V) -> some View {
@@ -288,8 +366,25 @@ struct CreateListSheet: View {
             }
     }
 
+    /// True when the form is in its initial "fresh" state — no name, no items,
+    /// no protection upgrade, default block type. Used to gate the Quick Start
+    /// template row so it disappears once the user starts editing.
+    private var isFreshForm: Bool {
+        name.isEmpty
+            && draft.websites.isEmpty && draft.apps.isEmpty && draft.categories.isEmpty
+            && protection == "noProtection" && blockType == "now"
+    }
+
     private var contentView: some View {
         List {
+            // ─── Section 0: Quick Start Templates (visible only on fresh form)
+            // Three one-tap starting points + a "Custom" escape hatch. Picking
+            // a template pre-fills name + blockType + protection + categories
+            // so the user is ~80% done before they touch any other card.
+            if isFreshForm {
+                quickStartTemplatesCard()
+            }
+
             // ─── Section 1: Basics ─────────────────────────────────
             nameCard()
 
@@ -304,9 +399,11 @@ struct CreateListSheet: View {
             if blockType == "now" { durationCard() }
             if blockType == "timeLimit" { timeLimitCard() }
 
-            // ─── Section 4: Protection ─────────────────────────────
+            // ─── Section 4: Protection (+ inline partner choice) ───
+            // protectionCard now includes the gatekeeper selection inline when
+            // Hard Mode is picked — replaces the previous "two stacked cards"
+            // pattern where partnerCard appeared as a separate section.
             protectionCard()
-            partnerCard() // appears only when protection == "hard"
 
             // ─── Section 5: Breaks ─────────────────────────────────
             breaksCard()
@@ -451,8 +548,21 @@ struct CreateListSheet: View {
     }
 
     private func nameCard() -> some View {
-        Section(header: Text(lang.isArabicEffective ? "اسم القائمة" : "List Name")) {
+        Section(header: HStack(spacing: NNSpacing.xs) {
+            Image(systemName: "tag")
+                .font(.nnCardBody)
+                .foregroundColor(AppColors.accent)
+            Text(lang.isArabicEffective ? "اسم القائمة" : "List Name")
+                .font(.nnCardTitle)
+        }) {
             VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
+                // Smart suggestions — render only when the user hasn't picked
+                // a name yet AND the form has enough signal (items + blockType)
+                // to generate a meaningful suggestion. Disappears the moment
+                // they tap one or start typing.
+                if name.isEmpty && !smartNameSuggestions().isEmpty {
+                    smartNameSuggestionRow()
+                }
                 TextField(lang.isArabicEffective ? "مثال: وقت التركيز" : "e.g., Focus Time", text: $name)
                     .textInputAutocapitalization(.words)
                     .disableAutocorrection(true)
@@ -505,14 +615,52 @@ struct CreateListSheet: View {
                 .font(.nnCardTitle)
         }) {
             VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
-                Picker("Time", selection: $blockType) {
-                    Text(lang.isArabicEffective ? "فوري" : "Now").tag("now")
-                    Text(lang.isArabicEffective ? "مجدول" : "Scheduled").tag("scheduled")
-                    Text(lang.isArabicEffective ? "حد يومي" : "Daily Limit").tag("timeLimit")
-                    Text(lang.isArabicEffective ? "دائم" : "Forever").tag("forever")
+                // 2×2 grid of block-type cards. Replaces the 4-segment picker
+                // because (a) segments give every option equal visual weight,
+                // letting "Forever" hide in plain sight next to "Now," and
+                // (b) segments can't carry the short descriptions that make
+                // the distinction between Now/Scheduled/Daily-Limit/Forever
+                // legible without reading docs.
+                LazyVGrid(
+                    columns: [
+                        GridItem(.flexible(), spacing: NNSpacing.sm),
+                        GridItem(.flexible(), spacing: NNSpacing.sm)
+                    ],
+                    spacing: NNSpacing.sm
+                ) {
+                    blockTypeCard(
+                        tag: "now",
+                        icon: "bolt.fill",
+                        titleAr: "فوري", titleEn: "Now",
+                        subtitleAr: "ابدأ الآن لمدة محددة",
+                        subtitleEn: "Start now for a set time",
+                        isDestructive: false
+                    )
+                    blockTypeCard(
+                        tag: "scheduled",
+                        icon: "calendar",
+                        titleAr: "مجدول", titleEn: "Scheduled",
+                        subtitleAr: "في أوقات محددة من الأسبوع",
+                        subtitleEn: "At set times each week",
+                        isDestructive: false
+                    )
+                    blockTypeCard(
+                        tag: "timeLimit",
+                        icon: "hourglass.bottomhalf.filled",
+                        titleAr: "حد يومي", titleEn: "Daily Limit",
+                        subtitleAr: "X دقيقة كل يوم ثم يقفل",
+                        subtitleEn: "X minutes per day, then lock",
+                        isDestructive: false
+                    )
+                    blockTypeCard(
+                        tag: "forever",
+                        icon: "infinity",
+                        titleAr: "دائم", titleEn: "Forever",
+                        subtitleAr: "بلا نهاية — حتى الحذف",
+                        subtitleEn: "No end — until deleted",
+                        isDestructive: true
+                    )
                 }
-                .pickerStyle(.segmented)
-                .frame(maxWidth: 420, alignment: .center)
                 .onChange(of: blockType) { newVal in
                     if newVal == "scheduled" && !isPremium {
                         blockType = "now"
@@ -603,6 +751,62 @@ struct CreateListSheet: View {
             )
         }
         .listRowBackground(Color.clear)
+    }
+
+    /// Single cell in the 2×2 block-type grid (Now / Scheduled / Daily Limit /
+    /// Forever). Tapping a card flips `blockType` to its tag; `.onChange` on
+    /// `blockType` higher up still fires the schedule/upgrade/forever logic.
+    ///
+    /// Visual states:
+    ///   - Inactive: hairline border + neutral background
+    ///   - Active: accent border + tinted bg + accent icon
+    ///   - Active + destructive (Forever): red border + red-tinted bg
+    ///     so users see at a glance that this is the dangerous choice
+    @ViewBuilder
+    private func blockTypeCard(
+        tag: String,
+        icon: String,
+        titleAr: String, titleEn: String,
+        subtitleAr: String, subtitleEn: String,
+        isDestructive: Bool
+    ) -> some View {
+        let isSelected = blockType == tag
+        let activeColor = isDestructive ? AppColors.alertRed : AppColors.accent
+        Button(action: {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            blockType = tag
+        }) {
+            VStack(alignment: .center, spacing: NNSpacing.xxs) {
+                Image(systemName: icon)
+                    .font(.title2.weight(.semibold))
+                    .foregroundColor(isSelected ? activeColor : AppColors.textSecondary)
+                    .frame(height: 28)
+                Text(lang.isArabicEffective ? titleAr : titleEn)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(AppColors.textPrimary)
+                    .lineLimit(1)
+                Text(lang.isArabicEffective ? subtitleAr : subtitleEn)
+                    .font(.caption2)
+                    .foregroundColor(AppColors.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, minHeight: 96, alignment: .top)
+            .padding(.horizontal, NNSpacing.sm)
+            .padding(.vertical, NNSpacing.sm)
+            .background(isSelected ? activeColor.opacity(0.12) : Color.clear)
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
+            .overlay(
+                RoundedRectangle(cornerRadius: NNRadius.card)
+                    .stroke(isSelected ? activeColor : AppColors.uiBorder,
+                            lineWidth: isSelected ? NNBorder.input : NNBorder.hairline)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(lang.isArabicEffective ? titleAr : titleEn)
+        .accessibilityHint(lang.isArabicEffective ? subtitleAr : subtitleEn)
+        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
     }
 
     private func durationCard() -> some View {
@@ -718,6 +922,17 @@ struct CreateListSheet: View {
         .listRowBackground(Color.clear)
     }
 
+    /// Protection + gatekeeper, fused into one card. Replaces the previous
+    /// pattern of two sequential cards (`protectionCard` + `partnerCard`)
+    /// that broke the conceptual link between "Hard Mode" and "who guards it."
+    ///
+    /// Structure:
+    ///   - Two top-level option rows (No Protection / Hard Mode)
+    ///   - When Hard Mode is picked, a nested gatekeeper section reveals:
+    ///       - NoNet (default)
+    ///       - Human partner → sub-options for existing/new partner
+    ///
+    /// All visuals reuse the existing `partnerOptionRow` for consistency.
     private func protectionCard() -> some View {
         Section(header: HStack(spacing: NNSpacing.xs) {
             Image(systemName: "shield.checkered")
@@ -727,64 +942,44 @@ struct CreateListSheet: View {
                 .font(.nnCardTitle)
         }) {
             VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
-                Picker("Protection", selection: $protection) {
-                    Text(lang.isArabicEffective ? "بدون حماية" : "No Protection").tag("noProtection")
-                    Text(lang.isArabicEffective ? "الوضع الصارم" : "Hard Mode").tag("hard")
-                }
-                .pickerStyle(.segmented)
+                // Top-level protection choice — uses the same option-row visual
+                // as the gatekeeper choices below so the whole card reads as
+                // one nested decision tree.
+                partnerOptionRow(
+                    title: lang.isArabicEffective ? "بدون حماية" : "No Protection",
+                    subtitle: lang.isArabicEffective ? "تعديل/حذف في أي وقت" : "Edit or delete anytime",
+                    isSelected: protection == "noProtection",
+                    action: { protection = "noProtection" }
+                )
 
-                VStack(alignment: .leading, spacing: NNSpacing.xxs) {
-                    Text(lang.isArabicEffective ? "بدون حماية: تعديل/حذف في أي وقت." : "No Protection: Edit/Delete anytime.")
-                        .font(.footnote)
-                        .foregroundColor(AppColors.textSecondary)
-                    Text(lang.isArabicEffective ? "الوضع الصارم: صعب الإيقاف أثناء المدة." : "Hard Mode: Hard to stop during duration.")
-                        .font(.footnote)
-                        .foregroundColor(AppColors.textSecondary)
-                }
-                .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
-                    }
-            .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
-            .padding(NNSpacing.lg)
-            .background(AppColors.uiSurface)
-            .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
-            .overlay(
-                RoundedRectangle(cornerRadius: NNRadius.container)
-                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
-            )
-        }
-        .listRowBackground(Color.clear)
-    }
+                partnerOptionRow(
+                    title: lang.isArabicEffective ? "الوضع الصارم" : "Hard Mode",
+                    subtitle: lang.isArabicEffective ? "صعب الإيقاف أثناء المدة" : "Hard to stop during duration",
+                    isSelected: protection == "hard",
+                    action: { protection = "hard" }
+                )
 
-    /// Gatekeeper step — appears only when Hard Mode is selected. Two top-level
-    /// choices that determine `gatekeeperType` on the saved ListEntity:
-    ///
-    ///   • NoNet (default): the app itself guards the list. Delete/disable/modify
-    ///     attempts open NoNetGatekeeperSheet, which offers two honest paths
-    ///     (200-char reason or 7-day wait). This reframes the previously hidden
-    ///     EmergencyUnlockStore as a conscious choice.
-    ///
-    ///   • Human partner: a Recovery Partner approves/denies requests. Sub-options
-    ///     pick an existing accepted partnership or kick off a new CKShare invite.
-    @ViewBuilder
-    private func partnerCard() -> some View {
-        if protection == "hard" {
-            Section(header: HStack(spacing: NNSpacing.xs) {
-                Image(systemName: "shield.lefthalf.filled")
-                    .font(.nnCardBody)
-                    .foregroundColor(AppColors.accent)
-                Text(lang.isArabicEffective ? "من يكون حارس قائمتك؟" : "Who guards this list?")
-                    .font(.nnCardTitle)
-            }) {
-                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
+                // Nested gatekeeper section — only visible when Hard Mode is on.
+                // Indented (leading padding) so the user reads it as "sub-choice
+                // of Hard Mode" rather than as a peer to the two options above.
+                if protection == "hard" {
+                    Divider()
+                        .padding(.vertical, NNSpacing.xxs)
+
+                    Text(lang.isArabicEffective ? "من يحرس قائمتك؟" : "Who guards this list?")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundColor(AppColors.textPrimary)
+                        .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+
                     Text(lang.isArabicEffective
-                         ? "في الوضع الصارم، الحارس هو من يقرّر متى يمكن حذف/إيقاف/تعديل القائمة."
-                         : "In Hard Mode, the gatekeeper decides when this list can be deleted, paused, or modified.")
+                         ? "الحارس هو من يقرّر متى يمكن حذف/إيقاف/تعديل القائمة."
+                         : "The gatekeeper decides when this list can be deleted, paused, or modified.")
                         .font(.footnote)
                         .foregroundColor(AppColors.textSecondary)
                         .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
                         .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
 
-                    // Option A — NoNet itself (default)
+                    // NoNet (default) gatekeeper option
                     partnerOptionRow(
                         title: lang.isArabicEffective ? "NoNet (افتراضي)" : "NoNet (default)",
                         subtitle: lang.isArabicEffective
@@ -798,7 +993,7 @@ struct CreateListSheet: View {
                         }
                     )
 
-                    // Option B — Human partner (CloudKit-backed Recovery Partner)
+                    // Human partner gatekeeper option
                     partnerOptionRow(
                         title: lang.isArabicEffective ? "شريك بشري" : "Human partner",
                         subtitle: lang.isArabicEffective
@@ -808,24 +1003,23 @@ struct CreateListSheet: View {
                         action: { selectedGatekeeper = "partner" }
                     )
 
-                    // Sub-options visible only when the user picks "Human partner".
                     if selectedGatekeeper == "partner" {
                         partnerSubOptions
                             .padding(.top, NNSpacing.xs)
                             .padding(lang.isArabicEffective ? .trailing : .leading, NNSpacing.md)
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
-                .padding(NNSpacing.lg)
-                .background(AppColors.uiSurface)
-                .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
-                .overlay(
-                    RoundedRectangle(cornerRadius: NNRadius.container)
-                        .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
-                )
             }
-            .listRowBackground(Color.clear)
+            .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+            .padding(NNSpacing.lg)
+            .background(AppColors.uiSurface)
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
+            .overlay(
+                RoundedRectangle(cornerRadius: NNRadius.container)
+                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+            )
         }
+        .listRowBackground(Color.clear)
     }
 
     /// Sub-list shown beneath the "Human partner" option: existing accepted
@@ -961,6 +1155,422 @@ struct CreateListSheet: View {
         .listRowBackground(Color.clear)
     }
     
+    // MARK: - Quick Start Templates
+    //
+    // One-tap presets that prefill 80% of the form. The user can still edit
+    // any field after applying. Templates intentionally do NOT seed
+    // FamilyActivitySelection tokens (Apple's API requires an active picker
+    // session) — they prefill `draft.categories` instead, which the editor
+    // picks up when the user opens it to add specific apps.
+
+    /// Internal template descriptor. Lives at the bottom of the file as a
+    /// static array (`Self.builtInTemplates`).
+    fileprivate struct ListTemplate: Identifiable {
+        let id: String
+        let icon: String
+        let iconColor: Color
+        let titleAr: String
+        let titleEn: String
+        let subtitleAr: String
+        let subtitleEn: String
+        let suggestedNameAr: String
+        let suggestedNameEn: String
+        let blockType: String         // "now" | "scheduled" | "timeLimit" | "forever"
+        let protection: String        // "noProtection" | "hard"
+        let categoriesAr: [String]    // raw labels (must match CategoryOptionsAr in editor)
+        let categoriesEn: [String]
+        let durationMinutes: Int      // for "now" — converted to days/hours/minutes
+        let timeLimitMinutes: Int     // for "timeLimit"
+    }
+
+    private static let builtInTemplates: [ListTemplate] = [
+        ListTemplate(
+            id: "focus",
+            icon: "target",
+            iconColor: .blue,
+            titleAr: "تركيز",
+            titleEn: "Focus",
+            subtitleAr: "احجب السوشيال والمقاطع لساعة",
+            subtitleEn: "Block social & shorts for an hour",
+            suggestedNameAr: "وقت التركيز",
+            suggestedNameEn: "Focus Time",
+            blockType: "now",
+            protection: "noProtection",
+            categoriesAr: ["وسائل التواصل الاجتماعي", "الشورتس والريلز"],
+            categoriesEn: ["Social Media", "Shorts & Reels"],
+            durationMinutes: 60,
+            timeLimitMinutes: 0
+        ),
+        ListTemplate(
+            id: "sleep",
+            icon: "moon.fill",
+            iconColor: .purple,
+            titleAr: "نوم",
+            titleEn: "Sleep",
+            subtitleAr: "حد يومي ٣٠ دقيقة للسوشيال",
+            subtitleEn: "30 min/day cap on social",
+            suggestedNameAr: "وضع النوم",
+            suggestedNameEn: "Sleep Mode",
+            blockType: "timeLimit",
+            protection: "noProtection",
+            categoriesAr: ["وسائل التواصل الاجتماعي", "الشورتس والريلز", "الألعاب"],
+            categoriesEn: ["Social Media", "Shorts & Reels", "Games"],
+            durationMinutes: 0,
+            timeLimitMinutes: 30
+        ),
+        ListTemplate(
+            id: "adult",
+            icon: "shield.lefthalf.filled",
+            iconColor: .red,
+            titleAr: "حماية صارمة",
+            titleEn: "Strict Block",
+            subtitleAr: "محتوى للبالغين + قمار، دائم",
+            subtitleEn: "Adult + gambling, permanent",
+            suggestedNameAr: "حماية دائمة",
+            suggestedNameEn: "Strict Protection",
+            blockType: "forever",
+            protection: "hard",
+            categoriesAr: ["محتوى للبالغين", "تطبيقات المقامرة"],
+            categoriesEn: ["Adult Content", "Gambling Apps"],
+            durationMinutes: 0,
+            timeLimitMinutes: 0
+        )
+    ]
+
+    private func quickStartTemplatesCard() -> some View {
+        Section(header: HStack(spacing: NNSpacing.xs) {
+            Image(systemName: "wand.and.stars")
+                .font(.nnCardBody)
+                .foregroundColor(AppColors.accent)
+            Text(lang.isArabicEffective ? "بداية سريعة" : "Quick Start")
+                .font(.nnCardTitle)
+        }) {
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
+                Text(lang.isArabicEffective
+                     ? "اختر قالباً جاهزاً (يمكنك التعديل بعد) أو ابدأ من الصفر."
+                     : "Pick a template (editable after) or start from scratch.")
+                    .font(.footnote)
+                    .foregroundColor(AppColors.textSecondary)
+                    .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+
+                LazyVGrid(
+                    columns: [
+                        GridItem(.flexible(), spacing: NNSpacing.sm),
+                        GridItem(.flexible(), spacing: NNSpacing.sm)
+                    ],
+                    spacing: NNSpacing.sm
+                ) {
+                    ForEach(Self.builtInTemplates) { template in
+                        templateCard(template)
+                    }
+                    customStartCard()
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+            .padding(NNSpacing.lg)
+            .background(AppColors.uiSurface)
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
+            .overlay(
+                RoundedRectangle(cornerRadius: NNRadius.container)
+                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+            )
+        }
+        .listRowBackground(Color.clear)
+    }
+
+    @ViewBuilder
+    private func templateCard(_ template: ListTemplate) -> some View {
+        Button(action: {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            applyTemplate(template)
+        }) {
+            VStack(alignment: .center, spacing: NNSpacing.xxs) {
+                Image(systemName: template.icon)
+                    .font(.title2.weight(.semibold))
+                    .foregroundColor(template.iconColor)
+                    .frame(height: 28)
+                Text(lang.isArabicEffective ? template.titleAr : template.titleEn)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(AppColors.textPrimary)
+                    .lineLimit(1)
+                Text(lang.isArabicEffective ? template.subtitleAr : template.subtitleEn)
+                    .font(.caption2)
+                    .foregroundColor(AppColors.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, minHeight: 100, alignment: .top)
+            .padding(.horizontal, NNSpacing.sm)
+            .padding(.vertical, NNSpacing.sm)
+            .background(AppColors.uiBackground)
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
+            .overlay(
+                RoundedRectangle(cornerRadius: NNRadius.card)
+                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(lang.isArabicEffective ? template.titleAr : template.titleEn)
+        .accessibilityHint(lang.isArabicEffective ? template.subtitleAr : template.subtitleEn)
+    }
+
+    /// Fourth grid cell — explicit "skip templates, build from scratch" option.
+    /// Same visual register as the template cards so the choice doesn't feel
+    /// asymmetric, but its action is a no-op that just dismisses the section
+    /// by giving the form a sentinel character (a single space) — that flips
+    /// `isFreshForm` to false so the templates row hides itself.
+    @ViewBuilder
+    private func customStartCard() -> some View {
+        Button(action: {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            // Move the form out of "fresh" state without seeding anything —
+            // a non-breaking space in `name` is invisible to the user but
+            // flips isFreshForm to false. They'll replace it the moment they
+            // start typing.
+            name = "\u{00A0}"
+            // Then immediately clear so the trim-based isNameValid still
+            // shows them the "name is too short" hint when they save without
+            // a real name. Async dispatch so the isFreshForm flip happens
+            // first (one runloop later) before the field empties.
+            DispatchQueue.main.async {
+                self.name = ""
+            }
+        }) {
+            VStack(alignment: .center, spacing: NNSpacing.xxs) {
+                Image(systemName: "square.and.pencil")
+                    .font(.title2.weight(.semibold))
+                    .foregroundColor(AppColors.textSecondary)
+                    .frame(height: 28)
+                Text(lang.isArabicEffective ? "مخصصة" : "Custom")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(AppColors.textPrimary)
+                    .lineLimit(1)
+                Text(lang.isArabicEffective ? "ابدأ من الصفر" : "Start from scratch")
+                    .font(.caption2)
+                    .foregroundColor(AppColors.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, minHeight: 100, alignment: .top)
+            .padding(.horizontal, NNSpacing.sm)
+            .padding(.vertical, NNSpacing.sm)
+            .background(AppColors.uiBackground)
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
+            .overlay(
+                RoundedRectangle(cornerRadius: NNRadius.card)
+                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// Apply a template's prefill values to the form state. Items aren't
+    /// seeded into FamilyActivitySelection (Apple requires an active picker
+    /// session), but `draft.categories` IS populated so the editor opens with
+    /// the category set already ticked.
+    private func applyTemplate(_ template: ListTemplate) {
+        // Name + block type + protection
+        name = lang.isArabicEffective ? template.suggestedNameAr : template.suggestedNameEn
+        blockType = template.blockType
+        protection = template.protection
+
+        // Duration / time-limit prefill
+        if template.durationMinutes > 0 {
+            let total = template.durationMinutes
+            days = total / (24 * 60)
+            let rem1 = total % (24 * 60)
+            hours = rem1 / 60
+            minutes = rem1 % 60
+            // Round minutes to nearest 5 (picker step) so the wheel snaps
+            // to a valid value when the user opens it.
+            if !minuteOptions.contains(minutes) {
+                minutes = minuteOptions.min(by: { abs($0 - minutes) < abs($1 - minutes) }) ?? 15
+            }
+        }
+        if template.timeLimitMinutes > 0 {
+            timeLimitMinutes = template.timeLimitMinutes
+        }
+
+        // Categories prefill — uses raw labels matching BlockItemsEditorView's
+        // category options. The editor reads `draft.categories` on open and
+        // ticks matching entries automatically.
+        let labels = lang.isArabicEffective ? template.categoriesAr : template.categoriesEn
+        draft.categories = labels.map {
+            DraftBlockItem(kind: .category, value: $0, displayName: $0)
+        }
+    }
+
+    // MARK: - Smart name suggestions
+    //
+    // Picks 2-4 plausible names from the user's selections + block type. Pure
+    // heuristic, no ML — the patterns cover the most common list intents
+    // (social detox, study mode, sleep mode, permanent porn block, etc.).
+
+    /// Returns 0-4 suggested names, ordered by relevance to the current draft.
+    /// Returns empty if there's not enough signal yet (no items + default
+    /// settings) — empty list hides the chip row entirely.
+    private func smartNameSuggestions() -> [String] {
+        let isAr = lang.isArabicEffective
+        var out: [String] = []
+
+        // Heuristics on selected categories — match against the raw value
+        // strings since they're consistent across languages (we localize at
+        // display time, not at category-key time).
+        let catValues = draft.categories.map { $0.value }
+        let hasSocial = catValues.contains { $0.contains("التواصل") || $0.lowercased().contains("social") }
+        let hasShorts = catValues.contains { $0.contains("الشورتس") || $0.lowercased().contains("shorts") }
+        let hasGames = catValues.contains { $0.contains("الألعاب") || $0.lowercased().contains("game") }
+        let hasAdult = catValues.contains { $0.contains("للبالغين") || $0.lowercased().contains("adult") }
+        let hasGambling = catValues.contains { $0.contains("المقامرة") || $0.lowercased().contains("gambling") }
+        let hasShopping = catValues.contains { $0.contains("التسوق") || $0.lowercased().contains("shopping") }
+
+        // Block-type-driven names take priority because they describe the
+        // intent more strongly than the items do (Forever = "permanent X",
+        // Daily Limit = "daily quota," etc.).
+        if blockType == "forever" {
+            if hasAdult { out.append(isAr ? "حجب دائم للبالغين" : "Permanent Adult Block") }
+            if hasGambling { out.append(isAr ? "حجب القمار" : "Block Gambling") }
+            out.append(isAr ? "حجب دائم" : "Permanent Block")
+        } else if blockType == "scheduled" {
+            if hasSocial || hasShorts { out.append(isAr ? "وقت التركيز" : "Focus Time") }
+            out.append(isAr ? "ساعات العمل" : "Work Hours")
+            out.append(isAr ? "وقت النوم" : "Sleep Mode")
+        } else if blockType == "timeLimit" {
+            if hasSocial { out.append(isAr ? "حد السوشيال" : "Social Limit") }
+            if hasShorts { out.append(isAr ? "حد المقاطع القصيرة" : "Shorts Limit") }
+            out.append(isAr ? "حد يومي" : "Daily Quota")
+        } else { // "now"
+            if hasSocial || hasShorts { out.append(isAr ? "ابتعد عن السوشيال" : "Social Detox") }
+            if hasGames { out.append(isAr ? "وقت الدراسة" : "Study Time") }
+            if hasShopping { out.append(isAr ? "ابتعد عن التسوق" : "No-Spend Hours") }
+            out.append(isAr ? "وقت التركيز" : "Focus Time")
+        }
+
+        // Hard Mode adds urgency to the name — prefix one suggestion.
+        if protection == "hard", let first = out.first {
+            out[0] = (isAr ? "إقفال: " : "Lock: ") + first
+        }
+
+        // Dedupe + cap at 4 to keep the chip row from wrapping into 2 lines.
+        var seen: Set<String> = []
+        let unique = out.filter { seen.insert($0).inserted }
+        return Array(unique.prefix(4))
+    }
+
+    /// Horizontal scrollable row of suggestion chips. Tapping one fills the
+    /// name field; the row hides itself the moment `name` becomes non-empty
+    /// (driven by the parent's `if name.isEmpty` guard, not this view).
+    @ViewBuilder
+    private func smartNameSuggestionRow() -> some View {
+        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.xxs) {
+            HStack(spacing: NNSpacing.xxs) {
+                Image(systemName: "sparkles")
+                    .font(.caption2)
+                    .foregroundColor(AppColors.accent)
+                Text(lang.isArabicEffective ? "اقتراحات" : "Suggestions")
+                    .font(.caption.weight(.medium))
+                    .foregroundColor(AppColors.textSecondary)
+            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: NNSpacing.xs) {
+                    ForEach(smartNameSuggestions(), id: \.self) { suggestion in
+                        Button(action: {
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            name = suggestion
+                        }) {
+                            Text(suggestion)
+                                .font(.caption.weight(.medium))
+                                .foregroundColor(AppColors.accent)
+                                .padding(.horizontal, NNSpacing.sm)
+                                .padding(.vertical, NNSpacing.xs - 2)
+                                .background(AppColors.infoBg)
+                                .clipShape(Capsule())
+                                .overlay(
+                                    Capsule()
+                                        .stroke(AppColors.accent.opacity(0.3), lineWidth: NNBorder.hairline)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(suggestion)
+                        .accessibilityHint(lang.isArabicEffective ? "املأ الاسم بهذا الاقتراح" : "Fill name with this suggestion")
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Draft auto-save
+    //
+    // Persist the simple form state to AppStorage on every meaningful change.
+    // Items aren't persisted (FamilyActivitySelection tokens are opaque), so
+    // restoring a draft fills name/duration/protection/breaks but the user
+    // must re-pick the items to block.
+
+    private func currentSnapshot() -> CreateListDraftSnapshot {
+        CreateListDraftSnapshot(
+            name: name,
+            protection: protection,
+            blockType: blockType,
+            days: days,
+            hours: hours,
+            minutes: minutes,
+            timeLimitMinutes: timeLimitMinutes,
+            breaksCount: breaksCount,
+            breakDurationMinutes: breakDurationMinutes,
+            selectedGatekeeper: selectedGatekeeper,
+            savedAt: Date()
+        )
+    }
+
+    private func saveDraft() {
+        let snap = currentSnapshot()
+        // Don't persist truly empty drafts — would just clutter AppStorage and
+        // surface useless restore prompts.
+        guard !snap.isEmpty else { return }
+        guard let data = try? JSONEncoder().encode(snap),
+              let json = String(data: data, encoding: .utf8) else { return }
+        draftJSON = json
+    }
+
+    private func clearDraft() {
+        draftJSON = ""
+    }
+
+    /// Read the persisted draft if it exists and is fresh + non-empty. Returns
+    /// nil if there's nothing to restore.
+    private func readDraft() -> CreateListDraftSnapshot? {
+        guard !draftJSON.isEmpty,
+              let data = draftJSON.data(using: .utf8),
+              let snap = try? JSONDecoder().decode(CreateListDraftSnapshot.self, from: data),
+              snap.isFresh, !snap.isEmpty
+        else { return nil }
+        return snap
+    }
+
+    private func applyDraft(_ snap: CreateListDraftSnapshot) {
+        name = snap.name
+        protection = snap.protection
+        blockType = snap.blockType
+        days = snap.days
+        hours = snap.hours
+        minutes = snap.minutes
+        timeLimitMinutes = snap.timeLimitMinutes
+        breaksCount = snap.breaksCount
+        breakDurationMinutes = snap.breakDurationMinutes
+        selectedGatekeeper = snap.selectedGatekeeper
+    }
+
+    /// Called on first appearance — if a fresh, non-empty draft exists, prompt
+    /// the user to restore. They can dismiss to start fresh (which also clears
+    /// the draft so the prompt won't reappear).
+    private func handleAppearForDraft() {
+        if readDraft() != nil {
+            showRestoreDraftAlert = true
+        }
+    }
+
     // Logic helpers
     private func openEditor() { draft.name = name; showingEditor = true }
 
@@ -1028,11 +1638,12 @@ struct CreateListSheet: View {
             showValidationAlert = true
             return
         }
-        // Forever skips the duration step but still goes through a hard confirm dialog before save.
+        // Forever skips the duration step but still goes through the unified
+        // danger sheet (replaces showForeverConfirmAlert + showHardConfirmAlert).
         if blockType == "forever" {
             pendingBaseName = name.trimmingCharacters(in: .whitespacesAndNewlines)
             pendingSeconds = 0
-            showForeverConfirmAlert = true
+            showDangerConfirmSheet = true
             return
         }
         // Time-Limit stores the daily quota in durationSeconds; skip the confirm sheet
@@ -1042,7 +1653,8 @@ struct CreateListSheet: View {
             pendingBaseName = trimmed
             pendingSeconds = Int64(timeLimitMinutes * 60)
             if protection == "hard" {
-                showHardConfirmAlert = true
+                // Unified danger sheet covers Hard Mode confirmation here too.
+                showDangerConfirmSheet = true
             } else {
                 save(totalSeconds: pendingSeconds, baseName: trimmed)
             }
@@ -1099,7 +1711,9 @@ struct CreateListSheet: View {
                 : "We couldn't save the list right now. Try again, and if it keeps failing, restart the app."
             return
         case .success:
-            break
+            // Clear the auto-save draft now that the list is persisted —
+            // the next CreateListSheet open should be a clean form.
+            clearDraft()
         }
         // Apply blocking immediately when appropriate.
         let shouldStartNow = blockType == "now" && (startImmediately || protection == "hard")
@@ -1249,6 +1863,255 @@ struct CreateListSheet: View {
             return daysDesc + " " + fmt(from) + "–" + fmt(to)
         }
         return lang.isArabicEffective ? "\(list.count) فترات" : "\(list.count) slots"
+    }
+}
+
+// MARK: - ConfirmDangerSheet
+//
+// Single sheet that replaces the previous trio of alerts
+// (showForeverFirstAlert + showForeverConfirmAlert + showHardConfirmAlert).
+// Shows ALL consequences in one view with checkboxes the user must tick
+// before the destructive button enables.
+//
+// Why one sheet instead of stacked alerts: testers in the original flow
+// reflexively tapped "OK" through 3 modals without reading. A single sheet
+// with consequence rows + checkboxes forces the eye to land on each
+// consequence and explicitly acknowledge it before the confirm enables.
+private struct ConfirmDangerSheet: View {
+    let isArabic: Bool
+    let isForever: Bool
+    let isHardMode: Bool
+    var onCancel: () -> Void
+    var onConfirm: () -> Void
+
+    @State private var ackForever: Bool = false
+    @State private var ackHard: Bool = false
+
+    private var requiresAckForever: Bool { isForever }
+    private var requiresAckHard: Bool { isHardMode }
+
+    /// Confirm enabled only when every applicable consequence has been ticked.
+    private var canConfirm: Bool {
+        (requiresAckForever ? ackForever : true) && (requiresAckHard ? ackHard : true)
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: NNSpacing.lg) {
+                // Header — large warning icon + title that names what's about
+                // to happen in plain language.
+                VStack(spacing: NNSpacing.xs) {
+                    Image(systemName: "exclamationmark.shield.fill")
+                        .font(.system(size: 44))
+                        .foregroundColor(AppColors.alertRed)
+                        .padding(.top, NNSpacing.md)
+                    Text(headerTitle)
+                        .font(.title2.weight(.bold))
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(AppColors.textPrimary)
+                    Text(headerSubtitle)
+                        .font(.subheadline)
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(AppColors.textSecondary)
+                        .padding(.horizontal, NNSpacing.md)
+                }
+
+                // Consequences list — one row per applicable danger. Each row
+                // is icon + headline + body so the consequence reads as a
+                // discrete fact, not a wall of warning text.
+                VStack(spacing: NNSpacing.sm) {
+                    if isForever {
+                        consequenceRow(
+                            icon: "infinity",
+                            headline: isArabic ? "بلا نهاية تلقائية" : "No automatic end",
+                            body: isArabic
+                                ? "يبقى الحجب فعّالاً حتى تحذف القائمة يدوياً من شاشة التطبيق."
+                                : "Stays active until you manually delete the list from inside the app."
+                        )
+                    }
+                    if isHardMode {
+                        consequenceRow(
+                            icon: "lock.fill",
+                            headline: isArabic ? "صعب الإيقاف" : "Hard to stop",
+                            body: isArabic
+                                ? "لا يمكن تعديل أو حذف القائمة بسهولة خلال المدة. الحذف يتطلب عذراً مفصّلاً أو انتظار ٧ أيام."
+                                : "You can't simply edit or delete the list during the duration. Deletion requires a detailed reason or a 7-day wait."
+                        )
+                    }
+                    if isForever && isHardMode {
+                        consequenceRow(
+                            icon: "exclamationmark.octagon.fill",
+                            headline: isArabic ? "الجمع بين الاثنين = إقفال شبه دائم" : "Combining both = near-permanent lock",
+                            body: isArabic
+                                ? "مع تفعيل الوضع الصارم + الحجب الدائم، تصبح القائمة شبه مستحيلة الإزالة قبل ٧ أيام."
+                                : "With Hard Mode + Permanent block, this list becomes nearly impossible to remove before 7 days.",
+                            tone: .severe
+                        )
+                    }
+                }
+                .padding(.horizontal, NNSpacing.md)
+
+                // Checkboxes — one per danger. canConfirm gates the confirm
+                // button on these. Order: forever first, then hard mode.
+                VStack(spacing: NNSpacing.sm) {
+                    if requiresAckForever {
+                        ackToggle(
+                            isOn: $ackForever,
+                            label: isArabic
+                                ? "فهمت أن الحجب يبقى حتى أحذف القائمة يدوياً."
+                                : "I understand the block stays until I manually delete the list."
+                        )
+                    }
+                    if requiresAckHard {
+                        ackToggle(
+                            isOn: $ackHard,
+                            label: isArabic
+                                ? "فهمت أن إيقاف الحجب يتطلب عذراً مفصّلاً أو انتظار ٧ أيام."
+                                : "I understand stopping the block requires a detailed reason or a 7-day wait."
+                        )
+                    }
+                }
+                .padding(.horizontal, NNSpacing.md)
+
+                // Action buttons — destructive primary on top because that's
+                // the "I really want this" action; cancel below so an accidental
+                // tap on the wrong side of the screen doesn't trigger it.
+                VStack(spacing: NNSpacing.xs) {
+                    Button(action: { if canConfirm { onConfirm() } }) {
+                        Text(confirmLabel)
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: NNHitTarget.minimum + 6)
+                            .background(canConfirm ? AppColors.alertRed : AppColors.alertRed.opacity(0.4))
+                            .foregroundColor(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!canConfirm)
+
+                    Button(action: { onCancel() }) {
+                        Text(isArabic ? "تراجعت، رجّعني" : "Cancel")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: NNHitTarget.minimum + 6)
+                            .background(AppColors.uiSurface)
+                            .foregroundColor(AppColors.textPrimary)
+                            .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: NNRadius.control)
+                                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, NNSpacing.md)
+                .padding(.bottom, NNSpacing.lg)
+            }
+        }
+        .background(AppColors.uiBackground.ignoresSafeArea())
+    }
+
+    private var headerTitle: String {
+        switch (isForever, isHardMode) {
+        case (true, true):
+            return isArabic ? "حجب دائم + وضع صارم" : "Permanent + Hard Mode"
+        case (true, false):
+            return isArabic ? "حجب دائم" : "Permanent Block"
+        case (false, true):
+            return isArabic ? "تفعيل الوضع الصارم" : "Enable Hard Mode"
+        default:
+            return isArabic ? "تأكيد" : "Confirm"
+        }
+    }
+
+    private var headerSubtitle: String {
+        switch (isForever, isHardMode) {
+        case (true, true):
+            return isArabic
+                ? "اقرأ كل نقطة ووافق قبل التفعيل."
+                : "Read each point and acknowledge before activating."
+        case (true, false):
+            return isArabic
+                ? "قرار جادّ — راجع التفاصيل ثم وافق."
+                : "Serious decision — review and acknowledge."
+        case (false, true):
+            return isArabic
+                ? "الوضع الصارم يقلّل سيطرتك أثناء المدة بشكل متعمَّد."
+                : "Hard Mode intentionally reduces your control during the duration."
+        default:
+            return ""
+        }
+    }
+
+    private var confirmLabel: String {
+        if isForever && isHardMode {
+            return isArabic ? "نعم، فعّل الإثنين" : "Yes, enable both"
+        } else if isForever {
+            return isArabic ? "فعّل الحجب الدائم" : "Enable permanent block"
+        } else {
+            return isArabic ? "فعّل الوضع الصارم" : "Enable Hard Mode"
+        }
+    }
+
+    /// Visual tone for a consequence row — `.standard` uses muted red text,
+    /// `.severe` uses solid red background for the combined-danger case.
+    private enum ConsequenceTone { case standard, severe }
+
+    @ViewBuilder
+    private func consequenceRow(icon: String, headline: String, body: String, tone: ConsequenceTone = .standard) -> some View {
+        HStack(alignment: .top, spacing: NNSpacing.sm) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundColor(tone == .severe ? .white : AppColors.alertRed)
+                .frame(width: 32, alignment: .center)
+                .padding(.top, 2)
+            VStack(alignment: isArabic ? .trailing : .leading, spacing: 4) {
+                Text(headline)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(tone == .severe ? .white : AppColors.textPrimary)
+                Text(body)
+                    .font(.footnote)
+                    .foregroundColor(tone == .severe ? Color.white.opacity(0.9) : AppColors.textSecondary)
+                    .multilineTextAlignment(isArabic ? .trailing : .leading)
+            }
+            .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
+        }
+        .padding(NNSpacing.md)
+        .background(tone == .severe ? AppColors.alertRed : AppColors.alertRed.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+        .overlay(
+            RoundedRectangle(cornerRadius: NNRadius.control)
+                .stroke(tone == .severe ? Color.clear : AppColors.alertRed.opacity(0.25), lineWidth: NNBorder.hairline)
+        )
+    }
+
+    @ViewBuilder
+    private func ackToggle(isOn: Binding<Bool>, label: String) -> some View {
+        Button(action: {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            isOn.wrappedValue.toggle()
+        }) {
+            HStack(alignment: .top, spacing: NNSpacing.sm) {
+                Image(systemName: isOn.wrappedValue ? "checkmark.square.fill" : "square")
+                    .font(.title3)
+                    .foregroundColor(isOn.wrappedValue ? AppColors.accent : AppColors.textSecondary)
+                Text(label)
+                    .font(.footnote)
+                    .foregroundColor(AppColors.textPrimary)
+                    .multilineTextAlignment(isArabic ? .trailing : .leading)
+                    .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
+            }
+            .padding(NNSpacing.sm)
+            .frame(minHeight: NNHitTarget.minimum)
+            .background(AppColors.uiSurface)
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+            .overlay(
+                RoundedRectangle(cornerRadius: NNRadius.control)
+                    .stroke(isOn.wrappedValue ? AppColors.accent : AppColors.uiBorder,
+                            lineWidth: isOn.wrappedValue ? NNBorder.input : NNBorder.hairline)
+            )
+        }
+        .buttonStyle(.plain)
     }
 }
 
