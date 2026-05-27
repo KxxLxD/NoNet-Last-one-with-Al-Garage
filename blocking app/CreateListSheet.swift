@@ -984,12 +984,17 @@ struct CreateListSheet: View {
                         .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
                         .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
 
-                    // NoNet (default) gatekeeper option
+                    // NoNet (default) gatekeeper option — reframed to lead
+                    // with the user role ("I lock myself") rather than the
+                    // app name, so the choice reads as a posture not a brand.
                     partnerOptionRow(
-                        title: lang.isArabicEffective ? "NoNet (افتراضي)" : "NoNet (default)",
+                        title: lang.isArabicEffective ? "أنا أحجب نفسي" : "I lock myself",
                         subtitle: lang.isArabicEffective
-                            ? "للحذف: عذر مفصّل (\(BlockingConstants.strongReasonMinCharacters)+ حرف) أو انتظار ٧ أيام"
-                            : "To delete: a \(BlockingConstants.strongReasonMinCharacters)+ char reason or a 7-day wait",
+                            ? "بدون شريك. لتعطيل الحجب تكتب سبب مفصّل (\(BlockingConstants.strongReasonMinCharacters)+ حرف) أو تنتظر ٧ أيام."
+                            : "No partner. To disable, write a \(BlockingConstants.strongReasonMinCharacters)+ char reason or wait 7 days.",
+                        bestFor: lang.isArabicEffective
+                            ? "مناسب لما تكون وحدك أو ما عندك أحد تثق فيه"
+                            : "Best when you're solo or have no one to ask",
                         isSelected: selectedGatekeeper == "nonet",
                         action: {
                             selectedGatekeeper = "nonet"
@@ -998,17 +1003,30 @@ struct CreateListSheet: View {
                         }
                     )
 
-                    // Human partner gatekeeper option
+                    // Human partner gatekeeper option — outcome-framed:
+                    // "Someone holds me accountable" beats "Human partner"
+                    // because it names the benefit the user gets.
                     partnerOptionRow(
-                        title: lang.isArabicEffective ? "شريك بشري" : "Human partner",
+                        title: lang.isArabicEffective ? "شخص يحاسبني" : "Someone holds me accountable",
                         subtitle: lang.isArabicEffective
-                            ? "صديق/قريب يوافق أو يرفض طلباتك — حساب اجتماعي أقوى"
-                            : "A friend or family member approves or denies — stronger accountability",
+                            ? "صديق/أهل يستلم طلباتك ويوافق أو يرفض. أصعب تكسر الالتزام لما أحد يراقب."
+                            : "A friend or family member receives your requests and approves or denies. Harder to break your commitment with someone watching.",
+                        bestFor: lang.isArabicEffective
+                            ? "مناسب لما عندك شخص تثق فيه ويبيك تنجح"
+                            : "Best when you have someone you trust who wants you to succeed",
                         isSelected: selectedGatekeeper == "partner",
                         action: { selectedGatekeeper = "partner" }
                     )
 
                     if selectedGatekeeper == "partner" {
+                        // 4-step preview block — surfaces what happens AFTER
+                        // the user saves the list, since the CKShare flow
+                        // wasn't obvious before ("where do I put their
+                        // email?"). Now the steps + the iCloud note make
+                        // the mechanism explicit before the user commits.
+                        partnerPreviewSteps
+                            .padding(.top, NNSpacing.xs)
+
                         partnerSubOptions
                             .padding(.top, NNSpacing.xs)
                             .padding(lang.isArabicEffective ? .trailing : .leading, NNSpacing.md)
@@ -1025,6 +1043,86 @@ struct CreateListSheet: View {
             )
         }
         .listRowBackground(Color.clear)
+    }
+
+    /// 4-step preview of what happens AFTER the user picks "Someone holds
+    /// me accountable" and saves the list. Surfaces the CloudKit-via-link
+    /// model explicitly so users don't keep hunting for an "email" field
+    /// (the share goes via iMessage / WhatsApp / AirDrop, not email).
+    /// Pairs with an iCloud-required note so the user learns the partner-
+    /// side requirement before they invite someone who can't accept.
+    @ViewBuilder
+    private var partnerPreviewSteps: some View {
+        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.xs) {
+            HStack(spacing: NNSpacing.xxs) {
+                Image(systemName: "list.number")
+                    .font(.caption2)
+                    .foregroundColor(AppColors.accent)
+                Text(lang.isArabicEffective ? "وش يصير بعد ما تختار هذا؟" : "What happens after you pick this?")
+                    .font(.caption.weight(.semibold))
+                    .foregroundColor(AppColors.textPrimary)
+                Spacer(minLength: 0)
+            }
+
+            partnerStepRow(number: "١", numberEn: "1",
+                           textAr: "تكمّل بقية إعدادات القائمة وتضغط \"تم\".",
+                           textEn: "Finish the rest of the list settings and tap Done.")
+            partnerStepRow(number: "٢", numberEn: "2",
+                           textAr: "تكتب اسمك واسم شريكك → نسوي لك رابط دعوة.",
+                           textEn: "Enter your name + partner's name — we generate an invite link.")
+            partnerStepRow(number: "٣", numberEn: "3",
+                           textAr: "ترسل الرابط لشريكك عبر iMessage أو WhatsApp أو AirDrop.",
+                           textEn: "Send the link to your partner via iMessage, WhatsApp, or AirDrop.")
+            partnerStepRow(number: "٤", numberEn: "4",
+                           textAr: "شريكك يضغط الرابط ويقبل → يصير الحارس الرسمي.",
+                           textEn: "Your partner taps the link and accepts — they become the official gatekeeper.")
+
+            // iCloud requirement note — partners on Android / no-iCloud
+            // accounts can't accept a CKShare, so flag this upfront.
+            HStack(alignment: .top, spacing: NNSpacing.xxs) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.caption2)
+                    .foregroundColor(AppColors.alertRed)
+                    .padding(.top, 1)
+                Text(lang.isArabicEffective
+                     ? "شريكك يحتاج جهاز Apple مع iCloud مفعّل (مو email عادي)."
+                     : "Your partner needs an Apple device with iCloud signed in (not a regular email).")
+                    .font(.caption2)
+                    .foregroundColor(AppColors.textSecondary)
+                    .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+            }
+            .padding(.top, NNSpacing.xxs)
+        }
+        .padding(NNSpacing.sm)
+        .background(AppColors.infoBg.opacity(0.5))
+        .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+        .overlay(
+            RoundedRectangle(cornerRadius: NNRadius.control)
+                .stroke(AppColors.accent.opacity(0.2), lineWidth: NNBorder.hairline)
+        )
+    }
+
+    /// One numbered step row in the partner-preview block. Uses Arabic-
+    /// Indic digits (١/٢/٣/٤) in Arabic mode so the badge feels native to
+    /// the surrounding text direction.
+    @ViewBuilder
+    private func partnerStepRow(number: String, numberEn: String, textAr: String, textEn: String) -> some View {
+        HStack(alignment: .top, spacing: NNSpacing.xs) {
+            Text(lang.isArabicEffective ? number : numberEn)
+                .font(.caption.weight(.bold))
+                .foregroundColor(.white)
+                .frame(width: 20, height: 20)
+                .background(AppColors.accent)
+                .clipShape(Circle())
+            Text(lang.isArabicEffective ? textAr : textEn)
+                .font(.caption)
+                .foregroundColor(AppColors.textPrimary)
+                .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
+        }
     }
 
     /// Sub-list shown beneath the "Human partner" option: existing accepted
@@ -1073,17 +1171,36 @@ struct CreateListSheet: View {
 
     /// Single tappable row inside `partnerCard`. Visual: title + subtitle + a
     /// checkmark when selected. Used for "No partner" + each existing partner.
+    ///
+    /// `bestFor` (optional) renders a third line "💡 مناسب لـ: <text>" below
+    /// the subtitle — surfaces *who* this option suits without forcing the
+    /// user to infer it from technical mechanics. Used on the gatekeeper
+    /// options under Hard Mode so users pick by life-situation, not by
+    /// reading rule descriptions.
     @ViewBuilder
-    private func partnerOptionRow(title: String, subtitle: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+    private func partnerOptionRow(title: String, subtitle: String, bestFor: String? = nil, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: NNSpacing.sm) {
-                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 2) {
+                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 4) {
                     Text(title)
                         .font(.subheadline.weight(.medium))
                         .foregroundColor(AppColors.textPrimary)
                     Text(subtitle)
                         .font(.caption)
                         .foregroundColor(AppColors.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if let bestFor = bestFor {
+                        HStack(spacing: 4) {
+                            Image(systemName: "lightbulb.fill")
+                                .font(.caption2)
+                                .foregroundColor(AppColors.accent.opacity(0.7))
+                            Text(bestFor)
+                                .font(.caption2.weight(.medium))
+                                .foregroundColor(AppColors.accent.opacity(0.85))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(.top, 2)
+                    }
                 }
                 Spacer()
                 if isSelected {
