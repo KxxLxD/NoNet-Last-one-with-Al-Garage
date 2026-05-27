@@ -1169,11 +1169,12 @@ struct CreateListSheet: View {
     // picks up when the user opens it to add specific apps.
 
     /// Internal template descriptor. Lives at the bottom of the file as a
-    /// static array (`Self.builtInTemplates`).
+    /// static array (`Self.builtInTemplates`). Subtitle fields are kept
+    /// even though the chip UI doesn't render them — VoiceOver uses them
+    /// as the accessibility hint so users hear what each chip does.
     fileprivate struct ListTemplate: Identifiable {
         let id: String
         let icon: String
-        let iconColor: Color
         let titleAr: String
         let titleEn: String
         let subtitleAr: String
@@ -1192,7 +1193,6 @@ struct CreateListSheet: View {
         ListTemplate(
             id: "focus",
             icon: "target",
-            iconColor: .blue,
             titleAr: "تركيز",
             titleEn: "Focus",
             subtitleAr: "احجب السوشيال والمقاطع لساعة",
@@ -1209,7 +1209,6 @@ struct CreateListSheet: View {
         ListTemplate(
             id: "sleep",
             icon: "moon.fill",
-            iconColor: .purple,
             titleAr: "نوم",
             titleEn: "Sleep",
             subtitleAr: "حد يومي ٣٠ دقيقة للسوشيال",
@@ -1226,7 +1225,6 @@ struct CreateListSheet: View {
         ListTemplate(
             id: "adult",
             icon: "shield.lefthalf.filled",
-            iconColor: .red,
             titleAr: "حماية صارمة",
             titleEn: "Strict Block",
             subtitleAr: "محتوى للبالغين + قمار، دائم",
@@ -1242,133 +1240,74 @@ struct CreateListSheet: View {
         )
     ]
 
+    /// Inline "أفكار / Ideas" banner — caption label + horizontal scroll of
+    /// accent capsule chips. Mirrors the `smartNameSuggestionRow()` pattern
+    /// in the same file so the form has ONE visual language for tap-to-apply
+    /// suggestions instead of competing registers.
+    ///
+    /// Previous design (2×2 grid, ~230pt tall, three icon colours, "Custom"
+    /// escape-hatch card with a non-breaking-space hack) was scrapped per
+    /// user feedback ("ugly, make it simpler"). New design is ~50pt tall,
+    /// one accent colour throughout, no Custom button — a user who wants a
+    /// blank form just scrolls past this section.
     private func quickStartTemplatesCard() -> some View {
-        Section(header: HStack(spacing: NNSpacing.xs) {
-            Image(systemName: "wand.and.stars")
-                .font(.nnCardBody)
-                .foregroundColor(AppColors.accent)
-            Text(lang.isArabicEffective ? "بداية سريعة" : "Quick Start")
-                .font(.nnCardTitle)
-        }) {
-            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
-                Text(lang.isArabicEffective
-                     ? "اختر قالباً جاهزاً (يمكنك التعديل بعد) أو ابدأ من الصفر."
-                     : "Pick a template (editable after) or start from scratch.")
-                    .font(.footnote)
-                    .foregroundColor(AppColors.textSecondary)
-                    .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
-
-                LazyVGrid(
-                    columns: [
-                        GridItem(.flexible(), spacing: NNSpacing.sm),
-                        GridItem(.flexible(), spacing: NNSpacing.sm)
-                    ],
-                    spacing: NNSpacing.sm
-                ) {
-                    ForEach(Self.builtInTemplates) { template in
-                        templateCard(template)
+        Section {
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.xs) {
+                HStack(spacing: NNSpacing.xxs) {
+                    Image(systemName: "sparkles")
+                        .font(.caption2)
+                        .foregroundColor(AppColors.accent)
+                    Text(lang.isArabicEffective ? "أفكار" : "Ideas")
+                        .font(.caption.weight(.medium))
+                        .foregroundColor(AppColors.textSecondary)
+                    Spacer()
+                }
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: NNSpacing.xs) {
+                        ForEach(Self.builtInTemplates) { template in
+                            templateChip(template)
+                        }
                     }
-                    customStartCard()
                 }
             }
-            .frame(maxWidth: .infinity, alignment: lang.isArabicEffective ? .trailing : .leading)
-            .padding(NNSpacing.lg)
-            .background(AppColors.uiSurface)
-            .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
-            .overlay(
-                RoundedRectangle(cornerRadius: NNRadius.container)
-                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
-            )
+            .padding(.vertical, NNSpacing.xs)
         }
+        .listRowInsets(EdgeInsets(top: 0,
+                                  leading: NNSpacing.md,
+                                  bottom: 0,
+                                  trailing: NNSpacing.md))
         .listRowBackground(Color.clear)
     }
 
+    /// Single capsule chip in the Ideas row. Identical styling to the chips
+    /// used by `smartNameSuggestionRow()` — single accent colour, infoBg
+    /// fill, hairline accent border. Tap → applies the template.
     @ViewBuilder
-    private func templateCard(_ template: ListTemplate) -> some View {
+    private func templateChip(_ template: ListTemplate) -> some View {
         Button(action: {
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             applyTemplate(template)
         }) {
-            VStack(alignment: .center, spacing: NNSpacing.xxs) {
+            HStack(spacing: NNSpacing.xxs) {
                 Image(systemName: template.icon)
-                    .font(.title2.weight(.semibold))
-                    .foregroundColor(template.iconColor)
-                    .frame(height: 28)
+                    .font(.caption)
                 Text(lang.isArabicEffective ? template.titleAr : template.titleEn)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundColor(AppColors.textPrimary)
+                    .font(.caption.weight(.medium))
                     .lineLimit(1)
-                Text(lang.isArabicEffective ? template.subtitleAr : template.subtitleEn)
-                    .font(.caption2)
-                    .foregroundColor(AppColors.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
             }
-            .frame(maxWidth: .infinity, minHeight: 100, alignment: .top)
+            .foregroundColor(AppColors.accent)
             .padding(.horizontal, NNSpacing.sm)
-            .padding(.vertical, NNSpacing.sm)
-            .background(AppColors.uiBackground)
-            .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
+            .padding(.vertical, NNSpacing.xs - 2)
+            .background(AppColors.infoBg)
+            .clipShape(Capsule())
             .overlay(
-                RoundedRectangle(cornerRadius: NNRadius.card)
-                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+                Capsule()
+                    .stroke(AppColors.accent.opacity(0.3), lineWidth: NNBorder.hairline)
             )
         }
         .buttonStyle(.plain)
         .accessibilityLabel(lang.isArabicEffective ? template.titleAr : template.titleEn)
         .accessibilityHint(lang.isArabicEffective ? template.subtitleAr : template.subtitleEn)
-    }
-
-    /// Fourth grid cell — explicit "skip templates, build from scratch" option.
-    /// Same visual register as the template cards so the choice doesn't feel
-    /// asymmetric, but its action is a no-op that just dismisses the section
-    /// by giving the form a sentinel character (a single space) — that flips
-    /// `isFreshForm` to false so the templates row hides itself.
-    @ViewBuilder
-    private func customStartCard() -> some View {
-        Button(action: {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            // Move the form out of "fresh" state without seeding anything —
-            // a non-breaking space in `name` is invisible to the user but
-            // flips isFreshForm to false. They'll replace it the moment they
-            // start typing.
-            name = "\u{00A0}"
-            // Then immediately clear so the trim-based isNameValid still
-            // shows them the "name is too short" hint when they save without
-            // a real name. Async dispatch so the isFreshForm flip happens
-            // first (one runloop later) before the field empties.
-            DispatchQueue.main.async {
-                self.name = ""
-            }
-        }) {
-            VStack(alignment: .center, spacing: NNSpacing.xxs) {
-                Image(systemName: "square.and.pencil")
-                    .font(.title2.weight(.semibold))
-                    .foregroundColor(AppColors.textSecondary)
-                    .frame(height: 28)
-                Text(lang.isArabicEffective ? "مخصصة" : "Custom")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundColor(AppColors.textPrimary)
-                    .lineLimit(1)
-                Text(lang.isArabicEffective ? "ابدأ من الصفر" : "Start from scratch")
-                    .font(.caption2)
-                    .foregroundColor(AppColors.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .frame(maxWidth: .infinity, minHeight: 100, alignment: .top)
-            .padding(.horizontal, NNSpacing.sm)
-            .padding(.vertical, NNSpacing.sm)
-            .background(AppColors.uiBackground)
-            .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
-            .overlay(
-                RoundedRectangle(cornerRadius: NNRadius.card)
-                    .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
-            )
-        }
-        .buttonStyle(.plain)
     }
 
     /// Apply a template's prefill values to the form state. Items aren't
