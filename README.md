@@ -1,202 +1,138 @@
-# NoNet — تطبيق الحجب الذكي
+<div dir="rtl">
 
-تطبيق iOS للرفاهية الرقمية يساعد المستخدمين على تقليل إدمان التطبيقات والمواقع عبر قوائم حجب قابلة للجدولة، باستخدام نظام **Screen Time / FamilyControls** من Apple.
+# تطبيق الصملة · Samla
 
-- 🇸🇦 العربية / 🇬🇧 English (RTL/LTR كامل)
-- iOS 16+
-- SwiftUI + Core Data + StoreKit 2
-- محلي بالكامل (لا backend، لا تتبع، لا analytics خارجي)
+**نظام حظر صارم لا يمكن تجاوزه أو تعطيله، لمعالجة الإدمان الرقمي.**
+يحظر محتوى البالغين وتطبيقات المواعدة ومنصات القمار للأبد مجاناً، ويقلّل باقي صور الإدمان تدريجياً، مع بدائل صحية في مجتمع قائم.
 
-![Status](https://img.shields.io/badge/status-App%20Store%20Submission%20Ready-success)
-![Version](https://img.shields.io/badge/version-1.1.0-blue)
-![Tests](https://img.shields.io/badge/tests-46%20unit-brightgreen)
-![Privacy](https://img.shields.io/badge/privacy-CloudKit%20only-blueviolet)
-![Build](https://img.shields.io/badge/build-0%20errors%200%20warnings-success)
+> مشروع مشارك في **جائزة نورة الملاحي للابتكار الاجتماعي التقني 2026** · التحدي: الإدمان الرقمي · بدعم واحتضان من **ntdp**
 
-> ## 🎯 إطلاق App Store جاهز
->
-> الكود جاهز بنسبة 100% ✅ — تبقّت إجراءات إدارية تحتاج Apple ID الشخصي.
->
-> **➡️ افتح [TODO_FOR_KHALID.md](TODO_FOR_KHALID.md) للقائمة الكاملة.**
+![iOS 16+](https://img.shields.io/badge/iOS-16%2B-black) ![SwiftUI](https://img.shields.io/badge/SwiftUI-Screen%20Time%20API-DE1F26) ![Version](https://img.shields.io/badge/version-1.4.0-blue) ![License](https://img.shields.io/badge/license-All%20rights%20reserved-lightgrey)
 
-### 🆕 ما الجديد في v1.1.0
+![شاشات تطبيق الصملة](docs/images/samla-screens.png)
 
-- **شريك التعافي (Recovery Partner)** عبر CloudKit + Apple ID — دعوة شريك،
-  استلام إشعارات محاولات كسر Hard Mode، عرض السجل الكامل. بدون backend.
-- **نوع حظر "للأبد" (Forever)** — حجب دائم بدون نهاية مع تحذيرات ثلاثية.
-- **نوع حظر "حد يومي" (Time-Limit)** — حصة يومية تعيد نفسها منتصف الليل
-  (يستخدم `DeviceActivityEvent` threshold).
-- **صفحة الموارد (Resources)** + **شخصنة Onboarding** (تحية + اقتراحات).
-- **96% مطابقة لمواصفات الـ Web** — تفاصيل في
-  [docs/VERIFICATION_v1.1.0_AR.md](docs/VERIFICATION_v1.1.0_AR.md).
->
-> الإجراءات تأخذ ~3-4 ساعات موزعة على 1-2 أسبوع (انتظار Apple).
+## روابط سريعة
+
+| | |
+|---|---|
+| 🌐 الموقع وكل الروابط | https://samla-app-links.vercel.app |
+| 📱 صفحة التطبيق | https://samla-app-links.vercel.app/app |
+| 🎞️ العرض التقديمي (18 شريحة) | https://samla-app-links.vercel.app/deck |
+| ⬇️ العرض PDF | https://samla-app-links.vercel.app/samla-deck.pdf |
+| 📄 ملف المشاركة | https://samla-app-links.vercel.app/submission |
+| 📘 الدليل المجاني (36 صفحة) | https://samla-app-links.vercel.app/guide |
 
 ---
 
-## 🚀 البناء والتشغيل
+## المشكلة
 
-### المتطلبات
-- macOS مع Xcode 15+ (يفضّل 16+)
-- جهاز iPhone/iPad حقيقي بـ iOS 16+ لاختبار Screen Time (لا يعمل في Simulator)
-- حساب Apple Developer مع موافقة Family Controls Entitlement
+| الرقم | المعنى | المصدر |
+|---|---|---|
+| **48.6%** | من مستخدمي الإنترنت في السعودية يقضون 7+ ساعات يومياً على الإنترنت | تقرير الإنترنت السعودي 2024، هيئة الاتصالات والفضاء والتقنية |
+| **6h 38m** | متوسط الوقت اليومي على الإنترنت عالمياً، منها 2h 21m على وسائل التواصل | Digital 2025، DataReportal |
+| **73%** | من المراهقين (13–17) شاهدوا محتوى للبالغين، و54% منهم قبل سن 13 | Common Sense Media، 2023 |
 
-### خطوات البناء
+البدائل الحالية يمكن تعطيلها أو حذفها في لحظة الضعف، وأغلبها يضع الحماية خلف اشتراك.
+
+## الحل: مساران حسب الاحتياج
+
+**1. الحظر الدائم — مجاني للأبد**
+زر واحد من أول شاشة يحظر محتوى البالغين وتطبيقات المواعدة ومنصات القمار. بعد التأكيد يتفعّل للأبد: لا تجاوز، ولا تراجع من داخل التطبيق، ولا حذف للتطبيق.
+
+**2. تقليل الوقت — مدفوع**
+اختر المواقع والتطبيقات، وحدد الوقت (من دقائق إلى أيام)، واختر مستوى الحماية: **Hard Mode** (لا يُلغى حتى ينتهي الوقت) أو **Normal Mode**.
+
+### ما يميّزه عن البدائل
+- **لا يُلغى من داخل التطبيق** — البدائل المعروفة تُعطَّل أو تُحذف بضغطة.
+- **الحظر الأهم مجاني** — لا يقف المال بين الشخص وحمايته.
+- **بالعربية وللسياق السعودي** — واجهة عربية/إنجليزية كاملة (RTL/LTR).
+- **مجتمع قائم مربوط بالأداة** — مجتمع With Builders: 9 نوادٍ على واتساب يملأ فيها المستخدم الوقت المحرَّر.
+- **يقيس الجودة لا الوقت فقط** — النوم والعلاقات، لا ساعات الشاشة وحدها.
+
+## الفئة المستفيدة
+المراهقون والشباب · طلاب الجامعات · البالغون عموماً · أولياء الأمور (نسخة عائلية مخططة، بعلم المستخدم دائماً ولا مراقبة سرية).
+
+## قياس الأثر
+لا نعلن أرقام أثر قبل قياسها. ستة مؤشرات من اليوم الأول:
+
+| النوع | المؤشر |
+|---|---|
+| رئيسي | عدد من فعّلوا الحظر الدائم (عدّ مجهول الهوية) |
+| الوقت | ساعات شاشة أقل على المحظور (قبل/بعد) · الوقت المستبدل |
+| الجودة | النوم (1–5) · الجوال خارج الغرفة ليلاً · العلاقات (1–5) |
+
+## الخصوصية والأمان
+- الحظر يعمل **على الجهاز** عبر Screen Time API الرسمي من Apple، بلا خوادم، ويعمل بلا إنترنت بعد التفعيل.
+- سجل التصفح **لا يغادر الجهاز**. لا تتبع ولا تحليلات خارجية (`NSPrivacyTracking = false`).
+- الدفع عبر Apple فقط، لا بطاقات عندنا.
+- ميزة شريك التعافي عبر CloudKit وApple ID، بدون خادم خاص.
+
+## حالة المشروع
+- ✅ نموذج أولي يعمل بالمسارين (الإصدار 1.4.0)
+- ✅ صفحة هبوط بالعربية ودليل مجاني
+- ✅ احتضان من ntdp
+- 🔜 الإطلاق على iOS أولاً، ثم Android لاحقاً
+
+---
+
+## التقنيات
+
+| الجانب | التقنية |
+|---|---|
+| الواجهة | SwiftUI، عربي/إنجليزي (RTL/LTR) |
+| الحظر | FamilyControls · ManagedSettings · DeviceActivity (امتداد `BlockingMonitor`) |
+| البيانات | Core Data محلياً · Keychain |
+| الاشتراكات | StoreKit 2 |
+| الحساب | Sign in with Apple |
+| شريك التعافي | CloudKit |
+| الاختبارات | 92 اختبار وحدة في `blocking appTests/` |
+
+### بنية المشروع
+
+```
+blocking app/            التطبيق (SwiftUI)
+├── Core/                المحرّك: BlockingEngine، StoreManager، PermissionsManager، CloudKitPartnerStore …
+├── *View.swift          الشاشات: الرئيسية، إنشاء قائمة، الجدولة، الاشتراك، الإعدادات …
+├── ar.lproj / en.lproj  الترجمة
+└── PrivacyInfo.xcprivacy
+BlockingMonitor/         امتداد DeviceActivity لتطبيق الحظر في الخلفية
+blocking appTests/       اختبارات الوحدة
+docs/                    وثائق التصميم والمراجعات وصفحات الويب القانونية
+```
+
+تفاصيل أكثر في [ARCHITECTURE.md](ARCHITECTURE.md) و[CHANGELOG.md](CHANGELOG.md).
+
+### البناء والتشغيل
+المتطلبات: macOS مع Xcode 15+ (يُفضّل 16+)، وجهاز iPhone حقيقي بـ iOS 16+ (Screen Time لا يعمل في المحاكي)، وحساب Apple Developer بصلاحية Family Controls.
+
 ```bash
-git clone <repo>
-cd "blocking app الاصلي"
+git clone https://github.com/KxxLxD/NoNet-Last-one-with-Al-Garage.git
+cd NoNet-Last-one-with-Al-Garage
 open "blocking app.xcodeproj"
 ```
 
-ثم في Xcode:
-1. اختر هدف "blocking app"
-2. Signing & Capabilities → تأكد من:
-   - **Family Controls** capability
-   - **Sign in with Apple** capability  
-   - **In-App Purchase** capability
-3. Cmd+R للتشغيل
-
-### اختبار StoreKit محلياً
-1. Edit Scheme → Run → Options
-2. StoreKit Configuration → اختر `blocking app/Products.storekit`
-3. Cmd+R — ستظهر منتجات Premium بدون الحاجة لـ App Store Connect
+في Xcode: اختر هدف **blocking app**، وتأكد من قدرات Family Controls وSign in with Apple وIn-App Purchase، ثم `Cmd+R`.
+لاختبار المشتريات محلياً: Edit Scheme ← Run ← Options ← StoreKit Configuration ← `blocking app/Products.storekit`.
 
 ---
 
-## 📁 بنية المشروع
+## الفريق والتواصل
+**م. خالد بن خميس** — المؤسس
+📧 EngKhalidKhamis@gmail.com · 🌐 https://samla-app-links.vercel.app
 
-```
-blocking app/
-├── App/
-│   ├── blocking_appApp.swift       # Entry point + CoreDataStack
-│   └── ContentView.swift           # Root router (Auth → Onboarding → Tabs)
-│
-├── Views/
-│   ├── HomeView.swift              # الواجهة الرئيسية والقوائم
-│   ├── CreateListSheet.swift       # إنشاء قائمة حجب
-│   ├── BlockItemsEditorView.swift  # محرر العناصر + FamilyActivityPicker
-│   ├── ScheduleEditorSheet.swift   # محرر الجدولة
-│   ├── AuthView.swift              # تسجيل/Sign in with Apple
-│   ├── OnboardingView.swift        # 4 صفحات
-│   ├── ChatBotView.swift           # مساعد محلي
-│   ├── ChallengesView.swift        # نقاط ومستويات
-│   ├── SettingsView.swift          # الإعدادات
-│   ├── UpgradeView.swift           # شراء الاشتراك (StoreKit 2)
-│   ├── BlockScreenView.swift       # شاشة الحجب
-│   ├── PoliciesView.swift          # الشروط والخصوصية
-│   └── AboutView.swift             # حول التطبيق
-│
-├── Core/                           # ⭐ البنية التحتية
-│   ├── AppStorageKeys.swift        # كل مفاتيح @AppStorage موحّدة
-│   ├── BlockingConstants.swift     # ثوابت (مدد، حدود، حد المجاني)
-│   ├── BlockingEngine.swift        # ManagedSettings + DeviceActivity (4 block types)
-│   ├── PermissionsManager.swift    # Screen Time + Notifications
-│   ├── FamilySelectionStore.swift  # حفظ FamilyActivitySelection
-│   ├── SchedulePersistence.swift   # تشفير JSON مع versioning
-│   ├── PersistenceMigration       # داخل PersistenceHelpers.swift
-│   ├── CoreDataExtensions.swift    # saveIfNeeded() helper
-│   ├── StoreManager.swift          # StoreKit 2 (purchase/restore/redeem)
-│   ├── ProductIDs.swift            # IDs المنتجات (متطابقة مع Bundle ID)
-│   ├── AppleSignInCoordinator.swift # Sign in with Apple + nonce
-│   ├── KeychainStore.swift         # تخزين معرفات Apple بأمان
-│   ├── ChatResponder.swift         # protocol + LocalChatResponder
-│   ├── CloudKitPartnerStore.swift  # 🆕 Recovery Partner (CloudKit + Apple ID)
-│   └── LegalContent.swift          # سياسة الخصوصية + الشروط
-│
-│   AppDelegate.swift                # 🆕 يستقبل CloudKit share-acceptance
-│   PartnerInviteView.swift          # 🆕 UICloudSharingController wrapper
-│   ResourcesView.swift              # 🆕 صفحة موارد تعليمية static
-│
-├── Models/
-│   └── ListEntity.swift            # ListEntity + BlockItemEntity
-│
-├── Utilities/
-│   ├── PersistenceHelpers.swift    # BreaksStore + ManualStateStore + Migration
-│   ├── ConfirmCreateSheet.swift    # ورقة تأكيد
-│   ├── Theme.swift                 # ألوان + LanguageManager
-│   └── ...
-│
-├── Assets.xcassets/                # الأيقونات والألوان
-├── Products.storekit               # ⭐ تكوين IAP للاختبار المحلي
-├── blocking app.entitlements       # Debug entitlements
-└── Release.entitlements            # Release entitlements
-```
+## الرخصة
+© 2026 خالد بن خميس. **جميع الحقوق محفوظة.** الكود متاح للاطلاع والتقييم فقط، ولا يجوز نسخه أو استخدامه أو إعادة توزيعه دون إذن كتابي. التفاصيل في [LICENSE](LICENSE).
+
+</div>
 
 ---
 
-## 🔧 إضافة منتج اشتراك جديد
+## English summary
 
-1. **App Store Connect**: أنشئ المنتج بـ ID يبدأ بـ `com.nonetapp.`
-2. **Products.storekit**: أضف نفس المنتج للاختبار المحلي
-3. **[ProductIDs.swift](blocking app/Core/ProductIDs.swift)**: أضف const جديد:
-   ```swift
-   static let lifetime = "com.nonetapp.lifetime"
-   static let all: [String] = [monthly, yearly, lifetime]
-   ```
-4. **[UpgradeView.swift](blocking app/UpgradeView.swift)**: أضف `planCard` للمنتج الجديد
+**Samla** is an iOS app that tackles digital addiction with blocking that cannot be bypassed in a weak moment. A free, one-tap **permanent block** covers adult content, dating apps and gambling; it can't be undone from inside the app and the app can't be deleted. A paid **time-reduction** mode adds Hard/Normal blocking for chosen apps and sites. Everything runs on-device via Apple's Screen Time API (FamilyControls, ManagedSettings, DeviceActivity): no servers, no tracking, payments through Apple only.
 
----
+Built with SwiftUI, Core Data, StoreKit 2, Sign in with Apple and CloudKit. Entry for the **Noura Al-Mallahi Award for Technical Social Innovation 2026**, incubated by ntdp.
 
-## 🔐 الأذونات المطلوبة
+Website: https://samla-app-links.vercel.app · Pitch deck (PDF): https://samla-app-links.vercel.app/samla-deck.pdf
 
-| الإذن | متى يُطلب | الكود |
-|------|-----------|--------|
-| Family Controls (Screen Time) | عند فتح BlockItems Picker | `PermissionsManager.requestScreenTime()` |
-| Notifications | عند الضغط على "تفعيل" في الإعدادات | `PermissionsManager.requestNotifications()` |
-| Sign in with Apple | عند الضغط على زر Apple | `AppleSignInCoordinator` |
-
----
-
-## 🧪 الاختبارات
-
-اختبارات Unit موجودة في `blocking appTests/` — 32 اختبار يغطون:
-- `SchedulePersistence` (encode/decode + migration)
-- `BlockingConstants`، `LocalChatResponder`
-- `BreaksStore` / `ManualStateStore` / `KeychainStore`
-- `BlockingEngine.isHardLocked`
-
-> ⚠️ Target الـ Tests يحتاج إضافة من Xcode UI لمرة واحدة. اقرأ `blocking appTests/README.md`.
-
-```bash
-# بعد إضافة الـ Tests Target من Xcode:
-xcodebuild test \
-  -project "blocking app.xcodeproj" \
-  -scheme "blocking app" \
-  -destination "platform=iOS Simulator,name=iPhone 15"
-```
-
----
-
-## 🔒 الخصوصية و Privacy Manifest
-
-`PrivacyInfo.xcprivacy` يصرّح:
-- `NSPrivacyTracking`: false
-- `NSPrivacyTrackingDomains`: []
-- `NSPrivacyCollectedDataTypes`: User ID + Name + Product Interaction
-  (CloudKit Recovery Partner فقط، Purpose = AppFunctionality، لا tracking)
-- استخدام UserDefaults مع reason code `CA92.1` (Functional use)
-
----
-
-## 📚 وثائق إضافية
-
-- [ARCHITECTURE.md](ARCHITECTURE.md) — تفاصيل البنية والتدفقات
-- [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md) — قائمة مراجعة قبل النشر
-- [GSTACK_GUIDE_AR.md](GSTACK_GUIDE_AR.md) — دليل gstack الشامل بالعربية
-- [docs/APP_STORE_LISTING.md](docs/APP_STORE_LISTING.md) — كل نصوص App Store جاهزة
-- [docs/REVIEW_2026-05-22.md](docs/REVIEW_2026-05-22.md) — Engineering Review
-- [docs/SECURITY_AUDIT_2026-05-22.md](docs/SECURITY_AUDIT_2026-05-22.md) — Security Audit
-- [docs/RETRO_2026-05-22-v2.md](docs/RETRO_2026-05-22-v2.md) — Retrospective النهائي
-- 🆕 [docs/FEATURE_REFERENCE_FROM_WEB_AR.md](docs/FEATURE_REFERENCE_FROM_WEB_AR.md) — مرجع ميزات نسخة الويب
-- 🆕 [docs/FEATURE_GAP_ANALYSIS_AR.md](docs/FEATURE_GAP_ANALYSIS_AR.md) — مقارنة 27 ميزة (78% ممكن)
-- 🆕 [docs/PARTNER_FEATURE_DESIGN_AR.md](docs/PARTNER_FEATURE_DESIGN_AR.md) — تصميم Recovery Partner
-- 🆕 [docs/VERIFICATION_v1.1.0_AR.md](docs/VERIFICATION_v1.1.0_AR.md) — تحقّق v1.1.0 (96%)
-- [docs/web/](docs/web/) — صفحات HTML للاستضافة (privacy, terms, support, index)
-- [CHANGELOG.md](CHANGELOG.md) — سجل التغييرات
-- [BlockingMonitor/README.md](BlockingMonitor/README.md) — DeviceActivity Extension
-
----
-
-## 📄 الترخيص
-
-خاص — جميع الحقوق محفوظة.
+© 2026 Khalid bin Khamis. All rights reserved. Source is visible for review only; see [LICENSE](LICENSE).
