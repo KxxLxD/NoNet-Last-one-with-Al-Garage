@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreData
+import os
 
 final class CoreDataStack {
     static let shared = CoreDataStack()
@@ -64,7 +65,17 @@ final class CoreDataStack {
         list_updatedAt.attributeType = .dateAttributeType
         list_updatedAt.isOptional = false
 
-        listEntity.properties = [list_id, list_name, list_protection, list_blockType, list_durationSeconds, list_scheduleSlots, list_createdAt, list_updatedAt]
+        let list_gatekeeperType = NSAttributeDescription()
+        list_gatekeeperType.name = "gatekeeperType"
+        list_gatekeeperType.attributeType = .stringAttributeType
+        list_gatekeeperType.isOptional = false
+        // Default value — applied to new entities AND to existing rows
+        // that pre-date this attribute on next save (Core Data lightweight
+        // migration is automatic for added non-optional attributes with
+        // a default value).
+        list_gatekeeperType.defaultValue = "nonet"
+
+        listEntity.properties = [list_id, list_name, list_protection, list_blockType, list_durationSeconds, list_scheduleSlots, list_createdAt, list_updatedAt, list_gatekeeperType]
 
         // BlockItemEntity
         let itemEntity = NSEntityDescription()
@@ -114,18 +125,84 @@ final class CoreDataStack {
 
         model.entities = [listEntity, itemEntity]
 
-        container = NSPersistentContainer(name: "Model", managedObjectModel: model)
-        container.loadPersistentStores { _, error in
-            if let error = error { fatalError("Unresolved error: \(error)") }
+        let newContainer = NSPersistentContainer(name: "Model", managedObjectModel: model)
+        newContainer.loadPersistentStores { _, error in
+            if let error = error {
+                // The store file is unreadable — typically a corrupted SQLite
+                // (rare; can happen after an aborted migration or disk-full
+                // crash mid-write). The Apple-recommended fallback for a
+                // model we own end-to-end is: delete the file, reload fresh.
+                // The user loses local lists but the app still launches,
+                // which beats a hard crash on every launch.
+                //
+                // We do NOT fatalError in production: an unbootable app on
+                // App Store has no recovery path for the user other than
+                // reinstall. A fresh empty store at least lets them recreate
+                // their lists. CloudKit-stored data (partnerships, break
+                // attempts) is untouched — it lives on iCloud, not in the
+                // local store.
+                Self.log.error("Core Data load failed: \(error.localizedDescription, privacy: .public). Attempting fresh-store recovery.")
+                Self.recoverFromCorruptStore(container: newContainer)
+            }
         }
+        container = newContainer
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         container.viewContext.automaticallyMergesChangesFromParent = true
+    }
+
+    private static let log = Logger(subsystem: "app.nonet.blocking", category: "CoreDataStack")
+
+    /// Delete every persistent store the container knows about and reload
+    /// fresh. Called only when the initial loadPersistentStores threw. If
+    /// recovery itself fails (e.g. read-only filesystem), we fall through
+    /// to fatalError — at that point the device is in worse shape than the
+    /// app can handle, and a clean crash is better than a half-working app.
+    ///
+    /// Threading: Apple's `loadPersistentStores` completion is not formally
+    /// documented to run on a specific thread, but in practice it fires on
+    /// the same queue that called the load (the main queue when invoked
+    /// from `CoreDataStack.init`, which is itself called once during
+    /// `@main` app startup). The file operations below use FileManager,
+    /// which is documented as thread-safe for the methods we call. The
+    /// only multi-thread hazard would be a second `loadPersistentStores`
+    /// running concurrently against the same URL — but we deliberately do
+    /// not call the recovery from anywhere else, and the container is
+    /// captured by the closure so no other code path can re-enter it
+    /// while these deletions run.
+    private static func recoverFromCorruptStore(container: NSPersistentContainer) {
+        let coordinator = container.persistentStoreCoordinator
+        for store in coordinator.persistentStores {
+            if let url = store.url {
+                try? coordinator.remove(store)
+                try? FileManager.default.removeItem(at: url)
+                // SQLite also drops -shm and -wal sidecars; clean them up so
+                // the next load doesn't reattach to a half-deleted store.
+                let parent = url.deletingLastPathComponent()
+                let base = url.lastPathComponent
+                ["\(base)-shm", "\(base)-wal"].forEach { sidecar in
+                    try? FileManager.default.removeItem(at: parent.appendingPathComponent(sidecar))
+                }
+            }
+        }
+        container.loadPersistentStores { _, error in
+            if let error = error {
+                fatalError("Core Data fresh-store reload also failed: \(error)")
+            }
+            log.notice("Core Data recovered with fresh empty store")
+        }
     }
 }
 
 @main
 struct blocking_appApp: App {
+    // Adopts UIApplicationDelegate solely so iOS routes CloudKit share-acceptance
+    // through PartnerSceneDelegate.windowScene(_:userDidAcceptCloudKitShareWith:).
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     private let core = CoreDataStack.shared
+
+    init() {
+        PersistenceMigration.runIfNeeded()
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -138,7 +215,7 @@ struct blocking_appApp: App {
     }
 
     private func seedIfNeeded() {
-        let key = "seed_v1_done"
+        let key = AppStorageKeys.seedV1Done
         if UserDefaults.standard.bool(forKey: key) { return }
         let context = core.viewContext
         let names = ["Focus Time", "Sleep Time", "Deep Work"]
@@ -152,8 +229,12 @@ struct blocking_appApp: App {
             e.createdAt = Date().addingTimeInterval(-Double(idx) * 3600)
             e.updatedAt = Date()
         }
-        do { try context.save(); UserDefaults.standard.set(true, forKey: key) } catch {
-            print("Seed error: \(error)")
+        switch context.saveIfNeeded() {
+        case .success:
+            UserDefaults.standard.set(true, forKey: key)
+        case .failure:
+            // Seed failure is non-fatal; user starts with empty list and can add manually.
+            break
         }
     }
 }

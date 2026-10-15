@@ -1,0 +1,139 @@
+//
+//  BlockingMonitor.swift
+//  BlockingMonitor (DeviceActivityMonitor extension)
+//
+//  Apple invokes these callbacks in a separate process when a scheduled DeviceActivity
+//  starts or ends. The extension must apply shields on the SAME `ManagedSettingsStore`
+//  name that BlockingEngine uses ("blocklist.<UUID>") so the rest of the app stays in sync.
+//
+//  SETUP IN XCODE (one-time, ~30 seconds):
+//  1. File → New → Target → "Device Activity Monitor Extension"
+//  2. Product Name: BlockingMonitor
+//  3. Bundle Identifier: com.nonetapp.BlockingMonitor
+//  4. Embed in app: blocking app
+//  5. Replace the generated `DeviceActivityMonitor.swift` with this file.
+//  6. Add Family Controls capability to the extension target.
+//
+
+import DeviceActivity
+import ManagedSettings
+import FamilyControls
+import os
+
+private let log = Logger(subsystem: "app.nonet.blocking", category: "Monitor")
+
+/// Must match the App Group ID in both .entitlements files and the main app's FamilySelectionStore.
+private let kSharedAppGroup = "group.com.nonetapp.shared"
+
+/// Without an App Group the extension and the main app are looking at different
+/// `.standard` containers — writes from the extension are invisible to the app
+/// (and vice-versa). The earlier `?? .standard` fallback masked this. Treat the
+/// missing-suite case as a real failure: log loudly and skip the work, so the
+/// app's MonitorHealthcheck can flag it on the next foreground.
+private let sharedDefaults: UserDefaults? = {
+    if let suite = UserDefaults(suiteName: kSharedAppGroup) { return suite }
+    log.error("App Group \(kSharedAppGroup, privacy: .public) NOT GRANTED to extension — shields will not apply.")
+    return nil
+}()
+
+/// Heartbeat key shared with MonitorHealthcheck in the main app target.
+/// Keep this string in sync — the two files live in separate compile units.
+private let kHeartbeatKey = "v1:monitor:heartbeat"
+
+private func recordHeartbeat() {
+    sharedDefaults?.set(Date().timeIntervalSince1970, forKey: kHeartbeatKey)
+}
+
+class BlockingMonitor: DeviceActivityMonitor {
+    override func intervalDidStart(for activity: DeviceActivityName) {
+        super.intervalDidStart(for: activity)
+        log.notice("intervalDidStart: \(activity.rawValue, privacy: .public)")
+        recordHeartbeat()
+
+        guard let parsed = parseActivity(activity) else { return }
+        let store = ManagedSettingsStore(named: .init(rawValue: "blocklist.\(parsed.id.uuidString)"))
+
+        switch parsed.kind {
+        case .scheduled:
+            // Scheduled window opens — apply shield right away.
+            applyShield(to: store, for: parsed.id)
+        case .timeLimit:
+            // New day for a daily-quota list — start fresh, no shield.
+            // BlockingMonitor.eventDidReachThreshold will re-apply once the user crosses
+            // the daily threshold.
+            store.clearAllSettings()
+        }
+    }
+
+    override func intervalDidEnd(for activity: DeviceActivityName) {
+        super.intervalDidEnd(for: activity)
+        log.notice("intervalDidEnd: \(activity.rawValue, privacy: .public)")
+        recordHeartbeat()
+
+        guard let parsed = parseActivity(activity) else { return }
+        let store = ManagedSettingsStore(named: .init(rawValue: "blocklist.\(parsed.id.uuidString)"))
+        store.clearAllSettings()
+    }
+
+    /// Fired by iOS once the user's measured usage of the selected apps/categories/web-domains
+    /// crosses the configured `DeviceActivityEvent.threshold`. Only fires for Time-Limit
+    /// activities (they're the only ones that register events).
+    override func eventDidReachThreshold(_ event: DeviceActivityEvent.Name, activity: DeviceActivityName) {
+        super.eventDidReachThreshold(event, activity: activity)
+        log.notice("eventDidReachThreshold: \(event.rawValue, privacy: .public) in \(activity.rawValue, privacy: .public)")
+        recordHeartbeat()
+
+        guard let parsed = parseActivity(activity), parsed.kind == .timeLimit else { return }
+        let store = ManagedSettingsStore(named: .init(rawValue: "blocklist.\(parsed.id.uuidString)"))
+        applyShield(to: store, for: parsed.id)
+    }
+
+    private func applyShield(to store: ManagedSettingsStore, for id: UUID) {
+        // Read the persisted FamilyActivitySelection from the shared App Group defaults
+        // (same key the main app's FamilySelectionStore writes to).
+        guard let defaults = sharedDefaults else {
+            log.error("applyShield(\(id, privacy: .public)) skipped: App Group not granted to extension")
+            return
+        }
+        guard let data = defaults.data(forKey: "v1:familySelection:\(id.uuidString)"),
+              let selection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) else {
+            log.notice("applyShield(\(id, privacy: .public)) skipped: no persisted selection")
+            return
+        }
+        if !selection.applicationTokens.isEmpty {
+            store.shield.applications = selection.applicationTokens
+        }
+        if !selection.categoryTokens.isEmpty {
+            store.shield.applicationCategories = .specific(selection.categoryTokens)
+            store.shield.webDomainCategories = .specific(selection.categoryTokens)
+        }
+        if !selection.webDomainTokens.isEmpty {
+            store.shield.webDomains = selection.webDomainTokens
+        }
+    }
+
+    private enum ActivityKind { case scheduled, timeLimit }
+
+    /// Activity names use one of two patterns:
+    ///   • "schedule.<UUID>.<slotIndex>" — multi-slot scheduled lists. Each
+    ///     slot in the editor registers its own DeviceActivitySchedule with a
+    ///     unique index so per-day, per-window shields fire correctly.
+    ///   • "limit.<UUID>" — daily quota monitoring (different shield semantics).
+    /// We only need the list UUID downstream; the slot index is purely for
+    /// disambiguating Apple's per-name uniqueness requirement.
+    private func parseActivity(_ activity: DeviceActivityName) -> (id: UUID, kind: ActivityKind)? {
+        let raw = activity.rawValue
+        if raw.hasPrefix("schedule.") {
+            // Strip the prefix, then take the leading 36-char UUID. Anything
+            // after (".<index>") is ignored — the shield is per-list, not per-slot.
+            let body = String(raw.dropFirst("schedule.".count))
+            let uuidPart = String(body.prefix(36))
+            if let id = UUID(uuidString: uuidPart) { return (id, .scheduled) }
+        }
+        if raw.hasPrefix("limit.") {
+            let idStr = String(raw.dropFirst("limit.".count))
+            if let id = UUID(uuidString: idStr) { return (id, .timeLimit) }
+        }
+        return nil
+    }
+}

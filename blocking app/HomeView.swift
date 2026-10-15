@@ -2,6 +2,7 @@ import SwiftUI
 import FamilyControls
 import CoreData
 import UserNotifications
+import CloudKit
 
 struct HomeView: View {
     @EnvironmentObject var lang: LanguageManager
@@ -15,22 +16,40 @@ struct HomeView: View {
     // حالة حذف
     @State private var showDeleteConfirm = false
     @State private var listToDelete: ListEntity?
+    /// When non-nil, presents NoNetGatekeeperSheet for the given list. Set
+    /// from deleteList(_:) when the list's gatekeeperType is "nonet" — the
+    /// user must pass the 200-char or 7-day gate before the actual purge runs.
+    @State private var gatekeeperSheetList: ListEntity?
+    /// Backing for the RequestActionSheet (Hard + Partner). The wrapper
+    /// captures listID/name + partnership at the moment delete is tapped so
+    /// the sheet has stable references even if Core Data context updates.
+    @State private var partnerRequestSheet: PartnerRequestSheetContext?
+
+    /// Stable snapshot of "user asked to delete list X gated by partnership Y."
+    /// Used as the .sheet(item:) source so SwiftUI handles dismissal correctly.
+    struct PartnerRequestSheetContext: Identifiable {
+        let id: UUID            // listID, doubles as the SwiftUI item id
+        let listName: String
+        let action: GatekeeperAction
+        let partnership: Partnership
+    }
+    // حالة خطأ الحفظ
+    @State private var saveErrorMessage: String? = nil
+    // عرض/إخفاء "قوائم أخرى" — مطوي افتراضياً (DisclosureGroup)
+    @State private var showOtherLists: Bool = false
 
     // حالة الاشتراك/التجربة
-    @AppStorage("isPremium") private var isPremium: Bool = false
-    @AppStorage("trialStartTs") private var trialStartTs: Double = 0
-    @AppStorage("selectedTab") private var selectedTab: Int = 0
+    @AppStorage(AppStorageKeys.isPremium) private var isPremium: Bool = false
+    @AppStorage(AppStorageKeys.trialStartTs) private var trialStartTs: Double = 0
+    @AppStorage(AppStorageKeys.selectedTab) private var selectedTab: Int = 0
+    // Personalization from onboarding
+    @AppStorage(AppStorageKeys.obName) private var obName: String = ""
+    // Surfaces iCloud-unavailable banners when Hard-Mode lists exist
+    @ObservedObject private var partnerStore = CloudKitPartnerStore.shared
     @State private var refreshTick: Int = 0
     @State private var selectedListId: UUID? = nil
-    private let trialDuration: TimeInterval = 7 * 24 * 3600
-    private var isTrialActive: Bool {
-        trialStartTs > 0 && Date().timeIntervalSince1970 < trialStartTs + trialDuration
-    }
-    private var trialRemainingDays: Int {
-        guard isTrialActive else { return 0 }
-        let remaining = (trialStartTs + trialDuration - Date().timeIntervalSince1970) / (24 * 3600)
-        return max(0, Int(ceil(remaining)))
-    }
+    private var isTrialActive: Bool { TrialClock.isTrialActive(startTs: trialStartTs) }
+    private var trialRemainingDays: Int { TrialClock.daysRemaining(startTs: trialStartTs) }
 
     // Schedule decoding
     private struct ScheduleSlot: Codable { let id: UUID; let day: Int; let fromMinutes: Int; let toMinutes: Int }
@@ -60,355 +79,730 @@ struct HomeView: View {
             }
     }
 
-    // Permission states
-    @State private var hasScreenTimePermission: Bool = false
-    @State private var hasNotificationPermission: Bool = false
-    @State private var permissionsExpanded: Bool = false
+    /// Delete a list and clean up its UserDefaults-backed companion data (breaks/manual state, family selection, shields).
+    ///
+    /// Routing for Hard-Mode lists depends on the configured gatekeeper:
+    ///   • "nonet" — open NoNetGatekeeperSheet so the user picks the 200-char
+    ///     reason path (immediate) or the 7-day wait path (delayed). The
+    ///     actual purge runs inside `performHardDelete` once the gate is passed.
+    ///   • "partner" — current behavior: refuse + record BreakAttempt. The
+    ///     full approval workflow lands in PR 2.
+    /// Non-Hard lists delete immediately.
+    private func deleteList(_ list: ListEntity) {
+        if BlockingEngine.shared.isHardLocked(list: list) {
+            if list.gatekeeperType == "nonet" {
+                // Defer to NoNetGatekeeperSheet — the user must satisfy one of
+                // the two gates before performHardDelete runs.
+                gatekeeperSheetList = list
+                return
+            }
+            // gatekeeperType == "partner": route through RequestActionSheet
+            // so the partner can approve or deny. If no partnership is yet
+            // associated (e.g. the invitation hasn't been accepted), fall back
+            // to a refusal — there's no one to approve through.
+            if let partnership = CloudKitPartnerStore.shared.partnership(for: list.id),
+               partnership.status == .accepted {
+                partnerRequestSheet = PartnerRequestSheetContext(
+                    id: list.id,
+                    listName: list.name,
+                    action: .delete,
+                    partnership: partnership
+                )
+                return
+            }
+            // No accepted partnership yet — refusal + best-effort log.
+            saveErrorMessage = lang.isArabicEffective
+                ? "هذه القائمة بحماية شريك بشري، لكن لم يقبل أحد الدعوة بعد. أرسل دعوة جديدة أو حوّل الحارس إلى NoNet من تفاصيل القائمة."
+                : "This list is partner-protected, but no one has accepted yet. Send a new invitation or switch the gatekeeper to NoNet from the list details."
+            return
+        }
+        performHardDelete(list)
+    }
+
+    /// Actually delete a list — runs the Core Data purge plus all UserDefaults
+    /// companion-data cleanup. Called directly by `deleteList` for non-Hard
+    /// lists, and by the NoNetGatekeeperSheet callback once the user has
+    /// satisfied the 200-char gate.
+    private func performHardDelete(_ list: ListEntity) {
+        let id = list.id
+        // purge handles shield removal + monitoring stop + per-list satellite
+        // stores (FamilySelectionStore, EmergencyUnlockStore, BreaksStore,
+        // ManualStateStore). The only thing left is the Core Data row.
+        BlockingEngine.shared.purge(listId: id)
+        context.delete(list)
+        if case .failure(let error) = context.saveIfNeeded() {
+            saveErrorMessage = lang.isArabicEffective
+                ? "تعذّر حذف القائمة: \(error.localizedDescription)"
+                : "Couldn't delete the list: \(error.localizedDescription)"
+        }
+    }
+
+    private var shareMessage: String {
+        let activeCount = activeLists.count
+        let totalCount = lists.count
+        if lang.isArabicEffective {
+            return "أستخدم تطبيق NoNet لحجب الإلهاءات وزيادة تركيزي — \(activeCount) قائمة فعّالة من أصل \(totalCount). جرّبه معي!"
+        } else {
+            return "I'm using NoNet to block distractions and stay focused — \(activeCount) active list(s) out of \(totalCount). Join me!"
+        }
+    }
+
+    // Permission states (centralized)
+    @StateObject private var permissions = PermissionsManager.shared
+    @AppStorage(AppStorageKeys.permissionsExpanded) private var permissionsExpanded: Bool = false
+    private var hasScreenTimePermission: Bool { permissions.isScreenTimeGranted }
+    private var hasNotificationPermission: Bool { permissions.isNotificationsGranted }
+
+    // ─── Alert sources (data) ───
+    // Computed conditions for the consolidated alertsStrip(). Each is a pure
+    // predicate — the strip decides which one wins by priority order.
+
+    /// iCloud account is unavailable AND user has at least one Hard Mode list
+    /// (Recovery Partner relies on iCloud; without it the safety net is broken).
+    private var iCloudAlertReason: String? {
+        let hasHardList = lists.contains { $0.protection == "hard" }
+        guard hasHardList else { return nil }
+        return partnerStore.accountUnavailableReason(isArabic: lang.isArabicEffective)
+    }
+
+    /// `DeviceActivityMonitor` extension hasn't responded in 24h despite the
+    /// user having Scheduled or Time-Limit lists that need it. Silent failure
+    /// becomes a 1-star review territory; surface it explicitly.
+    private var monitorAlertActive: Bool {
+        let scheduledLists = lists.filter { $0.blockType == "scheduled" || $0.blockType == "timeLimit" }
+        let oldestCreation = scheduledLists.map { $0.createdAt }.min()
+        return MonitorHealthcheck.shouldShowBanner(oldestScheduledOrLimit: oldestCreation)
+    }
 
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    // Hero
-                    VStack(spacing: 12) {
-                        ZStack {
-                            Circle()
-                                .fill(AppColors.infoBg)
-                                .frame(width: 96, height: 96)
-                            Image("nonet_logo")
-                            .resizable()
-                            .scaledToFit()
-                                .frame(width: 60, height: 60)
-                        }
-                        Text(AppStrings.heroTitle(lang))
-                            .font(.system(size: 28, weight: .semibold))
-                            .foregroundColor(AppColors.textPrimary)
-                            .multilineTextAlignment(.center)
-                        Text(AppStrings.homeSubtitle(lang))
-                            .font(.subheadline)
-                            .foregroundColor(AppColors.textSecondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 24)
-                    .padding(.bottom, 8)
-                    
- 
-                     // Motivational stats
-                     HStack(spacing: 12) {
-                         SavedCycleCard(lang: lang)
-                         LevelCard(lang: lang, value: "1")
-                         ChallengesSimpleCard(lang: lang, value: "add")
-                     }
-                    if !lists.isEmpty || !activeLists.isEmpty {
-                        Button(action: { /* share placeholder */ }) {
-                            Text(lang.isArabicEffective ? "مشاركة" : "Share")
-                                .font(.subheadline.weight(.semibold))
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 44)
-                                .background(AppColors.accentDark)
-                                .foregroundColor(.white)
-                                .cornerRadius(12)
-                        }
-                    }
-                    SoftDivider(width: 300, opacity: 0.70)
+                VStack(alignment: .leading, spacing: NNSpacing.md) {
+                    // Welcome card — re-introduces the logo (removed in the
+                    // initial v1.3.0 redesign) at a much smaller scale than the
+                    // old 204pt hero. Costs ~88pt vs. the original 33% of the
+                    // iPhone SE viewport.
+                    welcomeCard()
 
-                    // Primary CTA — Create Blocklist
+                    // Consolidated alerts — at most one major banner shows at a
+                    // time (priority: Permissions → iCloud → Monitor). Inbound
+                    // partner requests get their own (richer) banner below,
+                    // since they are interactive and shouldn't be dismissed by
+                    // a less-important alert taking the slot.
+                    if hasScreenTimePermission && hasNotificationPermission {
+                        if let reason = iCloudAlertReason {
+                            slimAlertBanner(
+                                icon: "exclamationmark.icloud.fill",
+                                title: lang.isArabicEffective ? "iCloud غير متاح" : "iCloud unavailable",
+                                detail: reason
+                            )
+                        } else if monitorAlertActive {
+                            slimAlertBanner(
+                                icon: "bolt.slash.fill",
+                                title: lang.isArabicEffective ? "الجدولة غير مفعّلة" : "Scheduling not active",
+                                detail: lang.isArabicEffective
+                                    ? "نظام الجدولة لم يستجب خلال آخر 24 ساعة. تواصل مع الدعم."
+                                    : "Scheduling hasn't responded in 24h. Contact support."
+                            )
+                        }
+                    }
+
+                    // Inbound partner requests — one card per pending request,
+                    // each with Approve / Deny actions. Cards disappear the
+                    // moment the user decides (CloudKitPartnerStore updates
+                    // pendingPartnerRequests via fetchPendingRequestsForMe).
+                    if !partnerStore.pendingPartnerRequests.isEmpty {
+                        VStack(spacing: NNSpacing.xs) {
+                            ForEach(partnerStore.pendingPartnerRequests) { request in
+                                partnerRequestBanner(request)
+                            }
+                        }
+                    }
+
+                    // Permissions banner — kept inline because it has expand/collapse UX
+                    permissionsCard()
+
+                    // Primary CTA — the single dominant action
                     CreateBlocklistCard(lang: lang, useGradientCTA: false) {
                         showingCreate = true
                     }
                     .sheet(isPresented: $showingCreate) {
                         CreateListSheet().environmentObject(lang)
                     }
-                    SoftDivider(width: 300, opacity: 0.70)
 
-                    // Permissions (render only if missing)
-                    if !(hasScreenTimePermission && hasNotificationPermission) {
-                        VStack(spacing: 0) {
-                            HStack(spacing: 12) {
-                                Text(AppStrings.permissionsTitle(lang))
-                                    .font(.system(size: 20, weight: .semibold))
-                                    .foregroundColor(AppColors.textPrimary)
-                                Spacer()
-                                let requiredCount = (hasScreenTimePermission ? 0 : 1) + (hasNotificationPermission ? 0 : 1)
-                                let isAllSet = requiredCount == 0
-                                Text(isAllSet ? (lang.isArabicEffective ? "مكتملة" : "All set") : (lang.isArabicEffective ? "مطلوبة (\(requiredCount))" : "Required (\(requiredCount))"))
-                                    .font(.footnote.weight(.semibold))
-                                    .padding(.horizontal, 10)
-                                    .frame(height: 26)
-                                    .background(isAllSet ? Color.clear : AppColors.warningBg)
-                                    .foregroundColor(isAllSet ? AppColors.textSecondary : AppColors.warningFg)
-                                    .overlay(
-                                        Capsule().stroke(isAllSet ? AppColors.uiBorder : AppColors.warningFg.opacity(0.5), lineWidth: 0.5)
-                                    )
-                                    .clipShape(Capsule())
-                                Image(systemName: permissionsExpanded ? "chevron.up" : "chevron.down")
-                                    .foregroundColor(AppColors.textSecondary)
-                            }
-                            .contentShape(Rectangle())
-                            .onTapGesture { withAnimation(.easeInOut(duration: 0.2)) { permissionsExpanded.toggle() } }
-                            .padding(16)
-                            .background(AppColors.uiSurface)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: permissionsExpanded ? 0 : 20)
-                                    .stroke(AppColors.uiBorder, lineWidth: 0.5)
-                            )
-                            if permissionsExpanded {
-                                VStack(spacing: 0) {
-                                    // Screen Time row
-                                    HStack(spacing: 12) {
-                                        Image(systemName: "lock.iphone").foregroundColor(AppColors.accentDark)
-                                        Text(lang.isArabicEffective ? "Screen Time" : "Screen Time")
-                                            .font(.subheadline)
-                                            .foregroundColor(AppColors.textPrimary)
-                                        Spacer()
-                                        if !hasScreenTimePermission {
-                                            Button(action: { requestScreenTimeAuth() }) {
-                                                Text(lang.isArabicEffective ? "منح" : "Grant")
-                                                    .font(.footnote.weight(.semibold))
-                                                    .padding(.horizontal, 12)
-                                                    .frame(height: 30)
-                                                    .background(AppColors.accentDark)
-                                                    .foregroundColor(.white)
-                                                    .cornerRadius(8)
-                                            }
-                                            .buttonStyle(.plain)
-                                        } else {
-                                            Text(lang.isArabicEffective ? "تم" : "Granted")
-                                                .font(.footnote)
-                                                .foregroundColor(AppColors.textSecondary)
-                                        }
-                                    }
-                                    .padding(16)
-                                    Divider().background(AppColors.uiBorder.opacity(0.35))
-                                    // Notifications row
-                                    HStack(spacing: 12) {
-                                        Image(systemName: "bell").foregroundColor(AppColors.accentDark)
-                                        Text(lang.isArabicEffective ? "الإشعارات" : "Notifications")
-                                            .font(.subheadline)
-                                            .foregroundColor(AppColors.textPrimary)
-                                        Spacer()
-                                        if !hasNotificationPermission {
-                                            Button(action: { /* request notifications */ }) {
-                                                Text(lang.isArabicEffective ? "تفعيل" : "Enable")
-                                                    .font(.footnote.weight(.semibold))
-                                                    .padding(.horizontal, 12)
-                                                    .frame(height: 30)
-                                                    .background(AppColors.accentDark)
-                                                    .foregroundColor(.white)
-                                                    .cornerRadius(8)
-                                            }
-                                            .buttonStyle(.plain)
-                                        } else {
-                                            Text(lang.isArabicEffective ? "تم" : "Enabled")
-                                                .font(.footnote)
-                                                .foregroundColor(AppColors.textSecondary)
-                                        }
-                                    }
-                                    .padding(16)
-                                }
-                                .background(AppColors.uiSurface)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 20)
-                                        .stroke(AppColors.uiBorder, lineWidth: 0.5)
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: 20))
-                            }
-                        }
-                        .background(AppColors.uiSurface)
-                        .cornerRadius(20)
-                        SoftDivider(width: 300, opacity: 0.70)
-                    }
+                    // ── LISTS ──
+                    listsSection()
 
-                    // Share progress
-                    // [Removed from here to reduce visual noise when completed]
-
-                    // Permissions (moved above)
-                    // [Removed from here to reduce visual noise when completed]
-
-                    // Lists
-                    VStack(alignment: .leading, spacing: 16) {
-                        HStack {
-                            Text(lang.isArabicEffective ? "قوائمك" : "Your Lists")
-                                .font(.system(size: 22, weight: .semibold))
-                                .foregroundColor(AppColors.textPrimary)
+                    // Subtle footer stats — only when there's real data to show
+                    if !activeLists.isEmpty {
+                        HStack(spacing: NNSpacing.sm) {
                             Spacer()
-                            Button(action: { showingCreate = true }) {
-                                Image(systemName: "plus")
-                                    .foregroundColor(AppColors.accentDark)
-                                    .frame(width: 28, height: 28)
-                                    .background(AppColors.infoBg)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                            }
-                            .buttonStyle(.plain)
+                            Image(systemName: "shield.lefthalf.filled")
+                                .font(.caption2)
+                                .foregroundColor(AppColors.textSecondary)
+                            Text(lang.isArabicEffective
+                                 ? "\(activeLists.count) قائمة نشطة الآن"
+                                 : "\(activeLists.count) active right now")
+                                .font(.footnote)
+                                .foregroundColor(AppColors.textSecondary)
+                            Spacer()
                         }
-
-                        if lists.isEmpty {
-                            EmptyStateView(isArabic: lang.isArabicEffective)
-                        } else {
-                            VStack(spacing: 0) {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    if !activeLists.isEmpty {
-                                        Text(lang.isArabicEffective ? "القوائم النشطة" : "Active Lists")
-                                            .font(.caption)
-                                            .foregroundColor(AppColors.textSecondary)
-                                            .padding(.horizontal, 16)
-                                            .padding(.top, 12)
-                                    }
-                                    // Active lists first
-                                    ForEach(activeLists) { item in
-                                        HStack(spacing: 12) {
-                                            if !lang.isArabicEffective && item.protection != "hard" {
-                                                Button(action: { toggleManual(for: item) }) {
-                                                    Image(systemName: isActiveNow(item) ? "pause.fill" : "play.fill")
-                                                        .font(.system(size: 14, weight: .semibold))
-                                                        .foregroundColor(AppColors.accentDark)
-                                                        .frame(width: 32, height: 32)
-                                                        .background(AppColors.infoBg)
-                                                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                                                }
-                                                .buttonStyle(.plain)
-                                            }
-                                            NavigationLink(destination: ListDetailView(list: item)) {
-                                                ListRowCore(item: item, isActive: true)
-                                            }
-                                            if lang.isArabicEffective && item.protection != "hard" {
-                                                Button(action: { toggleManual(for: item) }) {
-                                                    Image(systemName: isActiveNow(item) ? "pause.fill" : "play.fill")
-                                                        .font(.system(size: 14, weight: .semibold))
-                                                        .foregroundColor(AppColors.accentDark)
-                                                        .frame(width: 32, height: 32)
-                                                        .background(AppColors.infoBg)
-                                                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                                                }
-                                                .buttonStyle(.plain)
-                                            }
-                                        }
-                                        .padding(.horizontal, 16)
-                                        if item.id != activeLists.last?.id || !nonActiveLists.isEmpty {
-                                            Divider().background(AppColors.uiBorder.opacity(0.6)).padding(.horizontal, 16)
-                                        }
-                                    }
-                                    if !nonActiveLists.isEmpty {
-                                        Text(lang.isArabicEffective ? "قوائم أخرى" : "Other Lists")
-                                            .font(.caption)
-                                            .foregroundColor(AppColors.textSecondary)
-                                            .padding(.horizontal, 16)
-                                            .padding(.top, 12)
-                                    }
-                                    // Non-active lists
-                                    ForEach(nonActiveLists) { item in
-                                        HStack(spacing: 12) {
-                                            if !lang.isArabicEffective && item.protection != "hard" {
-                                                Button(action: { toggleManual(for: item) }) {
-                                                    Image(systemName: isActiveNow(item) ? "pause.fill" : "play.fill")
-                                                        .font(.system(size: 14, weight: .semibold))
-                                                        .foregroundColor(AppColors.accentDark)
-                                                        .frame(width: 32, height: 32)
-                                                        .background(AppColors.infoBg)
-                                                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                                                }
-                                                .buttonStyle(.plain)
-                                            }
-                                            NavigationLink(destination: ListDetailView(list: item)) {
-                                                ListRowCore(item: item, isActive: false)
-                                            }
-                                            if lang.isArabicEffective && item.protection != "hard" {
-                                                Button(action: { toggleManual(for: item) }) {
-                                                    Image(systemName: isActiveNow(item) ? "pause.fill" : "play.fill")
-                                                        .font(.system(size: 14, weight: .semibold))
-                                                        .foregroundColor(AppColors.accentDark)
-                                                        .frame(width: 32, height: 32)
-                                                        .background(AppColors.infoBg)
-                                                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                                                }
-                                                .buttonStyle(.plain)
-                                            }
-                                        }
-                                        .padding(.horizontal, 16)
-                                        if item.id != nonActiveLists.last?.id {
-                                            Divider().background(AppColors.uiBorder.opacity(0.6)).padding(.horizontal, 16)
-                                        }
-                                    }
-                                }
-                                .background(AppColors.uiSurface)
-                                .cornerRadius(20)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 20)
-                                        .stroke(AppColors.uiBorder, lineWidth: 0.5)
-                                )
-                                .padding(.top, 8)
-                            }
-                        }
+                        .padding(.top, NNSpacing.md)
                     }
 
                     Spacer(minLength: 0)
                 }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 28)
+                .padding(.horizontal, NNSpacing.xl)
+                .padding(.top, NNSpacing.sm)
+                .padding(.bottom, NNSpacing.xxl - 4)
             }
             .background(AppColors.uiBackground)
-            .navigationTitle("")
+            .navigationTitle(homeNavTitle)
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar(.hidden, for: .navigationBar)
+            .toolbar {
+                // Share moved from inline button to toolbar — Apple HIG pattern
+                // for secondary actions on a content screen. Only renders when
+                // there's something worth sharing (at least one list exists).
+                if !lists.isEmpty {
+                    ToolbarItem(placement: .primaryAction) {
+                        ShareLink(item: shareMessage) {
+                            Image(systemName: "square.and.arrow.up")
+                                .foregroundColor(AppColors.accent)
+                        }
+                        .accessibilityLabel(lang.isArabicEffective ? "مشاركة تقدّمي" : "Share progress")
+                    }
+                }
+            }
             .alert(isPresented: $showDeleteConfirm) {
                 Alert(
-                    title: Text(lang.isArabicEffective ? "حذف القائمة" : "Delete List"),
-                    message: Text(lang.isArabicEffective ? "هل أنت متأكد من حذف هذه القائمة؟" : "Are you sure you want to delete this list?"),
-                    primaryButton: .destructive(Text(lang.isArabicEffective ? "حذف" : "Delete")) {
+                    title: Text(lang.isArabicEffective ? "حذف هذه القائمة؟" : "Delete this list?"),
+                    message: Text(lang.isArabicEffective ? "سيتوقّف الحجب فوراً، ولا يمكن استعادة الإعدادات بعد الحذف." : "The block will stop immediately, and the settings can't be restored after deletion."),
+                    primaryButton: .destructive(Text(lang.isArabicEffective ? "احذف القائمة" : "Delete list")) {
                         if let toDelete = listToDelete {
-                            context.delete(toDelete)
-                            try? context.save()
+                            deleteList(toDelete)
                         }
                         listToDelete = nil
                     },
-                    secondaryButton: .cancel(Text(lang.isArabicEffective ? "إلغاء" : "Cancel")) {
+                    secondaryButton: .cancel(Text(lang.isArabicEffective ? "احتفظ بها" : "Keep it")) {
                         listToDelete = nil
                     }
                 )
+            }
+            .alert(
+                lang.isArabicEffective ? "تعذّر الحفظ" : "Save failed",
+                isPresented: Binding(get: { saveErrorMessage != nil }, set: { if !$0 { saveErrorMessage = nil } })
+            ) {
+                Button(lang.isArabicEffective ? "حسناً" : "OK", role: .cancel) { saveErrorMessage = nil }
+            } message: {
+                Text(saveErrorMessage ?? "")
+            }
+            .sheet(item: $gatekeeperSheetList) { list in
+                NoNetGatekeeperSheet(
+                    listID: list.id,
+                    listName: list.name,
+                    action: .delete,
+                    onReasonAccepted: { performHardDelete(list) },
+                    onWaitStarted: {
+                        // Force a re-read so the new countdown badge shows up
+                        // on the list card.
+                        refreshTick &+= 1
+                    }
+                )
+                .environmentObject(lang)
+            }
+            .sheet(item: $partnerRequestSheet) { ctx in
+                RequestActionSheet(
+                    listID: ctx.id,
+                    listName: ctx.listName,
+                    action: ctx.action,
+                    partnership: ctx.partnership,
+                    onRequestSent: {
+                        Task {
+                            await partnerStore.fetchMyOutgoingRequests()
+                        }
+                    }
+                )
+                .environmentObject(lang)
             }
             .onAppear {
                 checkPermissions()
             }
         }
     }
-    
+
+    // ─── View helpers (extracted to keep the body readable) ───
+
+    /// Empty nav title — the hero below the title carries the brand. Keeping
+    /// the nav bar empty avoids duplicating "حرر نفسك" / "NoNet" between the
+    /// title bar and the hero card.
+    private var homeNavTitle: String { "" }
+
+    /// Top hero: large centered logo + tagline. Replaces the earlier
+    /// horizontal welcomeCard (50×50 logo with greeting beside it) after
+    /// user feedback — they wanted the icon big with "حرر نفسك" underneath
+    /// in a clear vertical stack. Sized at ~150pt to stay well under the
+    /// original v1.2.0 hero (204pt) while still feeling prominent.
+    ///
+    /// Layout:
+    ///   ┌─ 96×96 infoBg circle ─┐
+    ///   │      72×72 logo       │
+    ///   └───────────────────────┘
+    ///         حرر نفسك           ← .title.weight(.semibold)
+    ///       أهلاً، [Name]        ← optional, only when name is set
+    @ViewBuilder
+    private func welcomeCard() -> some View {
+        // Compact hero — 72pt circle with 52pt logo. The previous 96pt circle
+        // dominated the iPhone SE viewport and pushed the primary CTA below
+        // the fold. Smaller hero leaves more room for the action without
+        // losing brand presence.
+        VStack(spacing: NNSpacing.xs) {
+            ZStack {
+                Circle()
+                    .fill(AppColors.infoBg)
+                    .frame(width: 72, height: 72)
+                Image("nonet_logo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 52, height: 52)
+                    .accessibilityHidden(true)
+            }
+
+            let trimmedName = obName.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmedName.isEmpty {
+                Text(AppStrings.heroTitle(lang))
+                    .font(.title2.weight(.semibold))
+                    .foregroundColor(AppColors.textPrimary)
+                    .multilineTextAlignment(.center)
+            } else {
+                // Combine hero + greeting in one line to save vertical space.
+                Text(lang.isArabicEffective ? "أهلاً، \(trimmedName)" : "Welcome, \(trimmedName)")
+                    .font(.title2.weight(.semibold))
+                    .foregroundColor(AppColors.textPrimary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(1)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, NNSpacing.xs)
+        .padding(.bottom, NNSpacing.xs)
+    }
+
+    /// Permissions banner with expand/collapse UX. Slim 44pt row when collapsed
+    /// (so it doesn't compete with the primary CTA below), full card layout
+    /// when expanded so the user can see exactly which permission is missing
+    /// and grant it with one tap. Renders nothing when both permissions are
+    /// already granted — there's nothing for the user to do.
+    @ViewBuilder
+    private func permissionsCard() -> some View {
+        if !(hasScreenTimePermission && hasNotificationPermission) {
+            let requiredCount = (hasScreenTimePermission ? 0 : 1) + (hasNotificationPermission ? 0 : 1)
+            VStack(spacing: 0) {
+                permissionsCardHeader(requiredCount: requiredCount)
+                if permissionsExpanded {
+                    permissionsCardDetail
+                }
+            }
+            // Outer container: slim banner radius when collapsed, full-card
+            // radius when expanded. The outer clip rounds the whole stack so
+            // banner + detail share a single outer shape.
+            .clipShape(RoundedRectangle(cornerRadius: permissionsExpanded ? 20 : 12))
+        }
+    }
+
+    @ViewBuilder
+    private func permissionsCardHeader(requiredCount: Int) -> some View {
+        HStack(spacing: NNSpacing.sm) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundColor(AppColors.warningFg)
+                .font(.callout)
+            Text(lang.isArabicEffective
+                 ? "أذونات ناقصة (\(requiredCount))"
+                 : "Missing permissions (\(requiredCount))")
+                .font(.subheadline.weight(.semibold))
+                .foregroundColor(AppColors.textPrimary)
+            Spacer()
+            Text(lang.isArabicEffective
+                 ? (permissionsExpanded ? "إخفاء" : "إصلاح")
+                 : (permissionsExpanded ? "Hide" : "Fix"))
+                .font(.footnote.weight(.semibold))
+                .foregroundColor(AppColors.accent)
+            Image(systemName: permissionsExpanded ? "chevron.up" : "chevron.down")
+                .foregroundColor(AppColors.accent)
+                .font(.caption.weight(.semibold))
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { withAnimation(.easeInOut(duration: 0.2)) { permissionsExpanded.toggle() } }
+        .padding(.horizontal, NNSpacing.md)
+        .frame(minHeight: 44) // HIG minimum touch target
+        .padding(.vertical, NNSpacing.xs)
+        .background(AppColors.warningBg)
+        .overlay(
+            RoundedRectangle(cornerRadius: permissionsExpanded ? 0 : 12)
+                .stroke(AppColors.warningFg.opacity(0.3), lineWidth: NNBorder.hairline)
+        )
+    }
+
+    private var permissionsCardDetail: some View {
+        VStack(spacing: 0) {
+            permissionsRow(
+                icon: "lock.iphone",
+                title: lang.isArabicEffective ? "Screen Time" : "Screen Time",
+                granted: hasScreenTimePermission,
+                grantedLabel: lang.isArabicEffective ? "مُفعَّل" : "Granted",
+                grantTitle: lang.isArabicEffective ? "منح" : "Grant",
+                onGrant: requestScreenTimeAuth
+            )
+            Divider().background(AppColors.uiBorder.opacity(0.35))
+            permissionsRow(
+                icon: "bell",
+                title: lang.isArabicEffective ? "الإشعارات" : "Notifications",
+                granted: hasNotificationPermission,
+                grantedLabel: lang.isArabicEffective ? "مُفعَّل" : "Enabled",
+                grantTitle: lang.isArabicEffective ? "تفعيل" : "Enable",
+                onGrant: requestNotificationsAuth
+            )
+        }
+        .background(AppColors.uiSurface)
+        .overlay(
+            // Side+bottom border only (top edge meets the banner).
+            Rectangle().stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+        )
+    }
+
+    @ViewBuilder
+    private func permissionsRow(
+        icon: String,
+        title: String,
+        granted: Bool,
+        grantedLabel: String,
+        grantTitle: String,
+        onGrant: @escaping () -> Void
+    ) -> some View {
+        HStack(spacing: NNSpacing.sm) {
+            Image(systemName: icon).foregroundColor(AppColors.accent)
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(AppColors.textPrimary)
+            Spacer()
+            if granted {
+                HStack(spacing: NNSpacing.xxs) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(AppColors.successGreen)
+                        .font(.caption)
+                    Text(grantedLabel)
+                        .font(.footnote)
+                        .foregroundColor(AppColors.textSecondary)
+                }
+            } else {
+                Button(action: onGrant) {
+                    Text(grantTitle)
+                        .font(.footnote.weight(.semibold))
+                        .padding(.horizontal, NNSpacing.sm)
+                        .frame(minHeight: 44) // HIG minimum touch target
+                        .background(AppColors.accent)
+                        .foregroundColor(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: NNRadius.chip))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(NNSpacing.md)
+    }
+
+    /// Lists section: empty state when no lists exist, otherwise an
+    /// "Active now" card on top plus a collapsed DisclosureGroup of inactive
+    /// lists below. Splitting the two surfaces keeps the home screen calm —
+    /// the active card is short and instantly scannable, and the inactive
+    /// list stays out of view until the user taps to see it.
+    @ViewBuilder
+    private func listsSection() -> some View {
+        if lists.isEmpty {
+            EmptyState(
+                icon: "square.and.pencil",
+                title: lang.isArabicEffective ? "لا توجد قوائم بعد" : "No lists yet",
+                message: lang.isArabicEffective
+                    ? "ابدأ رحلتك بإنشاء أوّل قائمة حجب."
+                    : "Tap Create List above to start your focus journey.",
+                actionTitle: lang.isArabicEffective ? "أنشئ قائمتك الأولى" : "Create your first list",
+                action: { showingCreate = true }
+            )
+            .padding(.top, NNSpacing.xs)
+        } else {
+            if !activeLists.isEmpty {
+                activeListsCard
+            }
+            if !nonActiveLists.isEmpty {
+                inactiveListsDisclosure
+            }
+        }
+    }
+
+    private var activeListsCard: some View {
+        VStack(alignment: .leading, spacing: NNSpacing.xs) {
+            Text(lang.isArabicEffective ? "النشطة الآن" : "Active now")
+                .font(.caption.weight(.medium))
+                .foregroundColor(AppColors.textSecondary)
+                .padding(.horizontal, NNSpacing.xxs)
+            VStack(spacing: 0) {
+                ForEach(activeLists) { item in
+                    listRow(item: item, isActive: true)
+                    if item.id != activeLists.last?.id {
+                        Divider()
+                            .background(AppColors.uiBorder.opacity(0.5))
+                            .padding(.horizontal, NNSpacing.md)
+                    }
+                }
+            }
+            .background(AppColors.uiSurface)
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
+            .overlay(RoundedRectangle(cornerRadius: NNRadius.card)
+                .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline))
+        }
+    }
+
+    private var inactiveListsDisclosure: some View {
+        DisclosureGroup(isExpanded: $showOtherLists) {
+            VStack(spacing: 0) {
+                ForEach(nonActiveLists) { item in
+                    listRow(item: item, isActive: false)
+                    if item.id != nonActiveLists.last?.id {
+                        Divider()
+                            .background(AppColors.uiBorder.opacity(0.5))
+                            .padding(.horizontal, NNSpacing.md)
+                    }
+                }
+            }
+            .background(AppColors.uiSurface)
+            .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
+            .overlay(RoundedRectangle(cornerRadius: NNRadius.card)
+                .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline))
+            .padding(.top, NNSpacing.xs)
+        } label: {
+            Text(lang.isArabicEffective
+                 ? "عرض \(nonActiveLists.count) قائمة غير نشطة"
+                 : "Show \(nonActiveLists.count) inactive lists")
+                .font(.caption.weight(.medium))
+                .foregroundColor(AppColors.textSecondary)
+        }
+        .tint(AppColors.textSecondary)
+        .padding(.horizontal, NNSpacing.xxs)
+    }
+
+    /// Slim 44pt warning banner used by the consolidated alerts strip. Matches
+    /// the existing Permission-banner visual language (warningBg + warningFg
+    /// border, single row) so all home-screen alerts share one shape.
+    @ViewBuilder
+    private func slimAlertBanner(icon: String, title: String, detail: String) -> some View {
+        HStack(alignment: .top, spacing: NNSpacing.sm) {
+            Image(systemName: icon)
+                .foregroundColor(AppColors.alertRed)
+                .font(.callout)
+            VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(AppColors.textPrimary)
+                Text(detail)
+                    .font(.footnote)
+                    .foregroundColor(AppColors.textSecondary)
+                    .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, NNSpacing.md)
+        .padding(.vertical, NNSpacing.sm)
+        .background(AppColors.alertRed.opacity(0.08))
+        .overlay(
+            RoundedRectangle(cornerRadius: NNRadius.control)
+                .stroke(AppColors.alertRed.opacity(0.3), lineWidth: NNBorder.hairline)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+    }
+
+    /// Banner for a single inbound partner request. Renders the action type +
+    /// list name + reason + sender, with Approve / Deny inline. The buttons
+    /// kick off CloudKit updates and the banner disappears once
+    /// pendingPartnerRequests no longer contains this request.
+    @ViewBuilder
+    private func partnerRequestBanner(_ request: BreakAttempt) -> some View {
+        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.xs) {
+            HStack(alignment: .top, spacing: NNSpacing.xs) {
+                Image(systemName: "envelope.open.badge.clock")
+                    .foregroundColor(AppColors.accent)
+                    .font(.callout)
+                VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 2) {
+                    Text(requestBannerTitle(request))
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundColor(AppColors.textPrimary)
+                        .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                    if let reason = request.reason, !reason.isEmpty {
+                        Text(lang.isArabicEffective ? "السبب: \(reason)" : "Reason: \(reason)")
+                            .font(.footnote)
+                            .foregroundColor(AppColors.textSecondary)
+                            .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+
+            HStack(spacing: NNSpacing.sm) {
+                Button(action: { decide(request: request, approve: false) }) {
+                    Text(lang.isArabicEffective ? "أرفض" : "Deny")
+                        .font(.footnote.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 36)
+                        .background(Color.clear)
+                        .foregroundColor(AppColors.alertRed)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: NNRadius.control)
+                                .stroke(AppColors.alertRed.opacity(0.4), lineWidth: NNBorder.input)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+                }
+                .buttonStyle(.plain)
+
+                Button(action: { decide(request: request, approve: true) }) {
+                    Text(lang.isArabicEffective ? "أوافق" : "Approve")
+                        .font(.footnote.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 36)
+                        .background(AppColors.accent)
+                        .foregroundColor(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, NNSpacing.md)
+        .padding(.vertical, NNSpacing.sm)
+        .background(AppColors.infoBg)
+        .overlay(
+            RoundedRectangle(cornerRadius: NNRadius.control)
+                .stroke(AppColors.accent.opacity(0.3), lineWidth: NNBorder.hairline)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+    }
+
+    /// Build the banner title for a BreakAttempt — "Khalid wants to delete
+    /// 'Focus Time'." Falls back to a generic owner label when the request
+    /// doesn't have a Partnership cached (e.g. fresh fetch hasn't completed).
+    private func requestBannerTitle(_ request: BreakAttempt) -> String {
+        let owner: String = {
+            if let partnership = partnerStore.partnerships.first(where: { $0.id == request.partnershipID }) {
+                return partnership.ownerDisplayName
+            }
+            return lang.isArabicEffective ? "أحد شركائك" : "A partner"
+        }()
+        let listName = request.listName
+        if lang.isArabicEffective {
+            switch request.type {
+            case .delete:  return "\(owner) يطلب حذف «\(listName)»"
+            case .disable: return "\(owner) يطلب إيقاف «\(listName)»"
+            case .modify:  return "\(owner) يطلب تعديل «\(listName)»"
+            case .uninstallAttempt: return "\(owner) قد حاول إلغاء تثبيت التطبيق"
+            }
+        } else {
+            switch request.type {
+            case .delete:  return "\(owner) wants to delete \"\(listName)\""
+            case .disable: return "\(owner) wants to pause \"\(listName)\""
+            case .modify:  return "\(owner) wants to modify \"\(listName)\""
+            case .uninstallAttempt: return "\(owner) attempted to uninstall the app"
+            }
+        }
+    }
+
+    /// Approve or deny an inbound partner request. The CloudKit update happens
+    /// inside the store; we just wait for it to refresh
+    /// pendingPartnerRequests so the banner disappears.
+    private func decide(request: BreakAttempt, approve: Bool) {
+        Task {
+            if approve {
+                await partnerStore.approveRequest(request.id)
+            } else {
+                await partnerStore.denyRequest(request.id)
+            }
+        }
+    }
+
+    /// Single list row — kept in one helper so Active and Other lists share
+    /// the exact same row visual. The play/pause toggle is hidden for Hard
+    /// Mode lists (you can't pause them by design) and the row swaps the
+    /// toggle side for RTL.
+    @ViewBuilder
+    private func listRow(item: ListEntity, isActive: Bool) -> some View {
+        HStack(spacing: NNSpacing.sm) {
+            if !lang.isArabicEffective && item.protection != "hard" {
+                toggleButton(for: item)
+            }
+            NavigationLink(destination: ListDetailView(list: item)) {
+                ListRowCore(
+                    item: item,
+                    isActive: isActive,
+                    pendingPartnerLabel: pendingPartnerLabel(for: item)
+                )
+            }
+            if lang.isArabicEffective && item.protection != "hard" {
+                toggleButton(for: item)
+            }
+        }
+        .padding(.horizontal, NNSpacing.md)
+        .padding(.vertical, NNSpacing.xs)
+    }
+
+    /// Returns the localized "awaiting partner" badge label when there's a
+    /// pending outgoing approval request for this list, otherwise nil.
+    /// Drives the small chip rendered inside ListRowCore.
+    private func pendingPartnerLabel(for item: ListEntity) -> String? {
+        guard partnerStore.myOutgoingRequests.contains(where: { $0.listID == item.id && $0.status == .pending }) else {
+            return nil
+        }
+        return lang.isArabicEffective ? "بانتظار الشريك" : "Awaiting partner"
+    }
+
+    @ViewBuilder
+    private func toggleButton(for item: ListEntity) -> some View {
+        let isActive = isActiveNow(item)
+        Button(action: { toggleManual(for: item) }) {
+            // 44×44 hit area, 36pt visual chip inside — meets HIG minimum
+            // without making the chip itself look chunky next to row text.
+            ZStack {
+                RoundedRectangle(cornerRadius: NNRadius.chip)
+                    .fill(AppColors.infoBg)
+                    .frame(width: 36, height: 36)
+                Image(systemName: isActive ? "pause.fill" : "play.fill")
+                    .font(.nnSmallButton)
+                    .foregroundColor(AppColors.accent)
+            }
+            .frame(width: NNHitTarget.minimum, height: NNHitTarget.minimum)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(isActive
+                            ? (lang.isArabicEffective ? "إيقاف \(item.name)" : "Pause \(item.name)")
+                            : (lang.isArabicEffective ? "تشغيل \(item.name)" : "Resume \(item.name)"))
+    }
+
     private func checkPermissions() {
-        // Check Screen Time permission
-        if #available(iOS 16.0, *) {
-            Task {
-                let status: AuthorizationStatus
-                if #available(iOS 17.0, *) {
-                    status = AuthorizationCenter.shared.authorizationStatus
-                } else {
-                    status = await AuthorizationCenter.shared.authorizationStatus
-                }
-                await MainActor.run {
-                    hasScreenTimePermission = (status == .approved)
-                    updatePermissionsExpanded()
-                }
-            }
-        }
-        
-        // Check Notification permission
-        UNUserNotificationCenter.current().getNotificationSettings { settings in
-            DispatchQueue.main.async {
-                hasNotificationPermission = (settings.authorizationStatus == .authorized)
-                updatePermissionsExpanded()
-            }
-        }
+        permissions.bootstrap()
     }
 
     private func isActiveNow(_ l: ListEntity) -> Bool {
         // Manual override takes precedence (UserDefaults-backed)
         if ManualStateStore.isActive(for: l.id) { return true }
+        // Forever blocks are always active until the list is purged.
+        if l.blockType == "forever" { return true }
+        // Time-Limit is always "active" (monitoring runs daily); the shield itself only
+        // kicks in once the user crosses the daily threshold.
+        if l.blockType == "timeLimit" { return true }
         let now = Date()
         if l.blockType == "now" {
             let end = l.createdAt.addingTimeInterval(TimeInterval(l.durationSeconds))
             return now < end
         }
         if l.blockType == "scheduled" {
-            guard let data = l.scheduleSlots, let slots = try? JSONDecoder().decode([ScheduleSlot].self, from: data) else { return false }
+            guard let data = l.scheduleSlots else { return false }
+            let decoded = SchedulePersistence.decode(data)
+            if decoded.isEmpty { return false }
+            let slots = decoded.map { ScheduleSlot(id: $0.id, day: $0.day, fromMinutes: $0.fromMinutes, toMinutes: $0.toMinutes) }
             let cal = Calendar.current
             let comps = cal.dateComponents([.weekday, .hour, .minute], from: now)
             guard let weekday = comps.weekday, let h = comps.hour, let m = comps.minute else { return false }
@@ -422,317 +816,31 @@ struct HomeView: View {
 
 private extension HomeView {
     func toggleManual(for list: ListEntity) {
-        guard list.protection != "hard" else { return }
+        // Hard Mode normally blocks the toggle — that's the whole point. But
+        // once an emergency-unlock request has matured (7 days elapsed), the
+        // user has *earned* the right to release; let the toggle deactivate
+        // the list in that one specific case. Without this, the matured-unlock
+        // banner would say "use the toggle" but the toggle would silently
+        // do nothing (the original P0).
+        if list.protection == "hard" && !EmergencyUnlockStore.shared.isGranted(for: list.id) {
+            return
+        }
+        let wasActive = ManualStateStore.isActive(for: list.id)
         ManualStateStore.toggle(for: list.id)
+        if wasActive {
+            BlockingEngine.shared.deactivate(list: list)
+            // Consume the matured unlock so it isn't reusable indefinitely;
+            // a future re-block requires a fresh 7-day request.
+            if list.protection == "hard" {
+                EmergencyUnlockStore.shared.clear(for: list.id)
+            }
+        } else {
+            BlockingEngine.shared.activate(list: list)
+        }
         refreshTick += 1 // Force UI refresh
     }
 }
 
-
-private struct PermissionCard: View {
-    let title: String
-    let message: String
-    let icon: String
-    let learnTitle: String
-    var onLearn: () -> Void
-
-    @Environment(\.layoutDirection) private var layoutDirection
-
-    var body: some View {
-        VStack(alignment: layoutDirection == .rightToLeft ? .trailing : .leading, spacing: 8) {
-            HStack(spacing: 10) {
-                Image(systemName: icon).foregroundColor(AppColors.accentDark)
-                Text(title).font(.headline)
-            }
-            Text(message).font(.subheadline).foregroundColor(AppColors.textSecondary)
-            HStack {
-                Spacer()
-                Button(action: onLearn) {
-                    Label(learnTitle, systemImage: "info.circle")
-                }
-                .buttonStyle(.plain)
-                .font(.subheadline.weight(.semibold))
-                .foregroundColor(AppColors.accentDark)
-            }
-        }
-        .padding(20)
-        .background(AppColors.uiSurface)
-        .cornerRadius(16)
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(AppColors.uiBorder, lineWidth: 0.5)
-        )
-    }
-}
-
-private struct RealListRow: View {
-    let item: ListEntity
-    let isActive: Bool
-    let onToggle: () -> Void
-
-    @Environment(\.layoutDirection) private var layoutDirection
-    @EnvironmentObject private var lang: LanguageManager
-
-    // Local decode model for schedule slots
-    private struct Slot: Codable { let id: UUID; let day: Int; let fromMinutes: Int; let toMinutes: Int }
-
-    var body: some View {
-        HStack(alignment: .center) {
-            if item.protection != "hard" {
-                if !lang.isArabicEffective { // LTR → button on left
-                    Button(action: { onToggle() }) {
-                        Image(systemName: isActive ? "pause.fill" : "play.fill")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(AppColors.accentDark)
-                            .frame(width: 32, height: 32)
-                            .background(AppColors.infoBg)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-
-            VStack(alignment: layoutDirection == .rightToLeft ? .trailing : .leading, spacing: 6) {
-                Text(item.name)
-                    .font(.headline)
-                    .foregroundColor(AppColors.textPrimary)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                HStack(spacing: 8) {
-                    ProtectionBadge(isHard: item.protection == "hard", isRTL: layoutDirection == .rightToLeft)
-                }
-            }
-            Spacer()
-
-            if item.protection != "hard" {
-                if lang.isArabicEffective { // RTL → button on right
-                    Button(action: { onToggle() }) {
-                        Image(systemName: isActive ? "pause.fill" : "play.fill")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(AppColors.accentDark)
-                            .frame(width: 32, height: 32)
-                            .background(AppColors.infoBg)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
-                    .buttonStyle(.plain)
-                }
-            } else if isActive {
-                Text(layoutDirection == .rightToLeft ? "مفعّلة الآن" : "Active")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundColor(AppColors.infoFg)
-                    .padding(.vertical, 6)
-                    .padding(.horizontal, 10)
-                    .background(AppColors.infoBg)
-                    .cornerRadius(8)
-            }
-        }
-        .padding(.vertical, 16)
-        .padding(.horizontal, 20)
-        .frame(maxWidth: .infinity, alignment: layoutDirection == .rightToLeft ? .trailing : .leading)
-        .background(Color.clear)
-    }
-
-    private func itemsCountText(_ count: Int) -> String {
-        if layoutDirection == .rightToLeft {
-            return "\(arabicDigits(count)) عنصر"
-        } else {
-            return "\(count) items"
-        }
-    }
-
-    private func arabicDigits(_ n: Int) -> String {
-        let formatter = NumberFormatter()
-        formatter.locale = Locale(identifier: "ar")
-        return formatter.string(from: NSNumber(value: n)) ?? "\(n)"
-    }
-
-    private func scheduleSummaryBadged() -> String? {
-        if item.blockType == "scheduled", let data = item.scheduleSlots, let slots = try? JSONDecoder().decode([Slot].self, from: data), let summary = scheduleSummary(slots) {
-            return summary
-        }
-        return nil
-    }
-
-    private func subtitleText() -> String? { /* kept for potential future use */
-        if item.blockType == "now" && isActive {
-            let end = item.createdAt.addingTimeInterval(TimeInterval(item.durationSeconds))
-            let remaining = Int(max(0, end.timeIntervalSince(Date())))
-            if remaining <= 0 { return nil }
-            return (layoutDirection == .rightToLeft ? "ينتهي خلال " : "Ends in ") + format(remaining)
-        }
-        if item.blockType == "scheduled", let data = item.scheduleSlots {
-            if let slots = try? JSONDecoder().decode([Slot].self, from: data) {
-                if let summary = scheduleSummary(slots) { return summary }
-                let cnt = slots.count
-                return layoutDirection == .rightToLeft ? "جدولة: \(cnt) فترات" : "Scheduled: \(cnt) slots"
-            }
-        }
-        return nil
-    }
-
-    private func scheduleSummary(_ slots: [Slot]) -> String? {
-        guard !slots.isEmpty else { return nil }
-        let uniqueTimes = Set(slots.map { "\($0.fromMinutes)-\($0.toMinutes)" })
-        guard uniqueTimes.count == 1 else { return nil }
-        let from = slots.first!.fromMinutes
-        let to = slots.first!.toMinutes
-        let days = Array(Set(slots.map { $0.day })).sorted()
-        let daysDesc: String
-        if isContiguous(days) && days.count >= 2 {
-            daysDesc = dayShortName(days.first!) + "–" + dayShortName(days.last!)
-        } else if days.count <= 3 {
-            daysDesc = days.map { dayShortName($0) }.joined(separator: layoutDirection == .rightToLeft ? "، " : ", ")
-        } else {
-            return nil
-        }
-        let time = formatHM(from) + "–" + formatHM(to)
-        return (layoutDirection == .rightToLeft ? "\(daysDesc) \(time)" : "\(daysDesc) \(time)")
-    }
-
-    private func isContiguous(_ days: [Int]) -> Bool {
-        guard days.count >= 2 else { return false }
-        for i in 1..<days.count { if days[i] != days[i-1] + 1 { return false } }
-        return true
-    }
-
-    private func dayShortName(_ d: Int) -> String {
-        if layoutDirection == .rightToLeft {
-            let names = ["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"]
-            return names[(d % 7 + 7) % 7]
-        } else {
-            let names = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
-            return names[(d % 7 + 7) % 7]
-        }
-    }
-
-    private func formatHM(_ minutes: Int) -> String {
-        let h = minutes / 60
-        let m = minutes % 60
-        let s = String(format: "%02d:%02d", h, m)
-        return s
-    }
-
-    private func format(_ seconds: Int) -> String {
-        let d = seconds / 86400
-        let h = (seconds % 86400) / 3600
-        let m = (seconds % 3600) / 60
-        if layoutDirection == .rightToLeft {
-            if d > 0 { return "\(d)ي \(h)س" }
-            if h > 0 { return "\(h)س \(m)د" }
-            return "\(m)د"
-        } else {
-            if d > 0 { return "\(d)d \(h)h" }
-            if h > 0 { return "\(h)h \(m)m" }
-            return "\(m)m"
-        }
-    }
-}
-
-private enum BadgeStyle { case neutral, warning, danger }
-
-private struct Badge: View {
-    let icon: String
-    let text: String
-    let style: BadgeStyle
-    var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.system(size: 12, weight: .semibold))
-            Text(text)
-                .font(.caption.weight(.semibold))
-                .lineLimit(1)
-                .monospacedDigit()
-        }
-        .padding(.horizontal, 10)
-        .frame(height: 24)
-        .foregroundColor(fg)
-        .background(bg)
-        .overlay(RoundedRectangle(cornerRadius: 8).stroke(border, lineWidth: 0.5))
-        .cornerRadius(8)
-    }
-    private var fg: Color {
-        switch style {
-        case .neutral: return AppColors.textPrimary
-        case .warning: return AppColors.warningFg
-        case .danger: return AppColors.alertRed
-        }
-    }
-    private var bg: Color {
-        switch style {
-        case .neutral: return AppColors.uiSurface
-        case .warning: return AppColors.warningBg
-        case .danger: return AppColors.alertRed.opacity(0.10)
-        }
-    }
-    private var border: Color {
-        switch style {
-        case .neutral: return AppColors.uiBorder
-        case .warning: return AppColors.warningFg.opacity(0.6)
-        case .danger: return AppColors.alertRed
-        }
-    }
-}
-
-private struct ProtectionBadge: View {
-    let isHard: Bool
-    let isRTL: Bool
-    var body: some View {
-        if isHard {
-            Badge(icon: "lock.fill", text: isRTL ? "الوضع الصارم" : "Hard Mode", style: .danger)
-        } else {
-            Badge(icon: "lock.open", text: isRTL ? "بدون حماية" : "No Protection", style: .neutral)
-        }
-    }
-}
-
-private struct EmptyStateView: View {
-    let isArabic: Bool
-    var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "square.and.pencil")
-                .font(.system(size: 28))
-                .foregroundColor(.secondary)
-            Text(isArabic ? "رحلة تركيزك تبدأ من هنا. اضغط \"أنشئ قائمة\"." : "Your focus journey starts here. Tap Create List.")
-                .font(.subheadline)
-                .multilineTextAlignment(isArabic ? .trailing : .center)
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(18)
-        .background(AppColors.uiSurface)
-        .cornerRadius(20)
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(AppColors.uiBorder, lineWidth: 1)
-        )
-    }
-}
-
-private struct StatsCard: View {
-    let value: String
-    let label: String
-    var body: some View {
-        VStack(spacing: 8) {
-            Text(value)
-                .font(.title2.weight(.semibold))
-                .monospacedDigit()
-                .foregroundColor(AppColors.textPrimary)
-            Text(label)
-                .font(.caption)
-                .foregroundColor(AppColors.textSecondary)
-                .lineLimit(1)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(16)
-        .frame(height: 112)
-        .background(AppColors.uiSurface)
-        .cornerRadius(20)
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(AppColors.uiBorder, lineWidth: 0.5)
-        )
-    }
-}
 
 private struct CreateBlocklistCard: View {
     @ObservedObject var lang: LanguageManager
@@ -740,462 +848,83 @@ private struct CreateBlocklistCard: View {
     var onCreate: () -> Void
 
     var body: some View {
-        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: 12) {
+        VStack(alignment: lang.isArabicEffective ? .trailing : .leading, spacing: NNSpacing.sm) {
             HStack {
                 Text(AppStrings.createBlocklistTitle(lang))
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.nnCardTitle)
                     .foregroundColor(AppColors.textPrimary)
                 Spacer()
                 Image(systemName: "plus")
-                    .foregroundColor(AppColors.accent600)
+                    .foregroundColor(AppColors.accent)
                     .frame(width: 28, height: 28)
                     .background(AppColors.infoBg)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: NNRadius.chip))
+                    .accessibilityHidden(true) // decorative — the Button below carries the action label
             }
             Button(action: onCreate) {
                 Text(lang.isArabicEffective ? "ابدأ" : "Get Started")
-                    .font(.title3.weight(.semibold))
+                    .font(.nnCardTitle)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 44)
-                    .background(
-                        Group {
-                            AppColors.accentDark
-                        }
-                    )
+                    .frame(height: NNHitTarget.minimum)
+                    .background(AppColors.accent)
                     .foregroundColor(.white)
-        .cornerRadius(12)
+                    .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
             }
         }
-        .padding(16)
+        .padding(NNSpacing.md)
         .background(AppColors.uiSurface)
-        .cornerRadius(20)
+        .clipShape(RoundedRectangle(cornerRadius: NNRadius.container))
         .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(AppColors.uiBorder, lineWidth: 1)
+            RoundedRectangle(cornerRadius: NNRadius.container)
+                .stroke(AppColors.uiBorder, lineWidth: NNBorder.strong)
         )
     }
 }
-
-private struct ChallengesCard: View {
-    @ObservedObject var lang: LanguageManager
-    let value: String
-    var showCTA: Bool = false
-    var body: some View {
-        VStack(spacing: 8) {
-            ZStack(alignment: .topTrailing) {
-                StatsCard(value: value, label: AppStrings.challengesLabel(lang))
-                HStack {
-                    Spacer()
-                    Button(action: { /* add challenge */ }) {
-                        Image(systemName: "plus")
-                            .foregroundColor(AppColors.accentDark)
-                            .frame(width: 24, height: 24)
-                            .background(AppColors.infoBg)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
-                    .padding(10)
-                }
-            }
-            if showCTA {
-                NavigationLink(destination: ChallengesView().environmentObject(lang)) {
-                    Text(lang.isArabicEffective ? "استكشف التحديات (\(value))" : "Explore challenges (\(value))")
-                        .font(.subheadline.weight(.semibold))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 40)
-                        .background(AppColors.accentDark)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                }
-                .padding(.horizontal, 4)
-            }
-        }
-    }
-}
-
-private struct ChallengesSimpleCard: View {
-    @ObservedObject var lang: LanguageManager
-    let value: String
-    var body: some View {
-        ZStack(alignment: .topTrailing) {
-            NavigationLink(destination: ChallengesView().environmentObject(lang)) {
-                VStack(spacing: 8) {
-                    Image(systemName: "trophy.fill")
-                        .font(.system(size: 28, weight: .semibold))
-                        .foregroundColor(AppColors.trophyGold)
-                    Text(lang.isArabicEffective ? "أضف تحدّي" : "Add Challenge")
-                        .font(.caption)
-                        .foregroundColor(AppColors.textSecondary)
-                        .lineLimit(1)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(16)
-                .frame(height: 112)
-                .background(AppColors.uiSurface)
-                .cornerRadius(20)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(AppColors.uiBorder, lineWidth: 0.5)
-                )
-            }
-            Image(systemName: "plus")
-                .foregroundColor(AppColors.accentDark)
-                .frame(width: 24, height: 24)
-                .background(AppColors.infoBg)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .padding(10)
-        }
-    }
-}
-
-private struct SavedCycleCard: View {
-    @ObservedObject var lang: LanguageManager
-    @State private var scopeIndex: Int = 0 // 0=W, 1=M, 2=A
-    private func nextScope() { scopeIndex = (scopeIndex + 1) % 3 }
-    @State private var flash: Bool = false
-    var body: some View {
-        VStack(spacing: 6) {
-            Text("2.5h")
-                .font(.title2.weight(.semibold))
-                .monospacedDigit()
-                .foregroundColor(AppColors.textPrimary)
-            Text(combinedLabel())
-                .font(.caption)
-                .foregroundColor(AppColors.textSecondary)
-                .lineLimit(1)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(16)
-        .frame(height: 112)
-        .background(
-            ZStack {
-                AppColors.uiSurface
-                if flash { AppColors.accentDark.opacity(0.12) }
-            }
-        )
-        .cornerRadius(20)
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(AppColors.uiBorder, lineWidth: 0.5)
-        )
-        .overlay(alignment: .topTrailing) {
-            Button(action: {
-                nextScope()
-                withAnimation(.easeOut(duration: 0.2)) { flash = true }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
-                    withAnimation(.easeIn(duration: 0.2)) { flash = false }
-                }
-            }) {
-                Image(systemName: "arrow.triangle.2.circlepath")
-                    .foregroundColor(AppColors.accentDark)
-                    .frame(width: 24, height: 24)
-                    .background(AppColors.infoBg)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-            }
-            .padding(8)
-        }
-        .contentShape(Rectangle())
-    }
-    private func scopeText() -> String {
-        switch scopeIndex {
-        case 0: return lang.isArabicEffective ? "أسبوعي" : "Weekly"
-        case 1: return lang.isArabicEffective ? "شهري" : "Monthly"
-        default: return lang.isArabicEffective ? "طوال الوقت" : "All‑time"
-        }
-    }
-    private func combinedLabel() -> String {
-        let saved = lang.isArabicEffective ? "تم توفيره" : "Saved"
-        if lang.isArabicEffective {
-            return "\(saved) (\(scopeText()))"
-        } else {
-            return scopeText() + " " + saved
-        }
-    }
-}
-
-private struct LevelCard: View {
-    @ObservedObject var lang: LanguageManager
-    let value: String
-    @State private var showInfo: Bool = false
-    var body: some View {
-        ZStack(alignment: .topTrailing) {
-            VStack(spacing: 8) {
-                Text(value)
-                    .font(.title2.weight(.semibold))
-                    .monospacedDigit()
-                    .foregroundColor(AppColors.textPrimary)
-                Text(AppStrings.levelLabel(lang))
-                    .font(.caption)
-                    .foregroundColor(AppColors.textSecondary)
-                    .lineLimit(1)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(16)
-            .frame(height: 112)
-            .background(AppColors.uiSurface)
-            .cornerRadius(20)
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(AppColors.uiBorder, lineWidth: 0.5)
-            )
-            Button(action: { showInfo = true }) {
-                Image(systemName: "exclamationmark.circle")
-                    .foregroundColor(AppColors.accentDark)
-                    .frame(width: 24, height: 24)
-                    .background(AppColors.infoBg)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-            }
-            .padding(10)
-        }
-        .alert(isPresented: $showInfo) {
-            Alert(
-                title: Text(lang.isArabicEffective ? "كيف يعمل المستوى؟" : "How do levels work?"),
-                message: Text(lang.isArabicEffective ? "نظام النقاط يعتمد على التحديات المكتملة والساعات التي تم توفيرها." : "Your points grow with completed challenges and hours saved."),
-                dismissButton: .default(Text(lang.isArabicEffective ? "حسنًا" : "OK"))
-            )
-        }
-    }
-}
-
-struct ListDetailView: View {
-    let list: ListEntity
-    @EnvironmentObject var lang: LanguageManager
-    @State private var showEditSheet = false
-    @State private var showHardAlert = false
-    @Environment(\.dismiss) private var dismiss
-
-    private struct Slot: Codable { let id: UUID; let day: Int; let fromMinutes: Int; let toMinutes: Int }
-    private let stableListId: UUID
-
-    init(list: ListEntity) {
-        self.list = list
-        self.stableListId = list.id
-    }
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                // Hard mode banner
-                if list.protection == "hard" {
-                    HStack(alignment: .top, spacing: 12) {
-                        Image(systemName: "lock.fill").foregroundColor(AppColors.alertRed)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(lang.isArabicEffective ? "الوضع الصارم مفعل" : "Hard Mode Enabled")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundColor(AppColors.alertRed)
-                            Text(lang.isArabicEffective ? "لا يمكن التعديل أو الحذف أثناء تفعيل الوضع الصارم." : "Editing and deleting are disabled while Hard Mode is active.")
-                                .font(.caption)
-                                .foregroundColor(AppColors.textSecondary)
-                        }
-                        Spacer(minLength: 0)
-                    }
-                    .padding(12)
-                    .background(AppColors.alertRed.opacity(0.10))
-                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.alertRed, lineWidth: 0.5))
-                    .cornerRadius(12)
-                }
-
-                // Header
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 12) {
-                        Text(list.name)
-                            .font(.system(size: 22, weight: .semibold))
-                            .foregroundColor(AppColors.textPrimary)
-                            .lineLimit(2)
-                            .multilineTextAlignment(lang.isArabicEffective ? .trailing : .leading)
-                        Spacer()
-                        ProtectionBadge(isHard: list.protection == "hard", isRTL: lang.isArabicEffective)
-                    }
-                    if isActiveNowDetail() {
-                        Text(lang.isArabicEffective ? "مفعّلة الآن" : "Active")
-                            .font(.footnote.weight(.semibold))
-                            .foregroundColor(AppColors.infoFg)
-                            .padding(.vertical, 6)
-                            .padding(.horizontal, 10)
-                            .background(AppColors.infoBg)
-                            .cornerRadius(8)
-                    } else {
-                        Text(lang.isArabicEffective ? "غير نشطة" : "Inactive")
-                            .font(.footnote)
-                            .foregroundColor(AppColors.textSecondary)
-                    }
-                }
-
-                // Overview card
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(lang.isArabicEffective ? "نظرة عامة" : "Overview")
-                        .font(.caption.weight(.semibold))
-                        .foregroundColor(AppColors.textSecondary)
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack { Text(lang.isArabicEffective ? "النوع" : "Type").foregroundColor(AppColors.textSecondary); Spacer(); Text(list.blockType).foregroundColor(AppColors.textPrimary) }
-                        HStack { Text(lang.isArabicEffective ? "الحماية" : "Protection").foregroundColor(AppColors.textSecondary); Spacer(); Text(list.protection).foregroundColor(AppColors.textPrimary) }
-                        HStack { Text(lang.isArabicEffective ? "الحالة" : "Status").foregroundColor(AppColors.textSecondary); Spacer(); Text(isActiveNowDetail() ? (lang.isArabicEffective ? "مفعّلة" : "Active") : (lang.isArabicEffective ? "غير نشطة" : "Inactive")).foregroundColor(AppColors.textPrimary) }
-                        if let cnt = list.items?.count {
-                            HStack { Text(lang.isArabicEffective ? "العناصر" : "Items").foregroundColor(AppColors.textSecondary); Spacer(); Text("\(cnt)").foregroundColor(AppColors.textPrimary) }
-                        }
-                    }
-                    .padding(16)
-                    .background(AppColors.uiSurface)
-                    .cornerRadius(12)
-                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.uiBorder, lineWidth: 0.5))
-                }
-
-                // Timing card
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(lang.isArabicEffective ? "الوقت" : "Timing")
-                        .font(.caption.weight(.semibold))
-                        .foregroundColor(AppColors.textSecondary)
-                    VStack(alignment: .leading, spacing: 10) {
-                        if list.blockType == "now" {
-                            HStack { Text(lang.isArabicEffective ? "المدة" : "Duration").foregroundColor(AppColors.textSecondary); Spacer(); Text("\(list.durationSeconds/60) min").foregroundColor(AppColors.textPrimary) }
-                        }
-                        if let summary = scheduleSummaryText() {
-                            HStack { Text(lang.isArabicEffective ? "الجدولة" : "Schedule").foregroundColor(AppColors.textSecondary); Spacer(); Text(summary).foregroundColor(AppColors.textPrimary) }
-                        }
-                        if let b = BreaksStore.load(for: stableListId) {
-                            HStack { Text(lang.isArabicEffective ? "الاستراحات" : "Breaks").foregroundColor(AppColors.textSecondary); Spacer(); Text("\(b.count) × \(b.duration)m").foregroundColor(AppColors.textPrimary) }
-                        }
-                    }
-                    .padding(16)
-                    .background(AppColors.uiSurface)
-                    .cornerRadius(12)
-                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.uiBorder, lineWidth: 0.5))
-                }
-
-                // Actions
-                if list.protection != "hard" {
-                    HStack(spacing: 12) {
-                        Button(action: { showEditSheet = true }) {
-                            Text(lang.isArabicEffective ? "تحرير" : "Edit")
-                                .font(.subheadline.weight(.semibold))
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 44)
-                                .background(AppColors.accentDark)
-                                .foregroundColor(.white)
-                                .cornerRadius(12)
-                        }
-                        Button(role: .destructive, action: {
-                            if let ctx = list.managedObjectContext { ctx.delete(list); try? ctx.save() }
-                            dismiss()
-                        }) {
-                            Text(lang.isArabicEffective ? "حذف" : "Delete")
-                                .font(.subheadline.weight(.semibold))
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 44)
-                                .background(Color.clear)
-                                .foregroundColor(AppColors.alertRed)
-                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.alertRed, lineWidth: 1))
-                        }
-                    }
-                }
-
-                Spacer(minLength: 0)
-            }
-            .padding(24)
-            .background(AppColors.uiBackground)
-        }
-        .background(AppColors.uiBackground)
-        .navigationTitle(lang.isArabicEffective ? "التفاصيل" : "Details")
-        .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $showEditSheet) {
-            CreateListSheet().environmentObject(lang)
-        }
-        .onChange(of: showEditSheet) { _ in }
-        .onDisappear { }
-    }
-
-    private func isActiveNowDetail() -> Bool {
-        // Use stable id to avoid touching list.id after deletion
-        if ManualStateStore.isActive(for: stableListId) { return true }
-        // If the Core Data object is being deleted, avoid dereferencing its properties
-        if list.isDeleted { return false }
-        let now = Date()
-        if list.blockType == "now" {
-            let end = list.createdAt.addingTimeInterval(TimeInterval(list.durationSeconds))
-            return now < end
-        }
-        if list.blockType == "scheduled" {
-            guard let data = list.scheduleSlots, let slots = try? JSONDecoder().decode([Slot].self, from: data) else { return false }
-            let cal = Calendar.current
-            let comps = cal.dateComponents([.weekday, .hour, .minute], from: now)
-            guard let weekday = comps.weekday, let h = comps.hour, let m = comps.minute else { return false }
-            let dayIndex = (weekday - 1) % 7
-            let minutesNow = h * 60 + m
-            return slots.contains { $0.day == dayIndex && minutesNow >= $0.fromMinutes && minutesNow < $0.toMinutes }
-        }
-        return false
-    }
-
-    private func scheduleSummaryText() -> String? {
-        guard list.blockType == "scheduled", let data = list.scheduleSlots, let slots = try? JSONDecoder().decode([Slot].self, from: data), !slots.isEmpty else { return nil }
-        let uniqueTimes = Set(slots.map { "\($0.fromMinutes)-\($0.toMinutes)" })
-        guard uniqueTimes.count == 1 else { return nil }
-        let from = slots.first!.fromMinutes
-        let to = slots.first!.toMinutes
-        let days = Array(Set(slots.map { $0.day })).sorted()
-        func dayName(_ d: Int) -> String {
-            if lang.isArabicEffective { return ["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"][ (d % 7 + 7) % 7 ] }
-            return ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][ (d % 7 + 7) % 7 ]
-        }
-        let daysDesc: String
-        if days.count >= 2 && zip(days.dropFirst(), days).allSatisfy({ $0.0 == $0.1 + 1 }) {
-            daysDesc = dayName(days.first!) + "–" + dayName(days.last!)
-        } else if days.count <= 3 {
-            daysDesc = days.map { dayName($0) }.joined(separator: lang.isArabicEffective ? "، " : ", ")
-        } else { return nil }
-        let time = String(format: "%02d:%02d", from/60, from%60) + "–" + String(format: "%02d:%02d", to/60, to%60)
-        return daysDesc + " " + time
-    }
-}
-
-extension ListEntity: Identifiable {}
-
-#Preview {
-    HomeView().environmentObject(LanguageManager.shared)
-}
-
-// MARK: - Actions
-private extension HomeView {
-    func requestScreenTimeAuth() {
-        if #available(iOS 16.0, *) {
-            Task { _ = try? await AuthorizationCenter.shared.requestAuthorization(for: .individual) }
-        }
-    }
-    
-    func updatePermissionsExpanded() {
-        let allSet = hasScreenTimePermission && hasNotificationPermission
-        permissionsExpanded = !allSet
-    }
-}
-
-private struct SoftDivider: View {
-    let width: CGFloat
-    let opacity: Double
-    var body: some View {
-        HStack {
-            Spacer()
-            Rectangle()
-                .fill(AppColors.uiBorder.opacity(opacity))
-                .frame(width: width, height: 1)
-            Spacer()
-        }
-        .padding(.vertical, 8)
-    }
-} 
 
 private struct ListRowCore: View {
     let item: ListEntity
     let isActive: Bool
+    /// When non-nil, a small chip is shown next to the protection badge to
+    /// signal there's a pending recovery-partner approval request for this
+    /// list. The caller computes the localized label so this view doesn't
+    /// need a LanguageManager dependency.
+    var pendingPartnerLabel: String? = nil
     @Environment(\.layoutDirection) private var layoutDirection
+
+    /// Localized label for the list's blockType — surfaces the difference
+    /// between immediate / scheduled / time-limit / forever lists at a glance
+    /// rather than burying it in the detail view. nil for `now` (default
+    /// case), which doesn't need its own chip.
+    private var typeLabel: (icon: String, text: String)? {
+        let isRTL = layoutDirection == .rightToLeft
+        switch item.blockType {
+        case "scheduled":
+            return ("calendar", isRTL ? "مجدول" : "Scheduled")
+        case "timeLimit":
+            return ("clock.badge", isRTL ? "حد يومي" : "Daily limit")
+        case "forever":
+            return ("infinity", isRTL ? "للأبد" : "Forever")
+        default:
+            return nil
+        }
+    }
+
     var body: some View {
         HStack(alignment: .center) {
-            VStack(alignment: layoutDirection == .rightToLeft ? .trailing : .leading, spacing: 6) {
+            VStack(alignment: layoutDirection == .rightToLeft ? .trailing : .leading, spacing: NNSpacing.xs - 2) {
                 Text(item.name)
                     .font(.headline)
                     .foregroundColor(AppColors.textPrimary)
                     .lineLimit(1)
                     .truncationMode(.tail)
-                HStack(spacing: 8) {
+                HStack(spacing: NNSpacing.xs) {
                     ProtectionBadge(isHard: item.protection == "hard", isRTL: layoutDirection == .rightToLeft)
+                    if let type = typeLabel {
+                        chip(icon: type.icon, text: type.text, color: AppColors.textSecondary)
+                    }
+                    if let label = pendingPartnerLabel {
+                        chip(icon: "hourglass", text: label, color: AppColors.accent)
+                    }
                 }
             }
             Spacer()
@@ -1203,12 +932,48 @@ private struct ListRowCore: View {
                 Text(layoutDirection == .rightToLeft ? "مفعّلة الآن" : "Active")
                     .font(.footnote.weight(.semibold))
                     .foregroundColor(AppColors.infoFg)
-                    .padding(.vertical, 6)
-                    .padding(.horizontal, 10)
+                    .padding(.vertical, NNSpacing.xs - 2)
+                    .padding(.horizontal, NNSpacing.sm - 2)
                     .background(AppColors.infoBg)
-                    .cornerRadius(8)
+                    .clipShape(RoundedRectangle(cornerRadius: NNRadius.chip))
             }
         }
-        .padding(.vertical, 16)
+        .padding(.vertical, NNSpacing.md)
     }
-} 
+
+    /// Pill-shape chip used for blockType + pending-partner badges. Background
+    /// uses the color's 0.08 opacity so chips stay quiet against the row.
+    @ViewBuilder
+    private func chip(icon: String, text: String, color: Color) -> some View {
+        HStack(spacing: NNSpacing.xxs) {
+            Image(systemName: icon)
+                .font(.caption2)
+            Text(text)
+                .font(.caption.weight(.semibold))
+        }
+        .foregroundColor(color)
+        .padding(.vertical, NNSpacing.xxs - 1)
+        .padding(.horizontal, NNSpacing.xs)
+        .background(color.opacity(0.10))
+        .clipShape(Capsule())
+    }
+}
+
+
+extension ListEntity: Identifiable {}
+
+#Preview {
+    HomeView().environmentObject(LanguageManager.shared)
+}
+
+// MARK: - HomeView Action Helpers
+
+private extension HomeView {
+    func requestScreenTimeAuth() {
+        Task { await permissions.requestScreenTime() }
+    }
+
+    func requestNotificationsAuth() {
+        Task { await permissions.requestNotifications() }
+    }
+}

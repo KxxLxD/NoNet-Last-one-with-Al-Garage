@@ -4,27 +4,35 @@ struct ChallengesView: View {
     @EnvironmentObject var lang: LanguageManager
     @Environment(\.dismiss) private var dismiss
     @State private var showFooter: Bool = false
-    @State private var totalPoints: Int = 0
-    @State private var level: Int = 1
-    @State private var nextLevelPoints: Int = 200
+    /// Persisted across app launches + device rotations. Previously a `@State`
+    /// Int that reset to 0 whenever SwiftUI re-instantiated the view, so a
+    /// user who rotated mid-session lost their tally.
+    @AppStorage(AppStorageKeys.challengeTotalPoints) private var totalPoints: Int = 0
+
+    /// Derived from totalPoints — no separate stored state, so level
+    /// can't drift out of sync with the underlying counter.
+    private var level: Int { totalPoints / BlockingConstants.challengePointsPerLevel + 1 }
+    private var pointsToNextLevel: Int {
+        BlockingConstants.challengePointsPerLevel - (totalPoints % BlockingConstants.challengePointsPerLevel)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
             header()
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: NNSpacing.md) {
                     pointsCard()
                     Text(lang.isArabicEffective ? "التحديات" : "Challenges")
-                        .font(.system(size: 22, weight: .semibold))
+                        .font(.nnSectionTitle)
                         .foregroundColor(AppColors.textPrimary)
-                    Text(lang.isArabicEffective ? "اختر تحديات تكسب بها نقاطًا ثم احفظ." : "Pick challenges to earn points, then save.")
+                    Text(lang.isArabicEffective ? "اختر تحديات تكسب بها نقاطاً ثم احفظ." : "Pick challenges to earn points, then save.")
                         .font(.body)
                         .foregroundColor(AppColors.textSecondary)
 
                     ChallengeCardCompact(
-                        title: lang.isArabicEffective ? "حظر المحتوى للبالغين والمواعدة والقمار" : "Adult/Dating/Gambling",
+                        title: lang.isArabicEffective ? "حجب المحتوى للبالغين والمواعدة والقمار" : "Adult/Dating/Gambling",
                         description: lang.isArabicEffective ? "إيقاف دائم" : "Block forever",
-                        options: simpleOptions([lang.isArabicEffective ? "حظر دائم" : "Block forever"], pts: [60]),
+                        options: simpleOptions([lang.isArabicEffective ? "حجب دائم" : "Block forever"], pts: [60]),
                         onChange: apply
                     )
 
@@ -40,11 +48,11 @@ struct ChallengesView: View {
                         options: timeOptions(), onChange: apply
                     )
 
-                    SoftDivider(width: 300, opacity: 0.70)
+                    SoftDivider(maxWidth: 300, opacity: 0.7)
 
                     SleepChallengeCard(lang: lang, onChange: apply)
 
-                    SoftDivider(width: 300, opacity: 0.70)
+                    SoftDivider(maxWidth: 300, opacity: 0.7)
 
                     ChallengeCardCompact(
                         title: lang.isArabicEffective ? "ألعاب" : "Games",
@@ -61,13 +69,18 @@ struct ChallengesView: View {
                     ChallengeCardCompact(
                         title: lang.isArabicEffective ? "إشعارات أقل" : "Fewer notifications",
                         description: lang.isArabicEffective ? "اسكت المشتّتات" : "Mute distractors",
-                        options: simpleOptions(["4h","8h", lang.isArabicEffective ? "أيام العمل" : "Workdays", lang.isArabicEffective ? "دائمًا" : "Always"], pts: [10,20,30,40]),
+                        options: simpleOptions([
+                            lang.isArabicEffective ? "4 ساعات" : "4h",
+                            lang.isArabicEffective ? "8 ساعات" : "8h",
+                            lang.isArabicEffective ? "أيام العمل" : "Workdays",
+                            lang.isArabicEffective ? "دائماً" : "Always"
+                        ], pts: [10,20,30,40]),
                         onChange: apply
                     )
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 8)
-                .padding(.bottom, showFooter ? 120 : 28)
+                .padding(.horizontal, NNSpacing.xl)
+                .padding(.top, NNSpacing.xs)
+                .padding(.bottom, showFooter ? 120 : NNSpacing.xxl - 4)
                 .background(AppColors.uiBackground)
             }
         }
@@ -76,36 +89,45 @@ struct ChallengesView: View {
         .toolbar(.hidden, for: .navigationBar)
         .safeAreaInset(edge: .bottom) {
             if showFooter {
-                Footer(totalPoints: totalPoints, lang: lang)
+                Footer(totalPoints: totalPoints, onDone: { dismiss() }, lang: lang)
             }
         }
     }
 
     private func header() -> some View {
+        // Single "Done" — the previous header had both "Close" and "Done"
+        // doing the exact same dismiss(), which was confusing twin actions.
+        // Title on the leading side, Done on the trailing — standard iOS
+        // modal pattern.
         HStack {
-            Button(action: { dismiss() }) {
-                Text(lang.isArabicEffective ? "إغلاق" : "Close")
-                    .font(.subheadline)
-                    .foregroundColor(AppColors.accentDark)
-            }
+            Text(lang.isArabicEffective ? "التحديات" : "Challenges")
+                .font(.headline)
+                .foregroundColor(AppColors.textPrimary)
             Spacer()
             Button(action: { dismiss() }) {
                 Text(lang.isArabicEffective ? "تم" : "Done")
                     .font(.subheadline.weight(.semibold))
-                    .foregroundColor(AppColors.accentDark)
+                    .foregroundColor(AppColors.accent)
             }
+            .frame(minHeight: NNHitTarget.minimum)
         }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 12)
+        .padding(.horizontal, NNSpacing.xl)
+        .padding(.vertical, NNSpacing.sm)
         .background(AppColors.uiSurface)
-        .overlay(Rectangle().frame(height: 0.5).foregroundColor(AppColors.uiBorder), alignment: .bottom)
+        .overlay(
+            Rectangle()
+                .frame(height: NNBorder.hairline)
+                .foregroundColor(AppColors.uiBorder),
+            alignment: .bottom
+        )
     }
 
     private func pointsCard() -> some View {
-        let progress = min(1.0, Double(totalPoints % nextLevelPoints) / Double(nextLevelPoints))
-        return VStack(alignment: .leading, spacing: 12) {
+        let perLevel = BlockingConstants.challengePointsPerLevel
+        let progress = min(1.0, Double(totalPoints % perLevel) / Double(perLevel))
+        return VStack(alignment: .leading, spacing: NNSpacing.sm) {
             HStack(alignment: .center) {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: NNSpacing.xxs) {
                     Text((lang.isArabicEffective ? "النقاط" : "Points") + ": \(totalPoints)")
                         .font(.title3.weight(.semibold))
                         .foregroundColor(AppColors.textPrimary)
@@ -118,43 +140,48 @@ struct ChallengesView: View {
                     .font(.subheadline)
                     .foregroundColor(AppColors.textSecondary)
             }
-            ZStack(alignment: .leading) {
-                Capsule().fill(AppColors.uiBorder.opacity(0.6)).frame(height: 8)
-                Capsule().fill(AppColors.accentDark).frame(width: CGFloat(progress) * UIScreen.main.bounds.width * 0.6, height: 8)
+            // GeometryReader sizes the progress bar relative to its actual
+            // container width instead of UIScreen.main.bounds, which assumed
+            // a 375-point iPhone and clipped on wider devices (iPhone 14+
+            // Pro Max) and shrank on iPad.
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(AppColors.uiBorder.opacity(0.6)).frame(height: 8)
+                    Capsule().fill(AppColors.accent)
+                        .frame(width: CGFloat(progress) * geo.size.width, height: 8)
+                }
             }
+            .frame(height: 8)
         }
-        .padding(16)
+        .padding(NNSpacing.md)
         .background(AppColors.uiSurface)
-        .cornerRadius(16)
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(AppColors.uiBorder, lineWidth: 0.5))
+        .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
+        .overlay(
+            RoundedRectangle(cornerRadius: NNRadius.card)
+                .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+        )
     }
 
     private func apply(_ added: Int) {
+        // Accumulate. Level is derived from totalPoints — no need to manually
+        // bump anything; the computed `level` property reflects the new total
+        // immediately. Previously the view zeroed `totalPoints` at every
+        // level-up which silently capped points at perLevel - 1.
         totalPoints = max(0, totalPoints + added)
-        if totalPoints >= nextLevelPoints { level += 1; totalPoints = 0 }
-        if level >= 1 { showFooter = true }
+        if totalPoints > 0 { showFooter = true }
     }
 
     private func timeOptions() -> [ChallengeOption] {
         [
-            .option(label: "4h", points: 10),
-            .option(label: "2h", points: 20),
-            .option(label: "1h", points: 30),
-            .option(label: lang.isArabicEffective ? "حظر دائم" : "Block", points: 50)
+            .option(label: lang.isArabicEffective ? "4 ساعات" : "4h", points: 10),
+            .option(label: lang.isArabicEffective ? "ساعتان" : "2h", points: 20),
+            .option(label: lang.isArabicEffective ? "ساعة" : "1h", points: 30),
+            .option(label: lang.isArabicEffective ? "حجب دائم" : "Block", points: 50)
         ]
     }
 
     private func simpleOptions(_ labels: [String], pts: [Int]) -> [ChallengeOption] {
         zip(labels, pts).map { .option(label: $0.0, points: $0.1) }
-    }
-}
-
-private struct SoftDivider: View {
-    let width: CGFloat
-    let opacity: Double
-    var body: some View {
-        HStack { Spacer(); Rectangle().fill(AppColors.uiBorder.opacity(opacity)).frame(width: width, height: 1); Spacer() }
-            .padding(.vertical, 6)
     }
 }
 
@@ -168,9 +195,9 @@ private struct ChallengeCardCompact: View {
     @State private var selected: ChallengeOption? = nil
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: NNSpacing.sm) {
             Text(title)
-                .font(.system(size: 18, weight: .semibold))
+                .font(.nnSubheader.weight(.semibold))
                 .foregroundColor(AppColors.textPrimary)
             Text(description)
                 .font(.footnote)
@@ -178,10 +205,13 @@ private struct ChallengeCardCompact: View {
                 .lineLimit(1)
             ChipGrid(options: options, selected: $selected) { opt in if case let .option(_, p) = opt { onChange(p) } }
         }
-        .padding(16)
+        .padding(NNSpacing.md)
         .background(AppColors.uiSurface)
-        .cornerRadius(16)
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(AppColors.uiBorder, lineWidth: 0.5))
+        .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
+        .overlay(
+            RoundedRectangle(cornerRadius: NNRadius.card)
+                .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
+        )
     }
 }
 
@@ -190,23 +220,27 @@ private struct ChipGrid: View {
     @Binding var selected: ChallengeOption?
     var onPick: (ChallengeOption) -> Void
 
-    private var columns: [GridItem] { [GridItem(.adaptive(minimum: 120), spacing: 8)] }
+    private var columns: [GridItem] { [GridItem(.adaptive(minimum: 120), spacing: NNSpacing.xs)] }
 
     var body: some View {
-        LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
+        LazyVGrid(columns: columns, alignment: .leading, spacing: NNSpacing.xs) {
             ForEach(options, id: \.self) { opt in
                 let isSel = selected == opt
                 Button(action: { selected = opt; onPick(opt) }) {
                     Text(label(for: opt))
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.nnSmallButton)
                         .lineLimit(1)
                         .truncationMode(.tail)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(isSel ? AppColors.accentDark : AppColors.uiSurface)
+                        .padding(.horizontal, NNSpacing.sm)
+                        .padding(.vertical, NNSpacing.xs)
+                        .frame(minHeight: NNHitTarget.minimum - 8)
+                        .background(isSel ? AppColors.accent : AppColors.uiSurface)
                         .foregroundColor(isSel ? .white : AppColors.textPrimary)
-                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppColors.uiBorder, lineWidth: isSel ? 0 : 0.5))
-                        .cornerRadius(10)
+                        .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: NNRadius.control)
+                                .stroke(AppColors.uiBorder, lineWidth: isSel ? 0 : NNBorder.hairline)
+                        )
                 }
                 .buttonStyle(.plain)
             }
@@ -227,45 +261,65 @@ private struct SleepChallengeCard: View {
     @State private var allDays: Bool = true
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: NNSpacing.sm) {
             Text(lang.isArabicEffective ? "نوم بلا إنترنت" : "No‑Internet Sleep")
-                .font(.system(size: 18, weight: .semibold))
+                .font(.nnSubheader.weight(.semibold))
                 .foregroundColor(AppColors.textPrimary)
             Text(lang.isArabicEffective ? "اقتراح: 8م → 8ص (كل الأيام). يمكنك التعديل." : "Suggestion: 8pm → 8am (every day). You can edit.")
                 .font(.footnote)
                 .foregroundColor(AppColors.textSecondary)
                 .lineLimit(1)
-            HStack(spacing: 12) {
+            HStack(spacing: NNSpacing.sm) {
                 DatePicker(lang.isArabicEffective ? "من" : "From", selection: $from, displayedComponents: .hourAndMinute)
                 DatePicker(lang.isArabicEffective ? "إلى" : "To", selection: $to, displayedComponents: .hourAndMinute)
             }
+            // Inline validation: identical from/to is a silent footgun. End
+            // crossing midnight (from > to) is fine and intended for sleep
+            // schedules — we only refuse the zero-duration case.
+            if isZeroDuration {
+                Text(lang.isArabicEffective
+                     ? "وقت البداية والنهاية متطابقان."
+                     : "Start and end times are identical.")
+                    .font(.caption)
+                    .foregroundColor(AppColors.alertRed)
+            }
             Toggle(lang.isArabicEffective ? "كل الأيام" : "Every day", isOn: $allDays)
-                .tint(AppColors.accentDark)
+                .tint(AppColors.accent)
             Button(action: { onChange(40) }) {
                 Text(lang.isArabicEffective ? "اعتمد هذه الأوقات" : "Apply these times")
-                    .font(.system(size: 14, weight: .semibold))
-                    .frame(height: 36)
-                    .padding(.horizontal, 12)
-                    .background(AppColors.accentDark)
+                    .font(.nnSmallButton)
+                    .frame(minHeight: NNHitTarget.minimum)
+                    .padding(.horizontal, NNSpacing.md)
+                    .background(isZeroDuration ? AppColors.textDisabled : AppColors.accent)
                     .foregroundColor(.white)
-                    .cornerRadius(10)
+                    .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
             }
+            .disabled(isZeroDuration)
         }
-        .padding(16)
+        .padding(NNSpacing.md)
         .background(AppColors.uiSurface)
-        .cornerRadius(16)
+        .clipShape(RoundedRectangle(cornerRadius: NNRadius.card))
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(AppColors.uiBorder, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: NNRadius.card)
+                .stroke(AppColors.uiBorder, lineWidth: NNBorder.hairline)
         )
+    }
+
+    /// True if from == to (same minute). Compare hour+minute components only —
+    /// the DatePicker is `.hourAndMinute`, so day/year never drift.
+    private var isZeroDuration: Bool {
+        let fromComps = Calendar.current.dateComponents([.hour, .minute], from: from)
+        let toComps = Calendar.current.dateComponents([.hour, .minute], from: to)
+        return fromComps.hour == toComps.hour && fromComps.minute == toComps.minute
     }
 }
 
 private struct Footer: View {
     let totalPoints: Int
+    let onDone: () -> Void
     @ObservedObject var lang: LanguageManager
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: NNSpacing.sm) {
             HStack {
                 Text((lang.isArabicEffective ? "النقاط: " : "Points: ") + "\(totalPoints)")
                     .foregroundColor(AppColors.textPrimary)
@@ -273,31 +327,26 @@ private struct Footer: View {
                 Text(lang.isArabicEffective ? "Lv 1 → Lv 2" : "Lv 1 → Lv 2")
                     .foregroundColor(AppColors.textSecondary)
             }
-            HStack(spacing: 8) {
-                Button(action: { /* cancel */ }) {
-                    Text(lang.isArabicEffective ? "إلغاء" : "Cancel")
-                        .font(.system(size: 16, weight: .semibold))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 44)
-                        .foregroundColor(AppColors.accentDark)
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.accentDark, lineWidth: 1))
-                }
-                Button(action: { /* save */ }) {
-                    Text(lang.isArabicEffective ? "حفظ التغييرات" : "Save changes")
-                        .font(.system(size: 16, weight: .semibold))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 44)
-                        .background(AppColors.accentDark)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                }
+            Button(action: onDone) {
+                Text(lang.isArabicEffective ? "حفظ وإغلاق" : "Save & close")
+                    .font(.nnButton)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: NNHitTarget.minimum)
+                    .background(AppColors.accent)
+                    .foregroundColor(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: NNRadius.control))
             }
         }
-        .padding(.horizontal, 24)
-        .padding(.top, 12)
-        .padding(.bottom, 24)
+        .padding(.horizontal, NNSpacing.xl)
+        .padding(.top, NNSpacing.sm)
+        .padding(.bottom, NNSpacing.lg + 4)
         .background(AppColors.uiSurface)
-        .overlay(Rectangle().frame(height: 0.5).foregroundColor(AppColors.uiBorder), alignment: .top)
+        .overlay(
+            Rectangle()
+                .frame(height: NNBorder.hairline)
+                .foregroundColor(AppColors.uiBorder),
+            alignment: .top
+        )
     }
 }
 

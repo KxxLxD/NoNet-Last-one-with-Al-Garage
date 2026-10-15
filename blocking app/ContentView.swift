@@ -7,17 +7,24 @@
 
 import SwiftUI
 import UIKit
+import CloudKit
 
 struct ContentView: View {
     @StateObject private var lang = LanguageManager.shared
-    @AppStorage("isAuthenticated") private var isAuthenticated: Bool = false
-    @AppStorage("showOnboardingAfterLogin") private var showOnboardingAfterLogin: Bool = false
-    @AppStorage("selectedTab") private var selectedTab: Int = 0
-    @AppStorage("isPremium") private var isPremium: Bool = false
-    @AppStorage("trialStartTs") private var trialStartTs: Double = 0
-    @AppStorage("hasShownTrialExpiredAlert") private var hasShownTrialExpiredAlert: Bool = false
+    @AppStorage(AppStorageKeys.isAuthenticated) private var isAuthenticated: Bool = false
+    @AppStorage(AppStorageKeys.showOnboardingAfterLogin) private var showOnboardingAfterLogin: Bool = false
+    @AppStorage(AppStorageKeys.selectedTab) private var selectedTab: Int = 0
+    @AppStorage(AppStorageKeys.isPremium) private var isPremium: Bool = false
+    @AppStorage(AppStorageKeys.trialStartTs) private var trialStartTs: Double = 0
+    @AppStorage(AppStorageKeys.hasShownTrialExpiredAlert) private var hasShownTrialExpiredAlert: Bool = false
 
     @State private var showTrialExpiredAlert: Bool = false
+
+    /// Drives the PartnerAcceptSheet. We observe partnerStore.pendingShareMetadata
+    /// (set by PartnerSceneDelegate when a CKShare invite arrives) and present
+    /// the accept sheet so the invitee can pick a display name before the share
+    /// is actually accepted.
+    @ObservedObject private var partnerStore = CloudKitPartnerStore.shared
 
     var body: some View {
         Group {
@@ -33,7 +40,7 @@ struct ContentView: View {
                         .tag(0)
 
                     ChatBotView()
-                            .tabItem { Label(lang.isArabicEffective ? "NoNet AI" : "NoNet AI", systemImage: "sparkles") }
+                        .tabItem { Label("NoNet AI", systemImage: "message") }
                         .tag(1)
 
                     Group {
@@ -47,7 +54,7 @@ struct ContentView: View {
                         .tabItem { Label(AppStrings.settingsTitle(lang), systemImage: "gearshape") }
                     .tag(2)
                     }
-                    .accentColor(AppColors.accentDark)
+                    .accentColor(AppColors.accent)
                     .toolbar(.hidden, for: .tabBar)
                     .safeAreaInset(edge: .bottom) {
                         CustomTabBar(selectedTab: $selectedTab)
@@ -61,60 +68,83 @@ struct ContentView: View {
         .onAppear {
             applySemanticDirection(isArabic: lang.isArabicEffective)
             expireTrialIfNeeded()
-            configureTabBarAppearance()
+            Task { await bootstrapCloudKit() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .CKAccountChanged)) { _ in
+            Task { await bootstrapCloudKit() }
         }
         .onChange(of: lang.isArabicEffective) { isArabic in
             applySemanticDirection(isArabic: isArabic)
-            configureTabBarAppearance()
         }
-        .alert(lang.isArabicEffective ? "انتهت التجربة المجانية" : "Free Trial Expired", isPresented: $showTrialExpiredAlert) {
-            Button(lang.isArabicEffective ? "ترقية الآن" : "Upgrade Now") {
+        .alert(lang.isArabicEffective ? "انتهت تجربتك المجانية" : "Your free trial ended", isPresented: $showTrialExpiredAlert) {
+            Button(lang.isArabicEffective ? "اشترك الآن" : "Subscribe now") {
                 selectedTab = 2 // Settings tab
             }
-            Button(lang.isArabicEffective ? "لاحقًا" : "Later", role: .cancel) {}
+            Button(lang.isArabicEffective ? "لاحقاً" : "Later", role: .cancel) {}
         } message: {
-            Text(lang.isArabicEffective ? "انتهت تجربتك المجانية لمدة 7 أيام. ترقّ الآن للاستمرار في استخدام جميع الميزات." : "Your 7-day free trial has expired. Upgrade now to continue using all features.")
+            Text(lang.isArabicEffective ? "نأمل أن NoNet ساعدك خلال هذه الأيام السبعة. اختر خطّة لتحتفظ بجميع المزايا، أو استمرّ بالنسخة المجانية." : "We hope NoNet helped you during these 7 days. Choose a plan to keep all features, or continue with the free version.")
+        }
+        .sheet(item: Binding(
+            get: { partnerStore.pendingShareMetadata.map(MetadataWrapper.init) },
+            set: { newValue in
+                // Two paths land here: (a) PartnerAcceptSheet finished
+                // (accept/reject/later) and nulled pendingShareMetadata
+                // itself, (b) the user swiped the sheet down without
+                // deciding. Treat both as "clear the metadata so the sheet
+                // doesn't reappear" — the user can re-tap the original
+                // share link if they want to reconsider.
+                if newValue == nil {
+                    partnerStore.pendingShareMetadata = nil
+                }
+            }
+        )) { wrapper in
+            PartnerAcceptSheet(metadata: wrapper.metadata, onFinished: {})
+                .environmentObject(lang)
         }
         .preferredColorScheme(.light)
     }
 
+    /// CKShare.Metadata isn't Identifiable, so we wrap it for use with
+    /// `.sheet(item:)`. The id key is the share's recordID.recordName —
+    /// stable, unique, and human-readable in logs.
+    private struct MetadataWrapper: Identifiable {
+        let metadata: CKShare.Metadata
+        var id: String { metadata.share.recordID.recordName }
+    }
+
+    /// Centralized bootstrap so onAppear and CKAccountChanged share the same
+    /// sequence. Pulls account state, registers push subscriptions, fetches
+    /// partnerships, replays any queued BreakAttempts, and refreshes the two
+    /// approval-workflow lists.
+    private func bootstrapCloudKit() async {
+        let store = CloudKitPartnerStore.shared
+        await store.refreshAccountStatus()
+        guard store.isAccountAvailable else { return }
+        await store.setupSubscriptions()
+        await store.fetchPartnerships()
+        await store.flushPendingBreakAttempts()
+        // Approval workflow surfaces (PR 2). executePendingApprovals does its
+        // own fetchMyOutgoingRequests internally, so we don't pre-fetch here —
+        // a single round-trip per cold-launch / CKAccountChanged event is
+        // enough to drain approvals received while the app was closed (e.g.
+        // partner approved while we were offline, or background push failed).
+        await store.fetchPendingRequestsForMe()
+        await ApprovalExecutor.executePendingApprovals()
+    }
+
     private func expireTrialIfNeeded() {
         guard isPremium else { return }
-        guard trialStartTs > 0 else { return }
-        let trialDuration: TimeInterval = 7 * 24 * 3600
-        let start = Date(timeIntervalSince1970: trialStartTs)
-        if Date().timeIntervalSince(start) >= trialDuration {
-            isPremium = false
-            trialStartTs = 0
-            if !hasShownTrialExpiredAlert {
-                hasShownTrialExpiredAlert = true
-                showTrialExpiredAlert = true
-            }
+        guard TrialClock.hasTrialExpired(startTs: trialStartTs) else { return }
+        isPremium = false
+        trialStartTs = 0
+        if !hasShownTrialExpiredAlert {
+            hasShownTrialExpiredAlert = true
+            showTrialExpiredAlert = true
         }
     }
 
     private func applySemanticDirection(isArabic: Bool) {
         UIView.appearance().semanticContentAttribute = isArabic ? .forceRightToLeft : .forceLeftToRight
-    }
-
-    private func configureTabBarAppearance() {
-        let appearance = UITabBarAppearance()
-        appearance.configureWithOpaqueBackground()
-
-        // Item appearance with slight title offset (moves label down a bit → إحساس مسافة فوق الأيقونة)
-        let itemAppearance = UITabBarItemAppearance()
-        itemAppearance.normal.titlePositionAdjustment = UIOffset(horizontal: 0, vertical: 6)
-        itemAppearance.selected.titlePositionAdjustment = UIOffset(horizontal: 0, vertical: 6)
-        appearance.stackedLayoutAppearance = itemAppearance
-        appearance.inlineLayoutAppearance = itemAppearance
-        appearance.compactInlineLayoutAppearance = itemAppearance
-
-        UITabBar.appearance().standardAppearance = appearance
-        if #available(iOS 15.0, *) {
-            UITabBar.appearance().scrollEdgeAppearance = appearance
-        }
-        // Unselected tint for elegance
-        UITabBar.appearance().unselectedItemTintColor = UIColor(red: 107/255, green: 114/255, blue: 128/255, alpha: 1)
     }
 }
 
@@ -122,63 +152,148 @@ struct ContentView: View {
     ContentView()
 }
 
+/// Three-tab bottom navigation. SwiftUI's native TabView is hidden in favour
+/// of this custom strip so we control:
+///   • Hairline divider visibility (single 0.5pt line on top)
+///   • Accent color matching the design system
+///   • Press-feedback that's subtle (scale + tint) instead of a heavy overlay
+///   • Vertical rhythm — icon stays centered, no .padding(.top, 14) hacks
+/// Safe area: SwiftUI's `safeAreaInset(edge: .bottom)` (used by the parent
+/// ContentView) automatically extends the background to cover the home
+/// indicator, so the view itself doesn't need ignoresSafeArea games.
 struct CustomTabBar: View {
     @Binding var selectedTab: Int
     @EnvironmentObject private var lang: LanguageManager
+    // Drives the Home-tab badge when partners send new break-attempt
+    // requests. Observed here (not just in ContentView) so the dot
+    // appears/disappears live without a full view rebuild.
+    @ObservedObject private var partnerStore = CloudKitPartnerStore.shared
 
-    private struct Item: Identifiable { let id: Int; let title: String; let systemImage: String }
+    private struct Item: Identifiable {
+        let id: Int
+        let title: String
+        // Outline + fill pair: the swap is the non-color signal of
+        // selection (works for color-blind users).
+        let unselectedImage: String
+        let selectedImage: String
+        let badgeCount: Int
+    }
 
     private var items: [Item] {
         [
-            Item(id: 0, title: AppStrings.homeTitle(lang), systemImage: "house"),
-            Item(id: 1, title: lang.isArabicEffective ? "NoNet AI" : "NoNet AI", systemImage: "sparkles"),
-            Item(id: 2, title: AppStrings.settingsTitle(lang), systemImage: "gearshape")
+            Item(
+                id: 0,
+                title: AppStrings.homeTitle(lang),
+                unselectedImage: "house",
+                selectedImage: "house.fill",
+                badgeCount: partnerStore.pendingPartnerRequests.count
+            ),
+            Item(
+                id: 1,
+                title: "NoNet AI",
+                unselectedImage: "message",
+                selectedImage: "message.fill",
+                badgeCount: 0
+            ),
+            Item(
+                id: 2,
+                title: AppStrings.settingsTitle(lang),
+                unselectedImage: "gearshape",
+                selectedImage: "gearshape.fill",
+                badgeCount: 0
+            )
         ]
     }
 
-    @State private var flashIndex: Int? = nil
+    @State private var pressedID: Int? = nil
 
     var body: some View {
         VStack(spacing: 0) {
+            // Top hairline — single 0.5pt divider between content and tab bar.
             Rectangle()
-                .fill(AppColors.uiBorder.opacity(0.35))
+                .fill(AppColors.uiBorder.opacity(0.6))
                 .frame(height: 0.5)
-                .edgesIgnoringSafeArea(.bottom)
+
             HStack(spacing: 0) {
                 ForEach(items) { item in
-                    Button(action: {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        withAnimation(.easeOut(duration: 0.2)) { flashIndex = item.id }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                            withAnimation(.easeIn(duration: 0.15)) { flashIndex = nil }
-                        }
-                        withAnimation(.easeOut(duration: 0.15)) { selectedTab = item.id }
-                    }) {
-                        ZStack(alignment: .top) {
-                            VStack(spacing: 4) {
-                                Image(systemName: item.systemImage)
-                                    .symbolRenderingMode(.monochrome)
-                                    .font(.system(size: 21, weight: .regular))
-                                    .foregroundColor(selectedTab == item.id ? AppColors.accentDark : AppColors.textSecondary)
-                                    .padding(.top, 14)
-                                Text(item.title)
-                                    .font(.system(size: 12, weight: selectedTab == item.id ? .semibold : .regular))
-                                    .foregroundColor(selectedTab == item.id ? AppColors.accentDark : AppColors.textSecondary)
-                                    .lineLimit(1)
-                            }
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                            if flashIndex == item.id {
-                                AppColors.accentDark.opacity(0.12)
-                                    .ignoresSafeArea()
-                            }
-                        }
-                    }
-                    .buttonStyle(.plain)
+                    tabButton(for: item)
                 }
             }
-            .frame(height: 60)
+            .frame(height: 56)
             .background(AppColors.uiSurface)
         }
-        .background(AppColors.uiSurface)
+        .background(
+            // Background extends behind the home indicator (safeAreaInset
+            // already handles the inset; this just paints the surface
+            // continuation so the bottom edge doesn't show the page bg).
+            AppColors.uiSurface.ignoresSafeArea(edges: .bottom)
+        )
+    }
+
+    @ViewBuilder
+    private func tabButton(for item: Item) -> some View {
+        let isSelected = selectedTab == item.id
+        let isPressed = pressedID == item.id
+
+        Button(action: {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            withAnimation(.easeOut(duration: 0.12)) { selectedTab = item.id }
+        }) {
+            VStack(spacing: 2) {
+                ZStack(alignment: .topTrailing) {
+                    Image(systemName: isSelected ? item.selectedImage : item.unselectedImage)
+                        .symbolRenderingMode(.monochrome)
+                        // .system(.title2) scales with Dynamic Type — fixed
+                        // .system(size: 22) did not.
+                        .font(.system(.title2, weight: .regular))
+                        .foregroundColor(isSelected ? AppColors.accent : AppColors.textSecondary)
+                        .scaleEffect(isPressed ? 0.92 : 1.0)
+
+                    if item.badgeCount > 0 {
+                        Circle()
+                            .fill(AppColors.alertRed)
+                            .frame(width: 8, height: 8)
+                            .overlay(
+                                Circle().stroke(AppColors.uiSurface, lineWidth: 1.5)
+                            )
+                            .offset(x: 6, y: -2)
+                            .accessibilityHidden(true)
+                    }
+                }
+                Text(item.title)
+                    .font(.caption.weight(isSelected ? .semibold : .regular))
+                    .foregroundColor(isSelected ? AppColors.accent : AppColors.textSecondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        // Custom press tracking — subtle scale on the icon, no overlay flash.
+        // SimultaneousGesture so the button's tap action still fires.
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    withAnimation(.easeOut(duration: 0.1)) { pressedID = item.id }
+                }
+                .onEnded { _ in
+                    withAnimation(.easeIn(duration: 0.15)) { pressedID = nil }
+                }
+        )
+        .accessibilityLabel(accessibilityLabel(for: item))
+        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
+        .accessibilityHint(isSelected
+                           ? (lang.isArabicEffective ? "محددة حالياً" : "Currently selected")
+                           : (lang.isArabicEffective ? "اضغط للانتقال إلى \(item.title)" : "Tap to switch to \(item.title)"))
+    }
+
+    private func accessibilityLabel(for item: Item) -> String {
+        guard item.badgeCount > 0 else { return item.title }
+        if lang.isArabicEffective {
+            return "\(item.title)، \(item.badgeCount) طلب جديد"
+        }
+        let noun = item.badgeCount == 1 ? "new request" : "new requests"
+        return "\(item.title), \(item.badgeCount) \(noun)"
     }
 }

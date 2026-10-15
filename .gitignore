@@ -1,0 +1,116 @@
+# ─────────────────────────────────────────────────────────
+# Xcode build artifacts
+# ─────────────────────────────────────────────────────────
+build/
+DerivedData/
+*.xcuserstate
+*.xcuserdatad/
+xcuserdata/
+*.xccheckout
+*.xcscmblueprint
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+*.profraw
+*.profdata
+
+# ─────────────────────────────────────────────────────────
+# Swift Package Manager
+# ─────────────────────────────────────────────────────────
+.swiftpm/
+.build/
+Packages/
+Package.resolved
+
+# ─────────────────────────────────────────────────────────
+# CocoaPods (in case it's added later)
+# ─────────────────────────────────────────────────────────
+Pods/
+
+# ─────────────────────────────────────────────────────────
+# Carthage (in case it's added later)
+# ─────────────────────────────────────────────────────────
+Carthage/Build/
+
+# ─────────────────────────────────────────────────────────
+# Signing & provisioning (NEVER commit these)
+# ─────────────────────────────────────────────────────────
+*.pem
+*.p12
+*.cer
+*.key
+*.mobileprovision
+*.provisionprofile
+*.certSigningRequest
+AuthKey_*.p8
+
+# ─────────────────────────────────────────────────────────
+# Secrets, env files, credentials
+# ─────────────────────────────────────────────────────────
+*.secret
+secrets.plist
+secrets.json
+.env
+.env.*
+.envrc
+GoogleService-Info.plist
+fastlane/.env
+fastlane/Appfile
+
+# ─────────────────────────────────────────────────────────
+# macOS system files
+# ─────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# ─────────────────────────────────────────────────────────
+# Backup / scratch files
+# ─────────────────────────────────────────────────────────
+*.backup
+*.tmp
+*.bak
+*.orig
+*.rej
+temp_*
+*~
+
+# ─────────────────────────────────────────────────────────
+# Logs & test output
+# ─────────────────────────────────────────────────────────
+*.log
+fastlane/report.xml
+fastlane/screenshots
+fastlane/test_output
+coverage/
+*.coverage
+
+# ─────────────────────────────────────────────────────────
+# IDEs & editor state
+# ─────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ─────────────────────────────────────────────────────────
+# AI agent / tooling state (local-only)
+# ─────────────────────────────────────────────────────────
+.claude/
+.gstack/
+.gbrain/
+.cursor/mcp.json
+*.session
+*.session.json
+
+# ─────────────────────────────────────────────────────────
+# Node (in case JS tooling appears)
+# ─────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

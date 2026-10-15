@@ -1,0 +1,98 @@
+{
+  "identifier" : "NoNet.Products",
+  "nonRenewingSubscriptions" : [],
+  "products" : [],
+  "settings" : {
+    "_applicationInternalID" : "",
+    "_developerTeamID" : "L2T9STCPA5",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : null,
+    "_locale" : "en_US",
+    "_storefront" : "SAU",
+    "_storeKitErrors" : []
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21520000",
+      "localizations" : [
+        {
+          "description" : "NoNet Premium subscription",
+          "displayName" : "NoNet Premium",
+          "locale" : "en_US"
+        },
+        {
+          "description" : "اشتراك NoNet Premium",
+          "displayName" : "NoNet Premium",
+          "locale" : "ar_SA"
+        }
+      ],
+      "name" : "NoNetPremium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "30.00",
+          "familyShareable" : true,
+          "groupNumber" : 1,
+          "internalID" : "MO0001",
+          "introductoryOffer" : {
+            "internalID" : "TR0001",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Monthly NoNet Premium subscription with 7-day free trial",
+              "displayName" : "Monthly",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "اشتراك شهري في NoNet Premium مع تجربة مجانية 7 أيام",
+              "displayName" : "شهري",
+              "locale" : "ar_SA"
+            }
+          ],
+          "productID" : "com.nonetapp.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Monthly",
+          "subscriptionGroupID" : "21520000",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "300.00",
+          "familyShareable" : true,
+          "groupNumber" : 1,
+          "internalID" : "YR0001",
+          "introductoryOffer" : {
+            "internalID" : "TR0002",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Yearly NoNet Premium — save 2 months",
+              "displayName" : "Yearly",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "اشتراك سنوي — وفّر شهرين",
+              "displayName" : "سنوي",
+              "locale" : "ar_SA"
+            }
+          ],
+          "productID" : "com.nonetapp.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Yearly",
+          "subscriptionGroupID" : "21520000",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

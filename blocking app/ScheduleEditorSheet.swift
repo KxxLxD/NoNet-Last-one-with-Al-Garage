@@ -44,9 +44,9 @@ struct ScheduleEditorSheet: View {
                     }
                 }
                 Section {
-                    HStack(alignment: .top, spacing: 16) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(isArabic ? "من" : "From").font(.footnote).foregroundColor(.secondary)
+                    HStack(alignment: .top, spacing: NNSpacing.md) {
+                        VStack(alignment: .leading, spacing: NNSpacing.xs) {
+                            Text(isArabic ? "من" : "From").font(.footnote).foregroundColor(AppColors.textSecondary)
                             HStack {
                                 Picker("h", selection: $fromHour) { ForEach(0...23, id: \.self) { Text("\($0)") } }
                                     .frame(width: 90, height: 120)
@@ -57,8 +57,8 @@ struct ScheduleEditorSheet: View {
                             }
                         }
                         .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(isArabic ? "إلى" : "To").font(.footnote).foregroundColor(.secondary)
+                        VStack(alignment: .leading, spacing: NNSpacing.xs) {
+                            Text(isArabic ? "إلى" : "To").font(.footnote).foregroundColor(AppColors.textSecondary)
                             HStack {
                                 Picker("h", selection: $toHour) { ForEach(0...23, id: \.self) { Text("\($0)") } }
                                     .frame(width: 90, height: 120)
@@ -70,31 +70,54 @@ struct ScheduleEditorSheet: View {
                         }
                         .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, NNSpacing.xxs)
                     Text(totalDurationLabel)
                         .font(.footnote)
-                        .foregroundColor(.secondary)
-                        .padding(.top, 6)
+                        .foregroundColor(AppColors.textSecondary)
+                        .padding(.top, NNSpacing.xxs + 2)
                         .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
                 }
                 Button(action: addSlotsForSelectedDays) {
                     Label(isArabic ? "إضافة فترة" : "Add Slot", systemImage: "plus.circle")
                 }
                 .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
+                .disabled(selectedDays.isEmpty)
+                if selectedDays.isEmpty {
+                    // Without this hint the disabled Add button looks like a
+                    // bug — users couldn't tell they needed to pick days first.
+                    Text(isArabic ? "اختر يوماً واحداً على الأقل قبل الإضافة" : "Pick at least one day before adding")
+                        .font(.caption)
+                        .foregroundColor(AppColors.warningFg)
+                        .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
+                }
                 if working.isEmpty {
-                    Text(isArabic ? "لا توجد فترات" : "No slots").foregroundColor(.secondary)
+                    Text(isArabic ? "لا توجد فترات" : "No slots").foregroundColor(AppColors.textSecondary)
                         .frame(maxWidth: .infinity, alignment: isArabic ? .trailing : .leading)
                 } else {
                     ForEach(working) { s in
                         Group {
                             if isArabic {
-                                HStack { Text(timeRangeLabel(s)).foregroundColor(.secondary); Spacer(); Text(dayName(s.day)) }
+                                HStack { Text(timeRangeLabel(s)).foregroundColor(AppColors.textSecondary); Spacer(); Text(dayName(s.day)) }
                             } else {
-                                HStack { Text(dayName(s.day)); Spacer(); Text(timeRangeLabel(s)).foregroundColor(.secondary) }
+                                HStack { Text(dayName(s.day)); Spacer(); Text(timeRangeLabel(s)).foregroundColor(AppColors.textSecondary) }
+                            }
+                        }
+                        // Swipe-to-delete with an explicit destructive
+                        // action button instead of the bare onDelete handler.
+                        // Adding a slot is multi-step (day + from + to + add),
+                        // so deletion deserves the same visible affordance —
+                        // a single-finger slide can't undo someone's setup
+                        // by mistake.
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                if let idx = working.firstIndex(where: { $0.id == s.id }) {
+                                    working.remove(at: idx)
+                                }
+                            } label: {
+                                Label(isArabic ? "حذف" : "Delete", systemImage: "trash")
                             }
                         }
                     }
-                    .onDelete { idx in working.remove(atOffsets: idx) }
                 }
             }
             .scrollContentBackground(.hidden)
