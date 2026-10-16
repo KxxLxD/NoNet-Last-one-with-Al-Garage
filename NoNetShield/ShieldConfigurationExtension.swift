@@ -51,7 +51,7 @@ final class ShieldConfigurationExtension: ShieldConfigurationDataSource {
         if let list {
             title = list.name
             if let end = list.activeUntil(at: now) {
-                details.append(String(localized: "Ends \(end.formatted(date: .omitted, time: .shortened))"))
+                details.append(String(localized: "Ends \(end.formatted(Date.FormatStyle(date: .omitted, time: .shortened).locale(.app)))"))
             }
         }
         details.append(MotivationalQuotes.random())
@@ -66,7 +66,7 @@ final class ShieldConfigurationExtension: ShieldConfigurationDataSource {
             primaryButtonLabel: .init(text: String(localized: "Close"), color: .white),
             primaryButtonBackgroundColor: Self.navy,
             secondaryButtonLabel: breaksLeft > 0
-                ? .init(text: String(localized: "Start a Break (\(breaksLeft) left)"), color: Self.navy)
+                ? .init(text: String(localized: "Start a Break (\(breaksLeft) left)", locale: .app), color: Self.navy)
                 : nil
         )
     }

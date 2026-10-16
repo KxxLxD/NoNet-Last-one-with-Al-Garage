@@ -62,7 +62,7 @@ struct PartnerSettingsView: View {
 
         Section {
             if let date = partner.forgotResetDate {
-                LabeledContent("Partner removed on", value: date.formatted(date: .abbreviated, time: .shortened))
+                LabeledContent("Partner removed on", value: date.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened).locale(.app)))
                 Button("Cancel Request") { partner.cancelForgotReset() }
             } else {
                 Button("Forgot PIN?") { confirmForgot = true }

@@ -2,7 +2,7 @@ import Foundation
 
 /// External links used across the app. Community links show as "coming soon" until real URLs are set.
 enum AppLinks {
-    static let supportEmail = "support@nonet.app"
+    static let supportEmail = "hello@With-Builders.com"
     static let supportMail = URL(string: "mailto:\(supportEmail)")
     /// Apple's standard Licensed Application End User License Agreement.
     static let termsOfUse = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")

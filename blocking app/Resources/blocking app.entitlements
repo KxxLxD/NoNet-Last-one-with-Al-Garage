@@ -10,7 +10,7 @@
 	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.databox.nonet.blocking-app</string>
+		<string>group.com.databox.samla</string>
 	</array>
 </dict>
 </plist>

@@ -3,7 +3,7 @@ import os
 
 /// Reads and writes block lists as a single JSON file in the App Group container.
 enum BlockListRepository {
-    private static let logger = Logger(subsystem: "com.databox.nonet", category: "Repository")
+    private static let logger = Logger(subsystem: "com.databox.samla", category: "Repository")
 
     static var fileURL: URL {
         AppGroup.containerURL.appendingPathComponent("block-lists.json")

@@ -118,8 +118,8 @@ struct BrandLogo: View {
     var size: CGFloat
 
     var body: some View {
-        if UIImage(named: "nonet_logo") != nil {
-            Image("nonet_logo")
+        if UIImage(named: "samla_logo") != nil {
+            Image("samla_logo")
                 .resizable()
                 .scaledToFit()
                 .frame(width: size, height: size)

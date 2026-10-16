@@ -37,7 +37,7 @@ struct ForeverBlock: Codable, Equatable, Sendable {
 }
 
 enum ForeverBlockRepository {
-    private static let logger = Logger(subsystem: "com.databox.nonet", category: "ForeverBlock")
+    private static let logger = Logger(subsystem: "com.databox.samla", category: "ForeverBlock")
 
     static var fileURL: URL {
         AppGroup.containerURL.appendingPathComponent("forever-block.json")

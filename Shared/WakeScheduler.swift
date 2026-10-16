@@ -9,7 +9,7 @@ import os
 /// at the boundary; the extension re-evaluates all lists on `intervalDidStart`, so timing
 /// stays exact no matter how short the session, slot or break is.
 enum WakeScheduler {
-    private static let logger = Logger(subsystem: "com.databox.nonet", category: "WakeScheduler")
+    private static let logger = Logger(subsystem: "com.databox.samla", category: "WakeScheduler")
     /// DeviceActivityCenter refuses more than 20 monitored activities.
     private static let maxActivities = 20
     private static let wakeLength = 16

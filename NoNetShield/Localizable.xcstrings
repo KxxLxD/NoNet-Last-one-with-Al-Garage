@@ -16,7 +16,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الاستراحة تخلص بعد دقيقة"
+            "value": "تنتهي الاستراحة بعد دقيقة"
           }
         }
       }
@@ -36,7 +36,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الانضباط إنك تختار اللي تبيه أكثر، بدل اللي تبيه الحين."
+            "value": "الانضباط أن تختار ما تريده أكثر، لا ما تريده الآن."
           }
         }
       }
@@ -46,7 +46,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "ينتهي %@"
+            "value": "تنتهي %@"
           }
         }
       }
@@ -59,37 +59,37 @@
               "few": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "ابدأ استراحة (باقي %lld)"
+                  "value": "بدء استراحة (تبقّت %lld)"
                 }
               },
               "many": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "ابدأ استراحة (باقي %lld)"
+                  "value": "بدء استراحة (تبقّت %lld)"
                 }
               },
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "ابدأ استراحة (باقي وحدة)"
+                  "value": "بدء استراحة (تبقّت واحدة)"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "ابدأ استراحة (باقي %lld)"
+                  "value": "بدء استراحة (تبقّت %lld)"
                 }
               },
               "two": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "ابدأ استراحة (باقي ثنتين)"
+                  "value": "بدء استراحة (تبقّت اثنتان)"
                 }
               },
               "zero": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "ابدأ استراحة"
+                  "value": "بدء استراحة"
                 }
               }
             }
@@ -140,7 +140,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "«%@» يرجع يحظر بعد قليل."
+            "value": "سيعود حظر «%@» بعد قليل."
           }
         }
       }

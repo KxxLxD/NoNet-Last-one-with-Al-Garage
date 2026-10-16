@@ -48,7 +48,7 @@ struct ForeverCard: View {
 
     private var badgeText: String {
         if let days = forever.daysUntilUnlock() {
-            return String(localized: "Block Forever · unlocks in \(days) days")
+            return String(localized: "Block Forever · unlocks in \(days) days", locale: .app)
         }
         return String(localized: "Block Forever is on")
     }

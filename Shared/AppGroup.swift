@@ -2,7 +2,7 @@ import Foundation
 
 /// Shared container used by the app and the DeviceActivity monitor extension.
 enum AppGroup {
-    static let identifier = "group.com.databox.nonet.blocking-app"
+    static let identifier = "group.com.databox.samla"
 
     /// Directory shared between the app and its extensions.
     /// Falls back to Application Support when the group container is unavailable (e.g. unsigned builds).

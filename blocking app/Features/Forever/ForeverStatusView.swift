@@ -47,7 +47,7 @@ struct ForeverStatusView: View {
                 .font(.headline)
                 .foregroundStyle(AppColors.active)
             if let since = forever.block.enabledAt {
-                Text("Protecting you since \(since.formatted(date: .long, time: .omitted))")
+                Text("Protecting you since \(since.formatted(Date.FormatStyle(date: .long, time: .omitted).locale(.app)))")
                     .font(.subheadline)
                     .foregroundStyle(AppColors.textSecondary)
             }
@@ -69,7 +69,7 @@ struct ForeverStatusView: View {
                 .font(.largeTitle.weight(.bold))
                 .foregroundStyle(AppColors.primary)
             if let date = forever.block.unlockDate {
-                Text("Unlocks on \(date.formatted(date: .long, time: .omitted))")
+                Text("Unlocks on \(date.formatted(Date.FormatStyle(date: .long, time: .omitted).locale(.app)))")
                     .font(.subheadline)
                     .foregroundStyle(AppColors.textSecondary)
             }

@@ -32,7 +32,7 @@
             { "description" : "All Premium features, billed monthly", "displayName" : "Monthly", "locale" : "en_US" },
             { "description" : "كل ميزات الاشتراك المميز، تُدفع شهريًا", "displayName" : "شهري", "locale" : "ar_SA" }
           ],
-          "productID" : "com.databox.nonet.premium.monthly",
+          "productID" : "com.databox.samla.premium.monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "Premium Monthly",
           "subscriptionGroupID" : "21500001",
@@ -55,7 +55,7 @@
             { "description" : "All Premium features, billed yearly", "displayName" : "Yearly", "locale" : "en_US" },
             { "description" : "كل ميزات الاشتراك المميز، تُدفع سنويًا", "displayName" : "سنوي", "locale" : "ar_SA" }
           ],
-          "productID" : "com.databox.nonet.premium.yearly",
+          "productID" : "com.databox.samla.premium.yearly",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Premium Yearly",
           "subscriptionGroupID" : "21500001",

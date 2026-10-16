@@ -31,6 +31,8 @@ struct SamlaApp: App {
                 .environment(account)
                 .environment(screenTime)
                 .tint(AppColors.primary)
+                // Western digits everywhere, whatever the device region.
+                .environment(\.locale, .app)
         }
         .onChange(of: scenePhase, initial: true) { _, phase in
             guard phase == .active else { return }

@@ -7,7 +7,7 @@ import ManagedSettings
 /// Everything is merged into one named store so overlapping rules never conflict:
 /// the store always reflects the union of everything that should be blocked right now.
 enum ShieldEngine {
-    private static let storeName = "nonet.blocking"
+    private static let storeName = "samla.blocking"
     /// ManagedSettings caps shielded application tokens per store.
     private static let maxApplications = 50
     /// The web content filter accepts at most 50 domains.

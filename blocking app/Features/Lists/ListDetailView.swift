@@ -79,7 +79,7 @@ struct ListDetailView: View {
                     .font(.subheadline)
                     if list.allowsBreaks {
                         Divider()
-                        row("Breaks", value: String(localized: "\(list.breaksRemaining(at: now)) of \(list.breaks.count) left"))
+                        row("Breaks", value: String(localized: "\(list.breaksRemaining(at: now)) of \(list.breaks.count) left", locale: .app))
                     }
                 }
                 .card(padding: 16)
@@ -174,8 +174,8 @@ struct ListDetailView: View {
     private func blockedSummary(_ list: BlockList) -> String {
         var parts: [String] = []
         let apps = list.appCount + list.categoryCount
-        if apps > 0 { parts.append(String(localized: "\(apps) apps")) }
-        if list.websiteCount > 0 { parts.append(String(localized: "\(list.websiteCount) websites")) }
+        if apps > 0 { parts.append(String(localized: "\(apps) apps", locale: .app)) }
+        if list.websiteCount > 0 { parts.append(String(localized: "\(list.websiteCount) websites", locale: .app)) }
         if list.blockAdultContent { parts.append(String(localized: "Adult websites")) }
         return parts.isEmpty ? "—" : parts.joined(separator: " · ")
     }

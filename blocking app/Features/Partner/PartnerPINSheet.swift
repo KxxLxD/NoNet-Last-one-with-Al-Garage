@@ -91,10 +91,10 @@ struct PartnerPINSheet: View {
             onSuccess()
         case .wrong(let attemptsLeft):
             pin = ""
-            errorMessage = String(localized: "Wrong PIN. \(attemptsLeft) attempts left.")
+            errorMessage = String(localized: "Wrong PIN. \(attemptsLeft) attempts left.", locale: .app)
         case .lockedOut(let until):
             pin = ""
-            errorMessage = String(localized: "Too many attempts. Try again at \(until.formatted(date: .omitted, time: .shortened)).")
+            errorMessage = String(localized: "Too many attempts. Try again at \(Formatters.clock(until)).")
         }
     }
 }

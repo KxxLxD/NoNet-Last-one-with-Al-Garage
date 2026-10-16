@@ -12,18 +12,18 @@ enum Formatters {
 
     static func time(minutes: Int) -> String {
         let date = Calendar.current.date(bySettingHour: (minutes / 60) % 24, minute: minutes % 60, second: 0, of: .now) ?? .now
-        return date.formatted(date: .omitted, time: .shortened)
+        return date.formatted(Date.FormatStyle(date: .omitted, time: .shortened).locale(.app))
     }
 
     /// A clock time ("6:00 AM"), with the day added when it isn't today ("Tue 6:00 AM").
     static func clock(_ date: Date, now: Date = .now, calendar: Calendar = .current) -> String {
         if calendar.isDate(date, inSameDayAs: now) {
-            return date.formatted(date: .omitted, time: .shortened)
+            return date.formatted(Date.FormatStyle(date: .omitted, time: .shortened).locale(.app))
         }
         let withinWeek = date.timeIntervalSince(now) < 6 * 86_400
         return withinWeek
-            ? date.formatted(.dateTime.weekday(.abbreviated).hour().minute())
-            : date.formatted(.dateTime.day().month(.abbreviated).hour().minute())
+            ? date.formatted(.dateTime.weekday(.abbreviated).hour().minute().locale(.app))
+            : date.formatted(.dateTime.day().month(.abbreviated).hour().minute().locale(.app))
     }
 
     static func timeRange(from: Int, to: Int) -> String {
@@ -31,7 +31,7 @@ enum Formatters {
     }
 
     static func duration(seconds: Int) -> String {
-        Duration.seconds(seconds).formatted(.units(allowed: [.days, .hours, .minutes], width: .abbreviated))
+        Duration.seconds(seconds).formatted(.units(allowed: [.days, .hours, .minutes], width: .abbreviated).locale(.app))
     }
 
     static func duration(minutes: Int) -> String {
@@ -42,7 +42,7 @@ enum Formatters {
     static func scheduleSummary(_ slots: [ScheduleSlot]) -> String {
         guard let first = slots.first else { return String(localized: "No schedule yet") }
         let sameTime = slots.allSatisfy { $0.fromMinutes == first.fromMinutes && $0.toMinutes == first.toMinutes }
-        guard sameTime else { return String(localized: "\(slots.count) time slots") }
+        guard sameTime else { return String(localized: "\(slots.count) time slots", locale: .app) }
 
         let days = Array(Set(slots.map(\.day))).sorted()
         let isContiguous = days.count >= 2 && zip(days, days.dropFirst()).allSatisfy { $1 == $0 + 1 }
@@ -54,7 +54,7 @@ enum Formatters {
         } else if days.count <= 3 {
             daysText = days.map { weekday($0, short: true) }.formatted(.list(type: .and, width: .narrow))
         } else {
-            daysText = String(localized: "\(days.count) days")
+            daysText = String(localized: "\(days.count) days", locale: .app)
         }
         return "\(daysText) · \(timeRange(from: first.fromMinutes, to: first.toMinutes))"
     }

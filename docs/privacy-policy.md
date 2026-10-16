@@ -1,42 +1,44 @@
-# NoNet — Privacy Policy
+# Samla — Privacy Policy
 
-_Last updated: October 15, 2026_
+_Last updated: October 16, 2026_
 
-NoNet ("the app") helps you block distracting apps and websites. We built it so that your data never leaves your device.
+Samla ("the app") helps you block distracting apps and websites and protect yourself from harmful content. We built it so that your data never leaves your device.
 
 ## What we collect
-**Nothing.** NoNet has no servers, no analytics and no advertising SDKs. We do not collect, sell or share personal data.
+**Nothing.** Samla has no servers, no analytics and no advertising SDKs. We do not collect, sell or share personal data.
 
 ## Data stored on your device
-- Block lists, schedules, breaks and focus history
-- Onboarding answers (name, age group, goals) if you choose to provide them
-- Points and level from Challenges
+- Block lists, schedules and breaks
+- Block Forever settings and any unlock request
+- Your accountability partner's name, and their PIN stored only as a protected hash in the iOS Keychain
 
-This data stays on your iPhone. Delete it at any time from **Settings › Account › Delete Account & Data**, or by deleting the app.
+This data stays on your iPhone. Delete it at any time from **Settings › Account › Delete Account & Data**, or by deleting the app. Lists that are locked right now, and Block Forever, keep their rules until they end.
 
 ## Screen Time
-Apps, categories and websites you pick are handled by Apple's Screen Time (Family Controls) framework as private tokens. NoNet cannot see which apps they are or how you use them.
+Apps, categories and websites you pick are handled by Apple's Screen Time (Family Controls) framework as private tokens. Samla cannot see which apps they are or how you use them.
 
-## Sign in with Apple
-If you sign in, NoNet stores only Apple's anonymous user identifier and the name you choose to share, on your device. You can stop using Sign in with Apple at any time in **Settings › Apple Account › Sign in with Apple**.
+## Sign in with Apple (optional)
+Samla works fully without an account. If you sign in, Samla stores only Apple's anonymous user identifier and the name you choose to share, on your device. You can stop using Sign in with Apple at any time in **Settings › Apple Account › Sign in with Apple**.
 
 ## Purchases
-Subscriptions are processed by Apple. NoNet only receives the subscription status needed to unlock Premium.
+If paid features are offered in the future, payments are processed by Apple. Samla would only receive the subscription status needed to unlock them.
 
 ## Contact
-support@nonet.app
+hello@With-Builders.com
 
 ---
 
-# نونت — سياسة الخصوصية
+# الصملة — سياسة الخصوصية
 
-_آخر تحديث: 15 أكتوبر 2026_
+_آخر تحديث: 16 أكتوبر 2026_
 
-**لا نجمع أي بيانات.** لا يملك نونت خوادم ولا أدوات إحصاء أو إعلانات، ولا نبيع أو نشارك أي بيانات شخصية.
+يساعدك الصملة على حظر التطبيقات والمواقع المشتتة وحماية نفسك من المحتوى الضار. صمّمناه بحيث لا تغادر بياناتك جهازك أبدًا.
 
-- قوائم الحظر والجداول والاستراحات وسجل التركيز وإجابات التعريف والنقاط محفوظة على جهازك فقط، ويمكنك حذفها من **الإعدادات › الحساب › حذف الحساب والبيانات** أو بحذف التطبيق.
-- التطبيقات والمواقع التي تختارها يتعامل معها إطار مدة استخدام الجهاز من Apple كرموز خاصة، ولا يستطيع نونت معرفتها.
-- عند استخدام تسجيل الدخول باستخدام Apple نحفظ على جهازك فقط المعرّف المجهول والاسم الذي تختار مشاركته.
-- تتم المشتريات عبر Apple، ولا نتلقى إلا حالة الاشتراك.
+**لا نجمع أي بيانات.** لا يملك الصملة خوادم ولا أدوات تحليلات أو إعلانات، ولا نبيع أي بيانات شخصية ولا نشاركها.
 
-للتواصل: support@nonet.app
+- تُحفظ قوائم الحظر والجداول والاستراحات وإعدادات «احظر للأبد» واسم شريك المساءلة على جهازك فقط، ويُحفظ رمز الشريك مشفّرًا في سلسلة المفاتيح. يمكنك حذفها من **الإعدادات ‹ الحساب ‹ حذف الحساب والبيانات** أو بحذف التطبيق.
+- تتعامل خدمة «مدة استخدام الجهاز» من Apple مع التطبيقات والمواقع التي تختارها كرموز خاصة، ولا يستطيع الصملة معرفتها.
+- تسجيل الدخول اختياري؛ وعند استخدام تسجيل الدخول بحساب Apple نحفظ على جهازك فقط المعرّف المجهول والاسم الذي تختار مشاركته.
+- إذا قُدّمت ميزات مدفوعة مستقبلًا، فتتم المدفوعات عبر Apple، ولا نتلقى إلا حالة الاشتراك.
+
+للتواصل: hello@With-Builders.com

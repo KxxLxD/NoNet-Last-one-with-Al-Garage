@@ -6,19 +6,19 @@ These steps need your Apple Developer account and can't be done from code. Produ
 - [ ] **Request the Family Controls (Distribution) entitlement** — required to ship any Screen Time app:
       https://developer.apple.com/contact/request/family-controls-distribution
       Request it for all four bundle IDs:
-      - `com.databox.nonet.blocking-app`
-      - `com.databox.nonet.blocking-app.monitor`
-      - `com.databox.nonet.blocking-app.shield`
-      - `com.databox.nonet.blocking-app.shield-action` (block screen buttons, new)
+      - `com.databox.samla`
+      - `com.databox.samla.monitor`
+      - `com.databox.samla.shield`
+      - `com.databox.samla.shield-action` (block screen buttons, new)
       (Development builds work without approval; TestFlight/App Store builds don't.)
-- [ ] Create the App Group `group.com.databox.nonet.blocking-app` and enable it for the app and all three extensions (monitor, shield, shield-action).
+- [ ] Create the App Group `group.com.databox.samla` and enable it for the app and all three extensions (monitor, shield, shield-action).
 - [ ] Enable **Sign in with Apple** for the app ID.
 
 ## 2. App Store Connect
-- [ ] Create the app (bundle ID `com.databox.nonet.blocking-app`, name "Samla", Arabic name "الصملة").
+- [ ] Create the app (bundle ID `com.databox.samla`, name "Samla", Arabic name "الصملة").
 - [ ] (Later — Premium is "coming soon" in v1) Subscription group **Samla Premium** with two auto-renewable products:
-      - `com.databox.nonet.premium.monthly` — 1 month
-      - `com.databox.nonet.premium.yearly` — 1 year
+      - `com.databox.samla.premium.monthly` — 1 month
+      - `com.databox.samla.premium.yearly` — 1 year
       Add a 1-week free-trial introductory offer if you want one, plus English and Arabic display names.
 - [ ] To replace the old `nonet` discount code: create **Offer Codes** for the subscriptions (users redeem them via "Redeem Code" in the paywall).
 - [ ] Publish `docs/privacy-policy.md` (e.g. GitHub Pages) and paste the URL into App Store Connect.
@@ -30,9 +30,9 @@ These steps need your Apple Developer account and can't be done from code. Produ
 
 ## 3. Assets you need to add
 - [ ] **App icon** (1024×1024, navy shield on white — Icon Composer) in `Resources/Assets.xcassets/AppIcon` — currently empty; upload will fail without it.
-- [ ] **Logo** image named `nonet_logo` in the asset catalog (a shield symbol is shown until then).
+- [ ] **Logo** image named `samla_logo` in the asset catalog (a shield symbol is shown until then).
 - [ ] Optional: real WhatsApp/Telegram community links in `AppLinks.swift` (section is hidden while empty).
-- [ ] Make sure `support@nonet.app` is a working inbox.
+- [ ] Make sure `hello@With-Builders.com` is a working inbox.
 
 ## 4. Local testing
 - In Xcode: **Product › Scheme › Edit Scheme › Run › Options › StoreKit Configuration → `Products.storekit`** to test purchases without App Store Connect.
