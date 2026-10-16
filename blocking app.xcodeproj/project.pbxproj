@@ -181,8 +181,8 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				AA2000000000000000000001 /* NoNetShield */,
 				AA10000000000000000000A2 /* Shared */,
+				AA2000000000000000000001 /* NoNetShield */,
 			);
 			name = NoNetShield;
 			packageProductDependencies = (
@@ -204,8 +204,8 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				AA3000000000000000000001 /* NoNetShieldAction */,
 				AA10000000000000000000A2 /* Shared */,
+				AA3000000000000000000001 /* NoNetShieldAction */,
 			);
 			name = NoNetShieldAction;
 			packageProductDependencies = (
@@ -303,14 +303,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		FB0E177A2E697E9B00AA0757 /* Resources */ = {
+		AA3000000000000000000006 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		AA3000000000000000000006 /* Resources */ = {
+		FB0E177A2E697E9B00AA0757 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -334,14 +334,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		FB0E17782E697E9B00AA0757 /* Sources */ = {
+		AA3000000000000000000004 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		AA3000000000000000000004 /* Sources */ = {
+		FB0E17782E697E9B00AA0757 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -749,6 +749,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		AA3000000000000000000007 /* Build configuration list for PBXNativeTarget "NoNetShieldAction" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA3000000000000000000008 /* Debug */,
+				AA3000000000000000000009 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		FB0E17772E697E9B00AA0757 /* Build configuration list for PBXProject "blocking app" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -763,15 +772,6 @@
 			buildConfigurations = (
 				FB0E17882E697E9C00AA0757 /* Debug */,
 				FB0E17892E697E9C00AA0757 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		AA3000000000000000000007 /* Build configuration list for PBXNativeTarget "NoNetShieldAction" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				AA3000000000000000000008 /* Debug */,
-				AA3000000000000000000009 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

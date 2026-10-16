@@ -1,6 +1,7 @@
 import Foundation
 import FamilyControls
 import ManagedSettings
+import UserNotifications
 
 /// Handles the block screen buttons. "Close" closes the app; "Start a Break" starts one of
 /// the list's remaining breaks, lifts the shields and schedules the wake that restores them.
@@ -32,6 +33,9 @@ final class ShieldActionExtension: ShieldActionDelegate {
         let forever = ForeverBlockRepository.load()
         ShieldEngine.apply(lists, forever: forever, at: now)
         WakeScheduler.reschedule(lists, forever: forever, now: now)
+        if let reminder = BreakReminder.request(for: lists[index], now: now) {
+            UNUserNotificationCenter.current().add(reminder)
+        }
         // Redraw: with the shield lifted, the app opens normally.
         return .defer
     }

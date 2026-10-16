@@ -8,7 +8,8 @@ struct ForeverStatusView: View {
 
     @State private var confirmRequest = false
     @State private var showPartnerPIN = false
-    @State private var quote = MotivationalQuotes.random()
+    // Skip the An-Nur verse: it is already shown in the header.
+    @State private var quote = MotivationalQuotes.all.dropFirst().randomElement() ?? ""
 
     var body: some View {
         ScrollView {

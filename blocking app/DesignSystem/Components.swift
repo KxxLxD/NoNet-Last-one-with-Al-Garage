@@ -41,15 +41,18 @@ struct PrimaryButtonStyle: ButtonStyle {
         let label = configuration.label
             .font(.body.weight(.semibold))
             .frame(maxWidth: .infinity, minHeight: height)
-            .foregroundStyle(.white)
+            .foregroundStyle(isEnabled ? Color.white : AppColors.textSecondary)
             .contentShape(RoundedRectangle(cornerRadius: 14))
 
-        if #available(iOS 26.0, *) {
+        if !isEnabled {
+            // Disabled: grey text on a light fill, so it stays readable.
+            label.background(AppColors.border, in: RoundedRectangle(cornerRadius: 14))
+        } else if #available(iOS 26.0, *) {
             label
-                .glassEffect(.regular.tint(tint.opacity(isEnabled ? 1 : 0.4)).interactive(), in: .rect(cornerRadius: 14))
+                .glassEffect(.regular.tint(tint).interactive(), in: .rect(cornerRadius: 14))
         } else {
             label
-                .background(tint.opacity(isEnabled ? 1 : 0.4), in: RoundedRectangle(cornerRadius: 14))
+                .background(tint, in: RoundedRectangle(cornerRadius: 14))
                 .opacity(configuration.isPressed ? 0.85 : 1)
         }
     }

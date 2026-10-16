@@ -40,15 +40,8 @@ final class NotificationService {
                     now: now
                 ))
             }
-            if let breakUntil = list.breakUntil, breakUntil > now {
-                let warning = max(now.addingTimeInterval(1), breakUntil.addingTimeInterval(-60))
-                requests.append(oneOff(
-                    id: "break.\(list.id.uuidString)",
-                    title: String(localized: "Break ends in a minute"),
-                    body: String(localized: "“\(list.name)” starts blocking again soon."),
-                    at: warning,
-                    now: now
-                ))
+            if let reminder = BreakReminder.request(for: list, now: now) {
+                requests.append(reminder)
             }
             guard list.kind == .scheduled else { continue }
             for slot in list.slots {

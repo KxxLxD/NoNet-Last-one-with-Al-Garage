@@ -5,7 +5,8 @@ struct AboutView: View {
         let info = Bundle.main.infoDictionary
         let short = info?["CFBundleShortVersionString"] as? String ?? "1.0"
         let build = info?["CFBundleVersion"] as? String ?? "1"
-        return "\(short) (\(build))"
+        // Isolated left-to-right so Arabic doesn't flip it to "(1) 1.0".
+        return "\u{2066}\(short) (\(build))\u{2069}"
     }
 
     var body: some View {

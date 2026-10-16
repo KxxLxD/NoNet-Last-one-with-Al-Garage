@@ -270,9 +270,9 @@ struct ListEditorView: View {
             .font(.footnote)
             .foregroundStyle(AppColors.textSecondary)
             if !partner.hasPartner {
-                Text("To use Partner, add one in Settings › Accountability Partner.")
-                    .font(.footnote)
-                    .foregroundStyle(AppColors.scheduled)
+                Label("To use Partner, add one in Settings › Accountability Partner.", systemImage: "info.circle")
+                    .font(.caption)
+                    .foregroundStyle(AppColors.textSecondary)
             }
         }
     }

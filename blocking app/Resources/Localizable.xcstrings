@@ -14,9 +14,63 @@
     "%lld apps": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld تطبيقات"
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld تطبيقات"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld تطبيقًا"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تطبيق واحد"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld تطبيق"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تطبيقان"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا تطبيقات"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld app"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld apps"
+                }
+              }
+            }
           }
         }
       }
@@ -88,9 +142,63 @@
     "%lld days left": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "باقي %lld يوم"
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "باقي %lld أيام"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "باقي %lld يوم"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "باقي يوم واحد"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "باقي %lld يوم"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "باقي يومين"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "خلصت المدة"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld day left"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld days left"
+                }
+              }
+            }
           }
         }
       }
@@ -178,9 +286,63 @@
     "%lld websites": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld مواقع"
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld مواقع"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld موقعًا"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "موقع واحد"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld موقع"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "موقعان"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا مواقع"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld website"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld websites"
+                }
+              }
+            }
           }
         }
       }
@@ -508,9 +670,63 @@
     "Block Forever · unlocks in %lld days": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "احظر للأبد · ينفك بعد %lld يوم"
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "احظر للأبد · ينفك بعد %lld أيام"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "احظر للأبد · ينفك بعد %lld يوم"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "احظر للأبد · ينفك بعد يوم"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "احظر للأبد · ينفك بعد %lld يوم"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "احظر للأبد · ينفك بعد يومين"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "احظر للأبد · ينفك اليوم"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Block Forever · unlocks in %lld day"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Block Forever · unlocks in %lld days"
+                }
+              }
+            }
           }
         }
       }
@@ -640,7 +856,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "عدد الاستراحات خلال 24 ساعة: %lld"
+            "value": "عدد الاستراحات في اليوم: %lld"
           }
         }
       }
@@ -1640,7 +1856,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "افتح الإعدادات › شريك المساءلة واضغط «نسيت الرمز؟». الشريك ينشال بعد 7 أيام. «احظر للأبد» ما يتأثر ويبقى انتظاره 360 يوم."
+            "value": "افتح الإعدادات ‹ شريك المساءلة واضغط «نسيت الرمز؟». الشريك ينشال بعد 7 أيام. «احظر للأبد» ما يتأثر ويبقى انتظاره 360 يوم."
           }
         }
       }
@@ -1720,7 +1936,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يُخصم المبلغ من حساب Apple عند التأكيد. يتجدد الاشتراك تلقائيًا ما لم يُلغَ قبل 24 ساعة على الأقل من نهاية الفترة الحالية. يمكنك الإدارة أو الإلغاء في أي وقت من الإعدادات › حساب Apple › الاشتراكات."
+            "value": "يُخصم المبلغ من حساب Apple عند التأكيد. يتجدد الاشتراك تلقائيًا ما لم يُلغَ قبل 24 ساعة على الأقل من نهاية الفترة الحالية. يمكنك الإدارة أو الإلغاء في أي وقت من الإعدادات ‹ حساب Apple ‹ الاشتراكات."
           }
         }
       }
@@ -2410,7 +2626,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "هذا يحذف بيانات حسابك وقوائم الحظر من هذا الجهاز نهائياً. القوائم المقفلة الحين تبقى لين تنتهي، و«احظر للأبد» له قوانينه. وعشان توقف تسجيل الدخول بـ Apple مع الصملة، افتح الإعدادات › حساب Apple › تسجيل الدخول بـ Apple."
+            "value": "هذا يحذف بيانات حسابك وقوائم الحظر من هذا الجهاز نهائياً. القوائم المقفلة الحين تبقى لين تنتهي، و«احظر للأبد» له قوانينه. وعشان توقف تسجيل الدخول بـ Apple مع الصملة، افتح الإعدادات ‹ حساب Apple ‹ تسجيل الدخول بـ Apple."
           }
         }
       }
@@ -2480,7 +2696,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "عشان تستخدم الشريك، أضفه من الإعدادات › شريك المساءلة."
+            "value": "عشان تستخدم الشريك، أضفه من الإعدادات ‹ شريك المساءلة."
           }
         }
       }
@@ -2758,9 +2974,63 @@
     "Wrong PIN. %lld attempts left.": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الرمز غلط. باقي لك %lld محاولات."
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "الرمز غلط. باقي لك %lld محاولات."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "الرمز غلط. باقي لك %lld محاولة."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "الرمز غلط. باقي لك محاولة وحدة."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "الرمز غلط. باقي لك %lld محاولة."
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "الرمز غلط. باقي لك محاولتين."
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "الرمز غلط."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Wrong PIN. %lld attempt left."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Wrong PIN. %lld attempts left."
+                }
+              }
+            }
           }
         }
       }
@@ -2880,7 +3150,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تقدر تختار لغة الصملة من الإعدادات › الصملة › اللغة."
+            "value": "تقدر تختار لغة الصملة من الإعدادات ‹ الصملة ‹ اللغة."
           }
         }
       }

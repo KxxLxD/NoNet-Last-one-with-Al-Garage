@@ -11,6 +11,16 @@
         }
       }
     },
+    "Break ends in a minute": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاستراحة تخلص بعد دقيقة"
+          }
+        }
+      }
+    },
     "Close": {
       "localizations": {
         "ar": {
@@ -44,9 +54,63 @@
     "Start a Break (%lld left)": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ابدأ استراحة (باقي %lld)"
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ابدأ استراحة (باقي %lld)"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ابدأ استراحة (باقي %lld)"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ابدأ استراحة (باقي وحدة)"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ابدأ استراحة (باقي %lld)"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ابدأ استراحة (باقي ثنتين)"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ابدأ استراحة"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Start a Break (%lld left)"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Start a Break (%lld left)"
+                }
+              }
+            }
           }
         }
       }
@@ -67,6 +131,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "من عرف ما يطلب، هان عليه ما يبذل."
+          }
+        }
+      }
+    },
+    "“%@” starts blocking again soon.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«%@» يرجع يحظر بعد قليل."
           }
         }
       }
