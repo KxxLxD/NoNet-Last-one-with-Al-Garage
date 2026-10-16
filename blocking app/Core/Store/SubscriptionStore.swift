@@ -9,8 +9,8 @@ import StoreKit
 final class SubscriptionStore {
     /// Must match the products configured in App Store Connect (and Products.storekit for local testing).
     enum ProductID {
-        static let monthly = "com.databox.samla.premium.monthly"
-        static let yearly = "com.databox.samla.premium.yearly"
+        static let monthly = "app.samla.premium.monthly"
+        static let yearly = "app.samla.premium.yearly"
         static let all = [monthly, yearly]
     }
 
@@ -27,7 +27,7 @@ final class SubscriptionStore {
     /// The currently active subscription transaction (used for refunds / management).
     private(set) var activeTransactionID: UInt64?
 
-    private let logger = Logger(subsystem: "com.databox.samla", category: "Store")
+    private let logger = Logger(subsystem: "app.samla", category: "Store")
     private var updatesTask: Task<Void, Never>?
 
     init() {

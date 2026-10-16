@@ -4,7 +4,7 @@
   "products" : [],
   "settings" : {
     "_applicationInternalID" : "",
-    "_developerTeamID" : "L2T9STCPA5",
+    "_developerTeamID" : "",
     "_failTransactionsEnabled" : false,
     "_locale" : "ar_SA",
     "_storefront" : "SAU",
@@ -32,7 +32,7 @@
             { "description" : "All Premium features, billed monthly", "displayName" : "Monthly", "locale" : "en_US" },
             { "description" : "كل ميزات الاشتراك المميز، تُدفع شهريًا", "displayName" : "شهري", "locale" : "ar_SA" }
           ],
-          "productID" : "com.databox.samla.premium.monthly",
+          "productID" : "app.samla.premium.monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "Premium Monthly",
           "subscriptionGroupID" : "21500001",
@@ -55,7 +55,7 @@
             { "description" : "All Premium features, billed yearly", "displayName" : "Yearly", "locale" : "en_US" },
             { "description" : "كل ميزات الاشتراك المميز، تُدفع سنويًا", "displayName" : "سنوي", "locale" : "ar_SA" }
           ],
-          "productID" : "com.databox.samla.premium.yearly",
+          "productID" : "app.samla.premium.yearly",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Premium Yearly",
           "subscriptionGroupID" : "21500001",

@@ -30,8 +30,8 @@ struct AboutView: View {
 
                 VStack(spacing: 8) {
                     Text("Everything stays on your device. We collect no data.")
-                    if let mail = AppLinks.supportMail {
-                        Link(AppLinks.supportEmail, destination: mail)
+                    if let email = AppLinks.supportEmail, let mail = AppLinks.supportMail {
+                        Link(email, destination: mail)
                             .fontWeight(.semibold)
                     }
                 }

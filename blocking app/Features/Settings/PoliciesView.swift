@@ -23,9 +23,11 @@ struct PoliciesView: View {
                         .font(.subheadline.weight(.semibold))
                 }
 
-                Text("Questions? Contact \(AppLinks.supportEmail)")
-                    .font(.footnote)
-                    .foregroundStyle(AppColors.textSecondary)
+                if let email = AppLinks.supportEmail {
+                    Text("Questions? Contact \(email)")
+                        .font(.footnote)
+                        .foregroundStyle(AppColors.textSecondary)
+                }
             }
             .padding(24)
         }

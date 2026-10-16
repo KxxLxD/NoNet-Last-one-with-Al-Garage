@@ -10,7 +10,7 @@
 	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.databox.samla</string>
+		<string>group.app.samla</string>
 	</array>
 </dict>
 </plist>

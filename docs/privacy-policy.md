@@ -24,7 +24,7 @@ Samla works fully without an account. If you sign in, Samla stores only Apple's 
 If paid features are offered in the future, payments are processed by Apple. Samla would only receive the subscription status needed to unlock them.
 
 ## Contact
-hello@With-Builders.com
+A contact email will be added before publishing.
 
 ---
 
@@ -41,4 +41,4 @@ _آخر تحديث: 16 أكتوبر 2026_
 - تسجيل الدخول اختياري؛ وعند استخدام تسجيل الدخول بحساب Apple نحفظ على جهازك فقط المعرّف المجهول والاسم الذي تختار مشاركته.
 - إذا قُدّمت ميزات مدفوعة مستقبلًا، فتتم المدفوعات عبر Apple، ولا نتلقى إلا حالة الاشتراك.
 
-للتواصل: hello@With-Builders.com
+للتواصل: سيُضاف بريد التواصل قبل النشر.

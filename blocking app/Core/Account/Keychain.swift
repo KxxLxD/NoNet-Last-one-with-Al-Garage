@@ -3,7 +3,7 @@ import Security
 
 /// Minimal generic-password Keychain wrapper for small secrets such as the Apple user ID.
 enum Keychain {
-    private static let service = "com.databox.samla"
+    private static let service = "app.samla"
 
     static func string(for key: String) -> String? {
         let query: [String: Any] = [

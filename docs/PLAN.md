@@ -243,7 +243,7 @@
 ---
 
 ## 9. الإطلاق للمتجر (عليك أنت — حساب Apple)
-- [ ] طلب Family Controls Distribution entitlement لـ **4 معرّفات**: `com.databox.samla` + `.monitor` + `.shield` + `.shield-action`
+- [ ] طلب Family Controls Distribution entitlement لـ **4 معرّفات**: `app.samla` + `.monitor` + `.shield` + `.shield-action`
 - [ ] تفعيل App Group لـ **الإضافات الثلاث** (صارت الثلاث تحتاجه)
 - [ ] أيقونة التطبيق 1024×1024 — درع كحلي على أبيض (Icon Composer)
 - [ ] صور المتجر والوصف عربي + إنجليزي — المسودات في [STORE.md](STORE.md)
@@ -286,24 +286,23 @@
 ### ✅ تم في 2026-10-16 (الجولة الثالثة)
 - **الأرقام إنجليزية (360) بكل مكان** مهما كانت منطقة الجهاز — `Shared/AppLocale.swift` (`Locale.app`)
 - **الترجمة العربية كلها فصحى** (كانت مخلوطة فصحى ولهجة)
-- **المعرّفات صارت `com.databox.samla`** (+ `.monitor` `.shield` `.shield-action`) و App Group `group.com.databox.samla`
-- **بريد الدعم:** hello@With-Builders.com
+- **المعرّفات صارت `app.samla`** (+ `.monitor` `.shield` `.shield-action`) و App Group `group.app.samla`
+- **بريد الدعم:** مخفي من التطبيق لين يصير فيه بريد رسمي (`AppLinks.supportEmail = nil`)
 
 ---
 
 ## 11. ملاحظات تقنية
 - فلتر المواقع في Apple يقبل **50 دومين بالمجموع** — لذلك «احظر للأبد» فيه 25، والباقي لقوائم المستخدم
 - مفتاح 17+ **مطفي افتراضياً** — لأنه يقفل تطبيقات عادية كمان، فالمستخدم يفعّله بنفسه
-- زر الاستراحة في شاشة الحظر يحتاج الإضافة الجديدة `NoNetShieldAction` (المعرّف `com.databox.samla.shield-action`)
+- زر الاستراحة في شاشة الحظر يحتاج الإضافة الجديدة `NoNetShieldAction` (المعرّف `app.samla.shield-action`)
 - `WakeScheduler` انتقل لـ `Shared/` عشان تستخدمه إضافة الاستراحة
-- المعرّفات: `com.databox.samla`، `.monitor`، `.shield`، `.shield-action` — App Group: `group.com.databox.samla`
-- منتجات الاشتراك (للمستقبل): `com.databox.samla.premium.monthly` / `.yearly`
+- المعرّفات: `app.samla`، `.monitor`، `.shield`، `.shield-action` — App Group: `group.app.samla`
+- منتجات الاشتراك (للمستقبل): `app.samla.premium.monthly` / `.yearly`
 - `FeatureFlags.subscriptionsEnabled = false` — شاشة الدفع `UpgradeView` جاهزة للمستقبل ومحدّثة
 
 ---
 
 ## 12. أسئلة مفتوحة ❓
-- نبرة وصف المتجر النهائية (3 مسودات في STORE.md)
 - ميزات Premium القادمة — حطيت مؤقتاً: قوائم بلا حدود، التحديات، القوالب، الحظر وقت الصلاة. تأكيد؟
 
 ---
@@ -325,5 +324,8 @@
 | 2026-10-16 | الوضع الصارم: صار بلا حد استخدام (كان 3 مرات للمجاني) |
 | 2026-10-16 | لغة الترجمة: فصحى بكل مكان (بدل خليط فصحى ولهجة) |
 | 2026-10-16 | الأرقام: إنجليزية (360) بكل مكان |
-| 2026-10-16 | المعرّفات: من `com.databox.nonet.blocking-app` ← `com.databox.samla` |
-| 2026-10-16 | بريد الدعم: من support@nonet.app ← hello@With-Builders.com |
+| 2026-10-16 | المعرّفات: من `com.databox.nonet.blocking-app` ← `app.samla` |
+| 2026-10-16 | بريد الدعم: من support@nonet.app ← مخفي لين يصير فيه بريد رسمي |
+| 2026-10-16 | المعرّفات: شلنا databox ← `app.samla` و `group.app.samla` |
+| 2026-10-16 | فريق المطوّر L2T9STCPA5 انشال من المشروع — يتحدد حسابك الجديد من Xcode |
+| 2026-10-16 | وصف المتجر: النبرة الروحانية (تبدأ بآية غض البصر) |
