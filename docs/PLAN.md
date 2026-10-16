@@ -1,11 +1,48 @@
 # الصملة (Samla) — خطة المنتج
 
 > هذا الملف هو المرجع لكل قرارات التخطيط. أي شيء نتفق عليه بالمحادثة يتوثق هنا.
-> آخر تحديث: 2026-10-16
+> آخر تحديث: 2026-10-17
 >
 > ملفات مرتبطة: [STORE.md](STORE.md) (محتوى المتجر) · [release-checklist.md](release-checklist.md) (خطوات Apple) · [privacy-policy.md](privacy-policy.md)
 >
 > ملاحظة: محادثة تخطيط سابقة ضاعت بدون توثيق — كل القرارات هنا أُعيد جمعها في 2026-10-15.
+
+---
+
+## 0. الخطوات الباقية — بالترتيب ✅
+
+> أول شيء تشوفه في الملف. نشطب كل خطوة لما تخلص.
+
+### المرحلة 1 — الآن (عليك، دقائق)
+- [ ] **1. دمج الشغل في الفرع الرئيسي:** افتح https://github.com/KxxLxD/NoNet-Last-one-with-Al-Garage/compare/NoNet-Garage...refactor/project-structure ← «Create pull request» ← «Merge»
+- [ ] **2. تشغيل صفحات الويب:** إعدادات المستودع ‹ Pages ‹ Deploy from a branch ‹ `gh-pages` / root
+  - الرئيسية: https://kxxlxd.github.io/NoNet-Last-one-with-Al-Garage/
+  - الخصوصية: https://kxxlxd.github.io/NoNet-Last-one-with-Al-Garage/privacy.html
+  - الدعم: https://kxxlxd.github.io/NoNet-Last-one-with-Al-Garage/support.html
+  - ⚠️ لو المستودع خاص: Pages تحتاج خطة GitHub مدفوعة
+
+### المرحلة 2 — حساب Apple (عليك، الأهم)
+- [ ] **3. اختيار حسابك في Xcode:** المشروع ‹ كل هدف من الأربعة (blocking app, NoNetMonitor, NoNetShield, NoNetShieldAction) ‹ Signing & Capabilities ‹ Team
+- [ ] **4. App Group:** تأكد إن `group.app.samla` مفعّل للأربعة (Xcode يسويه تلقائياً غالباً)
+- [ ] **5. طلب Family Controls (Distribution)** — الأهم لأن الموافقة تاخذ أيام لأسابيع:
+  https://developer.apple.com/contact/request/family-controls-distribution
+  للمعرّفات: `app.samla` · `app.samla.monitor` · `app.samla.shield` · `app.samla.shield-action`
+
+### المرحلة 3 — التجربة (عليك + أنا)
+- [ ] **6. تجربة على آيفون حقيقي** (الحظر ما يشتغل على المحاكي): إنشاء قائمة، حظر الآن، جدولة، استراحة من شاشة الحظر، احظر للأبد، الشريك
+- [ ] **7. فحص بصري أخير على المحاكي** (أنا): شاشة الملخص قبل الحفظ + صفحتي الـOnboarding الأولى والثانية
+
+### المرحلة 4 — المتجر (بعد موافقة Apple)
+- [ ] **8. إنشاء التطبيق في App Store Connect:** الاسم الصملة / Samla، المعرّف `app.samla`، رابط الخصوصية ورابط الدعم
+- [ ] **9. Privacy Nutrition Label:** «Data Not Collected»
+- [ ] **10. الوصف:** النبرة الروحانية من [STORE.md](STORE.md)
+- [ ] **11. صور المتجر:** 5 صور بخلفية كحلية (iPhone 6.9")
+- [ ] **12. رفع أول نسخة TestFlight** ← تجربة ← إرسال للمراجعة
+
+### لاحقاً (ما يوقف الإطلاق)
+- [ ] أيقونة نهائية بـ Icon Composer (الحالية مؤقتة)
+- [ ] بريد رسمي ← نحطه في `AppLinks.supportEmail` ويرجع صف البريد تلقائياً
+- [ ] تأكيد ميزات Premium القادمة (القسم 12)
 
 ---
 
@@ -285,18 +322,8 @@
 
 ---
 
-## 9. الإطلاق للمتجر (عليك أنت — حساب Apple)
-- [ ] طلب Family Controls Distribution entitlement لـ **4 معرّفات**: `app.samla` + `.monitor` + `.shield` + `.shield-action`
-- [ ] تفعيل App Group لـ **الإضافات الثلاث** (صارت الثلاث تحتاجه)
-- [x] أيقونة مؤقتة 1024×1024 (درع كحلي على أبيض) — تتبدل بأيقونة Icon Composer قبل المتجر
-- [ ] صور المتجر والوصف عربي + إنجليزي — المسودات في [STORE.md](STORE.md)
-- [x] صفحات الخصوصية والدعم على فرع `gh-pages` — **باقي: تفعيل GitHub Pages من إعدادات المستودع**
-  - الخصوصية: https://kxxlxd.github.io/NoNet-Last-one-with-Al-Garage/privacy.html
-  - الدعم: https://kxxlxd.github.io/NoNet-Last-one-with-Al-Garage/support.html
-- [ ] Privacy Nutrition Label في App Store Connect: «Data Not Collected»
-- [ ] تجربة على **آيفون حقيقي** (الحظر ما يشتغل على المحاكي)
-- [ ] رفع أول نسخة TestFlight
-- تفاصيل أكثر في [release-checklist.md](release-checklist.md)
+## 9. الإطلاق للمتجر
+الخطوات بالترتيب في **القسم 0** أعلى الملف، والتفاصيل التقنية في [release-checklist.md](release-checklist.md).
 
 ---
 
@@ -326,14 +353,18 @@
 - إصلاحات من المراجعة: الزر المعطّل صار مقروء، تلميح الشريك صار هادي، الآية ما تتكرر، الأسهم «‹» صحيحة بالعربي، رقم الإصدار ما ينقلب
 - ✔️ **تأكدنا إن منع حذف التطبيق يشتغل:** المحاكي رفض حذف التطبيق وقت ما كان «احظر للأبد» مفعّل
 
-### ⏳ باقي (كود — بسيط)
-- [ ] صفحتي الـOnboarding الأولى والثانية ما انفحصت بصرياً (تحتاج جهاز نظيف)
-
 ### ✅ تم في 2026-10-16 (الجولة الثالثة)
 - **الأرقام إنجليزية (360) بكل مكان** مهما كانت منطقة الجهاز — `Shared/AppLocale.swift` (`Locale.app`)
 - **الترجمة العربية كلها فصحى** (كانت مخلوطة فصحى ولهجة)
 - **المعرّفات صارت `app.samla`** (+ `.monitor` `.shield` `.shield-action`) و App Group `group.app.samla`
 - **بريد الدعم:** مخفي من التطبيق لين يصير فيه بريد رسمي (`AppLinks.supportEmail = nil`)
+
+### ✅ تم في 2026-10-16/17 (الجولة الرابعة والخامسة)
+- 3 تابات + الشاشات كلها `List`/`Form` أصلية + نظام مسافات موحّد (`Layout.swift`)
+- صفحات الويب (عربي/إنجليزي، رئيسية + خصوصية + دعم + شروط) — المولّد في `docs/site/build_site.py`
+- أيقونة مؤقتة
+- رجعت عجلات المدة، الاستراحات بأزرار − / +، الاهتزاز، العدّاد الحي، ملخص قبل الحفظ، علامة ✓
+- صفحة «ما الذي تريد حظره» الجديدة: تطبيقات + مواقع + اقتراحات مقسّمة
 
 ---
 

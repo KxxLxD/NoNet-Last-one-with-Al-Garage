@@ -117,6 +117,8 @@ struct BlockItemsEditorView: View {
                     .fontWeight(.semibold)
                     .disabled(normalizedInput == nil || isFull)
             }
+            // Full-width separator under the input row (it otherwise starts at the "Add" button).
+            .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
 
             ForEach(items.websites, id: \.self) { site in
                 Text(site)
