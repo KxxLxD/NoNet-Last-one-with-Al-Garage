@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AA10000000000000000000AC /* NoNetMonitor.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AA10000000000000000000A3 /* NoNetMonitor.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		AA200000000000000000000A /* NoNetShield.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AA2000000000000000000002 /* NoNetShield.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		AA300000000000000000000A /* NoNetShieldAction.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AA3000000000000000000002 /* NoNetShieldAction.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AA10000000000000000000AC /* SamlaMonitor.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AA10000000000000000000A3 /* SamlaMonitor.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AA200000000000000000000A /* SamlaShield.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AA2000000000000000000002 /* SamlaShield.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AA300000000000000000000A /* SamlaShieldAction.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AA3000000000000000000002 /* SamlaShieldAction.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -18,21 +18,21 @@
 			containerPortal = FB0E17742E697E9B00AA0757 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = AA10000000000000000000A4;
-			remoteInfo = NoNetMonitor;
+			remoteInfo = SamlaMonitor;
 		};
 		AA200000000000000000000B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = FB0E17742E697E9B00AA0757 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = AA2000000000000000000003;
-			remoteInfo = NoNetShield;
+			remoteInfo = SamlaShield;
 		};
 		AA300000000000000000000B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = FB0E17742E697E9B00AA0757 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = AA3000000000000000000003;
-			remoteInfo = NoNetShieldAction;
+			remoteInfo = SamlaShieldAction;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -43,9 +43,9 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				AA10000000000000000000AC /* NoNetMonitor.appex in Embed Foundation Extensions */,
-				AA200000000000000000000A /* NoNetShield.appex in Embed Foundation Extensions */,
-				AA300000000000000000000A /* NoNetShieldAction.appex in Embed Foundation Extensions */,
+				AA10000000000000000000AC /* SamlaMonitor.appex in Embed Foundation Extensions */,
+				AA200000000000000000000A /* SamlaShield.appex in Embed Foundation Extensions */,
+				AA300000000000000000000A /* SamlaShieldAction.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -53,16 +53,16 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		AA10000000000000000000A3 /* NoNetMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NoNetMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		AA2000000000000000000002 /* NoNetShield.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NoNetShield.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		AA3000000000000000000002 /* NoNetShieldAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NoNetShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA10000000000000000000A3 /* SamlaMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SamlaMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA2000000000000000000002 /* SamlaShield.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SamlaShield.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA3000000000000000000002 /* SamlaShieldAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SamlaShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB0E177C2E697E9B00AA0757 /* blocking app.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "blocking app.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		AA10000000000000000000A1 /* NoNetMonitor */ = {
+		AA10000000000000000000A1 /* SamlaMonitor */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = NoNetMonitor;
+			path = SamlaMonitor;
 			sourceTree = "<group>";
 		};
 		AA10000000000000000000A2 /* Shared */ = {
@@ -70,14 +70,14 @@
 			path = Shared;
 			sourceTree = "<group>";
 		};
-		AA2000000000000000000001 /* NoNetShield */ = {
+		AA2000000000000000000001 /* SamlaShield */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = NoNetShield;
+			path = SamlaShield;
 			sourceTree = "<group>";
 		};
-		AA3000000000000000000001 /* NoNetShieldAction */ = {
+		AA3000000000000000000001 /* SamlaShieldAction */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = NoNetShieldAction;
+			path = SamlaShieldAction;
 			sourceTree = "<group>";
 		};
 		FB0E177E2E697E9B00AA0757 /* blocking app */ = {
@@ -124,9 +124,9 @@
 			children = (
 				FB0E177E2E697E9B00AA0757 /* blocking app */,
 				AA10000000000000000000A2 /* Shared */,
-				AA10000000000000000000A1 /* NoNetMonitor */,
-				AA2000000000000000000001 /* NoNetShield */,
-				AA3000000000000000000001 /* NoNetShieldAction */,
+				AA10000000000000000000A1 /* SamlaMonitor */,
+				AA2000000000000000000001 /* SamlaShield */,
+				AA3000000000000000000001 /* SamlaShieldAction */,
 				FB0E177D2E697E9B00AA0757 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -135,9 +135,9 @@
 			isa = PBXGroup;
 			children = (
 				FB0E177C2E697E9B00AA0757 /* blocking app.app */,
-				AA10000000000000000000A3 /* NoNetMonitor.appex */,
-				AA2000000000000000000002 /* NoNetShield.appex */,
-				AA3000000000000000000002 /* NoNetShieldAction.appex */,
+				AA10000000000000000000A3 /* SamlaMonitor.appex */,
+				AA2000000000000000000002 /* SamlaShield.appex */,
+				AA3000000000000000000002 /* SamlaShieldAction.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -145,9 +145,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		AA10000000000000000000A4 /* NoNetMonitor */ = {
+		AA10000000000000000000A4 /* SamlaMonitor */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = AA10000000000000000000A8 /* Build configuration list for PBXNativeTarget "NoNetMonitor" */;
+			buildConfigurationList = AA10000000000000000000A8 /* Build configuration list for PBXNativeTarget "SamlaMonitor" */;
 			buildPhases = (
 				AA10000000000000000000A5 /* Sources */,
 				AA10000000000000000000A6 /* Frameworks */,
@@ -158,19 +158,19 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				AA10000000000000000000A1 /* NoNetMonitor */,
+				AA10000000000000000000A1 /* SamlaMonitor */,
 				AA10000000000000000000A2 /* Shared */,
 			);
-			name = NoNetMonitor;
+			name = SamlaMonitor;
 			packageProductDependencies = (
 			);
-			productName = NoNetMonitor;
-			productReference = AA10000000000000000000A3 /* NoNetMonitor.appex */;
+			productName = SamlaMonitor;
+			productReference = AA10000000000000000000A3 /* SamlaMonitor.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
-		AA2000000000000000000003 /* NoNetShield */ = {
+		AA2000000000000000000003 /* SamlaShield */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = AA2000000000000000000007 /* Build configuration list for PBXNativeTarget "NoNetShield" */;
+			buildConfigurationList = AA2000000000000000000007 /* Build configuration list for PBXNativeTarget "SamlaShield" */;
 			buildPhases = (
 				AA2000000000000000000004 /* Sources */,
 				AA2000000000000000000005 /* Frameworks */,
@@ -182,18 +182,18 @@
 			);
 			fileSystemSynchronizedGroups = (
 				AA10000000000000000000A2 /* Shared */,
-				AA2000000000000000000001 /* NoNetShield */,
+				AA2000000000000000000001 /* SamlaShield */,
 			);
-			name = NoNetShield;
+			name = SamlaShield;
 			packageProductDependencies = (
 			);
-			productName = NoNetShield;
-			productReference = AA2000000000000000000002 /* NoNetShield.appex */;
+			productName = SamlaShield;
+			productReference = AA2000000000000000000002 /* SamlaShield.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
-		AA3000000000000000000003 /* NoNetShieldAction */ = {
+		AA3000000000000000000003 /* SamlaShieldAction */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = AA3000000000000000000007 /* Build configuration list for PBXNativeTarget "NoNetShieldAction" */;
+			buildConfigurationList = AA3000000000000000000007 /* Build configuration list for PBXNativeTarget "SamlaShieldAction" */;
 			buildPhases = (
 				AA3000000000000000000004 /* Sources */,
 				AA3000000000000000000005 /* Frameworks */,
@@ -205,13 +205,13 @@
 			);
 			fileSystemSynchronizedGroups = (
 				AA10000000000000000000A2 /* Shared */,
-				AA3000000000000000000001 /* NoNetShieldAction */,
+				AA3000000000000000000001 /* SamlaShieldAction */,
 			);
-			name = NoNetShieldAction;
+			name = SamlaShieldAction;
 			packageProductDependencies = (
 			);
-			productName = NoNetShieldAction;
-			productReference = AA3000000000000000000002 /* NoNetShieldAction.appex */;
+			productName = SamlaShieldAction;
+			productReference = AA3000000000000000000002 /* SamlaShieldAction.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 		FB0E177B2E697E9B00AA0757 /* blocking app */ = {
@@ -281,9 +281,9 @@
 			projectRoot = "";
 			targets = (
 				FB0E177B2E697E9B00AA0757 /* blocking app */,
-				AA10000000000000000000A4 /* NoNetMonitor */,
-				AA2000000000000000000003 /* NoNetShield */,
-				AA3000000000000000000003 /* NoNetShieldAction */,
+				AA10000000000000000000A4 /* SamlaMonitor */,
+				AA2000000000000000000003 /* SamlaShield */,
+				AA3000000000000000000003 /* SamlaShieldAction */,
 			);
 		};
 /* End PBXProject section */
@@ -353,17 +353,17 @@
 /* Begin PBXTargetDependency section */
 		AA10000000000000000000AE /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = AA10000000000000000000A4 /* NoNetMonitor */;
+			target = AA10000000000000000000A4 /* SamlaMonitor */;
 			targetProxy = AA10000000000000000000AD /* PBXContainerItemProxy */;
 		};
 		AA200000000000000000000C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = AA2000000000000000000003 /* NoNetShield */;
+			target = AA2000000000000000000003 /* SamlaShield */;
 			targetProxy = AA200000000000000000000B /* PBXContainerItemProxy */;
 		};
 		AA300000000000000000000C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = AA3000000000000000000003 /* NoNetShieldAction */;
+			target = AA3000000000000000000003 /* SamlaShieldAction */;
 			targetProxy = AA300000000000000000000B /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -372,12 +372,12 @@
 		AA10000000000000000000A9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = NoNetMonitor/NoNetMonitor.entitlements;
+				CODE_SIGN_ENTITLEMENTS = SamlaMonitor/SamlaMonitor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Config/NoNetMonitor-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = NoNetMonitor;
+				INFOPLIST_FILE = "Config/SamlaMonitor-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = SamlaMonitor;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -399,12 +399,12 @@
 		AA10000000000000000000AA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = NoNetMonitor/NoNetMonitor.entitlements;
+				CODE_SIGN_ENTITLEMENTS = SamlaMonitor/SamlaMonitor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Config/NoNetMonitor-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = NoNetMonitor;
+				INFOPLIST_FILE = "Config/SamlaMonitor-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = SamlaMonitor;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -426,12 +426,12 @@
 		AA2000000000000000000008 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = NoNetShield/NoNetShield.entitlements;
+				CODE_SIGN_ENTITLEMENTS = SamlaShield/SamlaShield.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Config/NoNetShield-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = NoNetShield;
+				INFOPLIST_FILE = "Config/SamlaShield-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = SamlaShield;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -453,12 +453,12 @@
 		AA2000000000000000000009 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = NoNetShield/NoNetShield.entitlements;
+				CODE_SIGN_ENTITLEMENTS = SamlaShield/SamlaShield.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Config/NoNetShield-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = NoNetShield;
+				INFOPLIST_FILE = "Config/SamlaShield-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = SamlaShield;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -480,12 +480,12 @@
 		AA3000000000000000000008 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = NoNetShieldAction/NoNetShieldAction.entitlements;
+				CODE_SIGN_ENTITLEMENTS = SamlaShieldAction/SamlaShieldAction.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Config/NoNetShieldAction-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = NoNetShieldAction;
+				INFOPLIST_FILE = "Config/SamlaShieldAction-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = SamlaShieldAction;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -507,12 +507,12 @@
 		AA3000000000000000000009 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = NoNetShieldAction/NoNetShieldAction.entitlements;
+				CODE_SIGN_ENTITLEMENTS = SamlaShieldAction/SamlaShieldAction.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Config/NoNetShieldAction-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = NoNetShieldAction;
+				INFOPLIST_FILE = "Config/SamlaShieldAction-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = SamlaShieldAction;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -723,7 +723,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		AA10000000000000000000A8 /* Build configuration list for PBXNativeTarget "NoNetMonitor" */ = {
+		AA10000000000000000000A8 /* Build configuration list for PBXNativeTarget "SamlaMonitor" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AA10000000000000000000A9 /* Debug */,
@@ -732,7 +732,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		AA2000000000000000000007 /* Build configuration list for PBXNativeTarget "NoNetShield" */ = {
+		AA2000000000000000000007 /* Build configuration list for PBXNativeTarget "SamlaShield" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AA2000000000000000000008 /* Debug */,
@@ -741,7 +741,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		AA3000000000000000000007 /* Build configuration list for PBXNativeTarget "NoNetShieldAction" */ = {
+		AA3000000000000000000007 /* Build configuration list for PBXNativeTarget "SamlaShieldAction" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AA3000000000000000000008 /* Debug */,

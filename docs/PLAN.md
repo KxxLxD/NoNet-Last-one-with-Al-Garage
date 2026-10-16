@@ -14,7 +14,8 @@
 > أول شيء تشوفه في الملف. نشطب كل خطوة لما تخلص.
 
 ### المرحلة 1 — الآن (عليك، دقائق)
-- [ ] **1. دمج الشغل في الفرع الرئيسي:** افتح https://github.com/KxxLxD/NoNet-Last-one-with-Al-Garage/compare/NoNet-Garage...refactor/project-structure ← «Create pull request» ← «Merge»
+- [x] **1. دمج الشغل في الفرع الرئيسي** — تم (2026-10-17): `NoNet-Garage` صار نسختنا
+- [ ] **1.5 (اختياري) إعادة تسمية المستودع** من `NoNet-Last-one-with-Al-Garage` إلى اسم باسم الصملة (Settings ‹ General ‹ Repository name) — بعدها نحدّث روابط الصفحات في `AppLinks.swift` و`docs/site/build_site.py`
 - [ ] **2. تشغيل صفحات الويب:** إعدادات المستودع ‹ Pages ‹ Deploy from a branch ‹ `gh-pages` / root
   - الرئيسية: https://kxxlxd.github.io/NoNet-Last-one-with-Al-Garage/
   - الخصوصية: https://kxxlxd.github.io/NoNet-Last-one-with-Al-Garage/privacy.html
@@ -22,7 +23,7 @@
   - ⚠️ لو المستودع خاص: Pages تحتاج خطة GitHub مدفوعة
 
 ### المرحلة 2 — حساب Apple (عليك، الأهم)
-- [ ] **3. اختيار حسابك في Xcode:** المشروع ‹ كل هدف من الأربعة (blocking app, NoNetMonitor, NoNetShield, NoNetShieldAction) ‹ Signing & Capabilities ‹ Team
+- [ ] **3. اختيار حسابك في Xcode:** المشروع ‹ كل هدف من الأربعة (blocking app, SamlaMonitor, SamlaShield, SamlaShieldAction) ‹ Signing & Capabilities ‹ Team
 - [ ] **4. App Group:** تأكد إن `group.app.samla` مفعّل للأربعة (Xcode يسويه تلقائياً غالباً)
 - [ ] **5. طلب Family Controls (Distribution)** — الأهم لأن الموافقة تاخذ أيام لأسابيع:
   https://developer.apple.com/contact/request/family-controls-distribution
@@ -342,7 +343,7 @@
 | احظر للأبد: 25 موقع قمار ومواعدة + فلتر البالغين + مفتاح 17+ + منع حذف التطبيق + طلب فك 360 يوم + فك بالشريك | `ForeverBlock`, `ForeverStore`, `Forever*View` |
 | حد 3 قوائم + صفحة «Premium قريباً» + «نبهني» | `ListsModel`, `PremiumSoonView` |
 | الإعدادات بالترتيب المتفق + النصائح بأربع مواضيع + عن التطبيق + FAQ جديد | `Settings/`, `Tips/` |
-| شاشة الحظر: اسم القائمة + «ينتهي 6:00 ص» + نص تحفيزي + زر «ابدأ استراحة» | `NoNetShield`, **إضافة جديدة** `NoNetShieldAction` |
+| شاشة الحظر: اسم القائمة + «ينتهي 6:00 ص» + نص تحفيزي + زر «ابدأ استراحة» | `SamlaShield`, **إضافة جديدة** `SamlaShieldAction` |
 | الإشعارات: بداية/نهاية الجدول، نهاية الجلسة، قبل نهاية الاستراحة بدقيقة، تذكير يومي 10 الصبح | `NotificationService` |
 | الاسم الصملة / Samla + ترجمة عربية كاملة لكل النصوص الجديدة (169 نص) | `Localizable.xcstrings`, `InfoPlist.xcstrings` |
 
@@ -371,7 +372,7 @@
 ## 11. ملاحظات تقنية
 - فلتر المواقع في Apple يقبل **50 دومين بالمجموع** — لذلك «احظر للأبد» فيه 25، والباقي لقوائم المستخدم
 - مفتاح 17+ **مطفي افتراضياً** — لأنه يقفل تطبيقات عادية كمان، فالمستخدم يفعّله بنفسه
-- زر الاستراحة في شاشة الحظر يحتاج الإضافة الجديدة `NoNetShieldAction` (المعرّف `app.samla.shield-action`)
+- زر الاستراحة في شاشة الحظر يحتاج الإضافة الجديدة `SamlaShieldAction` (المعرّف `app.samla.shield-action`)
 - `WakeScheduler` انتقل لـ `Shared/` عشان تستخدمه إضافة الاستراحة
 - المعرّفات: `app.samla`، `.monitor`، `.shield`، `.shield-action` — App Group: `group.app.samla`
 - منتجات الاشتراك (للمستقبل): `app.samla.premium.monthly` / `.yearly`
@@ -413,3 +414,5 @@
 | 2026-10-17 | المدة: من منتقي واحد ← رجعت العجلات الثلاث ظاهرة دائمًا |
 | 2026-10-17 | رجع: الاهتزاز، العدّاد الحي، ملخص قبل الحفظ، علامة ✓ (كانت «بدون حركة» في v1) |
 | 2026-10-17 | صيغة الوقت للحظر الشغال: عدّاد حي + «تنتهي 6:00 ص» تحته |
+| 2026-10-17 | الفرع الرئيسي: نسختنا هي الأساس (دمج يحفظ تاريخ الـ108 كومِت القديمة)، وانشال كل شيء قديم باسم NoNet |
+| 2026-10-17 | أسماء الأهداف: NoNetMonitor/Shield/ShieldAction ← SamlaMonitor/SamlaShield/SamlaShieldAction |
