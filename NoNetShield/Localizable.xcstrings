@@ -1,0 +1,146 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Block Forever": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "احظر للأبد"
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إغلاق"
+          }
+        }
+      }
+    },
+    "Discipline is choosing what you want most over what you want now.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الانضباط إنك تختار اللي تبيه أكثر، بدل اللي تبيه الحين."
+          }
+        }
+      }
+    },
+    "Ends %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ينتهي %@"
+          }
+        }
+      }
+    },
+    "Start a Break (%lld left)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابدأ استراحة (باقي %lld)"
+          }
+        }
+      }
+    },
+    "Time is like a sword: if you don’t cut it, it cuts you.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوقت كالسيف، إن لم تقطعه قطعك."
+          }
+        }
+      }
+    },
+    "Whoever knows what they seek finds the effort easy.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من عرف ما يطلب، هان عليه ما يبذل."
+          }
+        }
+      }
+    },
+    "“Allah does not change the condition of a people until they change what is in themselves.” — Ar-Ra’d 13:11": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "﴿إِنَّ اللَّهَ لَا يُغَيِّرُ مَا بِقَوْمٍ حَتَّىٰ يُغَيِّرُوا مَا بِأَنفُسِهِمْ﴾ — الرعد: ١١"
+          }
+        }
+      }
+    },
+    "“As for those who strive for Us, We will surely guide them to Our ways.” — Al-Ankabut 29:69": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "﴿وَالَّذِينَ جَاهَدُوا فِينَا لَنَهْدِيَنَّهُمْ سُبُلَنَا﴾ — العنكبوت: ٦٩"
+          }
+        }
+      }
+    },
+    "“By time, indeed mankind is in loss.” — Al-Asr 103:1–2": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "﴿وَالْعَصْرِ ۝ إِنَّ الْإِنسَانَ لَفِي خُسْرٍ﴾ — العصر: ١–٢"
+          }
+        }
+      }
+    },
+    "“Part of a person’s good Islam is leaving what doesn’t concern him.” — At-Tirmidhi": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«مِنْ حُسْنِ إِسْلَامِ الْمَرْءِ تَرْكُهُ مَا لَا يَعْنِيهِ» — رواه الترمذي"
+          }
+        }
+      }
+    },
+    "“Strive for what benefits you, seek Allah’s help, and don’t give up.” — Muslim": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«احْرِصْ عَلَى مَا يَنْفَعُكَ، وَاسْتَعِنْ بِاللَّهِ وَلَا تَعْجَزْ» — رواه مسلم"
+          }
+        }
+      }
+    },
+    "“Tell the believing men to lower their gaze.” — An-Nur 24:30": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "﴿قُل لِّلْمُؤْمِنِينَ يَغُضُّوا مِنْ أَبْصَارِهِمْ﴾ — النور: ٣٠"
+          }
+        }
+      }
+    },
+    "“There are two blessings many people are cheated of: health and free time.” — Al-Bukhari": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«نِعْمَتَانِ مَغْبُونٌ فِيهِمَا كَثِيرٌ مِنَ النَّاسِ: الصِّحَّةُ وَالفَرَاغُ» — رواه البخاري"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
