@@ -1001,6 +1001,16 @@
         }
       }
     },
+    "Contact Support": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تواصل مع الدعم"
+          }
+        }
+      }
+    },
     "Continue": {
       "localizations": {
         "ar": {
@@ -1337,6 +1347,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "من"
+          }
+        }
+      }
+    },
+    "Full Privacy Policy": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سياسة الخصوصية كاملة"
           }
         }
       }

@@ -7,8 +7,9 @@ enum AppLinks {
     static let supportMail = supportEmail.flatMap { URL(string: "mailto:\($0)") }
     /// Apple's standard Licensed Application End User License Agreement.
     static let termsOfUse = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")
-    /// Hosted privacy policy (required in App Store Connect). Set once docs/privacy-policy.md is published.
-    static let privacyPolicy: URL? = nil
+    /// Hosted on GitHub Pages (gh-pages branch). Also paste these into App Store Connect.
+    static let privacyPolicy = URL(string: "https://kxxlxd.github.io/NoNet-Last-one-with-Al-Garage/privacy.html")
+    static let supportPage = URL(string: "https://kxxlxd.github.io/NoNet-Last-one-with-Al-Garage/support.html")
     static let whatsAppCommunity: URL? = nil
     static let telegramChannel: URL? = nil
 

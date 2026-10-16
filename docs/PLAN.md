@@ -245,9 +245,12 @@
 ## 9. الإطلاق للمتجر (عليك أنت — حساب Apple)
 - [ ] طلب Family Controls Distribution entitlement لـ **4 معرّفات**: `app.samla` + `.monitor` + `.shield` + `.shield-action`
 - [ ] تفعيل App Group لـ **الإضافات الثلاث** (صارت الثلاث تحتاجه)
-- [ ] أيقونة التطبيق 1024×1024 — درع كحلي على أبيض (Icon Composer)
+- [x] أيقونة مؤقتة 1024×1024 (درع كحلي على أبيض) — تتبدل بأيقونة Icon Composer قبل المتجر
 - [ ] صور المتجر والوصف عربي + إنجليزي — المسودات في [STORE.md](STORE.md)
-- [ ] نشر سياسة الخصوصية والشروط + Privacy Nutrition Label («لا نجمع بيانات»)
+- [x] صفحات الخصوصية والدعم على فرع `gh-pages` — **باقي: تفعيل GitHub Pages من إعدادات المستودع**
+  - الخصوصية: https://kxxlxd.github.io/NoNet-Last-one-with-Al-Garage/privacy.html
+  - الدعم: https://kxxlxd.github.io/NoNet-Last-one-with-Al-Garage/support.html
+- [ ] Privacy Nutrition Label في App Store Connect: «Data Not Collected»
 - [ ] تجربة على **آيفون حقيقي** (الحظر ما يشتغل على المحاكي)
 - [ ] رفع أول نسخة TestFlight
 - تفاصيل أكثر في [release-checklist.md](release-checklist.md)

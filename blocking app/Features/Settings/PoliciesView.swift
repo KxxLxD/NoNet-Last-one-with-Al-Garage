@@ -18,6 +18,11 @@ struct PoliciesView: View {
                     "Samla is provided to help you build healthier digital habits. Hard Mode and Block Forever are voluntary commitments: once on, they can't be turned off early, so choose carefully.",
                 ])
 
+                if let privacy = AppLinks.privacyPolicy {
+                    Link("Full Privacy Policy", destination: privacy)
+                        .font(.subheadline.weight(.semibold))
+                }
+
                 if let terms = AppLinks.termsOfUse {
                     Link("Apple Standard EULA", destination: terms)
                         .font(.subheadline.weight(.semibold))

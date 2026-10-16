@@ -36,6 +36,11 @@ struct SettingsView: View {
                             row("Support Email", systemImage: "envelope.fill")
                         }
                     }
+                    if let support = AppLinks.supportPage {
+                        Link(destination: support) {
+                            row("Contact Support", systemImage: "lifepreserver.fill")
+                        }
+                    }
                     NavigationLink {
                         FAQView()
                     } label: {
