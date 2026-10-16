@@ -313,7 +313,7 @@
 					};
 				};
 			};
-			buildConfigurationList = FB0E17772E697E9B00AA0757 /* Build configuration list for PBXProject Samla */;
+			buildConfigurationList = FB0E17772E697E9B00AA0757 /* Build configuration list for PBXProject "Samla" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -864,7 +864,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FB0E17772E697E9B00AA0757 /* Build configuration list for PBXProject Samla */ = {
+		FB0E17772E697E9B00AA0757 /* Build configuration list for PBXProject "Samla" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FB0E17852E697E9C00AA0757 /* Debug */,

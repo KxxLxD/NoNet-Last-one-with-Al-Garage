@@ -18,7 +18,7 @@
                BlueprintIdentifier = "FB0E177B2E697E9B00AA0757"
                BuildableName = "Samla.app"
                BlueprintName = "Samla"
-               ReferencedContainer = "container:blocking app.xcodeproj">
+               ReferencedContainer = "container:Samla.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -38,7 +38,7 @@
                BlueprintIdentifier = "FBE41E263082E3C700852C04"
                BuildableName = "SamlaTests.xctest"
                BlueprintName = "SamlaTests"
-               ReferencedContainer = "container:blocking app.xcodeproj">
+               ReferencedContainer = "container:Samla.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -60,7 +60,7 @@
             BlueprintIdentifier = "FB0E177B2E697E9B00AA0757"
             BuildableName = "Samla.app"
             BlueprintName = "Samla"
-            ReferencedContainer = "container:blocking app.xcodeproj">
+            ReferencedContainer = "container:Samla.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
@@ -90,7 +90,7 @@
             BlueprintIdentifier = "FB0E177B2E697E9B00AA0757"
             BuildableName = "Samla.app"
             BlueprintName = "Samla"
-            ReferencedContainer = "container:blocking app.xcodeproj">
+            ReferencedContainer = "container:Samla.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

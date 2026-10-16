@@ -23,7 +23,7 @@
   - ⚠️ لو المستودع خاص: Pages تحتاج خطة GitHub مدفوعة
 
 ### المرحلة 2 — حساب Apple (عليك، الأهم)
-- [ ] **3. اختيار حسابك في Xcode:** المشروع ‹ كل هدف من الأربعة (blocking app, SamlaMonitor, SamlaShield, SamlaShieldAction) ‹ Signing & Capabilities ‹ Team
+- [ ] **3. اختيار حسابك في Xcode:** افتح `Samla.xcodeproj` ‹ كل هدف (Samla, SamlaMonitor, SamlaShield, SamlaShieldAction, SamlaTests) ‹ Signing & Capabilities ‹ Team
 - [ ] **4. App Group:** تأكد إن `group.app.samla` مفعّل للأربعة (Xcode يسويه تلقائياً غالباً)
 - [ ] **5. طلب Family Controls (Distribution)** — الأهم لأن الموافقة تاخذ أيام لأسابيع:
   https://developer.apple.com/contact/request/family-controls-distribution
@@ -418,3 +418,4 @@
 | 2026-10-17 | صيغة الوقت للحظر الشغال: عدّاد حي + «تنتهي 6:00 ص» تحته |
 | 2026-10-17 | الفرع الرئيسي: نسختنا هي الأساس (دمج يحفظ تاريخ الـ108 كومِت القديمة)، وانشال كل شيء قديم باسم NoNet |
 | 2026-10-17 | أسماء الأهداف: NoNetMonitor/Shield/ShieldAction ← SamlaMonitor/SamlaShield/SamlaShieldAction |
+| 2026-10-17 | المشروع: `blocking app.xcodeproj` / هدف «blocking app» ← `Samla.xcodeproj` / هدف «Samla» |
