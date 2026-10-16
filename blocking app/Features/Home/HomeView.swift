@@ -50,9 +50,15 @@ struct HomeView: View {
                 NavigationLink(value: list.id) {
                     VStack(alignment: .leading, spacing: Spacing.s) {
                         Text(list.name)
-                            .font(.title2.weight(.bold))
-                            .foregroundStyle(AppColors.primary)
+                            .font(.headline)
+                            .foregroundStyle(AppColors.text)
                             .lineLimit(1)
+                        // Live countdown to the end of the block (or the break).
+                        if let end = list.isOnBreak(at: now) ? list.breakUntil : list.activeUntil(at: now) {
+                            CountdownText(end: end)
+                                .font(.system(size: 44, weight: .bold, design: .rounded))
+                                .foregroundStyle(AppColors.primary)
+                        }
                         StatusLine(status: ListStatus(list, at: now), detail: ListText.detail(for: list, at: now))
                     }
                     .padding(.vertical, Spacing.s)
@@ -182,6 +188,7 @@ struct HomeView: View {
     /// Runs the last-used Block Now list, or opens the editor when there's none.
     private func startTapped() {
         if let list = model.quickStartList {
+            Haptics.success()
             model.start(list.id)
         } else if model.canCreateList(isPremium: subscriptions.isPremium) {
             showCreate = true

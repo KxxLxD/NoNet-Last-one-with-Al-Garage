@@ -111,7 +111,7 @@ struct ListRow: View {
             } else if list.kind == .now {
                 let isActive = list.isActive(at: now)
                 Button {
-                    if isActive { model.stop(list.id) } else { model.start(list.id) }
+                    if isActive { Haptics.warning(); model.stop(list.id) } else { Haptics.success(); model.start(list.id) }
                 } label: {
                     Image(systemName: isActive ? "stop.circle.fill" : "play.circle.fill")
                         .font(.title2)

@@ -65,6 +65,11 @@ struct ListDetailView: View {
                         .font(.largeTitle.weight(.bold))
                         .foregroundStyle(AppColors.primary)
                         .lineLimit(2)
+                    if let countdownEnd = list.isOnBreak(at: now) ? list.breakUntil : end {
+                        CountdownText(end: countdownEnd)
+                            .font(.system(size: 48, weight: .bold, design: .rounded))
+                            .foregroundStyle(AppColors.primary)
+                    }
                     StatusLine(status: ListStatus(list, at: now), detail: ListText.detail(for: list, at: now))
                 }
                 .listRowBackground(Color.clear)
@@ -110,9 +115,10 @@ struct ListDetailView: View {
             Section {
                 if isActive && list.allowsBreaks {
                     if list.isOnBreak(at: now) {
-                        Button("End Break") { model.endBreak(list.id) }
+                        Button("End Break") { Haptics.tap(); model.endBreak(list.id) }
                     } else {
                         Button("Start a \(Formatters.duration(minutes: list.breaks.minutes)) Break") {
+                            Haptics.success()
                             model.takeBreak(list.id)
                         }
                         .disabled(list.breaksRemaining(at: now) == 0)
@@ -121,11 +127,11 @@ struct ListDetailView: View {
                 if list.kind == .now {
                     if isActive {
                         Button("Stop") {
-                            if needsPartner { pendingPartnerAction = .stop } else { model.stop(list.id) }
+                            if needsPartner { pendingPartnerAction = .stop } else { Haptics.warning(); model.stop(list.id) }
                         }
                         .disabled(hardLocked)
                     } else {
-                        Button("Start") { model.start(list.id) }
+                        Button("Start") { Haptics.success(); model.start(list.id) }
                     }
                 }
                 Button("Delete List", role: .destructive) {

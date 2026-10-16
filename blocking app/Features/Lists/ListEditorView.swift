@@ -17,21 +17,32 @@ struct ListEditorView: View {
     private let mode: Mode
     @State private var draft: BlockList
     @State private var startImmediately = true
+    @State private var days: Int
+    @State private var hours: Int
+    @State private var minutes: Int
 
     @State private var showItemsEditor = false
     @State private var showScheduleEditor = false
-    @State private var confirmProtection = false
+    @State private var showSummary = false
+    @State private var showSavedToast = false
+
+    private let minuteOptions = Array(stride(from: 0, through: 55, by: 5))
+    private static let breakLengths = [5, 10, 15, 20]
 
     init(mode: Mode) {
         self.mode = mode
+        var list: BlockList
         switch mode {
         case .create:
-            var list = BlockList(name: "")
+            list = BlockList(name: "")
             list.durationSeconds = 60 * 60
-            _draft = State(initialValue: list)
         case .edit(let existing, _):
-            _draft = State(initialValue: existing)
+            list = existing
         }
+        _draft = State(initialValue: list)
+        _days = State(initialValue: list.durationSeconds / 86_400)
+        _hours = State(initialValue: (list.durationSeconds % 86_400) / 3600)
+        _minutes = State(initialValue: (list.durationSeconds % 3600) / 60 / 5 * 5)
     }
 
     private var isEditing: Bool {
@@ -45,7 +56,10 @@ struct ListEditorView: View {
     }
 
     private var trimmedName: String { draft.name.trimmingCharacters(in: .whitespacesAndNewlines) }
-    private var isTimeValid: Bool { draft.kind == .now || !draft.slots.isEmpty }
+    private var totalSeconds: Int { days * 86_400 + hours * 3600 + minutes * 60 }
+    private var isTimeValid: Bool {
+        draft.kind == .now ? totalSeconds >= 5 * 60 : !draft.slots.isEmpty
+    }
     private var isFormValid: Bool { trimmedName.count >= 2 && draft.hasItems && isTimeValid }
 
     var body: some View {
@@ -64,7 +78,7 @@ struct ListEditorView: View {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(isEditing ? "Save" : "Create", action: attemptSave)
+                    Button(isEditing ? "Save" : "Create") { showSummary = true }
                         .disabled(!isFormValid)
                 }
             }
@@ -77,13 +91,16 @@ struct ListEditorView: View {
             .sheet(isPresented: $showScheduleEditor) {
                 ScheduleEditorSheet(initialSlots: draft.slots) { draft.slots = $0 }
             }
-            .alert(protectionAlertTitle, isPresented: $confirmProtection) {
-                Button("I understand, turn on", role: .destructive, action: save)
-                Button("Back", role: .cancel) {}
-            } message: {
-                Text(protectionAlertMessage)
+            .sheet(isPresented: $showSummary) {
+                ListSummarySheet(list: finalized, isEditing: isEditing, addsProtection: addsProtection, startsNow: startsNow) {
+                    showSummary = false
+                    save()
+                }
+                .presentationDetents([.medium, .large])
             }
+            .successToast(isPresented: showSavedToast, message: isEditing ? "List updated" : "List created")
         }
+        .interactiveDismissDisabled(showSavedToast)
     }
 
     // MARK: - Sections
@@ -129,10 +146,15 @@ struct ListEditorView: View {
 
             switch draft.kind {
             case .now:
-                Picker("Duration", selection: $draft.durationSeconds) {
-                    ForEach(durationOptions, id: \.self) { seconds in
-                        Text(Formatters.duration(seconds: seconds)).tag(seconds)
-                    }
+                LabeledContent("Duration") {
+                    Text(totalSeconds >= 5 * 60 ? Formatters.duration(seconds: totalSeconds) : String(localized: "At least 5 minutes"))
+                        .foregroundStyle(totalSeconds >= 5 * 60 ? AppColors.textSecondary : AppColors.danger)
+                }
+                .listRowSeparator(.hidden)
+                HStack(spacing: 0) {
+                    wheel("Days", selection: $days, values: Array(0...ListsModel.maxDays(for: draft.protection)))
+                    wheel("Hours", selection: $hours, values: Array(0...23))
+                    wheel("Minutes", selection: $minutes, values: minuteOptions)
                 }
                 if !isEditing && draft.protection == .none {
                     Toggle("Start right away", isOn: $startImmediately)
@@ -182,23 +204,67 @@ struct ListEditorView: View {
 
     private var breaksSection: some View {
         Section {
-            Stepper(value: $draft.breaks.count, in: 0...5) {
-                LabeledContent("Breaks per day") {
-                    Text(draft.breaks.count, format: .number)
-                }
+            HStack {
+                Text("Breaks per day")
+                Spacer()
+                counterButton("minus", disabled: draft.breaks.count == 0) { draft.breaks.count -= 1 }
+                Text(draft.breaks.count, format: .number)
+                    .font(.title3.weight(.semibold).monospacedDigit())
+                    .frame(minWidth: 32)
+                counterButton("plus", disabled: draft.breaks.count == 5) { draft.breaks.count += 1 }
             }
             if draft.breaks.count > 0 {
-                Picker("Length of each break", selection: $draft.breaks.minutes) {
-                    ForEach([5, 10, 15], id: \.self) { value in
-                        Text(Formatters.duration(minutes: value)).tag(value)
+                VStack(alignment: .leading, spacing: Spacing.s) {
+                    Text("Length of each break")
+                    HStack(spacing: Spacing.s) {
+                        ForEach(Self.breakLengths, id: \.self) { value in
+                            ChipToggle(title: Formatters.duration(minutes: value), isOn: draft.breaks.minutes == value) {
+                                draft.breaks.minutes = value
+                            }
+                        }
                     }
                 }
+                .padding(.vertical, Spacing.xs)
             }
         } header: {
             Text("Breaks")
         } footer: {
-            Text("Short breaks let you open blocked apps for a few minutes.")
+            if draft.breaks.count > 0 {
+                Text("\(draft.breaks.count.formatted(.number.locale(.app))) × \(Formatters.duration(minutes: draft.breaks.minutes)) per day")
+            } else {
+                Text("Short breaks let you open blocked apps for a few minutes.")
+            }
         }
+    }
+
+    private func counterButton(_ systemImage: String, disabled: Bool, action: @escaping () -> Void) -> some View {
+        Button {
+            Haptics.tap()
+            action()
+        } label: {
+            Image(systemName: systemImage)
+                .font(.body.weight(.semibold))
+                .frame(width: 36, height: 36)
+                .foregroundStyle(disabled ? AppColors.stopped : AppColors.primary)
+                .background(AppColors.primarySoft, in: Circle())
+        }
+        .buttonStyle(.borderless)
+        .disabled(disabled)
+    }
+
+    private func wheel(_ title: LocalizedStringKey, selection: Binding<Int>, values: [Int]) -> some View {
+        VStack(spacing: Spacing.xs) {
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(AppColors.textSecondary)
+            Picker(title, selection: selection) {
+                ForEach(values, id: \.self) { Text($0, format: .number).tag($0) }
+            }
+            .pickerStyle(.wheel)
+            .frame(height: 130)
+            .clipped()
+        }
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Helpers
@@ -209,22 +275,6 @@ struct ListEditorView: View {
         if apps > 0 { parts.append(String(localized: "\(apps) apps", locale: .app)) }
         if draft.websiteCount > 0 { parts.append(String(localized: "\(draft.websiteCount) websites", locale: .app)) }
         return parts.isEmpty ? String(localized: "Add") : parts.joined(separator: " · ")
-    }
-
-    /// Preset durations, capped by the protection level (Hard Mode: 30 days).
-    private var durationOptions: [Int] {
-        let minutes = [15, 30, 45]
-        let hours = [1, 2, 3, 4, 6, 8, 12]
-        let days = [1, 2, 3, 7, 14, 30, 60, 90, 180, 360]
-        let all = minutes.map { $0 * 60 } + hours.map { $0 * 3600 } + days.map { $0 * 86_400 }
-        let cap = ListsModel.maxDays(for: draft.protection) * 86_400
-        var options = all.filter { $0 <= cap }
-        // Keep an edited list's existing custom duration selectable.
-        if !options.contains(draft.durationSeconds), draft.durationSeconds <= cap {
-            options.append(draft.durationSeconds)
-            options.sort()
-        }
-        return options
     }
 
     private var kindBinding: Binding<BlockKind> {
@@ -243,46 +293,120 @@ struct ListEditorView: View {
             guard newValue != .partner || partner.hasPartner else { return }
             draft.protection = newValue
             if newValue == .hard { draft.breaks.count = 0 }
-            let cap = ListsModel.maxDays(for: newValue) * 86_400
-            if draft.durationSeconds > cap { draft.durationSeconds = cap }
+            days = min(days, ListsModel.maxDays(for: newValue))
         }
     }
 
-    private var protectionAlertTitle: LocalizedStringKey {
-        draft.isHard ? "Turn on Hard Mode?" : "Protect with your partner?"
+    /// The draft as it will be saved.
+    private var finalized: BlockList {
+        var list = draft
+        list.name = trimmedName
+        if list.kind == .now {
+            list.slots = []
+            list.durationSeconds = totalSeconds
+        }
+        return list
     }
 
-    private var protectionAlertMessage: LocalizedStringKey {
-        draft.isHard
-            ? "While this list is active you won't be able to stop, edit or delete it, and Samla can't be deleted."
-            : "While this list is active, only your partner's PIN can stop, edit or delete it, and Samla can't be deleted."
+    /// Adding Hard Mode or partner protection locks the user in, so the summary warns about it.
+    private var addsProtection: Bool {
+        guard draft.protection != .none else { return false }
+        if case .edit(let original, _) = mode { return original.protection != draft.protection }
+        return true
+    }
+
+    private var startsNow: Bool {
+        !isEditing && draft.kind == .now && (startImmediately || draft.protection != .none)
     }
 
     // MARK: - Actions
 
-    private func attemptSave() {
-        // Ask before adding protection that locks the user in.
-        let keepsSameProtection: Bool = {
-            if case .edit(let original, _) = mode { return original.protection == draft.protection }
-            return false
-        }()
-        if draft.protection != .none && !keepsSameProtection {
-            confirmProtection = true
+    private func save() {
+        if isEditing {
+            model.update(finalized, partnerApproved: partnerApproved)
         } else {
-            save()
+            model.create(finalized, startNow: startImmediately)
+        }
+        Haptics.success()
+        showSavedToast = true
+        Task {
+            try? await Task.sleep(for: .seconds(1.2))
+            dismiss()
+        }
+    }
+}
+
+/// Final review before saving: what's blocked, when, and how it's protected.
+private struct ListSummarySheet: View {
+    let list: BlockList
+    let isEditing: Bool
+    let addsProtection: Bool
+    let startsNow: Bool
+    var onConfirm: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    Text(list.name)
+                        .font(.title2.weight(.bold))
+                        .foregroundStyle(AppColors.primary)
+                        .listRowBackground(Color.clear)
+                }
+                Section("What to block") {
+                    LabeledContent("Apps", value: (list.appCount + list.categoryCount).formatted(.number.locale(.app)))
+                    LabeledContent("Websites", value: list.websiteCount.formatted(.number.locale(.app)))
+                    if list.blockAdultContent {
+                        LabeledContent("Adult websites", value: String(localized: "Blocked"))
+                    }
+                }
+                Section("Time") {
+                    switch list.kind {
+                    case .now:
+                        LabeledContent("Duration", value: Formatters.duration(seconds: list.durationSeconds))
+                        if startsNow {
+                            Label("Starts right away", systemImage: "play.fill")
+                        }
+                    case .scheduled:
+                        LabeledContent("Schedule", value: Formatters.scheduleSummary(list.slots))
+                    }
+                    if list.allowsBreaks {
+                        LabeledContent("Breaks", value: "\(list.breaks.count.formatted(.number.locale(.app))) × \(Formatters.duration(minutes: list.breaks.minutes))")
+                    }
+                }
+                Section {
+                    Label(list.protection.title, systemImage: list.protection.systemImage)
+                } header: {
+                    Text("Protection")
+                } footer: {
+                    if addsProtection {
+                        Text(list.isHard
+                             ? "While this list is active you won't be able to stop, edit or delete it, and Samla can't be deleted."
+                             : "While this list is active, only your partner's PIN can stop, edit or delete it, and Samla can't be deleted.")
+                    }
+                }
+            }
+            .navigationTitle(isEditing ? "Confirm Changes" : "Confirm List")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Back") { dismiss() }
+                }
+            }
+            .safeAreaInset(edge: .bottom) {
+                Button(confirmTitle, action: onConfirm)
+                    .buttonStyle(PrimaryButtonStyle(tint: addsProtection ? AppColors.danger : AppColors.primary))
+                    .padding(.horizontal, Spacing.l)
+                    .padding(.vertical, Spacing.m)
+            }
         }
     }
 
-    private func save() {
-        var list = draft
-        list.name = trimmedName
-        if list.kind == .now { list.slots = [] }
-        if isEditing {
-            model.update(list, partnerApproved: partnerApproved)
-        } else {
-            model.create(list, startNow: startImmediately)
-        }
-        dismiss()
+    private var confirmTitle: LocalizedStringKey {
+        if addsProtection { return "I understand, turn on" }
+        return isEditing ? "Save" : "Create"
     }
 }
 

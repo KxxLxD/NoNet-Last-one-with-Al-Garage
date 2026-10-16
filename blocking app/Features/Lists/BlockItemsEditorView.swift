@@ -1,12 +1,15 @@
 import FamilyControls
 import SwiftUI
 
-/// Picks what a list blocks: apps & categories (system picker) and websites.
+/// "What to block", in three clear steps:
+/// 1. Apps & categories (Apple's picker; chosen apps show with their icons)
+/// 2. Websites (type to add; swipe to remove)
+/// 3. Suggestions grouped by category — one tap adds the website.
+/// Suggestions can only be websites: Apple doesn't allow apps to be pre-selected.
 struct BlockItemsEditorView: View {
     struct Items {
         var websites: [String]
         var selection: FamilyActivitySelection
-        var blockAdultContent: Bool
     }
 
     @Environment(ScreenTimeAuthorization.self) private var screenTime
@@ -16,43 +19,42 @@ struct BlockItemsEditorView: View {
     @State private var websiteInput = ""
     @State private var showPicker = false
     @State private var showScreenTimeDenied = false
+    @FocusState private var isInputFocused: Bool
     private let onSave: (Items) -> Void
 
     /// ManagedSettings accepts at most 50 web domains in a filter.
     private static let maxWebsites = 50
 
     init(list: BlockList, onSave: @escaping (Items) -> Void) {
-        _items = State(initialValue: Items(websites: list.websites, selection: list.selection, blockAdultContent: list.blockAdultContent))
+        _items = State(initialValue: Items(websites: list.websites, selection: list.selection))
         self.onSave = onSave
     }
 
     private var normalizedInput: String? { WebsiteInput.normalize(websiteInput) }
-    private var hasAnyItem: Bool {
-        !items.websites.isEmpty
-            || !items.selection.applicationTokens.isEmpty
-            || !items.selection.categoryTokens.isEmpty
-            || !items.selection.webDomainTokens.isEmpty
-    }
+    private var isFull: Bool { items.websites.count >= Self.maxWebsites }
+    private var appCount: Int { items.selection.applicationTokens.count + items.selection.categoryTokens.count }
 
     var body: some View {
         NavigationStack {
-            Form {
+            List {
                 appsSection
                 websitesSection
-                quickSitesSection
+                ForEach(SuggestionGroup.all) { group in
+                    suggestionSection(group)
+                }
             }
-            .navigationTitle("Apps & Websites")
+            .navigationTitle("What to block")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Back") { dismiss() }
+                    Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button("Done") {
+                        Haptics.success()
                         onSave(items)
                         dismiss()
                     }
-                    .disabled(!hasAnyItem)
                 }
             }
             .familyActivityPicker(isPresented: $showPicker, selection: $items.selection)
@@ -69,70 +71,96 @@ struct BlockItemsEditorView: View {
         }
     }
 
-    // MARK: - Sections
+    // MARK: - 1. Apps
 
     private var appsSection: some View {
         Section {
             Button {
                 Task { await openPicker() }
             } label: {
-                Label("Choose Apps & Categories", systemImage: "square.stack.3d.up.fill")
-                    .font(.subheadline.weight(.semibold))
+                Label(appCount == 0 ? "Choose Apps" : "Change Apps", systemImage: "square.grid.2x2.fill")
             }
 
-            if !items.selection.categoryTokens.isEmpty {
-                ForEach(Array(items.selection.categoryTokens), id: \.self) { token in
-                    Label(token).font(.subheadline)
-                }
+            ForEach(Array(items.selection.categoryTokens), id: \.self) { token in
+                Label(token)
             }
-            if !items.selection.applicationTokens.isEmpty {
-                ForEach(Array(items.selection.applicationTokens), id: \.self) { token in
-                    Label(token).font(.subheadline)
-                }
+            ForEach(Array(items.selection.applicationTokens), id: \.self) { token in
+                Label(token)
             }
         } header: {
-            Text("Apps & Categories")
+            HStack {
+                Text("Apps & Categories")
+                Spacer()
+                if appCount > 0 { Text(appCount, format: .number) }
+            }
         } footer: {
-            Text("Selected apps open to the Samla block screen while the list is active.")
+            Text("Chosen apps open to the Samla block screen while the list is active.")
         }
     }
 
+    // MARK: - 2. Websites
+
     private var websitesSection: some View {
         Section {
-            HStack {
+            HStack(spacing: Spacing.m) {
+                Image(systemName: "globe")
+                    .foregroundStyle(AppColors.textSecondary)
                 TextField("e.g., youtube.com", text: $websiteInput)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .keyboardType(.URL)
                     .submitLabel(.done)
+                    .focused($isInputFocused)
                     .onSubmit(addWebsite)
                 Button("Add", action: addWebsite)
-                    .disabled(normalizedInput == nil || items.websites.count >= Self.maxWebsites)
+                    .buttonStyle(.borderless)
+                    .fontWeight(.semibold)
+                    .disabled(normalizedInput == nil || isFull)
             }
+
             ForEach(items.websites, id: \.self) { site in
-                Label(site, systemImage: "globe")
+                Text(site)
+                    .foregroundStyle(AppColors.text)
             }
-            .onDelete { items.websites.remove(atOffsets: $0) }
+            .onDelete { offsets in
+                Haptics.tap()
+                items.websites.remove(atOffsets: offsets)
+            }
         } header: {
-            Text("Websites")
+            HStack {
+                Text("Websites")
+                Spacer()
+                if !items.websites.isEmpty { Text(items.websites.count, format: .number) }
+            }
         } footer: {
-            if items.websites.count >= Self.maxWebsites {
+            if isFull {
                 Text("You can block up to \(Self.maxWebsites) websites per list.")
+            } else if !websiteInput.isEmpty && normalizedInput == nil {
+                Text("Enter a website like example.com")
+            } else if !items.websites.isEmpty {
+                Text("Swipe a website to remove it.")
             }
         }
     }
 
-    private var quickSitesSection: some View {
+    // MARK: - 3. Suggestions
+
+    private func suggestionSection(_ group: SuggestionGroup) -> some View {
         Section {
-            ForEach(QuickSite.all) { site in
-                Toggle(isOn: quickBinding(site.domain)) {
-                    Label(site.title, systemImage: site.icon)
+            FlowLayout {
+                ForEach(group.sites) { site in
+                    ChipToggle(title: site.title, isOn: items.websites.contains(site.domain)) {
+                        toggle(site.domain)
+                    }
                 }
             }
+            .padding(.vertical, Spacing.xs)
         } header: {
-            Text("Quick Websites")
+            Label(group.title, systemImage: group.systemImage)
         } footer: {
-            Text("To block the apps themselves, pick them with Choose Apps & Categories.")
+            if group.id == SuggestionGroup.all.last?.id {
+                Text("Suggestions block the website. To block the app itself, choose it in Apps & Categories.")
+            }
         }
     }
 
@@ -149,23 +177,20 @@ struct BlockItemsEditorView: View {
     }
 
     private func addWebsite() {
-        guard let domain = normalizedInput, items.websites.count < Self.maxWebsites else { return }
+        guard let domain = normalizedInput, !isFull else { return }
         if !items.websites.contains(domain) {
-            items.websites.append(domain)
+            Haptics.tap()
+            withAnimation { items.websites.insert(domain, at: 0) }
         }
         websiteInput = ""
     }
 
-    private func quickBinding(_ domain: String) -> Binding<Bool> {
-        Binding {
-            items.websites.contains(domain)
-        } set: { isOn in
-            if isOn {
-                if !items.websites.contains(domain), items.websites.count < Self.maxWebsites {
-                    items.websites.append(domain)
-                }
-            } else {
-                items.websites.removeAll { $0 == domain }
+    private func toggle(_ domain: String) {
+        withAnimation {
+            if let index = items.websites.firstIndex(of: domain) {
+                items.websites.remove(at: index)
+            } else if !isFull {
+                items.websites.insert(domain, at: 0)
             }
         }
     }
@@ -192,25 +217,54 @@ enum WebsiteInput {
     }
 }
 
-private struct QuickSite: Identifiable {
-    let domain: String
-    let title: String
-    let icon: String
-    var id: String { domain }
+/// Popular websites grouped by category for one-tap blocking.
+private struct SuggestionGroup: Identifiable {
+    struct Site: Identifiable {
+        let title: String
+        let domain: String
+        var id: String { domain }
+    }
 
-    static let all: [QuickSite] = [
-        QuickSite(domain: "tiktok.com", title: "TikTok", icon: "play.rectangle"),
-        QuickSite(domain: "instagram.com", title: "Instagram", icon: "camera"),
-        QuickSite(domain: "snapchat.com", title: "Snapchat", icon: "bolt"),
-        QuickSite(domain: "youtube.com", title: "YouTube", icon: "play.circle"),
-        QuickSite(domain: "x.com", title: "X (Twitter)", icon: "bubble.left"),
-        QuickSite(domain: "facebook.com", title: "Facebook", icon: "person.3"),
-        QuickSite(domain: "reddit.com", title: "Reddit", icon: "bubble.right"),
-        QuickSite(domain: "twitch.tv", title: "Twitch", icon: "gamecontroller.fill"),
-        QuickSite(domain: "netflix.com", title: "Netflix", icon: "film"),
-        QuickSite(domain: "primevideo.com", title: "Prime Video", icon: "film.stack"),
-        QuickSite(domain: "disneyplus.com", title: "Disney+", icon: "star"),
-        QuickSite(domain: "shahid.mbc.net", title: "Shahid", icon: "tv"),
-        QuickSite(domain: "osnplus.com", title: "OSN+", icon: "tv"),
+    let id: String
+    let title: LocalizedStringKey
+    let systemImage: String
+    let sites: [Site]
+
+    static let all: [SuggestionGroup] = [
+        SuggestionGroup(id: "social", title: "Social", systemImage: "bubble.left.and.bubble.right.fill", sites: [
+            Site(title: "TikTok", domain: "tiktok.com"),
+            Site(title: "Instagram", domain: "instagram.com"),
+            Site(title: "Snapchat", domain: "snapchat.com"),
+            Site(title: "X", domain: "x.com"),
+            Site(title: "Facebook", domain: "facebook.com"),
+            Site(title: "Reddit", domain: "reddit.com"),
+        ]),
+        SuggestionGroup(id: "video", title: "Video", systemImage: "play.rectangle.fill", sites: [
+            Site(title: "YouTube", domain: "youtube.com"),
+            Site(title: "Netflix", domain: "netflix.com"),
+            Site(title: "Shahid", domain: "shahid.mbc.net"),
+            Site(title: "OSN+", domain: "osnplus.com"),
+            Site(title: "Prime Video", domain: "primevideo.com"),
+            Site(title: "Disney+", domain: "disneyplus.com"),
+        ]),
+        SuggestionGroup(id: "games", title: "Games", systemImage: "gamecontroller.fill", sites: [
+            Site(title: "Twitch", domain: "twitch.tv"),
+            Site(title: "Roblox", domain: "roblox.com"),
+            Site(title: "Steam", domain: "steampowered.com"),
+            Site(title: "Epic Games", domain: "epicgames.com"),
+            Site(title: "Chess.com", domain: "chess.com"),
+        ]),
+        SuggestionGroup(id: "shopping", title: "Shopping", systemImage: "bag.fill", sites: [
+            Site(title: "Amazon", domain: "amazon.sa"),
+            Site(title: "noon", domain: "noon.com"),
+            Site(title: "SHEIN", domain: "shein.com"),
+            Site(title: "AliExpress", domain: "aliexpress.com"),
+            Site(title: "Temu", domain: "temu.com"),
+        ]),
     ]
+}
+
+#Preview {
+    BlockItemsEditorView(list: BlockList(name: "Preview")) { _ in }
+        .previewEnvironment()
 }
