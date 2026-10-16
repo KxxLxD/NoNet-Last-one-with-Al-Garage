@@ -39,7 +39,7 @@
 			containerPortal = FB0E17742E697E9B00AA0757 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = FB0E177B2E697E9B00AA0757;
-			remoteInfo = "blocking app";
+			remoteInfo = Samla;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -63,7 +63,7 @@
 		AA10000000000000000000A3 /* SamlaMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SamlaMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA2000000000000000000002 /* SamlaShield.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SamlaShield.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA3000000000000000000002 /* SamlaShieldAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SamlaShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		FB0E177C2E697E9B00AA0757 /* blocking app.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "blocking app.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB0E177C2E697E9B00AA0757 /* Samla.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Samla.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FBE41E273082E3C700852C04 /* SamlaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SamlaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -88,9 +88,9 @@
 			path = SamlaShieldAction;
 			sourceTree = "<group>";
 		};
-		FB0E177E2E697E9B00AA0757 /* blocking app */ = {
+		FB0E177E2E697E9B00AA0757 /* Samla */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "blocking app";
+			path = Samla;
 			sourceTree = "<group>";
 		};
 		FBE41E283082E3C700852C04 /* SamlaTests */ = {
@@ -142,7 +142,7 @@
 		FB0E17732E697E9B00AA0757 = {
 			isa = PBXGroup;
 			children = (
-				FB0E177E2E697E9B00AA0757 /* blocking app */,
+				FB0E177E2E697E9B00AA0757 /* Samla */,
 				AA10000000000000000000A2 /* Shared */,
 				AA10000000000000000000A1 /* SamlaMonitor */,
 				AA2000000000000000000001 /* SamlaShield */,
@@ -155,7 +155,7 @@
 		FB0E177D2E697E9B00AA0757 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FB0E177C2E697E9B00AA0757 /* blocking app.app */,
+				FB0E177C2E697E9B00AA0757 /* Samla.app */,
 				AA10000000000000000000A3 /* SamlaMonitor.appex */,
 				AA2000000000000000000002 /* SamlaShield.appex */,
 				AA3000000000000000000002 /* SamlaShieldAction.appex */,
@@ -236,9 +236,9 @@
 			productReference = AA3000000000000000000002 /* SamlaShieldAction.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
-		FB0E177B2E697E9B00AA0757 /* blocking app */ = {
+		FB0E177B2E697E9B00AA0757 /* Samla */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = FB0E17872E697E9C00AA0757 /* Build configuration list for PBXNativeTarget "blocking app" */;
+			buildConfigurationList = FB0E17872E697E9C00AA0757 /* Build configuration list for PBXNativeTarget Samla */;
 			buildPhases = (
 				FB0E17782E697E9B00AA0757 /* Sources */,
 				FB0E17792E697E9B00AA0757 /* Frameworks */,
@@ -254,13 +254,13 @@
 			);
 			fileSystemSynchronizedGroups = (
 				AA10000000000000000000A2 /* Shared */,
-				FB0E177E2E697E9B00AA0757 /* blocking app */,
+				FB0E177E2E697E9B00AA0757 /* Samla */,
 			);
-			name = "blocking app";
+			name = Samla;
 			packageProductDependencies = (
 			);
-			productName = "blocking app";
-			productReference = FB0E177C2E697E9B00AA0757 /* blocking app.app */;
+			productName = Samla;
+			productReference = FB0E177C2E697E9B00AA0757 /* Samla.app */;
 			productType = "com.apple.product-type.application";
 		};
 		FBE41E263082E3C700852C04 /* SamlaTests */ = {
@@ -313,7 +313,7 @@
 					};
 				};
 			};
-			buildConfigurationList = FB0E17772E697E9B00AA0757 /* Build configuration list for PBXProject "blocking app" */;
+			buildConfigurationList = FB0E17772E697E9B00AA0757 /* Build configuration list for PBXProject Samla */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -328,7 +328,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				FB0E177B2E697E9B00AA0757 /* blocking app */,
+				FB0E177B2E697E9B00AA0757 /* Samla */,
 				AA10000000000000000000A4 /* SamlaMonitor */,
 				AA2000000000000000000003 /* SamlaShield */,
 				AA3000000000000000000003 /* SamlaShieldAction */,
@@ -431,7 +431,7 @@
 		};
 		FBE41E2F3082E3C700852C04 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = FB0E177B2E697E9B00AA0757 /* blocking app */;
+			target = FB0E177B2E697E9B00AA0757 /* Samla */;
 			targetProxy = FBE41E2E3082E3C700852C04 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -723,7 +723,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "blocking app/Resources/blocking app.entitlements";
+				CODE_SIGN_ENTITLEMENTS = Samla/Resources/Samla.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
@@ -758,7 +758,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "blocking app/Resources/blocking app.entitlements";
+				CODE_SIGN_ENTITLEMENTS = Samla/Resources/Samla.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
@@ -803,7 +803,7 @@
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/blocking app.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/blocking app";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Samla.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Samla";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -826,7 +826,7 @@
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/blocking app.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/blocking app";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Samla.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Samla";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -864,7 +864,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FB0E17772E697E9B00AA0757 /* Build configuration list for PBXProject "blocking app" */ = {
+		FB0E17772E697E9B00AA0757 /* Build configuration list for PBXProject Samla */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FB0E17852E697E9C00AA0757 /* Debug */,
@@ -873,7 +873,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FB0E17872E697E9C00AA0757 /* Build configuration list for PBXNativeTarget "blocking app" */ = {
+		FB0E17872E697E9C00AA0757 /* Build configuration list for PBXNativeTarget Samla */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FB0E17882E697E9C00AA0757 /* Debug */,

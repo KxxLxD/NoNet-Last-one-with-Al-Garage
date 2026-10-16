@@ -22,7 +22,7 @@ These steps need your Apple Developer account and can't be done from code. Produ
       Add a 1-week free-trial introductory offer if you want one, plus English and Arabic display names.
 - [ ] To replace the old `nonet` discount code: create **Offer Codes** for the subscriptions (users redeem them via "Redeem Code" in the paywall).
 - [ ] Publish `docs/privacy-policy.md` (e.g. GitHub Pages) and paste the URL into App Store Connect.
-      Then set `AppLinks.privacyPolicy` in `blocking app/Core/AppLinks.swift`.
+      Then set `AppLinks.privacyPolicy` in `Samla/Core/AppLinks.swift`.
 - [ ] App Privacy questionnaire: **Data Not Collected**.
 - [ ] Age rating: answer the questionnaire (the app mentions adult content/gambling only as things to block).
 - [ ] Screenshots: iPhone 6.9" (Arabic + English).

@@ -16,8 +16,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "FB0E177B2E697E9B00AA0757"
-               BuildableName = "blocking app.app"
-               BlueprintName = "blocking app"
+               BuildableName = "Samla.app"
+               BlueprintName = "Samla"
                ReferencedContainer = "container:blocking app.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -58,8 +58,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "FB0E177B2E697E9B00AA0757"
-            BuildableName = "blocking app.app"
-            BlueprintName = "blocking app"
+            BuildableName = "Samla.app"
+            BlueprintName = "Samla"
             ReferencedContainer = "container:blocking app.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -88,8 +88,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "FB0E177B2E697E9B00AA0757"
-            BuildableName = "blocking app.app"
-            BlueprintName = "blocking app"
+            BuildableName = "Samla.app"
+            BlueprintName = "Samla"
             ReferencedContainer = "container:blocking app.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

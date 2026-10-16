@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import blocking_app
+@testable import Samla
 
 /// A fixed Gregorian/UTC calendar so schedule tests don't depend on the device.
 private let calendar: Calendar = {

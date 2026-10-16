@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-ICON = HERE.parent.parent / "blocking app/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png"
+ICON = HERE.parent.parent / "Samla/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png"
 
 BASE = "/NoNet-Last-one-with-Al-Garage"  # GitHub Pages project path
 UPDATED = {"ar": "16 أكتوبر 2026", "en": "October 16, 2026"}
