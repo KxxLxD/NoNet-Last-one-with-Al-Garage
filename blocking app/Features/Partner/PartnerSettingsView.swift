@@ -24,8 +24,6 @@ struct PartnerSettingsView: View {
                 }
             }
         }
-        .scrollContentBackground(.hidden)
-        .background(AppColors.background)
         .navigationTitle("Accountability Partner")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $pendingAction) { action in

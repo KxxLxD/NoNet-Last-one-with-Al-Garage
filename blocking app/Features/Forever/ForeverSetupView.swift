@@ -15,35 +15,26 @@ struct ForeverSetupView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
+            List {
+                Section {
                     ForeverAyah()
-
-                    VStack(alignment: .leading, spacing: 16) {
-                        point("checkmark.shield.fill", "Blocks porn, gambling and dating websites in every browser.")
-                        point("trash.slash.fill", "Samla can't be deleted from your phone while it's on.")
-                        point("hourglass", "To turn it off, you ask and then wait \(ForeverBlock.unlockWaitDays) days. You can cancel the request anytime.")
-                        point("person.2.fill", "Your accountability partner can turn it off sooner with their PIN.")
-                        point("gift.fill", "Free forever.")
-                    }
-                    .card()
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Toggle(isOn: $blocksMatureApps) {
-                            Text("Also lock all 17+ apps")
-                                .font(.headline)
-                                .foregroundStyle(AppColors.text)
-                        }
-                        .tint(AppColors.primary)
-                        Text("Hides and blocks every app rated 17+, which covers most dating and gambling apps. Some regular apps rated 17+ will be locked too.")
-                            .font(.footnote)
-                            .foregroundStyle(AppColors.textSecondary)
-                    }
-                    .card()
+                        .listRowBackground(Color.clear)
                 }
-                .padding(20)
+
+                Section {
+                    point("checkmark.shield.fill", "Blocks porn, gambling and dating websites in every browser.")
+                    point("trash.slash.fill", "Samla can't be deleted from your phone while it's on.")
+                    point("hourglass", "To turn it off, you ask and then wait \(ForeverBlock.unlockWaitDays) days. You can cancel the request anytime.")
+                    point("person.2.fill", "Your accountability partner can turn it off sooner with their PIN.")
+                    point("gift.fill", "Free forever.")
+                }
+
+                Section {
+                    Toggle("Also lock all 17+ apps", isOn: $blocksMatureApps)
+                } footer: {
+                    Text("Hides and blocks every app rated 17+, which covers most dating and gambling apps. Some regular apps rated 17+ will be locked too.")
+                }
             }
-            .background(AppColors.background)
             .navigationTitle("Block Forever")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -56,9 +47,8 @@ struct ForeverSetupView: View {
                     Task { await turnOn() }
                 }
                 .buttonStyle(PrimaryButtonStyle())
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
-                .background(AppColors.background)
+                .padding(.horizontal, Spacing.l)
+                .padding(.vertical, Spacing.m)
             }
             .alert("Screen Time access needed", isPresented: $showScreenTimeDenied) {
                 Button("OK", role: .cancel) {}
@@ -69,14 +59,10 @@ struct ForeverSetupView: View {
     }
 
     private func point(_ systemImage: String, _ text: LocalizedStringKey) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: systemImage)
-                .foregroundStyle(AppColors.primary)
-                .frame(width: 24)
-            Text(text)
-                .font(.subheadline)
-                .foregroundStyle(AppColors.text)
-                .frame(maxWidth: .infinity, alignment: .leading)
+        Label {
+            Text(text).foregroundStyle(AppColors.text)
+        } icon: {
+            Image(systemName: systemImage).foregroundStyle(AppColors.primary)
         }
     }
 
@@ -97,7 +83,7 @@ struct ForeverSetupView: View {
 /// The verse shown with Block Forever.
 struct ForeverAyah: View {
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: Spacing.s) {
             Image(systemName: "shield.lefthalf.filled")
                 .font(.system(size: 44))
                 .foregroundStyle(AppColors.primary)

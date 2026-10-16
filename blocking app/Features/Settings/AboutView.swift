@@ -10,37 +10,34 @@ struct AboutView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                VStack(spacing: 12) {
-                    BrandLogo(size: 88)
+        List {
+            Section {
+                VStack(spacing: Spacing.m) {
+                    BrandLogo(size: 80)
                     Text("Samla")
                         .font(.largeTitle.weight(.bold))
                         .foregroundStyle(AppColors.primary)
-                    Text("Version \(version)")
-                        .font(.footnote)
+                    Text("Samla helps you block the apps and websites that steal your time, and protect yourself from harmful content — calmly, privately, and on your own terms.")
+                        .font(.subheadline)
                         .foregroundStyle(AppColors.textSecondary)
+                        .multilineTextAlignment(.center)
                 }
-
-                Text("Samla helps you block the apps and websites that steal your time, and protect yourself from harmful content — calmly, privately, and on your own terms.")
-                    .font(.body)
-                    .foregroundStyle(AppColors.text)
-                    .multilineTextAlignment(.center)
-                    .card()
-
-                VStack(spacing: 8) {
-                    Text("Everything stays on your device. We collect no data.")
-                    if let email = AppLinks.supportEmail, let mail = AppLinks.supportMail {
-                        Link(email, destination: mail)
-                            .fontWeight(.semibold)
-                    }
-                }
-                .font(.footnote)
-                .foregroundStyle(AppColors.textSecondary)
+                .frame(maxWidth: .infinity)
+                .listRowBackground(Color.clear)
             }
-            .padding(24)
+
+            Section {
+                LabeledContent("Version", value: version)
+                if let url = AppLinks.privacyPolicy {
+                    Link("Full Privacy Policy", destination: url)
+                }
+                if let support = AppLinks.supportPage {
+                    Link("Contact Support", destination: support)
+                }
+            } footer: {
+                Text("Everything stays on your device. We collect no data.")
+            }
         }
-        .background(AppColors.background)
         .navigationTitle("About Samla")
         .navigationBarTitleDisplayMode(.inline)
     }

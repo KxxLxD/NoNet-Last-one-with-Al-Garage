@@ -17,15 +17,15 @@ private struct CardModifier: ViewModifier {
 
 extension View {
     /// White rounded surface with a hairline border — the app's standard container.
-    func card(padding: CGFloat = 20, cornerRadius: CGFloat = 20) -> some View {
+    func card(padding: CGFloat = Spacing.l, cornerRadius: CGFloat = Radius.card) -> some View {
         modifier(CardModifier(padding: padding, cornerRadius: cornerRadius))
     }
 
     /// Standard text field look.
     func inputFieldStyle() -> some View {
-        padding(12)
-            .background(AppColors.surface, in: RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.border, lineWidth: 0.5))
+        padding(Spacing.m)
+            .background(AppColors.surface, in: RoundedRectangle(cornerRadius: Radius.control))
+            .overlay(RoundedRectangle(cornerRadius: Radius.control).stroke(AppColors.border, lineWidth: 0.5))
     }
 }
 
@@ -42,17 +42,17 @@ struct PrimaryButtonStyle: ButtonStyle {
             .font(.body.weight(.semibold))
             .frame(maxWidth: .infinity, minHeight: height)
             .foregroundStyle(isEnabled ? Color.white : AppColors.textSecondary)
-            .contentShape(RoundedRectangle(cornerRadius: 14))
+            .contentShape(RoundedRectangle(cornerRadius: Radius.control))
 
         if !isEnabled {
             // Disabled: grey text on a light fill, so it stays readable.
-            label.background(AppColors.border, in: RoundedRectangle(cornerRadius: 14))
+            label.background(AppColors.border, in: RoundedRectangle(cornerRadius: Radius.control))
         } else if #available(iOS 26.0, *) {
             label
-                .glassEffect(.regular.tint(tint).interactive(), in: .rect(cornerRadius: 14))
+                .glassEffect(.regular.tint(tint).interactive(), in: .rect(cornerRadius: Radius.control))
         } else {
             label
-                .background(tint, in: RoundedRectangle(cornerRadius: 14))
+                .background(tint, in: RoundedRectangle(cornerRadius: Radius.control))
                 .opacity(configuration.isPressed ? 0.85 : 1)
         }
     }
@@ -69,15 +69,15 @@ struct SecondaryButtonStyle: ButtonStyle {
             .font(.body.weight(.semibold))
             .frame(maxWidth: .infinity, minHeight: height)
             .foregroundStyle(tint.opacity(isEnabled ? 1 : 0.4))
-            .contentShape(RoundedRectangle(cornerRadius: 14))
+            .contentShape(RoundedRectangle(cornerRadius: Radius.control))
 
         if #available(iOS 26.0, *) {
             label
-                .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 14))
+                .glassEffect(.regular.interactive(), in: .rect(cornerRadius: Radius.control))
         } else {
             label
-                .background(AppColors.surface, in: RoundedRectangle(cornerRadius: 14))
-                .overlay(RoundedRectangle(cornerRadius: 14).stroke(tint.opacity(isEnabled ? 0.4 : 0.15), lineWidth: 1))
+                .background(AppColors.surface, in: RoundedRectangle(cornerRadius: Radius.control))
+                .overlay(RoundedRectangle(cornerRadius: Radius.control).stroke(tint.opacity(isEnabled ? 0.4 : 0.15), lineWidth: 1))
                 .opacity(configuration.isPressed ? 0.7 : 1)
         }
     }

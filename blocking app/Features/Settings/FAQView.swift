@@ -29,51 +29,18 @@ struct FAQView: View {
     ]
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                ForEach(items) { item in
-                    FAQItemView(question: item.question, answer: item.answer)
-                }
-            }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 16)
-        }
-        .background(AppColors.background)
-        .navigationTitle("Frequently Asked Questions")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
-private struct FAQItemView: View {
-    let question: LocalizedStringKey
-    let answer: LocalizedStringKey
-    @State private var isExpanded = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Button {
-                withAnimation { isExpanded.toggle() }
-            } label: {
-                HStack(alignment: .top) {
-                    Text(question)
-                        .font(.headline)
-                        .foregroundStyle(AppColors.text)
-                        .multilineTextAlignment(.leading)
-                    Spacer()
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .foregroundStyle(AppColors.textSecondary)
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityHint(isExpanded ? "Collapse" : "Expand")
-
-            if isExpanded {
-                Text(answer)
+        List(items) { item in
+            DisclosureGroup {
+                Text(item.answer)
                     .foregroundStyle(AppColors.textSecondary)
+                    .padding(.vertical, Spacing.xs)
+            } label: {
+                Text(item.question)
+                    .font(.headline)
+                    .foregroundStyle(AppColors.text)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .card()
+        .navigationTitle("FAQ")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }

@@ -14,8 +14,6 @@ struct TipsView: View {
                 }
             }
         }
-        .scrollContentBackground(.hidden)
-        .background(AppColors.background)
         .navigationTitle("Tips")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -25,19 +23,11 @@ private struct TipTopicView: View {
     let topic: FocusTips.Topic
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                ForEach(topic.tips, id: \.self) { tip in
-                    Text(tip)
-                        .font(.body)
-                        .foregroundStyle(AppColors.text)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .card()
-                }
-            }
-            .padding(20)
+        List(topic.tips, id: \.self) { tip in
+            Text(tip)
+                .foregroundStyle(AppColors.text)
+                .padding(.vertical, Spacing.xs)
         }
-        .background(AppColors.background)
         .navigationTitle(Text(topic.title))
         .navigationBarTitleDisplayMode(.inline)
     }

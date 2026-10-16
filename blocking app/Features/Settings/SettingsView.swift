@@ -80,8 +80,6 @@ struct SettingsView: View {
                     AccountSection()
                 }
             }
-            .scrollContentBackground(.hidden)
-            .background(AppColors.background)
             .navigationTitle("Settings")
         }
     }

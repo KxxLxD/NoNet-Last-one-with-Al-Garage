@@ -18,8 +18,8 @@ struct PartnerPINSheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 24) {
-                VStack(spacing: 8) {
+            VStack(spacing: Spacing.xl) {
+                VStack(spacing: Spacing.s) {
                     Image(systemName: "person.2.fill")
                         .font(.largeTitle)
                         .foregroundStyle(AppColors.primary)
@@ -50,7 +50,7 @@ struct PartnerPINSheet: View {
                         .foregroundStyle(AppColors.danger)
                 }
 
-                VStack(spacing: 12) {
+                VStack(spacing: Spacing.m) {
                     Button("Unlock", action: verify)
                         .buttonStyle(PrimaryButtonStyle())
                         .disabled(pin.count != PartnerStore.pinLength)
@@ -67,8 +67,8 @@ struct PartnerPINSheet: View {
 
                 Spacer()
             }
-            .padding(24)
-            .background(AppColors.background)
+            .padding(Spacing.xl)
+            .background(Color(.systemGroupedBackground))
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

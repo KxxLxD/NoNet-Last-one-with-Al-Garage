@@ -77,7 +77,7 @@ struct OnboardingView: View {
         }
         .tabViewStyle(.page(indexDisplayMode: .always))
         .indexViewStyle(.page(backgroundDisplayMode: .always))
-        .background(AppColors.background)
+        .background(Color(.systemGroupedBackground))
         .sheet(isPresented: $showForeverSetup) {
             ForeverSetupView { next() }
         }
@@ -96,13 +96,13 @@ private struct OnboardingPage<Actions: View>: View {
     @ViewBuilder var actions: Actions
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: Spacing.xl) {
             Spacer()
             Image(systemName: systemImage)
                 .font(.system(size: 72))
                 .foregroundStyle(AppColors.primary)
                 .frame(height: 96)
-            VStack(spacing: 12) {
+            VStack(spacing: Spacing.m) {
                 Text(title)
                     .font(.largeTitle.weight(.bold))
                     .foregroundStyle(AppColors.primary)
@@ -112,12 +112,12 @@ private struct OnboardingPage<Actions: View>: View {
             }
             .multilineTextAlignment(.center)
             Spacer()
-            VStack(spacing: 12) {
+            VStack(spacing: Spacing.m) {
                 actions
             }
-            .padding(.bottom, 56)
+            .padding(.bottom, Spacing.xxl * 2)
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, Spacing.xl)
     }
 }
 

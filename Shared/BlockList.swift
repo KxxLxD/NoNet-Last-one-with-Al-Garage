@@ -132,6 +132,19 @@ extension BlockList {
         }
     }
 
+    /// The next time a scheduled list starts later today, or nil.
+    func nextStartToday(after date: Date, calendar: Calendar = .current) -> Date? {
+        guard kind == .scheduled, !isActive(at: date, calendar: calendar) else { return nil }
+        let parts = calendar.dateComponents([.weekday, .hour, .minute], from: date)
+        guard let weekday = parts.weekday, let hour = parts.hour, let minute = parts.minute else { return nil }
+        let minuteOfDay = hour * 60 + minute
+        guard let start = slots
+            .filter({ $0.day == weekday - 1 && $0.fromMinutes > minuteOfDay })
+            .map(\.fromMinutes)
+            .min() else { return nil }
+        return calendar.date(byAdding: .minute, value: start, to: calendar.startOfDay(for: date))
+    }
+
     func isOnBreak(at date: Date) -> Bool {
         guard let breakUntil else { return false }
         return date < breakUntil

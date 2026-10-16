@@ -447,16 +447,6 @@
         }
       }
     },
-    "Add Apps & Websites": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إضافة تطبيقات ومواقع"
-          }
-        }
-      }
-    },
     "Add Slot": {
       "localizations": {
         "ar": {
@@ -467,22 +457,32 @@
         }
       }
     },
-    "Add at least one schedule slot": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "أضف فترة جدولة واحدة على الأقل"
-          }
-        }
-      }
-    },
     "Adult websites": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "مواقع البالغين"
+          }
+        }
+      }
+    },
+    "Adult websites use Apple's built-in content filter.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تستخدم مواقع البالغين فلتر المحتوى المدمج من Apple."
+          }
+        }
+      }
+    },
+    "Allow": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السماح"
           }
         }
       }
@@ -667,80 +667,6 @@
         }
       }
     },
-    "Block Forever · unlocks in %lld days": {
-      "localizations": {
-        "ar": {
-          "variations": {
-            "plural": {
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "احظر للأبد · يُلغى بعد %lld أيام"
-                }
-              },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "احظر للأبد · يُلغى بعد %lld يومًا"
-                }
-              },
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "احظر للأبد · يُلغى بعد يوم"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "احظر للأبد · يُلغى بعد %lld يوم"
-                }
-              },
-              "two": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "احظر للأبد · يُلغى بعد يومين"
-                }
-              },
-              "zero": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "احظر للأبد · يُلغى اليوم"
-                }
-              }
-            }
-          }
-        },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Block Forever · unlocks in %lld day"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Block Forever · unlocks in %lld days"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "Block Forever: porn, gambling and dating — blocked for good. Free forever.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "احظر للأبد: الإباحية والقمار والمواعدة — محظورة إلى الأبد. مجانًا إلى الأبد."
-          }
-        }
-      }
-    },
     "Block adult websites": {
       "localizations": {
         "ar": {
@@ -851,12 +777,12 @@
         }
       }
     },
-    "Breaks per 24 hours: %lld": {
+    "Breaks per day": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "عدد الاستراحات خلال 24 ساعة: %lld"
+            "value": "الاستراحات في اليوم"
           }
         }
       }
@@ -911,26 +837,6 @@
         }
       }
     },
-    "Check inputs": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تحقق من الإدخالات"
-          }
-        }
-      }
-    },
-    "Check name, items and duration": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تحقق من الاسم والعناصر والمدة"
-          }
-        }
-      }
-    },
     "Choose Apps & Categories": {
       "localizations": {
         "ar": {
@@ -951,22 +857,22 @@
         }
       }
     },
+    "Choose apps and websites, then block them now or on a schedule.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر التطبيقات والمواقع، ثم احظرها الآن أو وفق جدول."
+          }
+        }
+      }
+    },
     "Close": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "إغلاق"
-          }
-        }
-      }
-    },
-    "Collapse": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "طي"
           }
         }
       }
@@ -1131,32 +1037,12 @@
         }
       }
     },
-    "Edit Apps & Websites": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تعديل التطبيقات والمواقع"
-          }
-        }
-      }
-    },
     "Edit List": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "تحرير القائمة"
-          }
-        }
-      }
-    },
-    "Edit Schedule": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تحرير الجدول"
           }
         }
       }
@@ -1197,6 +1083,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "إنهاء الاستراحة"
+          }
+        }
+      }
+    },
+    "Ends": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تنتهي"
           }
         }
       }
@@ -1247,26 +1143,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "كل ما تحتاجه لتبقى على المسار الصحيح."
-          }
-        }
-      }
-    },
-    "Expand": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "توسيع"
-          }
-        }
-      }
-    },
-    "Extra Options": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "خيارات إضافية"
           }
         }
       }
@@ -1331,16 +1207,6 @@
         }
       }
     },
-    "Frequently Asked Questions": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الأسئلة الشائعة"
-          }
-        }
-      }
-    },
     "From": {
       "localizations": {
         "ar": {
@@ -1381,32 +1247,12 @@
         }
       }
     },
-    "Get told when a session or break ends.": {
+    "Get told when a list starts or ends.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "لتنبيهك عند انتهاء الجلسة أو الاستراحة."
-          }
-        }
-      }
-    },
-    "Grant": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "منح"
-          }
-        }
-      }
-    },
-    "Granted": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تم"
+            "value": "احصل على إشعار عند بدء القائمة أو انتهائها."
           }
         }
       }
@@ -1437,16 +1283,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "الوضع الصارم"
-          }
-        }
-      }
-    },
-    "Hard Mode allows no breaks.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لا يسمح الوضع الصارم بالاستراحات."
           }
         }
       }
@@ -1521,16 +1357,6 @@
         }
       }
     },
-    "Hours": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الساعات"
-          }
-        }
-      }
-    },
     "How do scheduled lists work?": {
       "localizations": {
         "ar": {
@@ -1591,22 +1417,22 @@
         }
       }
     },
+    "Later Today": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لاحقًا اليوم"
+          }
+        }
+      }
+    },
     "Length of each break": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "مدة كل استراحة"
-          }
-        }
-      }
-    },
-    "List created": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تم إنشاء القائمة"
           }
         }
       }
@@ -1621,12 +1447,12 @@
         }
       }
     },
-    "List updated": {
+    "Lists": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تم تحديث القائمة"
+            "value": "القوائم"
           }
         }
       }
@@ -1681,32 +1507,12 @@
         }
       }
     },
-    "Minutes": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الدقائق"
-          }
-        }
-      }
-    },
     "Name": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "الاسم"
-          }
-        }
-      }
-    },
-    "Name is too short": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الاسم قصير جدًا"
           }
         }
       }
@@ -1781,6 +1587,16 @@
         }
       }
     },
+    "Nothing else is scheduled today": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد قوائم أخرى مجدولة اليوم"
+          }
+        }
+      }
+    },
     "Nothing is blocking right now": {
       "localizations": {
         "ar": {
@@ -1827,6 +1643,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "حسنًا"
+          }
+        }
+      }
+    },
+    "On": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفعّل"
           }
         }
       }
@@ -1961,12 +1787,12 @@
         }
       }
     },
-    "Permissions required": {
+    "Permissions": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الأذونات المطلوبة"
+            "value": "الأذونات"
           }
         }
       }
@@ -1987,6 +1813,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "السياسات والشروط"
+          }
+        }
+      }
+    },
+    "Porn, gambling and dating — blocked for good. Free forever.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإباحية والقمار والمواعدة — محظورة إلى الأبد. مجانًا إلى الأبد."
           }
         }
       }
@@ -2051,12 +1887,12 @@
         }
       }
     },
-    "Protecting you since %@": {
+    "Protecting you since": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يحميك منذ %@"
+            "value": "يحميك منذ"
           }
         }
       }
@@ -2203,16 +2039,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "هل تريد طلب الإلغاء؟"
-          }
-        }
-      }
-    },
-    "Required (%lld)": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "مطلوبة (%lld)"
           }
         }
       }
@@ -2407,16 +2233,6 @@
         }
       }
     },
-    "Select at least 5 minutes": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اختر مدة لا تقل عن 5 دقائق"
-          }
-        }
-      }
-    },
     "Selected apps open to the Samla block screen while the list is active.": {
       "localizations": {
         "ar": {
@@ -2433,6 +2249,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الإعدادات"
+          }
+        }
+      }
+    },
+    "Short breaks let you open blocked apps for a few minutes.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تتيح لك الاستراحات القصيرة فتح التطبيقات المحظورة لبضع دقائق."
           }
         }
       }
@@ -2563,6 +2389,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "ابدأ أول قائمة حظر"
+          }
+        }
+      }
+    },
+    "Starts %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تبدأ %@"
           }
         }
       }
@@ -2847,6 +2683,70 @@
         }
       }
     },
+    "Unlocks in %lld days": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "يُلغى بعد %lld أيام"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "يُلغى بعد %lld يومًا"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "يُلغى بعد يوم"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "يُلغى بعد %lld يوم"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "يُلغى بعد يومين"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "يُلغى اليوم"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Unlocks in %lld day"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Unlocks in %lld days"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Unlocks on %@": {
       "localizations": {
         "ar": {
@@ -2877,22 +2777,12 @@
         }
       }
     },
-    "Uses Apple's built-in adult content filter.": {
+    "Version": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يستخدم فلتر Apple المدمج لمحتوى البالغين."
-          }
-        }
-      }
-    },
-    "Version %@": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الإصدار %@"
+            "value": "الإصدار"
           }
         }
       }
@@ -3107,16 +2997,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "الحد الأقصى للمواقع في كل قائمة: %lld."
-          }
-        }
-      }
-    },
-    "Your Lists": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "قوائمك"
           }
         }
       }

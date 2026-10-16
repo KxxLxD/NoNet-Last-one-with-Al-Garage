@@ -14,14 +14,14 @@ struct PremiumSoonView: View {
     @AppStorage(StorageKey.premiumNotifyMe) private var notifyMe = false
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                VStack(spacing: 12) {
+        List {
+            Section {
+                VStack(spacing: Spacing.m) {
                     Image(systemName: "sparkles")
-                        .font(.system(size: 52))
+                        .font(.system(size: 48))
                         .foregroundStyle(AppColors.primary)
                     Text("Premium is coming soon")
-                        .font(.title.weight(.bold))
+                        .font(.title2.weight(.bold))
                         .foregroundStyle(AppColors.primary)
                     if reason == .listLimit {
                         Text("The free version holds \(ListsModel.freeListLimit) lists. Premium will remove the limit.")
@@ -30,31 +30,28 @@ struct PremiumSoonView: View {
                     }
                 }
                 .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .listRowBackground(Color.clear)
+            }
 
-                VStack(alignment: .leading, spacing: 16) {
-                    feature("infinity", "Unlimited lists")
-                    feature("trophy.fill", "Challenges with points and levels")
-                    feature("square.stack.fill", "Ready-made list templates")
-                    feature("moon.stars.fill", "Blocking during prayer times")
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .card()
-
+            Section {
+                feature("infinity", "Unlimited lists")
+                feature("trophy.fill", "Challenges with points and levels")
+                feature("square.stack.fill", "Ready-made list templates")
+                feature("moon.stars.fill", "Blocking during prayer times")
+            } footer: {
                 Text("Block Forever stays free forever.")
-                    .font(.footnote)
-                    .foregroundStyle(AppColors.textSecondary)
+            }
 
+            Section {
                 Button {
                     notifyMe = true
                 } label: {
                     Label(notifyMe ? "We'll let you know" : "Notify Me", systemImage: notifyMe ? "checkmark" : "bell.fill")
                 }
-                .buttonStyle(PrimaryButtonStyle())
                 .disabled(notifyMe)
             }
-            .padding(20)
         }
-        .background(AppColors.background)
         .navigationTitle("Premium")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -72,7 +69,6 @@ struct PremiumSoonView: View {
         } icon: {
             Image(systemName: systemImage).foregroundStyle(AppColors.primary)
         }
-        .font(.body)
     }
 }
 

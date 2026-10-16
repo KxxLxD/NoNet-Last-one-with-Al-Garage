@@ -15,7 +15,7 @@ struct AccountSection: View {
     var body: some View {
         Group {
             if account.isSignedIn {
-                HStack(spacing: 12) {
+                HStack(spacing: Spacing.m) {
                     Image(systemName: "apple.logo")
                         .font(.title3)
                     VStack(alignment: .leading, spacing: 2) {
@@ -29,7 +29,7 @@ struct AccountSection: View {
                 }
                 Button("Log out") { confirmSignOut = true }
             } else {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: Spacing.m) {
                     Text("Optional. Samla works fully without an account.")
                         .font(.footnote)
                         .foregroundStyle(AppColors.textSecondary)
@@ -47,7 +47,7 @@ struct AccountSection: View {
                             .foregroundStyle(AppColors.danger)
                     }
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, Spacing.xs)
             }
 
             Button("Delete Account & Data", role: .destructive) { confirmDelete = true }
