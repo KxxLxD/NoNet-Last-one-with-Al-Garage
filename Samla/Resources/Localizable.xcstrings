@@ -219,6 +219,16 @@
         }
       }
     },
+    "%lld of %lld": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld من %2$lld"
+          }
+        }
+      }
+    },
     "%lld of %lld left": {
       "localizations": {
         "ar": {
@@ -393,6 +403,16 @@
         }
       }
     },
+    "A few helpful notifications, never spam.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إشعارات قليلة ومفيدة، بلا إزعاج."
+          }
+        }
+      }
+    },
     "A free, permanent filter for porn, gambling and dating websites. You can also lock every 17+ app. To turn it off you request an unlock and wait 360 days, or your partner enters their PIN.": {
       "localizations": {
         "ar": {
@@ -409,6 +429,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "لديك قائمة نشطة في الوضع الصارم أو محمية بالشريك، أو أن «احظر للأبد» مفعّل. ينتهي الوضع الصارم بانتهاء القائمة، وينتهي «احظر للأبد» بعد 360 يومًا من طلب الإلغاء، أو قبل ذلك برمز شريكك."
+          }
+        }
+      }
+    },
+    "A minute before a break ends": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قبل انتهاء الاستراحة بدقيقة"
+          }
+        }
+      }
+    },
+    "A real commitment for the weak moments.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التزام حقيقي للحظات الضعف."
+          }
+        }
+      }
+    },
+    "A verse, hadith or saying to keep you going.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آية أو حديث أو حكمة تعينك على الاستمرار."
           }
         }
       }
@@ -563,6 +613,36 @@
         }
       }
     },
+    "Apple keeps the apps you choose private, even from Samla.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تُبقي Apple التطبيقات التي تختارها خاصة حتى عن الصملة."
+          }
+        }
+      }
+    },
+    "Apple only lets apps block other apps through Screen Time.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا تسمح Apple للتطبيقات بحظر تطبيقات أخرى إلا عبر «مدة استخدام الجهاز»."
+          }
+        }
+      }
+    },
+    "Apple will ask you to allow it next.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ستطلب منك Apple السماح بذلك في الخطوة التالية."
+          }
+        }
+      }
+    },
     "Apps": {
       "localizations": {
         "ar": {
@@ -683,6 +763,16 @@
         }
       }
     },
+    "Block Forever keeps porn, gambling and dating away.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«احظر للأبد» يُبعد عنك الإباحية والقمار والمواعدة."
+          }
+        }
+      }
+    },
     "Block Forever stays free forever.": {
       "localizations": {
         "ar": {
@@ -699,6 +789,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "حظر مواقع البالغين"
+          }
+        }
+      }
+    },
+    "Block distractions": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "احظر المشتتات"
           }
         }
       }
@@ -739,6 +839,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "محظورة"
+          }
+        }
+      }
+    },
+    "Blocked in every browser. Free forever.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محظورة في جميع المتصفحات. مجانًا إلى الأبد."
           }
         }
       }
@@ -809,6 +919,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الاستراحات في اليوم"
+          }
+        }
+      }
+    },
+    "Can't be deleted while on": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يمكن حذفه أثناء تفعيله"
           }
         }
       }
@@ -889,6 +1009,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اختر «جدولة» ضمن «متى»، ثم أضف الأيام والأوقات. يبدأ الحظر ويتوقف تلقائيًا حتى عندما يكون الصملة مغلقًا."
+          }
+        }
+      }
+    },
+    "Choose apps and websites, and block them now or on a schedule.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر التطبيقات والمواقع، واحظرها الآن أو وفق جدول."
           }
         }
       }
@@ -989,6 +1119,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "متابعة"
+          }
+        }
+      }
+    },
+    "Continue Without It": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المتابعة بدونه"
           }
         }
       }
@@ -1643,6 +1783,16 @@
         }
       }
     },
+    "Needed to block": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ضروري للحظر"
+          }
+        }
+      }
+    },
     "New List": {
       "localizations": {
         "ar": {
@@ -1793,6 +1943,16 @@
         }
       }
     },
+    "One gentle daily reminder": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تذكير يومي لطيف"
+          }
+        }
+      }
+    },
     "Only your partner should type the PIN.": {
       "localizations": {
         "ar": {
@@ -1839,6 +1999,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اختياري. يعمل الصملة بالكامل بدون حساب."
+          }
+        }
+      }
+    },
+    "Or sooner with your accountability partner's PIN.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أو قبل ذلك برمز شريك المساءلة."
           }
         }
       }
@@ -1943,6 +2113,16 @@
         }
       }
     },
+    "Porn, gambling and dating": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإباحية والقمار والمواعدة"
+          }
+        }
+      }
+    },
     "Porn, gambling and dating — blocked for good. Free forever.": {
       "localizations": {
         "ar": {
@@ -1989,6 +2169,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "سياسة الخصوصية"
+          }
+        }
+      }
+    },
+    "Private by design": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خصوصيتك محفوظة"
+          }
+        }
+      }
+    },
+    "Protect yourself for good": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "احمِ نفسك إلى الأبد"
           }
         }
       }
@@ -2185,6 +2385,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "لا يمكن حذف الصملة من هاتفك أثناء تفعيله."
+          }
+        }
+      }
+    },
+    "Samla can't see your activity": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يرى الصملة نشاطك"
           }
         }
       }
@@ -2399,6 +2609,16 @@
         }
       }
     },
+    "Skip for Now": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تخطَّ الآن"
+          }
+        }
+      }
+    },
     "Sleep": {
       "localizations": {
         "ar": {
@@ -2415,6 +2635,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الفترات"
+          }
+        }
+      }
+    },
+    "So you always know what's blocked.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لتعرف دائمًا ما المحظور."
           }
         }
       }
@@ -2609,6 +2839,16 @@
         }
       }
     },
+    "Take back your time, and protect yourself.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استعِد وقتك، واحمِ نفسك."
+          }
+        }
+      }
+    },
     "Telegram Channel": {
       "localizations": {
         "ar": {
@@ -2685,6 +2925,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الوقت كالسيف، إن لم تقطعه قطعك."
+          }
+        }
+      }
+    },
+    "Time to wrap up.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حان وقت الإنهاء."
           }
         }
       }
@@ -2775,6 +3025,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تفعيل"
+          }
+        }
+      }
+    },
+    "Turning it off takes 360 days": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إيقافه يحتاج 360 يومًا"
           }
         }
       }
@@ -3003,6 +3263,16 @@
         }
       }
     },
+    "When a list starts or ends": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عند بدء القائمة أو انتهائها"
+          }
+        }
+      }
+    },
     "Where does my data go?": {
       "localizations": {
         "ar": {
@@ -3049,6 +3319,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "لماذا لا أستطيع حذف التطبيق؟"
+          }
+        }
+      }
+    },
+    "Without Screen Time, Samla can't block anything. You can allow it later from Home.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بدون «مدة استخدام الجهاز» لا يستطيع الصملة حظر أي شيء. يمكنك السماح بذلك لاحقًا من الرئيسية."
           }
         }
       }
@@ -3133,6 +3413,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "الحد الأقصى للمواقع في كل قائمة: %lld."
+          }
+        }
+      }
+    },
+    "You can change it anytime in iOS Settings.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يمكنك تغييره في أي وقت من إعدادات iOS."
+          }
+        }
+      }
+    },
+    "You stay in control": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التحكم بيدك"
           }
         }
       }
