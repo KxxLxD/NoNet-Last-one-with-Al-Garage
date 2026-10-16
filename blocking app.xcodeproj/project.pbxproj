@@ -34,6 +34,13 @@
 			remoteGlobalIDString = AA3000000000000000000003;
 			remoteInfo = SamlaShieldAction;
 		};
+		FBE41E2E3082E3C700852C04 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FB0E17742E697E9B00AA0757 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FB0E177B2E697E9B00AA0757;
+			remoteInfo = "blocking app";
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -57,6 +64,7 @@
 		AA2000000000000000000002 /* SamlaShield.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SamlaShield.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA3000000000000000000002 /* SamlaShieldAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SamlaShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB0E177C2E697E9B00AA0757 /* blocking app.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "blocking app.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FBE41E273082E3C700852C04 /* SamlaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SamlaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -83,6 +91,11 @@
 		FB0E177E2E697E9B00AA0757 /* blocking app */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "blocking app";
+			sourceTree = "<group>";
+		};
+		FBE41E283082E3C700852C04 /* SamlaTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SamlaTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -116,6 +129,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FBE41E243082E3C700852C04 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -127,6 +147,7 @@
 				AA10000000000000000000A1 /* SamlaMonitor */,
 				AA2000000000000000000001 /* SamlaShield */,
 				AA3000000000000000000001 /* SamlaShieldAction */,
+				FBE41E283082E3C700852C04 /* SamlaTests */,
 				FB0E177D2E697E9B00AA0757 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -138,6 +159,7 @@
 				AA10000000000000000000A3 /* SamlaMonitor.appex */,
 				AA2000000000000000000002 /* SamlaShield.appex */,
 				AA3000000000000000000002 /* SamlaShieldAction.appex */,
+				FBE41E273082E3C700852C04 /* SamlaTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -241,6 +263,29 @@
 			productReference = FB0E177C2E697E9B00AA0757 /* blocking app.app */;
 			productType = "com.apple.product-type.application";
 		};
+		FBE41E263082E3C700852C04 /* SamlaTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FBE41E2D3082E3C700852C04 /* Build configuration list for PBXNativeTarget "SamlaTests" */;
+			buildPhases = (
+				FBE41E233082E3C700852C04 /* Sources */,
+				FBE41E243082E3C700852C04 /* Frameworks */,
+				FBE41E253082E3C700852C04 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FBE41E2F3082E3C700852C04 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				FBE41E283082E3C700852C04 /* SamlaTests */,
+			);
+			name = SamlaTests;
+			packageProductDependencies = (
+			);
+			productName = SamlaTests;
+			productReference = FBE41E273082E3C700852C04 /* SamlaTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -248,7 +293,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1640;
+				LastSwiftUpdateCheck = 2700;
 				LastUpgradeCheck = 1640;
 				TargetAttributes = {
 					AA10000000000000000000A4 = {
@@ -262,6 +307,9 @@
 					};
 					FB0E177B2E697E9B00AA0757 = {
 						CreatedOnToolsVersion = 16.4;
+					};
+					FBE41E263082E3C700852C04 = {
+						CreatedOnToolsVersion = 27.0;
 					};
 				};
 			};
@@ -284,6 +332,7 @@
 				AA10000000000000000000A4 /* SamlaMonitor */,
 				AA2000000000000000000003 /* SamlaShield */,
 				AA3000000000000000000003 /* SamlaShieldAction */,
+				FBE41E263082E3C700852C04 /* SamlaTests */,
 			);
 		};
 /* End PBXProject section */
@@ -311,6 +360,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		FB0E177A2E697E9B00AA0757 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FBE41E253082E3C700852C04 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -348,6 +404,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FBE41E233082E3C700852C04 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -365,6 +428,11 @@
 			isa = PBXTargetDependency;
 			target = AA3000000000000000000003 /* SamlaShieldAction */;
 			targetProxy = AA300000000000000000000B /* PBXContainerItemProxy */;
+		};
+		FBE41E2F3082E3C700852C04 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FB0E177B2E697E9B00AA0757 /* blocking app */;
+			targetProxy = FBE41E2E3082E3C700852C04 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -720,6 +788,52 @@
 			};
 			name = Release;
 		};
+		FBE41E2B3082E3C700852C04 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.samla.SamlaTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/blocking app.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/blocking app";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+			};
+			name = Debug;
+		};
+		FBE41E2C3082E3C700852C04 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.samla.SamlaTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/blocking app.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/blocking app";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -764,6 +878,15 @@
 			buildConfigurations = (
 				FB0E17882E697E9C00AA0757 /* Debug */,
 				FB0E17892E697E9C00AA0757 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FBE41E2D3082E3C700852C04 /* Build configuration list for PBXNativeTarget "SamlaTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FBE41E2B3082E3C700852C04 /* Debug */,
+				FBE41E2C3082E3C700852C04 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
