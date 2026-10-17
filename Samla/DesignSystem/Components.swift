@@ -235,3 +235,18 @@ extension ProtectionMode {
         }
     }
 }
+
+/// iOS Settings–style icon: a white symbol on a rounded colored square.
+struct IconSquare: View {
+    let systemName: String
+    var color: Color = AppColors.primary
+
+    var body: some View {
+        Image(systemName: systemName)
+            .font(.system(size: 15, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(width: 30, height: 30)
+            .background(color, in: RoundedRectangle(cornerRadius: 7))
+            .accessibilityHidden(true)
+    }
+}

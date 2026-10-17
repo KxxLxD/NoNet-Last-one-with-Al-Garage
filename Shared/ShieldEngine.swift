@@ -31,6 +31,14 @@ enum ShieldEngine {
         // Block Forever domains go first so they always fit under the filter cap.
         var domains: [String] = foreverActive ? ForeverBlock.blockedDomains : []
         var filtersAdultContent = foreverActive
+        // No Internet mode: everything is shielded except the apps/sites the user allowed.
+        let everythingLists = shielding.filter(\.blocksEverything)
+        var allowedApps = Set<ApplicationToken>()
+        var allowedWebTokens = Set<WebDomainToken>()
+        for list in everythingLists {
+            allowedApps.formUnion(list.allowedSelection.applicationTokens)
+            allowedWebTokens.formUnion(list.allowedSelection.webDomainTokens)
+        }
 
         for list in shielding {
             applications.formUnion(list.selection.applicationTokens)
@@ -48,7 +56,11 @@ enum ShieldEngine {
         store.shield.webDomainCategories = categories.isEmpty ? nil : .specific(categories)
         store.shield.webDomains = webTokens.isEmpty ? nil : webTokens
 
-        if filtersAdultContent {
+        if !everythingLists.isEmpty {
+            store.shield.applicationCategories = .all(except: allowedApps)
+            store.shield.webDomainCategories = .all(except: allowedWebTokens)
+            store.webContent.blockedByFilter = .all()
+        } else if filtersAdultContent {
             store.webContent.blockedByFilter = .auto(filterDomains)
         } else {
             store.webContent.blockedByFilter = filterDomains.isEmpty ? nil : .specific(filterDomains)

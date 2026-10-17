@@ -202,3 +202,35 @@ struct AppLocaleTests {
         #expect(360.formatted(.number.locale(.app)) == "360")
     }
 }
+
+// MARK: - Safety & localization
+
+@Suite("Start confirmation")
+struct StartConfirmationTests {
+    @Test(arguments: [(ProtectionMode.none, false), (.hard, true), (.partner, true)])
+    func onlyProtectedListsAskBeforeStarting(protection: ProtectionMode, asks: Bool) {
+        var list = BlockList(name: "Focus")
+        list.protection = protection
+        #expect(list.startNeedsConfirmation == asks)
+    }
+}
+
+@Suite("Localization")
+struct LocalizationTests {
+    /// Arabic is the main audience: no string may fall back to English.
+    @Test func everyStringHasAnArabicTranslation() throws {
+        let url = URL(filePath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appending(path: "Samla/Resources/Localizable.xcstrings")
+        let catalog = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any]
+        let strings = try #require(catalog?["strings"] as? [String: [String: Any]])
+        let missing = strings.filter { _, entry in
+            guard entry["shouldTranslate"] as? Bool != false,
+                  entry["extractionState"] as? String != "stale" else { return false }
+            let arabic = (entry["localizations"] as? [String: Any])?["ar"] as? [String: Any]
+            return arabic?["stringUnit"] == nil && arabic?["variations"] == nil
+        }
+        #expect(missing.isEmpty, "Missing Arabic: \(missing.keys.sorted())")
+    }
+}

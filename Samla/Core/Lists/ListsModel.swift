@@ -126,6 +126,8 @@ final class ListsModel {
         updated.websites = edited.websites
         updated.selection = edited.selection
         updated.blockAdultContent = edited.blockAdultContent
+        updated.blocksEverything = edited.blocksEverything
+        updated.allowedSelection = edited.allowedSelection
         updated.breaks = edited.breaks
         updated.updatedAt = now
         if updated.kind == .scheduled { updated.session = nil }

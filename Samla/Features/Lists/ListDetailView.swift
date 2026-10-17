@@ -18,12 +18,13 @@ struct ListDetailView: View {
     @State private var confirmDelete = false
     @State private var deleteApproved = false
     @State private var pendingPartnerAction: PartnerAction?
+    @State private var pendingStart: BlockList?
 
     var body: some View {
         Group {
             if let list = model.list(withID: listID) {
-                TimelineView(.periodic(from: .now, by: 30)) { context in
-                    content(list, now: context.date)
+                TimelineView(.periodic(from: .now, by: 30)) { _ in
+                    content(list, now: .now)
                 }
             } else {
                 ContentUnavailableView("List not found", systemImage: "list.bullet.rectangle")
@@ -48,6 +49,7 @@ struct ListDetailView: View {
         } message: {
             Text("Are you sure you want to delete this list?")
         }
+        .startConfirmation(for: $pendingStart)
     }
 
     private func content(_ list: BlockList, now: Date) -> some View {
@@ -131,7 +133,14 @@ struct ListDetailView: View {
                         }
                         .disabled(hardLocked)
                     } else {
-                        Button("Start") { Haptics.success(); model.start(list.id) }
+                        Button("Start") {
+                            if list.startNeedsConfirmation {
+                                pendingStart = list
+                            } else {
+                                Haptics.success()
+                                model.start(list.id)
+                            }
+                        }
                     }
                 }
                 Button("Delete List", role: .destructive) {

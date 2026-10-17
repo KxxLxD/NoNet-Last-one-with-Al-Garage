@@ -1,307 +1,219 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "%@ free trial": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تجربة مجانية لمدة %@"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "·" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "·"
           }
         }
       }
     },
-    "%@ × %@ per day": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ × %2$@ في اليوم"
+    "“%@” has ended. Great work!" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "انتهت «%@». أحسنت!"
+          }
+        }
+      }
+    },
+    "“%@” is now blocking." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بدأ حظر «%@» الآن."
+          }
+        }
+      }
+    },
+    "“%@” starts blocking again soon." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سيعود حظر «%@» بعد قليل."
+          }
+        }
+      }
+    },
+    "“Allah does not change the condition of a people until they change what is in themselves.” — Ar-Ra’d 13:11" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "﴿إِنَّ اللَّهَ لَا يُغَيِّرُ مَا بِقَوْمٍ حَتَّىٰ يُغَيِّرُوا مَا بِأَنفُسِهِمْ﴾ — الرعد: 11"
+          }
+        }
+      }
+    },
+    "“As for those who strive for Us, We will surely guide them to Our ways.” — Al-Ankabut 29:69" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "﴿وَالَّذِينَ جَاهَدُوا فِينَا لَنَهْدِيَنَّهُمْ سُبُلَنَا﴾ — العنكبوت: 69"
+          }
+        }
+      }
+    },
+    "“By time, indeed mankind is in loss.” — Al-Asr 103:1–2" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "﴿وَالْعَصْرِ ۝ إِنَّ الْإِنسَانَ لَفِي خُسْرٍ﴾ — العصر: 1–2"
+          }
+        }
+      }
+    },
+    "“Part of a person’s good Islam is leaving what doesn’t concern him.” — At-Tirmidhi" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«مِنْ حُسْنِ إِسْلَامِ الْمَرْءِ تَرْكُهُ مَا لَا يَعْنِيهِ» — رواه الترمذي"
+          }
+        }
+      }
+    },
+    "“Strive for what benefits you, seek Allah’s help, and don’t give up.” — Muslim" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«احْرِصْ عَلَى مَا يَنْفَعُكَ، وَاسْتَعِنْ بِاللَّهِ وَلَا تَعْجَزْ» — رواه مسلم"
+          }
+        }
+      }
+    },
+    "“Tell the believing men to lower their gaze.”" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "﴿قُل لِّلْمُؤْمِنِينَ يَغُضُّوا مِنْ أَبْصَارِهِمْ﴾"
+          }
+        }
+      }
+    },
+    "“Tell the believing men to lower their gaze.” — An-Nur 24:30" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "﴿قُل لِّلْمُؤْمِنِينَ يَغُضُّوا مِنْ أَبْصَارِهِمْ﴾ — النور: 30"
+          }
+        }
+      }
+    },
+    "“There are two blessings many people are cheated of: health and free time.” — Al-Bukhari" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«نِعْمَتَانِ مَغْبُونٌ فِيهِمَا كَثِيرٌ مِنَ النَّاسِ: الصِّحَّةُ وَالفَرَاغُ» — رواه البخاري"
+          }
+        }
+      }
+    },
+    "/ %@" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "/ %@"
+          }
+        }
+      }
+    },
+    "%@ × %@ per day" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ × %2$@ في اليوم"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "%1$@ × %2$@ per day"
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ × %2$@ per day"
           }
         }
       }
     },
-    "%lld apps": {
-      "localizations": {
-        "ar": {
-          "variations": {
-            "plural": {
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld تطبيقات"
-                }
-              },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld تطبيقًا"
-                }
-              },
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "تطبيق واحد"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld تطبيق"
-                }
-              },
-              "two": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "تطبيقان"
-                }
-              },
-              "zero": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "لا توجد تطبيقات"
-                }
-              }
-            }
-          }
-        },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld app"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld apps"
-                }
-              }
-            }
+    "%@ free trial" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تجربة مجانية لمدة %@"
           }
         }
       }
     },
-    "%lld days": {
-      "localizations": {
-        "ar": {
-          "variations": {
-            "plural": {
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld أيام"
+    "%lld apps" : {
+      "localizations" : {
+        "ar" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld تطبيقات"
                 }
               },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld يومًا"
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld تطبيقًا"
                 }
               },
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "يوم واحد"
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "تطبيق واحد"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld يوم"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld تطبيق"
                 }
               },
-              "two": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "يومان"
+              "two" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "تطبيقان"
                 }
               },
-              "zero": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "لا أيام"
-                }
-              }
-            }
-          }
-        },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld day"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld days"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "%lld days left": {
-      "localizations": {
-        "ar": {
-          "variations": {
-            "plural": {
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "متبقٍّ %lld أيام"
-                }
-              },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "متبقٍّ %lld يومًا"
-                }
-              },
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "متبقٍّ يوم واحد"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "متبقٍّ %lld يوم"
-                }
-              },
-              "two": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "متبقٍّ يومان"
-                }
-              },
-              "zero": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "انتهت المدة"
-                }
-              }
-            }
-          }
-        },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld day left"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld days left"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "%lld of %lld": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$lld من %2$lld"
-          }
-        }
-      }
-    },
-    "%lld of %lld left": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "متبقٍّ %1$lld من %2$lld"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "%1$lld of %2$lld left"
-          }
-        }
-      }
-    },
-    "%lld time slots": {
-      "localizations": {
-        "ar": {
-          "variations": {
-            "plural": {
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld فترات"
-                }
-              },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld فترة"
-                }
-              },
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "فترة واحدة"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld فترة"
-                }
-              },
-              "two": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "فترتان"
-                }
-              },
-              "zero": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "لا فترات"
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "لا توجد تطبيقات"
                 }
               }
             }
           }
         },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld time slot"
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld app"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld time slots"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld apps"
                 }
               }
             }
@@ -309,2823 +221,63 @@
         }
       }
     },
-    "%lld websites": {
-      "localizations": {
-        "ar": {
-          "variations": {
-            "plural": {
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld مواقع"
+    "%lld days" : {
+      "localizations" : {
+        "ar" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld أيام"
                 }
               },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld موقعًا"
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld يومًا"
                 }
               },
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "موقع واحد"
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "يوم واحد"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld موقع"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld يوم"
                 }
               },
-              "two": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "موقعان"
+              "two" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "يومان"
                 }
               },
-              "zero": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "لا توجد مواقع"
-                }
-              }
-            }
-          }
-        },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld website"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld websites"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/ %@": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "/ %@"
-          }
-        }
-      }
-    },
-    "17+ apps are locked": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تطبيقات 17+ مقفلة"
-          }
-        }
-      }
-    },
-    "4-digit PIN": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "رمز من 4 أرقام"
-          }
-        }
-      }
-    },
-    "A few helpful notifications, never spam.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إشعارات قليلة ومفيدة، بلا إزعاج."
-          }
-        }
-      }
-    },
-    "A free, permanent filter for porn, gambling and dating websites. You can also lock every 17+ app. To turn it off you request an unlock and wait 360 days, or your partner enters their PIN.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "فلتر مجاني ودائم لمواقع الإباحية والقمار والمواعدة، ويمكنك أيضًا قفل جميع تطبيقات 17+. لإيقافه تطلب الإلغاء وتنتظر 360 يومًا، أو يُدخل شريكك رمزه."
-          }
-        }
-      }
-    },
-    "A list in Hard Mode or protected by your partner is active, or Block Forever is on. Hard Mode ends when the list ends. Block Forever ends 360 days after you request an unlock, or sooner with your partner's PIN.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لديك قائمة نشطة في الوضع الصارم أو محمية بالشريك، أو أن «احظر للأبد» مفعّل. ينتهي الوضع الصارم بانتهاء القائمة، وينتهي «احظر للأبد» بعد 360 يومًا من طلب الإلغاء، أو قبل ذلك برمز شريكك."
-          }
-        }
-      }
-    },
-    "A minute before a break ends": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "قبل انتهاء الاستراحة بدقيقة"
-          }
-        }
-      }
-    },
-    "A real commitment for the weak moments.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "التزام حقيقي للحظات الضعف."
-          }
-        }
-      }
-    },
-    "A verse, hadith or saying to keep you going.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "آية أو حديث أو حكمة تعينك على الاستمرار."
-          }
-        }
-      }
-    },
-    "About Samla": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "عن الصملة"
-          }
-        }
-      }
-    },
-    "Account": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الحساب"
-          }
-        }
-      }
-    },
-    "Accountability Partner": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "شريك المساءلة"
-          }
-        }
-      }
-    },
-    "Active": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "مفعّلة الآن"
-          }
-        }
-      }
-    },
-    "Add": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إضافة"
-          }
-        }
-      }
-    },
-    "Add Slot": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إضافة فترة"
-          }
-        }
-      }
-    },
-    "Adult websites": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "مواقع البالغين"
-          }
-        }
-      }
-    },
-    "Adult websites use Apple's built-in content filter.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تستخدم مواقع البالغين فلتر المحتوى المدمج من Apple."
-          }
-        }
-      }
-    },
-    "Allow": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "السماح"
-          }
-        }
-      }
-    },
-    "Allow Samla to use Screen Time so it can block content.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اسمح للصملة باستخدام «مدة استخدام الجهاز» ليتمكن من حظر المحتوى."
-          }
-        }
-      }
-    },
-    "Allow Screen Time": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "السماح بمدة استخدام الجهاز"
-          }
-        }
-      }
-    },
-    "Also lock all 17+ apps": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "قفل جميع تطبيقات 17+ أيضًا"
-          }
-        }
-      }
-    },
-    "An-Nur 24:30": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "النور: 30"
-          }
-        }
-      }
-    },
-    "Apple Account": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "حساب Apple"
-          }
-        }
-      }
-    },
-    "Apple Standard EULA": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اتفاقية الترخيص القياسية من Apple"
-          }
-        }
-      }
-    },
-    "Apple keeps the apps you choose private, even from Samla.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تُبقي Apple التطبيقات التي تختارها خاصة حتى عن الصملة."
-          }
-        }
-      }
-    },
-    "Apple only lets apps block other apps through Screen Time.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لا تسمح Apple للتطبيقات بحظر تطبيقات أخرى إلا عبر «مدة استخدام الجهاز»."
-          }
-        }
-      }
-    },
-    "Apple will ask you to allow it next.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ستطلب منك Apple السماح بذلك في الخطوة التالية."
-          }
-        }
-      }
-    },
-    "Apps": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "التطبيقات"
-          }
-        }
-      }
-    },
-    "Apps & Categories": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "التطبيقات والفئات"
-          }
-        }
-      }
-    },
-    "Apps & Websites": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "التطبيقات والمواقع"
-          }
-        }
-      }
-    },
-    "Apps, categories and websites you choose are handled by Apple's Screen Time framework as private tokens; Samla cannot see which apps they are or how you use them.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تتعامل خدمة «مدة استخدام الجهاز» من Apple مع التطبيقات والفئات والمواقع التي تختارها كرموز خاصة؛ ولا يستطيع الصملة معرفة ماهيتها أو كيفية استخدامك لها."
-          }
-        }
-      }
-    },
-    "Are breaks allowed?": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "هل توجد استراحات؟"
-          }
-        }
-      }
-    },
-    "Are you sure you want to delete this list?": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "هل أنت متأكد من حذف هذه القائمة؟"
-          }
-        }
-      }
-    },
-    "Ask My Partner": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اطلب من شريكي"
-          }
-        }
-      }
-    },
-    "Ask someone you trust to be your partner. They type a 4-digit PIN that only they know. Lists protected by your partner can't be stopped without it.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اطلب من شخص تثق به أن يكون شريكك. يكتب رمزًا من 4 أرقام لا يعرفه سواه، ولا يمكن إيقاف القوائم المحمية بالشريك بدونه."
-          }
-        }
-      }
-    },
-    "At least 5 minutes": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "5 دقائق على الأقل"
-          }
-        }
-      }
-    },
-    "Back": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "رجوع"
-          }
-        }
-      }
-    },
-    "Block Forever": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "احظر للأبد"
-          }
-        }
-      }
-    },
-    "Block Forever is on": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "«احظر للأبد» مفعّل"
-          }
-        }
-      }
-    },
-    "Block Forever keeps porn, gambling and dating away.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "«احظر للأبد» يُبعد عنك الإباحية والقمار والمواعدة."
-          }
-        }
-      }
-    },
-    "Block Forever stays free forever.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يبقى «احظر للأبد» مجانيًا إلى الأبد."
-          }
-        }
-      }
-    },
-    "Block adult websites": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "حظر مواقع البالغين"
-          }
-        }
-      }
-    },
-    "Block distractions": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "احظر المشتتات"
-          }
-        }
-      }
-    },
-    "Block ended 🎉": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "انتهى الحظر 🎉"
-          }
-        }
-      }
-    },
-    "Block started": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "بدأ الحظر"
-          }
-        }
-      }
-    },
-    "Block the apps and websites that steal your time, and protect yourself for good.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "احظر التطبيقات والمواقع التي تسرق وقتك، واحمِ نفسك إلى الأبد."
-          }
-        }
-      }
-    },
-    "Blocked": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "محظورة"
-          }
-        }
-      }
-    },
-    "Blocked in every browser. Free forever.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "محظورة في جميع المتصفحات. مجانًا إلى الأبد."
-          }
-        }
-      }
-    },
-    "Blocking during prayer times": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الحظر في أوقات الصلاة"
-          }
-        }
-      }
-    },
-    "Blocking isn't working?": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الحظر لا يعمل؟"
-          }
-        }
-      }
-    },
-    "Blocks porn, gambling and dating websites in every browser.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يحظر مواقع الإباحية والقمار والمواعدة في جميع المتصفحات."
-          }
-        }
-      }
-    },
-    "Both need your partner's current PIN.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يتطلب كلاهما رمز شريكك الحالي."
-          }
-        }
-      }
-    },
-    "Break ends in a minute": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تنتهي الاستراحة بعد دقيقة"
-          }
-        }
-      }
-    },
-    "Breaks": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الاستراحات"
-          }
-        }
-      }
-    },
-    "Breaks per day": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الاستراحات في اليوم"
-          }
-        }
-      }
-    },
-    "Can't be deleted while on": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لا يمكن حذفه أثناء تفعيله"
-          }
-        }
-      }
-    },
-    "Can't be stopped, edited or deleted while active, and Samla can't be deleted. No breaks.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لا يمكن إيقافها أو تعديلها أو حذفها أثناء نشاطها، ولا يمكن حذف الصملة. بدون استراحات."
-          }
-        }
-      }
-    },
-    "Cancel": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إلغاء"
-          }
-        }
-      }
-    },
-    "Cancel Request": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إلغاء الطلب"
-          }
-        }
-      }
-    },
-    "Challenges with points and levels": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تحديات بالنقاط والمستويات"
-          }
-        }
-      }
-    },
-    "Change Apps": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تغيير التطبيقات"
-          }
-        }
-      }
-    },
-    "Change Partner": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تغيير الشريك"
-          }
-        }
-      }
-    },
-    "Choose Apps": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اختر التطبيقات"
-          }
-        }
-      }
-    },
-    "Choose Schedule under When, then add days and times. Blocking starts and stops automatically, even when Samla is closed.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اختر «جدولة» ضمن «متى»، ثم أضف الأيام والأوقات. يبدأ الحظر ويتوقف تلقائيًا حتى عندما يكون الصملة مغلقًا."
-          }
-        }
-      }
-    },
-    "Choose apps and websites, and block them now or on a schedule.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اختر التطبيقات والمواقع، واحظرها الآن أو وفق جدول."
-          }
-        }
-      }
-    },
-    "Choose apps and websites, then block them now or on a schedule.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اختر التطبيقات والمواقع، ثم احظرها الآن أو وفق جدول."
-          }
-        }
-      }
-    },
-    "Chosen apps open to the Samla block screen while the list is active.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تُفتح التطبيقات المختارة على شاشة حظر الصملة أثناء نشاط القائمة."
-          }
-        }
-      }
-    },
-    "Close": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إغلاق"
-          }
-        }
-      }
-    },
-    "Coming soon": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "قريبًا"
-          }
-        }
-      }
-    },
-    "Community": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "المجتمع"
-          }
-        }
-      }
-    },
-    "Confirm Changes": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تأكيد التغييرات"
-          }
-        }
-      }
-    },
-    "Confirm List": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تأكيد القائمة"
-          }
-        }
-      }
-    },
-    "Confirm PIN": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تأكيد الرمز"
-          }
-        }
-      }
-    },
-    "Contact Support": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تواصل مع الدعم"
-          }
-        }
-      }
-    },
-    "Continue": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "متابعة"
-          }
-        }
-      }
-    },
-    "Continue Without It": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "المتابعة بدونه"
-          }
-        }
-      }
-    },
-    "Create": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إنشاء"
-          }
-        }
-      }
-    },
-    "Create List": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "أنشئ قائمة"
-          }
-        }
-      }
-    },
-    "Days": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الأيام"
-          }
-        }
-      }
-    },
-    "Delete": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "حذف"
-          }
-        }
-      }
-    },
-    "Delete Account & Data": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "حذف الحساب والبيانات"
-          }
-        }
-      }
-    },
-    "Delete List": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "حذف القائمة"
-          }
-        }
-      }
-    },
-    "Delete your account?": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "حذف حسابك؟"
-          }
-        }
-      }
-    },
-    "Discipline is choosing what you want most over what you want now.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الانضباط أن تختار ما تريده أكثر، لا ما تريده الآن."
-          }
-        }
-      }
-    },
-    "Done": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تم"
-          }
-        }
-      }
-    },
-    "Duration": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "المدة"
-          }
-        }
-      }
-    },
-    "Edit": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تحرير"
-          }
-        }
-      }
-    },
-    "Edit List": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تحرير القائمة"
-          }
-        }
-      }
-    },
-    "Edit, stop or delete anytime.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يمكنك التعديل أو الإيقاف أو الحذف في أي وقت."
-          }
-        }
-      }
-    },
-    "Enable": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تفعيل"
-          }
-        }
-      }
-    },
-    "Enable Notifications": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تفعيل الإشعارات"
-          }
-        }
-      }
-    },
-    "End Break": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إنهاء الاستراحة"
-          }
-        }
-      }
-    },
-    "Ends": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تنتهي"
-          }
-        }
-      }
-    },
-    "Ends %@": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تنتهي %@"
-          }
-        }
-      }
-    },
-    "Enter a website like example.com": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "أدخل موقعًا مثل example.com"
-          }
-        }
-      }
-    },
-    "Every day": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "كل يوم"
-          }
-        }
-      }
-    },
-    "Everything stays on your device. Samla has no servers, collects no data and never sells anything. Apple's Screen Time keeps the apps you choose private, even from Samla.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تبقى جميع بياناتك على جهازك. لا يملك الصملة خوادم، ولا يجمع أي بيانات، ولا يبيع شيئًا. وتُبقي خدمة «مدة استخدام الجهاز» من Apple التطبيقات التي تختارها خاصة حتى عن الصملة."
-          }
-        }
-      }
-    },
-    "Everything stays on your device. We collect no data.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تبقى جميع بياناتك على جهازك. لا نجمع أي بيانات."
-          }
-        }
-      }
-    },
-    "Everything you need to stay on track.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "كل ما تحتاجه لتبقى على المسار الصحيح."
-          }
-        }
-      }
-    },
-    "FAQ": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الأسئلة الشائعة"
-          }
-        }
-      }
-    },
-    "Focus": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "التركيز"
-          }
-        }
-      }
-    },
-    "Forgot PIN?": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "هل نسيت الرمز؟"
-          }
-        }
-      }
-    },
-    "Forgot the PIN?": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "هل نسيت الرمز؟"
-          }
-        }
-      }
-    },
-    "Free": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "مجاني"
-          }
-        }
-      }
-    },
-    "Free forever.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "مجانًا إلى الأبد."
-          }
-        }
-      }
-    },
-    "From": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "من"
-          }
-        }
-      }
-    },
-    "Full Privacy Policy": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "سياسة الخصوصية كاملة"
-          }
-        }
-      }
-    },
-    "Games": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الألعاب"
-          }
-        }
-      }
-    },
-    "Get Started": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ابدأ"
-          }
-        }
-      }
-    },
-    "Get notified when a list starts or ends, and a minute before a break is over.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "احصل على إشعار عند بدء القائمة أو انتهائها، وقبل انتهاء الاستراحة بدقيقة."
-          }
-        }
-      }
-    },
-    "Get told when a list starts or ends.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "احصل على إشعار عند بدء القائمة أو انتهائها."
-          }
-        }
-      }
-    },
-    "Habits": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "العادات"
-          }
-        }
-      }
-    },
-    "Hand the phone to %@": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "أعطِ الهاتف إلى %@"
-          }
-        }
-      }
-    },
-    "Hard Mode": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الوضع الصارم"
-          }
-        }
-      }
-    },
-    "Hard Mode and partner protection": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الوضع الصارم وحماية الشريك"
-          }
-        }
-      }
-    },
-    "Hard Mode · unlocks %@": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الوضع الصارم · يُفتح %@"
-          }
-        }
-      }
-    },
-    "Healthy Alternatives": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "بدائل صحية"
-          }
-        }
-      }
-    },
-    "Help & Support": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "المساعدة والدعم"
-          }
-        }
-      }
-    },
-    "Hi, I need you to enter your Samla PIN on my phone to unlock “%@”. Can you help?": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "مرحبًا، أحتاج أن تُدخل رمزك في الصملة على هاتفي لإلغاء قفل «%@». هل يمكنك المساعدة؟"
-          }
-        }
-      }
-    },
-    "Hides and blocks every app rated 17+, which covers most dating and gambling apps. Some regular apps rated 17+ will be locked too.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يُخفي ويقفل كل تطبيق مصنّف 17+، وهذا يشمل معظم تطبيقات المواعدة والقمار. وستُقفل كذلك بعض التطبيقات العادية المصنّفة 17+."
-          }
-        }
-      }
-    },
-    "Home": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الرئيسية"
-          }
-        }
-      }
-    },
-    "Hours": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الساعات"
-          }
-        }
-      }
-    },
-    "How do scheduled lists work?": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "كيف تعمل القوائم المجدولة؟"
-          }
-        }
-      }
-    },
-    "How many lists can I create?": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "كم قائمة يمكنني إنشاؤها؟"
-          }
-        }
-      }
-    },
-    "I forgot my partner's PIN. What now?": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "نسيت رمز شريكي، ماذا أفعل؟"
-          }
-        }
-      }
-    },
-    "I understand, turn on": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "فهمت، فعّل"
-          }
-        }
-      }
-    },
-    "If you use Sign in with Apple, Samla stores only the anonymous Apple user identifier and the name you choose to share, on this device.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إذا استخدمت تسجيل الدخول بحساب Apple، يحفظ الصملة على هذا الجهاز معرّف Apple المجهول والاسم الذي تختار مشاركته فقط."
-          }
-        }
-      }
-    },
-    "Language": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اللغة"
-          }
-        }
-      }
-    },
-    "Later Today": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لاحقًا اليوم"
-          }
-        }
-      }
-    },
-    "Length of each break": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "مدة كل استراحة"
-          }
-        }
-      }
-    },
-    "List created": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تم إنشاء القائمة"
-          }
-        }
-      }
-    },
-    "List not found": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "القائمة غير موجودة"
-          }
-        }
-      }
-    },
-    "List updated": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تم تحديث القائمة"
-          }
-        }
-      }
-    },
-    "Lists": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "القوائم"
-          }
-        }
-      }
-    },
-    "Lists protected by your partner can only be stopped, edited or deleted with this PIN while they're active.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لا يمكن إيقاف القوائم المحمية بالشريك أو تعديلها أو حذفها أثناء نشاطها إلا بهذا الرمز."
-          }
-        }
-      }
-    },
-    "Locked": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "مقفلة"
-          }
-        }
-      }
-    },
-    "Log out": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تسجيل الخروج"
-          }
-        }
-      }
-    },
-    "Log out?": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تسجيل الخروج؟"
-          }
-        }
-      }
-    },
-    "Make sure Screen Time access is allowed. If Home shows a permissions card, tap it and allow access. Blocking only works on a real iPhone.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تأكد من السماح بالوصول إلى «مدة استخدام الجهاز». إذا ظهرت بطاقة الأذونات في الرئيسية، فاضغط عليها واسمح بالوصول. لا يعمل الحظر إلا على جهاز iPhone حقيقي."
-          }
-        }
-      }
-    },
-    "Minutes": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الدقائق"
-          }
-        }
-      }
-    },
-    "Name": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الاسم"
-          }
-        }
-      }
-    },
-    "Needed to block": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ضروري للحظر"
-          }
-        }
-      }
-    },
-    "New List": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "قائمة جديدة"
-          }
-        }
-      }
-    },
-    "No Protection": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "بدون حماية"
-          }
-        }
-      }
-    },
-    "No schedule yet": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لا توجد جدولة بعد"
-          }
-        }
-      }
-    },
-    "No slots": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لا توجد فترات"
-          }
-        }
-      }
-    },
-    "None": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "بدون"
-          }
-        }
-      }
-    },
-    "Not Now": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ليس الآن"
-          }
-        }
-      }
-    },
-    "Not set": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "غير محدد"
-          }
-        }
-      }
-    },
-    "Nothing else is scheduled today": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لا توجد قوائم أخرى مجدولة اليوم"
-          }
-        }
-      }
-    },
-    "Nothing is blocking right now": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لا يوجد حظر نشط الآن"
-          }
-        }
-      }
-    },
-    "Notifications": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الإشعارات"
-          }
-        }
-      }
-    },
-    "Notify Me": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "أعلمني"
-          }
-        }
-      }
-    },
-    "Now": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الآن"
-          }
-        }
-      }
-    },
-    "OK": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "حسنًا"
-          }
-        }
-      }
-    },
-    "On": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "مفعّل"
-          }
-        }
-      }
-    },
-    "On break": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "في استراحة"
-          }
-        }
-      }
-    },
-    "One gentle daily reminder": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تذكير يومي لطيف"
-          }
-        }
-      }
-    },
-    "Only your partner should type the PIN.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يجب أن يكتب شريكك الرمز بنفسه."
-          }
-        }
-      }
-    },
-    "Only your partner's PIN can stop, edit or delete it while active.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "أثناء نشاطها، لا يمكن إيقافها أو تعديلها أو حذفها إلا برمز شريكك."
-          }
-        }
-      }
-    },
-    "Open Settings": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "فتح الإعدادات"
-          }
-        }
-      }
-    },
-    "Open Settings › Accountability Partner and tap Forgot PIN. Your partner is removed after 7 days. Block Forever isn't affected and keeps its 360-day wait.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "افتح الإعدادات ‹ شريك المساءلة واضغط «هل نسيت الرمز؟». سيُزال شريكك بعد 7 أيام. لا يتأثر «احظر للأبد» ويبقى انتظاره 360 يومًا."
-          }
-        }
-      }
-    },
-    "Optional. Samla works fully without an account.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اختياري. يعمل الصملة بالكامل بدون حساب."
-          }
-        }
-      }
-    },
-    "Or sooner with your accountability partner's PIN.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "أو قبل ذلك برمز شريك المساءلة."
-          }
-        }
-      }
-    },
-    "PIN": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الرمز"
-          }
-        }
-      }
-    },
-    "PIN — your partner types it": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الرمز — يكتبه شريكك"
-          }
-        }
-      }
-    },
-    "Partner": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الشريك"
-          }
-        }
-      }
-    },
-    "Partner PIN": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "رمز الشريك"
-          }
-        }
-      }
-    },
-    "Partner removed on": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يُزال الشريك في"
-          }
-        }
-      }
-    },
-    "Partner's Name": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اسم الشريك"
-          }
-        }
-      }
-    },
-    "Payment is charged to your Apple Account at confirmation. Subscriptions renew automatically unless cancelled at least 24 hours before the end of the current period. Manage or cancel anytime in Settings › Apple Account › Subscriptions.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يُخصم المبلغ من حساب Apple عند التأكيد. يتجدد الاشتراك تلقائيًا ما لم يُلغَ قبل 24 ساعة على الأقل من نهاية الفترة الحالية. يمكنك الإدارة أو الإلغاء في أي وقت من الإعدادات ‹ حساب Apple ‹ الاشتراكات."
-          }
-        }
-      }
-    },
-    "Permissions": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الأذونات"
-          }
-        }
-      }
-    },
-    "Plans are unavailable right now. Check your connection and try again.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الخطط غير متاحة حاليًا. تحقق من اتصالك وحاول مرة أخرى."
-          }
-        }
-      }
-    },
-    "Policies & Terms": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "السياسات والشروط"
-          }
-        }
-      }
-    },
-    "Porn, gambling and dating": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الإباحية والقمار والمواعدة"
-          }
-        }
-      }
-    },
-    "Porn, gambling and dating — blocked for good. Free forever.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الإباحية والقمار والمواعدة — محظورة إلى الأبد. مجانًا إلى الأبد."
-          }
-        }
-      }
-    },
-    "Premium": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الاشتراك المميز"
-          }
-        }
-      }
-    },
-    "Premium is active. Thank you!": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الاشتراك المميز فعّال. شكرًا لك!"
-          }
-        }
-      }
-    },
-    "Premium is coming soon": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الاشتراك المميز قريبًا"
-          }
-        }
-      }
-    },
-    "Privacy Policy": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "سياسة الخصوصية"
-          }
-        }
-      }
-    },
-    "Private by design": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "خصوصيتك محفوظة"
-          }
-        }
-      }
-    },
-    "Protect yourself for good": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "احمِ نفسك إلى الأبد"
-          }
-        }
-      }
-    },
-    "Protected by your partner": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "محمية بشريكك"
-          }
-        }
-      }
-    },
-    "Protecting you since": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يحميك منذ"
-          }
-        }
-      }
-    },
-    "Protection": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الحماية"
-          }
-        }
-      }
-    },
-    "Protection stays fully on during the wait. You can cancel the request anytime.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تبقى الحماية مفعّلة بالكامل طوال فترة الانتظار، ويمكنك إلغاء الطلب في أي وقت."
-          }
-        }
-      }
-    },
-    "Purchase failed": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تعذّر الشراء"
-          }
-        }
-      }
-    },
-    "Questions? Contact %@": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لديك سؤال؟ تواصل معنا: %@"
-          }
-        }
-      }
-    },
-    "Ready-made list templates": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "قوالب قوائم جاهزة"
-          }
-        }
-      }
-    },
-    "Redeem Code": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "استبدال رمز"
-          }
-        }
-      }
-    },
-    "Remove Partner": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إزالة الشريك"
-          }
-        }
-      }
-    },
-    "Remove in %lld Days": {
-      "localizations": {
-        "ar": {
-          "variations": {
-            "plural": {
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "إزالة بعد %lld أيام"
-                }
-              },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "إزالة بعد %lld يومًا"
-                }
-              },
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "إزالة بعد يوم"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "إزالة بعد %lld يوم"
-                }
-              },
-              "two": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "إزالة بعد يومين"
-                }
-              },
-              "zero": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "إزالة اليوم"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "Request Unlock": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "طلب الإلغاء"
-          }
-        }
-      }
-    },
-    "Request unlock?": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "هل تريد طلب الإلغاء؟"
-          }
-        }
-      }
-    },
-    "Required to block apps and websites.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "مطلوبة لحظر التطبيقات والمواقع."
-          }
-        }
-      }
-    },
-    "Restore Purchases": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "استعادة المشتريات"
-          }
-        }
-      }
-    },
-    "Samla": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الصملة"
-          }
-        }
-      }
-    },
-    "Samla can't be deleted from your phone while it's on.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لا يمكن حذف الصملة من هاتفك أثناء تفعيله."
-          }
-        }
-      }
-    },
-    "Samla can't see your activity": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لا يرى الصملة نشاطك"
-          }
-        }
-      }
-    },
-    "Samla does not collect, store on servers, sell or share personal data. There are no analytics or advertising SDKs.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لا يجمع الصملة بياناتك الشخصية ولا يخزنها على خوادم ولا يبيعها ولا يشاركها. ولا يتضمن أي أدوات تحليلات أو إعلانات."
-          }
-        }
-      }
-    },
-    "Samla helps you block distracting apps and websites, protect yourself from harmful content, and build healthy focus habits.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يساعدك الصملة على حظر التطبيقات والمواقع المشتتة، وحماية نفسك من المحتوى الضار، وبناء عادات تركيز صحية."
-          }
-        }
-      }
-    },
-    "Samla helps you block the apps and websites that steal your time, and protect yourself from harmful content — calmly, privately, and on your own terms.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يساعدك الصملة على حظر التطبيقات والمواقع التي تسرق وقتك، وحماية نفسك من المحتوى الضار — بهدوء وخصوصية وبطريقتك."
-          }
-        }
-      }
-    },
-    "Samla is provided to help you build healthier digital habits. Hard Mode and Block Forever are voluntary commitments: once on, they can't be turned off early, so choose carefully.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الصملة يساعدك على بناء عادات رقمية أصح. الوضع الصارم و«احظر للأبد» التزامان اختياريان: عند تفعيلهما لا يمكن إيقافهما مبكرًا، فاختر بعناية."
-          }
-        }
-      }
-    },
-    "Samla uses Apple's Screen Time to block apps and websites. Everything stays on your device.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يستخدم الصملة خدمة «مدة استخدام الجهاز» من Apple لحظر التطبيقات والمواقع، وتبقى جميع بياناتك على جهازك."
-          }
-        }
-      }
-    },
-    "Save": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "حفظ"
-          }
-        }
-      }
-    },
-    "Save %lld%%": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "وفّر %lld%%"
-          }
-        }
-      }
-    },
-    "Save Partner": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "حفظ الشريك"
-          }
-        }
-      }
-    },
-    "Schedule": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الجدولة"
-          }
-        }
-      }
-    },
-    "Scheduled": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "مجدولة"
-          }
-        }
-      }
-    },
-    "Scheduling": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الجدولة"
-          }
-        }
-      }
-    },
-    "Scheduling and breaks": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الجدولة والاستراحات"
-          }
-        }
-      }
-    },
-    "Screen Time": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "مدة استخدام الجهاز"
-          }
-        }
-      }
-    },
-    "Screen Time access needed": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يلزم إذن مدة استخدام الجهاز"
-          }
-        }
-      }
-    },
-    "Select a plan to continue": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اختر خطة للمتابعة"
-          }
-        }
-      }
-    },
-    "Settings": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الإعدادات"
-          }
-        }
-      }
-    },
-    "Shopping": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "التسوق"
-          }
-        }
-      }
-    },
-    "Short breaks let you open blocked apps for a few minutes.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تتيح لك الاستراحات القصيرة فتح التطبيقات المحظورة لبضع دقائق."
-          }
-        }
-      }
-    },
-    "Sign in failed. Please try again.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تعذّر تسجيل الدخول. حاول مرة أخرى."
-          }
-        }
-      }
-    },
-    "Signed in with Apple": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "مسجّل الدخول عبر Apple"
-          }
-        }
-      }
-    },
-    "Skip": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تخطي"
-          }
-        }
-      }
-    },
-    "Skip for Now": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تخطَّ الآن"
-          }
-        }
-      }
-    },
-    "Sleep": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "النوم"
-          }
-        }
-      }
-    },
-    "Slots": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الفترات"
-          }
-        }
-      }
-    },
-    "So you always know what's blocked.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لتعرف دائمًا ما المحظور."
-          }
-        }
-      }
-    },
-    "Social": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "التواصل"
-          }
-        }
-      }
-    },
-    "Start": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ابدأ"
-          }
-        }
-      }
-    },
-    "Start %@": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تشغيل %@"
-          }
-        }
-      }
-    },
-    "Start %lld-Day Wait": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "بدء انتظار %lld يومًا"
-          }
-        }
-      }
-    },
-    "Start Blocking": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ابدأ الحظر"
-          }
-        }
-      }
-    },
-    "Start Free Trial": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ابدأ التجربة المجانية"
-          }
-        }
-      }
-    },
-    "Start a %@ Break": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "بدء استراحة %@"
-          }
-        }
-      }
-    },
-    "Start right away": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "البدء فورًا"
-          }
-        }
-      }
-    },
-    "Start your first block list": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ابدأ أول قائمة حظر"
-          }
-        }
-      }
-    },
-    "Starts %@": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تبدأ %@"
-          }
-        }
-      }
-    },
-    "Starts right away": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تبدأ فورًا"
-          }
-        }
-      }
-    },
-    "Stay on Track": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "حافظ على مسارك"
-          }
-        }
-      }
-    },
-    "Stop": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إيقاف"
-          }
-        }
-      }
-    },
-    "Stop %@": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إيقاف %@"
-          }
-        }
-      }
-    },
-    "Stopped": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "متوقفة"
-          }
-        }
-      }
-    },
-    "Subscribe": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اشترك"
-          }
-        }
-      }
-    },
-    "Suggestions block the website. To block the app itself, choose it in Apps & Categories.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تحظر الاقتراحات الموقع فقط. لحظر التطبيق نفسه، اختره من «التطبيقات والفئات»."
-          }
-        }
-      }
-    },
-    "Support Email": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "بريد الدعم"
-          }
-        }
-      }
-    },
-    "Swipe a website to remove it.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اسحب الموقع لإزالته."
-          }
-        }
-      }
-    },
-    "Take back your time, and protect yourself.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "استعِد وقتك، واحمِ نفسك."
-          }
-        }
-      }
-    },
-    "Telegram Channel": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "قناة تيليجرام"
-          }
-        }
-      }
-    },
-    "Terms of Use": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "شروط الاستخدام"
-          }
-        }
-      }
-    },
-    "The PINs don't match.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الرمزان غير متطابقين."
-          }
-        }
-      }
-    },
-    "The free version holds %lld lists. Premium will remove the limit.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تتيح النسخة المجانية %lld قوائم، وسيُلغي الاشتراك المميز هذا الحد."
-          }
-        }
-      }
-    },
-    "The free version holds 3 lists. Premium, coming soon, will remove the limit. Block Forever stays free forever.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تتيح النسخة المجانية 3 قوائم، وسيُلغي الاشتراك المميز — قريبًا — هذا الحد. ويبقى «احظر للأبد» مجانيًا إلى الأبد."
-          }
-        }
-      }
-    },
-    "This permanently deletes your account details and block lists from this device. Lists that are locked right now stay until they end, and Block Forever keeps its own rules. To also stop using Sign in with Apple with Samla, open Settings › Apple Account › Sign in with Apple.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "سيؤدي هذا إلى حذف بيانات حسابك وقوائم الحظر من هذا الجهاز نهائيًا. تبقى القوائم المقفلة حاليًا حتى تنتهي، ويحتفظ «احظر للأبد» بقواعده. ولإيقاف تسجيل الدخول بحساب Apple مع الصملة، افتح الإعدادات ‹ حساب Apple ‹ تسجيل الدخول باستخدام Apple."
-          }
-        }
-      }
-    },
-    "Time": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الوقت"
-          }
-        }
-      }
-    },
-    "Time is like a sword: if you don’t cut it, it cuts you.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الوقت كالسيف، إن لم تقطعه قطعك."
-          }
-        }
-      }
-    },
-    "Time to wrap up.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "حان وقت الإنهاء."
-          }
-        }
-      }
-    },
-    "Tips": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "نصائح"
-          }
-        }
-      }
-    },
-    "To": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إلى"
-          }
-        }
-      }
-    },
-    "To turn it off, you ask and then wait %lld days. You can cancel the request anytime.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لإيقافه، تطلب الإلغاء ثم تنتظر %lld يومًا، ويمكنك إلغاء الطلب في أي وقت."
-          }
-        }
-      }
-    },
-    "To use Partner, add one in Settings › Accountability Partner.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لاستخدام الشريك، أضِفه من الإعدادات ‹ شريك المساءلة."
-          }
-        }
-      }
-    },
-    "Too many attempts. Try again at %@.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "محاولات كثيرة. حاول مجددًا الساعة %@."
-          }
-        }
-      }
-    },
-    "Total: %@": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "المجموع: %@"
-          }
-        }
-      }
-    },
-    "Try Again": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "حاول مرة أخرى"
-          }
-        }
-      }
-    },
-    "Turn Off Block Forever": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إيقاف «احظر للأبد»"
-          }
-        }
-      }
-    },
-    "Turn On": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تفعيل"
-          }
-        }
-      }
-    },
-    "Turning it off takes 360 days": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إيقافه يحتاج 360 يومًا"
-          }
-        }
-      }
-    },
-    "Unlimited lists": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "قوائم غير محدودة"
-          }
-        }
-      }
-    },
-    "Unlock": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إلغاء القفل"
-          }
-        }
-      }
-    },
-    "Unlock focus and change digital habits": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "حرّر تركيزك وغيّر عاداتك الرقمية"
-          }
-        }
-      }
-    },
-    "Unlocks in %lld days": {
-      "localizations": {
-        "ar": {
-          "variations": {
-            "plural": {
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "يُلغى بعد %lld أيام"
-                }
-              },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "يُلغى بعد %lld يومًا"
-                }
-              },
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "يُلغى بعد يوم"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "يُلغى بعد %lld يوم"
-                }
-              },
-              "two": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "يُلغى بعد يومين"
-                }
-              },
-              "zero": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "يُلغى اليوم"
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "لا أيام"
                 }
               }
             }
           }
         },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Unlocks in %lld day"
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld day"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Unlocks in %lld days"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld days"
                 }
               }
             }
@@ -3133,263 +285,63 @@
         }
       }
     },
-    "Unlocks on %@": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يُلغى في %@"
-          }
-        }
-      }
-    },
-    "Until %@": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "حتى %@"
-          }
-        }
-      }
-    },
-    "Up to %lld block lists": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "حتى %lld قوائم حظر"
-          }
-        }
-      }
-    },
-    "Version": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الإصدار"
-          }
-        }
-      }
-    },
-    "Video": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الفيديو"
-          }
-        }
-      }
-    },
-    "We'll let you know": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "سنُعلمك"
-          }
-        }
-      }
-    },
-    "Websites": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "المواقع"
-          }
-        }
-      }
-    },
-    "Welcome to Samla": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "مرحبًا بك في الصملة"
-          }
-        }
-      }
-    },
-    "What is Block Forever?": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ما هو «احظر للأبد»؟"
-          }
-        }
-      }
-    },
-    "What is Samla?": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ما هو الصملة؟"
-          }
-        }
-      }
-    },
-    "What to block": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ما الذي تريد حظره"
-          }
-        }
-      }
-    },
-    "WhatsApp Community": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "مجموعة واتساب"
-          }
-        }
-      }
-    },
-    "When": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "متى"
-          }
-        }
-      }
-    },
-    "When a list starts or ends": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "عند بدء القائمة أو انتهائها"
-          }
-        }
-      }
-    },
-    "Where does my data go?": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "أين تذهب بياناتي؟"
-          }
-        }
-      }
-    },
-    "While this list is active you won't be able to stop, edit or delete it, and Samla can't be deleted.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "أثناء نشاط هذه القائمة لن تتمكن من إيقافها أو تعديلها أو حذفها، ولا يمكن حذف الصملة."
-          }
-        }
-      }
-    },
-    "While this list is active, only your partner's PIN can stop, edit or delete it, and Samla can't be deleted.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "أثناء نشاط هذه القائمة، لا يمكن إيقافها أو تعديلها أو حذفها إلا برمز شريكك، ولا يمكن حذف الصملة."
-          }
-        }
-      }
-    },
-    "Whoever knows what they seek finds the effort easy.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "من عرف ما يطلب، هان عليه ما يبذل."
-          }
-        }
-      }
-    },
-    "Why can't I delete the app?": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لماذا لا أستطيع حذف التطبيق؟"
-          }
-        }
-      }
-    },
-    "Without Screen Time, Samla can't block anything. You can allow it later from Home.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "بدون «مدة استخدام الجهاز» لا يستطيع الصملة حظر أي شيء. يمكنك السماح بذلك لاحقًا من الرئيسية."
-          }
-        }
-      }
-    },
-    "Wrong PIN. %lld attempts left.": {
-      "localizations": {
-        "ar": {
-          "variations": {
-            "plural": {
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "رمز غير صحيح. تبقّت %lld محاولات."
+    "%lld days left" : {
+      "localizations" : {
+        "ar" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "متبقٍّ %lld أيام"
                 }
               },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "رمز غير صحيح. تبقّت %lld محاولة."
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "متبقٍّ %lld يومًا"
                 }
               },
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "رمز غير صحيح. تبقّت محاولة واحدة."
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "متبقٍّ يوم واحد"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "رمز غير صحيح. تبقّت %lld محاولة."
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "متبقٍّ %lld يوم"
                 }
               },
-              "two": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "رمز غير صحيح. تبقّت محاولتان."
+              "two" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "متبقٍّ يومان"
                 }
               },
-              "zero": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "رمز غير صحيح."
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "انتهت المدة"
                 }
               }
             }
           }
         },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Wrong PIN. %lld attempt left."
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld day left"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Wrong PIN. %lld attempts left."
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld days left"
                 }
               }
             }
@@ -3397,396 +349,3474 @@
         }
       }
     },
-    "Yes, except in Hard Mode. Under Extra Options choose how many breaks you get per 24 hours and how long each lasts. Start a break from the list's page or the block screen.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "نعم، إلا في الوضع الصارم. من «خيارات إضافية» اختر عدد الاستراحات خلال 24 ساعة ومدة كل منها. ويمكنك بدء الاستراحة من صفحة القائمة أو من شاشة الحظر."
+    "%lld of %lld" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld من %2$lld"
           }
         }
       }
     },
-    "You can block up to %lld websites per list.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الحد الأقصى للمواقع في كل قائمة: %lld."
+    "%lld of %lld left" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "متبقٍّ %1$lld من %2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld left"
           }
         }
       }
     },
-    "You can change it anytime in iOS Settings.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يمكنك تغييره في أي وقت من إعدادات iOS."
+    "%lld time slots" : {
+      "localizations" : {
+        "ar" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld فترات"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld فترة"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "فترة واحدة"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld فترة"
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "فترتان"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "لا فترات"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld time slot"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld time slots"
+                }
+              }
+            }
           }
         }
       }
     },
-    "You stay in control": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "التحكم بيدك"
+    "%lld websites" : {
+      "localizations" : {
+        "ar" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld مواقع"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld موقعًا"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "موقع واحد"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld موقع"
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "موقعان"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "لا توجد مواقع"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld website"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld websites"
+                }
+              }
+            }
           }
         }
       }
     },
-    "Your accountability partner can turn it off sooner with their PIN.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يمكن لشريك المساءلة إيقافه قبل ذلك برمزه."
+    "⏰ Suggested 60-minute block schedule:\n• 9–10 AM: deep work\n• 2–3 PM: important tasks\n• 8–9 PM: family time or reading\n\nPick the time that fits your routine best!" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⏰ جدول حظر 60 دقيقة مقترح:\n• 9–10 صباحًا: عمل عميق\n• 2–3 ظهرًا: مهام مهمة\n• 8–9 مساءً: وقت عائلي أو قراءة\n\nاختر الوقت الأنسب لروتينك!"
           }
         }
       }
     },
-    "Your block lists, schedules, partner details and settings are stored only on your device. Deleting the app or using Delete Account & Data in Settings removes them.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تُحفظ قوائم الحظر والجداول وبيانات الشريك والإعدادات على جهازك فقط. ويؤدي حذف التطبيق أو استخدام «حذف الحساب والبيانات» في الإعدادات إلى إزالتها."
+    "⚠️ Harms of Reels addiction:\n• Fragmented attention and weaker focus\n• Harmful social comparisons\n• Hours of precious time lost\n\n💡 Solution: start with a 30-minute daily block and increase gradually" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ مضار إدمان الريلز:\n• تشتت الانتباه وضعف التركيز\n• مقارنات اجتماعية مؤذية\n• إضاعة ساعات ثمينة\n\n💡 الحل: ابدأ بحجب 30 دقيقة يوميًا وزِد تدريجيًا"
           }
         }
       }
     },
-    "Your lists stay on this device.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "قوائمك تبقى على هذا الجهاز."
+    "🌱 Healthy alternatives to your phone:\n• Read a paper book\n• Walk outside or exercise\n• Learn a new skill (cooking, drawing, music)\n• Spend time with friends and family" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🌱 بدائل صحية للهاتف:\n• اقرأ كتابًا ورقيًا\n• امشِ في الخارج أو مارس الرياضة\n• تعلم مهارة جديدة (طبخ، رسم، موسيقى)\n• اقضِ وقتًا مع الأصدقاء والعائلة"
           }
         }
       }
     },
-    "Your partner will be removed after a %lld-day wait. Block Forever isn't affected and keeps its own 360-day wait.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "سيُزال شريكك بعد انتظار %lld أيام. لا يتأثر «احظر للأبد» ويبقى انتظاره 360 يومًا."
+    "🎮 To reduce gaming time:\n• Limit games to 1 hour a day\n• Block gaming apps outside that window\n• Replace games with exercise or reading" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎮 لتقليل وقت الألعاب:\n• حدد ساعة واحدة يوميًا للألعاب\n• احجب الألعاب خارج هذا الوقت\n• استبدل الألعاب بالرياضة أو القراءة"
           }
         }
       }
     },
-    "Your partner's PIN is stored only on this device, as a protected hash in the Keychain. It is never sent anywhere.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يُحفظ رمز شريكك على هذا الجهاز فقط، مشفّرًا في سلسلة المفاتيح، ولا يُرسل إلى أي مكان."
+    "🎯 To organize your life:\n• Start by blocking your main distractions (TikTok, Instagram) for 1 hour\n• Set 3 clear daily goals\n• Choose a fixed time for an evening review" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎯 لترتيب حياتك:\n• ابدأ بحجب المشتتات الأساسية (تيك توك، إنستغرام) لمدة ساعة\n• حدد 3 أهداف يومية واضحة\n• اختر وقتًا ثابتًا للمراجعة كل مساء"
           }
         }
       }
     },
-    "e.g., Ahmed": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "مثال: أحمد"
+    "🎲 To stop gambling:\n• Block betting apps and websites in a Hard Mode list\n• Remove saved payment cards from those services\n• Seek support from a professional or a support group" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎲 للتوقف عن القمار:\n• احجب تطبيقات ومواقع المراهنات في قائمة بالوضع الصارم\n• احذف بطاقات الدفع المحفوظة من تلك الخدمات\n• اطلب الدعم من مختص أو مجموعة دعم"
           }
         }
       }
     },
-    "e.g., Sleep": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "مثال: النوم"
+    "📅 7-day focus plan:\n\nDays 1–2: block for 30 minutes each morning\nDays 3–4: block for a full hour\nDays 5–7: block for 2–3 hours with short breaks\n\n🎯 Goal: build a sustainable habit gradually" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "📅 خطة التركيز 7 أيام:\n\nاليوم 1–2: حجب 30 دقيقة كل صباح\nاليوم 3–4: حجب ساعة كاملة\nاليوم 5–7: حجب 2–3 ساعات مع استراحات قصيرة\n\n🎯 الهدف: بناء عادة مستدامة تدريجيًا"
           }
         }
       }
     },
-    "e.g., youtube.com": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "مثال: youtube.com"
+    "📱 To quit the social media habit:\n• Remove the apps from your home screen\n• Keep only essential notifications\n• Set specific browsing windows (e.g. 7–8 PM)" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "📱 للتخلص من عادة وسائل التواصل الاجتماعي:\n• احذف التطبيقات من الشاشة الرئيسية\n• أبقِ الإشعارات الضرورية فقط\n• خصص أوقاتًا محددة للتصفح (مثل 7–8 مساءً)"
           }
         }
       }
     },
-    "iOS lets you pick Samla's language in Settings › Samla › Language.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يمكنك اختيار لغة الصملة من الإعدادات ‹ الصملة ‹ اللغة."
+    "🧠 To resist the urge to scroll:\n• Wait 10 minutes before opening the app\n• Name the feeling behind the urge (boredom, stress)\n• Put the phone in another room for focused work" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🧠 لمقاومة الرغبة في التصفح:\n• انتظر 10 دقائق قبل فتح التطبيق\n• سمِّ الشعور وراء الرغبة (ملل، توتر)\n• ضع الهاتف في غرفة أخرى أثناء العمل المركّز"
           }
         }
       }
     },
-    "my partner settings": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إعدادات شريكي"
+    "😴 For healthier sleep:\n• Create a scheduled list from 10 PM to 7 AM\n• Keep your phone out of the bedroom\n• Replace late scrolling with reading or a short walk" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "😴 لنوم أكثر صحة:\n• أنشئ قائمة مجدولة من 10 مساءً إلى 7 صباحًا\n• أبقِ هاتفك خارج غرفة النوم\n• استبدل التصفح المتأخر بالقراءة أو مشي قصير"
           }
         }
       }
     },
-    "your partner": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "شريكك"
+    "🛡️ To quit adult content for good:\n• Turn on \"Block adult websites\" in a Hard Mode list\n• Block the apps and browsers you relapse on\n• Talk to someone you trust and track your streak" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🛡️ لترك الإباحية للأبد:\n• فعّل \"حظر مواقع البالغين\" في قائمة بالوضع الصارم\n• احجب التطبيقات والمتصفحات التي تنتكس فيها\n• تحدث مع شخص تثق به وتابع أيام التزامك"
           }
         }
       }
     },
-    "·": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "·"
+    "4-digit PIN" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "رمز من 4 أرقام"
           }
         }
       }
     },
-    "“%@” has ended. Great work!": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "انتهت «%@». أحسنت!"
+    "17+ apps are locked" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تطبيقات 17+ مقفلة"
           }
         }
       }
     },
-    "“%@” is now blocking.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "بدأ حظر «%@» الآن."
+    "A few helpful notifications, never spam." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إشعارات قليلة ومفيدة، بلا إزعاج."
           }
         }
       }
     },
-    "“%@” starts blocking again soon.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "سيعود حظر «%@» بعد قليل."
+    "A free, permanent filter for porn, gambling and dating websites. You can also lock every 17+ app. To turn it off you request an unlock and wait 360 days, or your partner enters their PIN." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فلتر مجاني ودائم لمواقع الإباحية والقمار والمواعدة، ويمكنك أيضًا قفل جميع تطبيقات 17+. لإيقافه تطلب الإلغاء وتنتظر 360 يومًا، أو يُدخل شريكك رمزه."
           }
         }
       }
     },
-    "“Allah does not change the condition of a people until they change what is in themselves.” — Ar-Ra’d 13:11": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "﴿إِنَّ اللَّهَ لَا يُغَيِّرُ مَا بِقَوْمٍ حَتَّىٰ يُغَيِّرُوا مَا بِأَنفُسِهِمْ﴾ — الرعد: 11"
+    "A list in Hard Mode or protected by your partner is active, or Block Forever is on. Hard Mode ends when the list ends. Block Forever ends 360 days after you request an unlock, or sooner with your partner's PIN." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لديك قائمة نشطة في الوضع الصارم أو محمية بالشريك، أو أن «احظر للأبد» مفعّل. ينتهي الوضع الصارم بانتهاء القائمة، وينتهي «احظر للأبد» بعد 360 يومًا من طلب الإلغاء، أو قبل ذلك برمز شريكك."
           }
         }
       }
     },
-    "“As for those who strive for Us, We will surely guide them to Our ways.” — Al-Ankabut 29:69": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "﴿وَالَّذِينَ جَاهَدُوا فِينَا لَنَهْدِيَنَّهُمْ سُبُلَنَا﴾ — العنكبوت: 69"
+    "A minute before a break ends" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "قبل انتهاء الاستراحة بدقيقة"
           }
         }
       }
     },
-    "“By time, indeed mankind is in loss.” — Al-Asr 103:1–2": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "﴿وَالْعَصْرِ ۝ إِنَّ الْإِنسَانَ لَفِي خُسْرٍ﴾ — العصر: 1–2"
+    "A real commitment for the weak moments." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التزام حقيقي للحظات الضعف."
           }
         }
       }
     },
-    "“Part of a person’s good Islam is leaving what doesn’t concern him.” — At-Tirmidhi": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "«مِنْ حُسْنِ إِسْلَامِ الْمَرْءِ تَرْكُهُ مَا لَا يَعْنِيهِ» — رواه الترمذي"
+    "A verse, hadith or saying to keep you going." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "آية أو حديث أو حكمة تعينك على الاستمرار."
           }
         }
       }
     },
-    "“Strive for what benefits you, seek Allah’s help, and don’t give up.” — Muslim": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "«احْرِصْ عَلَى مَا يَنْفَعُكَ، وَاسْتَعِنْ بِاللَّهِ وَلَا تَعْجَزْ» — رواه مسلم"
+    "About Samla" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عن الصملة"
           }
         }
       }
     },
-    "“Tell the believing men to lower their gaze.”": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "﴿قُل لِّلْمُؤْمِنِينَ يَغُضُّوا مِنْ أَبْصَارِهِمْ﴾"
+    "Account" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحساب"
           }
         }
       }
     },
-    "“Tell the believing men to lower their gaze.” Porn, gambling and dating — blocked for good, free forever.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "﴿قُل لِّلْمُؤْمِنِينَ يَغُضُّوا مِنْ أَبْصَارِهِمْ﴾\nالإباحية والقمار والمواعدة — محظورة إلى الأبد، ومجانًا إلى الأبد."
+    "Accountability Partner" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "شريك المساءلة"
           }
         }
       }
     },
-    "“Tell the believing men to lower their gaze.” — An-Nur 24:30": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "﴿قُل لِّلْمُؤْمِنِينَ يَغُضُّوا مِنْ أَبْصَارِهِمْ﴾ — النور: 30"
+    "Active" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مفعّلة الآن"
           }
         }
       }
     },
-    "“There are two blessings many people are cheated of: health and free time.” — Al-Bukhari": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "«نِعْمَتَانِ مَغْبُونٌ فِيهِمَا كَثِيرٌ مِنَ النَّاسِ: الصِّحَّةُ وَالفَرَاغُ» — رواه البخاري"
+    "Add" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إضافة"
           }
         }
       }
     },
-    "⏰ Suggested 60-minute block schedule:\n• 9–10 AM: deep work\n• 2–3 PM: important tasks\n• 8–9 PM: family time or reading\n\nPick the time that fits your routine best!": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "⏰ جدول حظر 60 دقيقة مقترح:\n• 9–10 صباحًا: عمل عميق\n• 2–3 ظهرًا: مهام مهمة\n• 8–9 مساءً: وقت عائلي أو قراءة\n\nاختر الوقت الأنسب لروتينك!"
+    "Add Slot" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إضافة فترة"
           }
         }
       }
     },
-    "⚠️ Harms of Reels addiction:\n• Fragmented attention and weaker focus\n• Harmful social comparisons\n• Hours of precious time lost\n\n💡 Solution: start with a 30-minute daily block and increase gradually": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "⚠️ مضار إدمان الريلز:\n• تشتت الانتباه وضعف التركيز\n• مقارنات اجتماعية مؤذية\n• إضاعة ساعات ثمينة\n\n💡 الحل: ابدأ بحجب 30 دقيقة يوميًا وزِد تدريجيًا"
+    "Adult websites" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مواقع البالغين"
           }
         }
       }
     },
-    "🌱 Healthy alternatives to your phone:\n• Read a paper book\n• Walk outside or exercise\n• Learn a new skill (cooking, drawing, music)\n• Spend time with friends and family": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "🌱 بدائل صحية للهاتف:\n• اقرأ كتابًا ورقيًا\n• امشِ في الخارج أو مارس الرياضة\n• تعلم مهارة جديدة (طبخ، رسم، موسيقى)\n• اقضِ وقتًا مع الأصدقاء والعائلة"
+    "Adult websites use Apple's built-in content filter." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تستخدم مواقع البالغين فلتر المحتوى المدمج من Apple."
           }
         }
       }
     },
-    "🎮 To reduce gaming time:\n• Limit games to 1 hour a day\n• Block gaming apps outside that window\n• Replace games with exercise or reading": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "🎮 لتقليل وقت الألعاب:\n• حدد ساعة واحدة يوميًا للألعاب\n• احجب الألعاب خارج هذا الوقت\n• استبدل الألعاب بالرياضة أو القراءة"
+    "Allow" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "السماح"
           }
         }
       }
     },
-    "🎯 To organize your life:\n• Start by blocking your main distractions (TikTok, Instagram) for 1 hour\n• Set 3 clear daily goals\n• Choose a fixed time for an evening review": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "🎯 لترتيب حياتك:\n• ابدأ بحجب المشتتات الأساسية (تيك توك، إنستغرام) لمدة ساعة\n• حدد 3 أهداف يومية واضحة\n• اختر وقتًا ثابتًا للمراجعة كل مساء"
+    "Allow Samla to use Screen Time so it can block content." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اسمح للصملة باستخدام «مدة استخدام الجهاز» ليتمكن من حظر المحتوى."
           }
         }
       }
     },
-    "🎲 To stop gambling:\n• Block betting apps and websites in a Hard Mode list\n• Remove saved payment cards from those services\n• Seek support from a professional or a support group": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "🎲 للتوقف عن القمار:\n• احجب تطبيقات ومواقع المراهنات في قائمة بالوضع الصارم\n• احذف بطاقات الدفع المحفوظة من تلك الخدمات\n• اطلب الدعم من مختص أو مجموعة دعم"
+    "Allow Screen Time" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "السماح بمدة استخدام الجهاز"
           }
         }
       }
     },
-    "📅 7-day focus plan:\n\nDays 1–2: block for 30 minutes each morning\nDays 3–4: block for a full hour\nDays 5–7: block for 2–3 hours with short breaks\n\n🎯 Goal: build a sustainable habit gradually": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "📅 خطة التركيز 7 أيام:\n\nاليوم 1–2: حجب 30 دقيقة كل صباح\nاليوم 3–4: حجب ساعة كاملة\nاليوم 5–7: حجب 2–3 ساعات مع استراحات قصيرة\n\n🎯 الهدف: بناء عادة مستدامة تدريجيًا"
+    "Also lock all 17+ apps" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "قفل جميع تطبيقات 17+ أيضًا"
           }
         }
       }
     },
-    "📱 To quit the social media habit:\n• Remove the apps from your home screen\n• Keep only essential notifications\n• Set specific browsing windows (e.g. 7–8 PM)": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "📱 للتخلص من عادة وسائل التواصل الاجتماعي:\n• احذف التطبيقات من الشاشة الرئيسية\n• أبقِ الإشعارات الضرورية فقط\n• خصص أوقاتًا محددة للتصفح (مثل 7–8 مساءً)"
+    "An-Nur 24:30" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "النور: 30"
           }
         }
       }
     },
-    "😴 For healthier sleep:\n• Create a scheduled list from 10 PM to 7 AM\n• Keep your phone out of the bedroom\n• Replace late scrolling with reading or a short walk": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "😴 لنوم أكثر صحة:\n• أنشئ قائمة مجدولة من 10 مساءً إلى 7 صباحًا\n• أبقِ هاتفك خارج غرفة النوم\n• استبدل التصفح المتأخر بالقراءة أو مشي قصير"
+    "Apple Account" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حساب Apple"
           }
         }
       }
     },
-    "🛡️ To quit adult content for good:\n• Turn on \"Block adult websites\" in a Hard Mode list\n• Block the apps and browsers you relapse on\n• Talk to someone you trust and track your streak": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "🛡️ لترك الإباحية للأبد:\n• فعّل \"حظر مواقع البالغين\" في قائمة بالوضع الصارم\n• احجب التطبيقات والمتصفحات التي تنتكس فيها\n• تحدث مع شخص تثق به وتابع أيام التزامك"
+    "Apple keeps the apps you choose private, even from Samla." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تُبقي Apple التطبيقات التي تختارها خاصة حتى عن الصملة."
           }
         }
       }
     },
-    "🧠 To resist the urge to scroll:\n• Wait 10 minutes before opening the app\n• Name the feeling behind the urge (boredom, stress)\n• Put the phone in another room for focused work": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "🧠 لمقاومة الرغبة في التصفح:\n• انتظر 10 دقائق قبل فتح التطبيق\n• سمِّ الشعور وراء الرغبة (ملل، توتر)\n• ضع الهاتف في غرفة أخرى أثناء العمل المركّز"
+    "Apple only lets apps block other apps through Screen Time." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا تسمح Apple للتطبيقات بحظر تطبيقات أخرى إلا عبر «مدة استخدام الجهاز»."
+          }
+        }
+      }
+    },
+    "Apple Standard EULA" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اتفاقية الترخيص القياسية من Apple"
+          }
+        }
+      }
+    },
+    "Apple will ask you to allow it next." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ستطلب منك Apple السماح بذلك في الخطوة التالية."
+          }
+        }
+      }
+    },
+    "Apps" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التطبيقات"
+          }
+        }
+      }
+    },
+    "Apps & Categories" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التطبيقات والفئات"
+          }
+        }
+      }
+    },
+    "Apps & Websites" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التطبيقات والمواقع"
+          }
+        }
+      }
+    },
+    "Apps, categories and websites you choose are handled by Apple's Screen Time framework as private tokens; Samla cannot see which apps they are or how you use them." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تتعامل خدمة «مدة استخدام الجهاز» من Apple مع التطبيقات والفئات والمواقع التي تختارها كرموز خاصة؛ ولا يستطيع الصملة معرفة ماهيتها أو كيفية استخدامك لها."
+          }
+        }
+      }
+    },
+    "Are breaks allowed?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هل توجد استراحات؟"
+          }
+        }
+      }
+    },
+    "Are you sure you want to delete this list?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هل أنت متأكد من حذف هذه القائمة؟"
+          }
+        }
+      }
+    },
+    "Ask My Partner" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اطلب من شريكي"
+          }
+        }
+      }
+    },
+    "Ask someone you trust to be your partner. They type a 4-digit PIN that only they know. Lists protected by your partner can't be stopped without it." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اطلب من شخص تثق به أن يكون شريكك. يكتب رمزًا من 4 أرقام لا يعرفه سواه، ولا يمكن إيقاف القوائم المحمية بالشريك بدونه."
+          }
+        }
+      }
+    },
+    "At least 5 minutes" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 دقائق على الأقل"
+          }
+        }
+      }
+    },
+    "Back" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "رجوع"
+          }
+        }
+      }
+    },
+    "Block adult websites" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حظر مواقع البالغين"
+          }
+        }
+      }
+    },
+    "Block distractions" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "احظر المشتتات"
+          }
+        }
+      }
+    },
+    "Block ended 🎉" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "انتهى الحظر 🎉"
+          }
+        }
+      }
+    },
+    "Block Forever" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "احظر للأبد"
+          }
+        }
+      }
+    },
+    "Block Forever is on" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«احظر للأبد» مفعّل"
+          }
+        }
+      }
+    },
+    "Block Forever keeps porn, gambling and dating away." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«احظر للأبد» يُبعد عنك الإباحية والقمار والمواعدة."
+          }
+        }
+      }
+    },
+    "Block Forever stays free forever." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يبقى «احظر للأبد» مجانيًا إلى الأبد."
+          }
+        }
+      }
+    },
+    "Block started" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بدأ الحظر"
+          }
+        }
+      }
+    },
+    "Blocked" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "محظورة"
+          }
+        }
+      }
+    },
+    "Blocked in every browser. Free forever." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "محظورة في جميع المتصفحات. مجانًا إلى الأبد."
+          }
+        }
+      }
+    },
+    "Blocking during prayer times" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحظر في أوقات الصلاة"
+          }
+        }
+      }
+    },
+    "Blocking isn't working?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحظر لا يعمل؟"
+          }
+        }
+      }
+    },
+    "Blocking now" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحظر الآن"
+          }
+        }
+      }
+    },
+    "Blocks porn, gambling and dating websites in every browser." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحظر مواقع الإباحية والقمار والمواعدة في جميع المتصفحات."
+          }
+        }
+      }
+    },
+    "Both need your partner's current PIN." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتطلب كلاهما رمز شريكك الحالي."
+          }
+        }
+      }
+    },
+    "Break ends in a minute" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تنتهي الاستراحة بعد دقيقة"
+          }
+        }
+      }
+    },
+    "Breaks" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الاستراحات"
+          }
+        }
+      }
+    },
+    "Breaks per day" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الاستراحات في اليوم"
+          }
+        }
+      }
+    },
+    "Can't be deleted while on" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يمكن حذفه أثناء تفعيله"
+          }
+        }
+      }
+    },
+    "Can't be stopped, edited or deleted while active, and Samla can't be deleted. No breaks." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يمكن إيقافها أو تعديلها أو حذفها أثناء نشاطها، ولا يمكن حذف الصملة. بدون استراحات."
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إلغاء"
+          }
+        }
+      }
+    },
+    "Cancel Request" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إلغاء الطلب"
+          }
+        }
+      }
+    },
+    "Challenges with points and levels" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحديات بالنقاط والمستويات"
+          }
+        }
+      }
+    },
+    "Change Apps" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تغيير التطبيقات"
+          }
+        }
+      }
+    },
+    "Change Partner" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تغيير الشريك"
+          }
+        }
+      }
+    },
+    "Choose Apps" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر التطبيقات"
+          }
+        }
+      }
+    },
+    "Choose apps and websites, and block them now or on a schedule." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر التطبيقات والمواقع، واحظرها الآن أو وفق جدول."
+          }
+        }
+      }
+    },
+    "Choose apps and websites, then block them now or on a schedule." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر التطبيقات والمواقع، ثم احظرها الآن أو وفق جدول."
+          }
+        }
+      }
+    },
+    "Choose Schedule under When, then add days and times. Blocking starts and stops automatically, even when Samla is closed." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر «جدولة» ضمن «متى»، ثم أضف الأيام والأوقات. يبدأ الحظر ويتوقف تلقائيًا حتى عندما يكون الصملة مغلقًا."
+          }
+        }
+      }
+    },
+    "Chosen apps open to the Samla block screen while the list is active." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تُفتح التطبيقات المختارة على شاشة حظر الصملة أثناء نشاط القائمة."
+          }
+        }
+      }
+    },
+    "Close" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إغلاق"
+          }
+        }
+      }
+    },
+    "Coming soon" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "قريبًا"
+          }
+        }
+      }
+    },
+    "Community" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المجتمع"
+          }
+        }
+      }
+    },
+    "Confirm Changes" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تأكيد التغييرات"
+          }
+        }
+      }
+    },
+    "Confirm List" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تأكيد القائمة"
+          }
+        }
+      }
+    },
+    "Confirm PIN" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تأكيد الرمز"
+          }
+        }
+      }
+    },
+    "Contact Support" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تواصل مع الدعم"
+          }
+        }
+      }
+    },
+    "Continue" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "متابعة"
+          }
+        }
+      }
+    },
+    "Continue Without It" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المتابعة بدونه"
+          }
+        }
+      }
+    },
+    "Create" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إنشاء"
+          }
+        }
+      }
+    },
+    "Create List" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أنشئ قائمة"
+          }
+        }
+      }
+    },
+    "Custom" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مخصص"
+          }
+        }
+      }
+    },
+    "Days" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الأيام"
+          }
+        }
+      }
+    },
+    "Delete" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حذف"
+          }
+        }
+      }
+    },
+    "Delete Account & Data" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حذف الحساب والبيانات"
+          }
+        }
+      }
+    },
+    "Delete List" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حذف القائمة"
+          }
+        }
+      }
+    },
+    "Delete your account?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حذف حسابك؟"
+          }
+        }
+      }
+    },
+    "Discipline is choosing what you want most over what you want now." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الانضباط أن تختار ما تريده أكثر، لا ما تريده الآن."
+          }
+        }
+      }
+    },
+    "Done" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم"
+          }
+        }
+      }
+    },
+    "Duration" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المدة"
+          }
+        }
+      }
+    },
+    "e.g., Ahmed" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مثال: أحمد"
+          }
+        }
+      }
+    },
+    "e.g., Sleep" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مثال: النوم"
+          }
+        }
+      }
+    },
+    "e.g., youtube.com" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مثال: youtube.com"
+          }
+        }
+      }
+    },
+    "Edit" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحرير"
+          }
+        }
+      }
+    },
+    "Edit List" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحرير القائمة"
+          }
+        }
+      }
+    },
+    "Edit, stop or delete anytime." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يمكنك التعديل أو الإيقاف أو الحذف في أي وقت."
+          }
+        }
+      }
+    },
+    "Enable" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تفعيل"
+          }
+        }
+      }
+    },
+    "Enable Notifications" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تفعيل الإشعارات"
+          }
+        }
+      }
+    },
+    "End Break" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إنهاء الاستراحة"
+          }
+        }
+      }
+    },
+    "Ends" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تنتهي"
+          }
+        }
+      }
+    },
+    "Ends %@" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تنتهي %@"
+          }
+        }
+      }
+    },
+    "Enter a website like example.com" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أدخل موقعًا مثل example.com"
+          }
+        }
+      }
+    },
+    "Every day" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كل يوم"
+          }
+        }
+      }
+    },
+    "Everything stays on your device. Samla has no servers, collects no data and never sells anything. Apple's Screen Time keeps the apps you choose private, even from Samla." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تبقى جميع بياناتك على جهازك. لا يملك الصملة خوادم، ولا يجمع أي بيانات، ولا يبيع شيئًا. وتُبقي خدمة «مدة استخدام الجهاز» من Apple التطبيقات التي تختارها خاصة حتى عن الصملة."
+          }
+        }
+      }
+    },
+    "Everything stays on your device. We collect no data." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تبقى جميع بياناتك على جهازك. لا نجمع أي بيانات."
+          }
+        }
+      }
+    },
+    "Everything you need to stay on track." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كل ما تحتاجه لتبقى على المسار الصحيح."
+          }
+        }
+      }
+    },
+    "FAQ" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الأسئلة الشائعة"
+          }
+        }
+      }
+    },
+    "Fix" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إصلاح"
+          }
+        }
+      }
+    },
+    "Focus" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التركيز"
+          }
+        }
+      }
+    },
+    "Forgot PIN?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هل نسيت الرمز؟"
+          }
+        }
+      }
+    },
+    "Forgot the PIN?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هل نسيت الرمز؟"
+          }
+        }
+      }
+    },
+    "Free" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مجاني"
+          }
+        }
+      }
+    },
+    "Free forever." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مجانًا إلى الأبد."
+          }
+        }
+      }
+    },
+    "From" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "من"
+          }
+        }
+      }
+    },
+    "Full Privacy Policy" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سياسة الخصوصية كاملة"
+          }
+        }
+      }
+    },
+    "Games" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الألعاب"
+          }
+        }
+      }
+    },
+    "Get Started" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ابدأ"
+          }
+        }
+      }
+    },
+    "Get told when a list starts or ends." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "احصل على إشعار عند بدء القائمة أو انتهائها."
+          }
+        }
+      }
+    },
+    "Habits" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "العادات"
+          }
+        }
+      }
+    },
+    "Hand the phone to %@" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أعطِ الهاتف إلى %@"
+          }
+        }
+      }
+    },
+    "Hard Mode" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الوضع الصارم"
+          }
+        }
+      }
+    },
+    "Hard Mode · unlocks %@" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الوضع الصارم · يُفتح %@"
+          }
+        }
+      }
+    },
+    "Hard Mode and partner protection" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الوضع الصارم وحماية الشريك"
+          }
+        }
+      }
+    },
+    "Healthy Alternatives" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بدائل صحية"
+          }
+        }
+      }
+    },
+    "Hi, I need you to enter your Samla PIN on my phone to unlock “%@”. Can you help?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مرحبًا، أحتاج أن تُدخل رمزك في الصملة على هاتفي لإلغاء قفل «%@». هل يمكنك المساعدة؟"
+          }
+        }
+      }
+    },
+    "Hides and blocks every app rated 17+, which covers most dating and gambling apps. Some regular apps rated 17+ will be locked too." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يُخفي ويقفل كل تطبيق مصنّف 17+، وهذا يشمل معظم تطبيقات المواعدة والقمار. وستُقفل كذلك بعض التطبيقات العادية المصنّفة 17+."
+          }
+        }
+      }
+    },
+    "Home" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الرئيسية"
+          }
+        }
+      }
+    },
+    "Hours" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الساعات"
+          }
+        }
+      }
+    },
+    "How do scheduled lists work?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كيف تعمل القوائم المجدولة؟"
+          }
+        }
+      }
+    },
+    "How many lists can I create?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كم قائمة يمكنني إنشاؤها؟"
+          }
+        }
+      }
+    },
+    "I forgot my partner's PIN. What now?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نسيت رمز شريكي، ماذا أفعل؟"
+          }
+        }
+      }
+    },
+    "I understand, start" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فهمت، ابدأ"
+          }
+        }
+      }
+    },
+    "I understand, turn on" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فهمت، فعّل"
+          }
+        }
+      }
+    },
+    "If you use Sign in with Apple, Samla stores only the anonymous Apple user identifier and the name you choose to share, on this device." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إذا استخدمت تسجيل الدخول بحساب Apple، يحفظ الصملة على هذا الجهاز معرّف Apple المجهول والاسم الذي تختار مشاركته فقط."
+          }
+        }
+      }
+    },
+    "Language" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اللغة"
+          }
+        }
+      }
+    },
+    "Later Today" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لاحقًا اليوم"
+          }
+        }
+      }
+    },
+    "Length of each break" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مدة كل استراحة"
+          }
+        }
+      }
+    },
+    "List created" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم إنشاء القائمة"
+          }
+        }
+      }
+    },
+    "List not found" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "القائمة غير موجودة"
+          }
+        }
+      }
+    },
+    "List updated" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم تحديث القائمة"
+          }
+        }
+      }
+    },
+    "Lists" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "القوائم"
+          }
+        }
+      }
+    },
+    "Lists protected by your partner can only be stopped, edited or deleted with this PIN while they're active." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يمكن إيقاف القوائم المحمية بالشريك أو تعديلها أو حذفها أثناء نشاطها إلا بهذا الرمز."
+          }
+        }
+      }
+    },
+    "Locked" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مقفلة"
+          }
+        }
+      }
+    },
+    "Log out" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تسجيل الخروج"
+          }
+        }
+      }
+    },
+    "Log out?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تسجيل الخروج؟"
+          }
+        }
+      }
+    },
+    "Make sure Screen Time access is allowed. If Home shows a permissions card, tap it and allow access. Blocking only works on a real iPhone." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تأكد من السماح بالوصول إلى «مدة استخدام الجهاز». إذا ظهرت بطاقة الأذونات في الرئيسية، فاضغط عليها واسمح بالوصول. لا يعمل الحظر إلا على جهاز iPhone حقيقي."
+          }
+        }
+      }
+    },
+    "Minutes" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الدقائق"
+          }
+        }
+      }
+    },
+    "my partner settings" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعدادات شريكي"
+          }
+        }
+      }
+    },
+    "Name" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الاسم"
+          }
+        }
+      }
+    },
+    "Needed to block" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ضروري للحظر"
+          }
+        }
+      }
+    },
+    "New List" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "قائمة جديدة"
+          }
+        }
+      }
+    },
+    "No account" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بدون حساب"
+          }
+        }
+      }
+    },
+    "No partner" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بدون شريك"
+          }
+        }
+      }
+    },
+    "No Protection" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بدون حماية"
+          }
+        }
+      }
+    },
+    "No schedule yet" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا توجد جدولة بعد"
+          }
+        }
+      }
+    },
+    "No slots" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا توجد فترات"
+          }
+        }
+      }
+    },
+    "None" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بدون"
+          }
+        }
+      }
+    },
+    "Not Now" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ليس الآن"
+          }
+        }
+      }
+    },
+    "Not set" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "غير محدد"
+          }
+        }
+      }
+    },
+    "Nothing is blocking right now" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يوجد حظر نشط الآن"
+          }
+        }
+      }
+    },
+    "Notifications" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإشعارات"
+          }
+        }
+      }
+    },
+    "Notify Me" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أعلمني"
+          }
+        }
+      }
+    },
+    "Now" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الآن"
+          }
+        }
+      }
+    },
+    "Off" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "غير مفعّل"
+          }
+        }
+      }
+    },
+    "OK" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حسنًا"
+          }
+        }
+      }
+    },
+    "On" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مفعّل"
+          }
+        }
+      }
+    },
+    "On break" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "في استراحة"
+          }
+        }
+      }
+    },
+    "One gentle daily reminder" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تذكير يومي لطيف"
+          }
+        }
+      }
+    },
+    "Only your partner should type the PIN." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يجب أن يكتب شريكك الرمز بنفسه."
+          }
+        }
+      }
+    },
+    "Only your partner's PIN can stop, edit or delete it while active." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أثناء نشاطها، لا يمكن إيقافها أو تعديلها أو حذفها إلا برمز شريكك."
+          }
+        }
+      }
+    },
+    "Open Settings" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فتح الإعدادات"
+          }
+        }
+      }
+    },
+    "Open Settings › Accountability Partner and tap Forgot PIN. Your partner is removed after 7 days. Block Forever isn't affected and keeps its 360-day wait." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "افتح الإعدادات ‹ شريك المساءلة واضغط «هل نسيت الرمز؟». سيُزال شريكك بعد 7 أيام. لا يتأثر «احظر للأبد» ويبقى انتظاره 360 يومًا."
+          }
+        }
+      }
+    },
+    "Optional. Samla works fully without an account." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختياري. يعمل الصملة بالكامل بدون حساب."
+          }
+        }
+      }
+    },
+    "Or sooner with your accountability partner's PIN." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أو قبل ذلك برمز شريك المساءلة."
+          }
+        }
+      }
+    },
+    "Partner" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الشريك"
+          }
+        }
+      }
+    },
+    "Partner on" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الشريك مفعّل"
+          }
+        }
+      }
+    },
+    "Partner PIN" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "رمز الشريك"
+          }
+        }
+      }
+    },
+    "Partner removed on" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يُزال الشريك في"
+          }
+        }
+      }
+    },
+    "Partner's Name" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اسم الشريك"
+          }
+        }
+      }
+    },
+    "Payment is charged to your Apple Account at confirmation. Subscriptions renew automatically unless cancelled at least 24 hours before the end of the current period. Manage or cancel anytime in Settings › Apple Account › Subscriptions." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يُخصم المبلغ من حساب Apple عند التأكيد. يتجدد الاشتراك تلقائيًا ما لم يُلغَ قبل 24 ساعة على الأقل من نهاية الفترة الحالية. يمكنك الإدارة أو الإلغاء في أي وقت من الإعدادات ‹ حساب Apple ‹ الاشتراكات."
+          }
+        }
+      }
+    },
+    "Permissions" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الأذونات"
+          }
+        }
+      }
+    },
+    "PIN" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الرمز"
+          }
+        }
+      }
+    },
+    "PIN — your partner types it" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الرمز — يكتبه شريكك"
+          }
+        }
+      }
+    },
+    "Plans are unavailable right now. Check your connection and try again." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الخطط غير متاحة حاليًا. تحقق من اتصالك وحاول مرة أخرى."
+          }
+        }
+      }
+    },
+    "Policies & Terms" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "السياسات والشروط"
+          }
+        }
+      }
+    },
+    "Porn, gambling and dating" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإباحية والقمار والمواعدة"
+          }
+        }
+      }
+    },
+    "Premium" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الاشتراك المميز"
+          }
+        }
+      }
+    },
+    "Premium is active. Thank you!" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الاشتراك المميز فعّال. شكرًا لك!"
+          }
+        }
+      }
+    },
+    "Premium is coming soon" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الاشتراك المميز قريبًا"
+          }
+        }
+      }
+    },
+    "Privacy Policy" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سياسة الخصوصية"
+          }
+        }
+      }
+    },
+    "Private by design" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خصوصيتك محفوظة"
+          }
+        }
+      }
+    },
+    "Protect yourself for good" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "احمِ نفسك إلى الأبد"
+          }
+        }
+      }
+    },
+    "Protected by your partner" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "محمية بشريكك"
+          }
+        }
+      }
+    },
+    "Protecting you since" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحميك منذ"
+          }
+        }
+      }
+    },
+    "Protection" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحماية"
+          }
+        }
+      }
+    },
+    "Protection stays fully on during the wait. You can cancel the request anytime." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تبقى الحماية مفعّلة بالكامل طوال فترة الانتظار، ويمكنك إلغاء الطلب في أي وقت."
+          }
+        }
+      }
+    },
+    "Purchase failed" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّر الشراء"
+          }
+        }
+      }
+    },
+    "Questions? Contact %@" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لديك سؤال؟ تواصل معنا: %@"
+          }
+        }
+      }
+    },
+    "Quick Start" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بدء سريع"
+          }
+        }
+      }
+    },
+    "Ready-made list templates" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "قوالب قوائم جاهزة"
+          }
+        }
+      }
+    },
+    "Redeem Code" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استبدال رمز"
+          }
+        }
+      }
+    },
+    "Remove in %lld Days" : {
+      "localizations" : {
+        "ar" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "إزالة بعد %lld أيام"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "إزالة بعد %lld يومًا"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "إزالة بعد يوم"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "إزالة بعد %lld يوم"
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "إزالة بعد يومين"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "إزالة اليوم"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Remove Partner" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إزالة الشريك"
+          }
+        }
+      }
+    },
+    "Request Unlock" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "طلب الإلغاء"
+          }
+        }
+      }
+    },
+    "Request unlock?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هل تريد طلب الإلغاء؟"
+          }
+        }
+      }
+    },
+    "Required to block apps and websites." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مطلوبة لحظر التطبيقات والمواقع."
+          }
+        }
+      }
+    },
+    "Restore Purchases" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استعادة المشتريات"
+          }
+        }
+      }
+    },
+    "Samla" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الصملة"
+          }
+        }
+      }
+    },
+    "Samla can't be deleted from your phone while it's on." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يمكن حذف الصملة من هاتفك أثناء تفعيله."
+          }
+        }
+      }
+    },
+    "Samla can't see your activity" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يرى الصملة نشاطك"
+          }
+        }
+      }
+    },
+    "Samla does not collect, store on servers, sell or share personal data. There are no analytics or advertising SDKs." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يجمع الصملة بياناتك الشخصية ولا يخزنها على خوادم ولا يبيعها ولا يشاركها. ولا يتضمن أي أدوات تحليلات أو إعلانات."
+          }
+        }
+      }
+    },
+    "Samla helps you block distracting apps and websites, protect yourself from harmful content, and build healthy focus habits." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يساعدك الصملة على حظر التطبيقات والمواقع المشتتة، وحماية نفسك من المحتوى الضار، وبناء عادات تركيز صحية."
+          }
+        }
+      }
+    },
+    "Samla helps you block the apps and websites that steal your time, and protect yourself from harmful content — calmly, privately, and on your own terms." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يساعدك الصملة على حظر التطبيقات والمواقع التي تسرق وقتك، وحماية نفسك من المحتوى الضار — بهدوء وخصوصية وبطريقتك."
+          }
+        }
+      }
+    },
+    "Samla is provided to help you build healthier digital habits. Hard Mode and Block Forever are voluntary commitments: once on, they can't be turned off early, so choose carefully." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الصملة يساعدك على بناء عادات رقمية أصح. الوضع الصارم و«احظر للأبد» التزامان اختياريان: عند تفعيلهما لا يمكن إيقافهما مبكرًا، فاختر بعناية."
+          }
+        }
+      }
+    },
+    "Save" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حفظ"
+          }
+        }
+      }
+    },
+    "Save %lld%%" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "وفّر %lld%%"
+          }
+        }
+      }
+    },
+    "Save Partner" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حفظ الشريك"
+          }
+        }
+      }
+    },
+    "Schedule" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الجدولة"
+          }
+        }
+      }
+    },
+    "Scheduled" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مجدولة"
+          }
+        }
+      }
+    },
+    "Scheduling" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الجدولة"
+          }
+        }
+      }
+    },
+    "Scheduling and breaks" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الجدولة والاستراحات"
+          }
+        }
+      }
+    },
+    "Screen Time" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مدة استخدام الجهاز"
+          }
+        }
+      }
+    },
+    "Screen Time access needed" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يلزم إذن مدة استخدام الجهاز"
+          }
+        }
+      }
+    },
+    "Select a plan to continue" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر خطة للمتابعة"
+          }
+        }
+      }
+    },
+    "Settings" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإعدادات"
+          }
+        }
+      }
+    },
+    "Shopping" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التسوق"
+          }
+        }
+      }
+    },
+    "Short breaks let you open blocked apps for a few minutes." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تتيح لك الاستراحات القصيرة فتح التطبيقات المحظورة لبضع دقائق."
+          }
+        }
+      }
+    },
+    "Sign in failed. Please try again." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّر تسجيل الدخول. حاول مرة أخرى."
+          }
+        }
+      }
+    },
+    "Signed in" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مسجّل الدخول"
+          }
+        }
+      }
+    },
+    "Signed in with Apple" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مسجّل الدخول عبر Apple"
+          }
+        }
+      }
+    },
+    "Skip for Now" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تخطَّ الآن"
+          }
+        }
+      }
+    },
+    "Sleep" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "النوم"
+          }
+        }
+      }
+    },
+    "Slots" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الفترات"
+          }
+        }
+      }
+    },
+    "So you always know what's blocked." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لتعرف دائمًا ما المحظور."
+          }
+        }
+      }
+    },
+    "Social" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التواصل"
+          }
+        }
+      }
+    },
+    "Some permissions are missing" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بعض الأذونات ناقصة"
+          }
+        }
+      }
+    },
+    "Start" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ابدأ"
+          }
+        }
+      }
+    },
+    "Start %@" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تشغيل %@"
+          }
+        }
+      }
+    },
+    "Start %lld-Day Wait" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بدء انتظار %lld يومًا"
+          }
+        }
+      }
+    },
+    "Start a %@ Break" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بدء استراحة %@"
+          }
+        }
+      }
+    },
+    "Start a list and stay focused." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ابدأ قائمة وحافظ على تركيزك."
+          }
+        }
+      }
+    },
+    "Start Blocking" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ابدأ الحظر"
+          }
+        }
+      }
+    },
+    "Start Free Trial" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ابدأ التجربة المجانية"
+          }
+        }
+      }
+    },
+    "Start List?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بدء القائمة؟"
+          }
+        }
+      }
+    },
+    "Start right away" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "البدء فورًا"
+          }
+        }
+      }
+    },
+    "Start your first block list" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ابدأ أول قائمة حظر"
+          }
+        }
+      }
+    },
+    "Start “%@”" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ابدأ «%@»"
+          }
+        }
+      }
+    },
+    "Starts %@" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تبدأ %@"
+          }
+        }
+      }
+    },
+    "Starts right away" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تبدأ فورًا"
+          }
+        }
+      }
+    },
+    "Stay on Track" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حافظ على مسارك"
+          }
+        }
+      }
+    },
+    "Stop" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إيقاف"
+          }
+        }
+      }
+    },
+    "Stop %@" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إيقاف %@"
+          }
+        }
+      }
+    },
+    "Stopped" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "متوقفة"
+          }
+        }
+      }
+    },
+    "Subscribe" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اشترك"
+          }
+        }
+      }
+    },
+    "Suggestions block the website. To block the app itself, choose it in Apps & Categories." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحظر الاقتراحات الموقع فقط. لحظر التطبيق نفسه، اختره من «التطبيقات والفئات»."
+          }
+        }
+      }
+    },
+    "Support Email" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بريد الدعم"
+          }
+        }
+      }
+    },
+    "Swipe a website to remove it." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اسحب الموقع لإزالته."
+          }
+        }
+      }
+    },
+    "Take back your time, and protect yourself." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استعِد وقتك، واحمِ نفسك."
+          }
+        }
+      }
+    },
+    "Terms of Use" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "شروط الاستخدام"
+          }
+        }
+      }
+    },
+    "The free version holds %lld lists. Premium will remove the limit." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تتيح النسخة المجانية %lld قوائم، وسيُلغي الاشتراك المميز هذا الحد."
+          }
+        }
+      }
+    },
+    "The free version holds 3 lists. Premium, coming soon, will remove the limit. Block Forever stays free forever." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تتيح النسخة المجانية 3 قوائم، وسيُلغي الاشتراك المميز — قريبًا — هذا الحد. ويبقى «احظر للأبد» مجانيًا إلى الأبد."
+          }
+        }
+      }
+    },
+    "The PINs don't match." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الرمزان غير متطابقين."
+          }
+        }
+      }
+    },
+    "This permanently deletes your account details and block lists from this device. Lists that are locked right now stay until they end, and Block Forever keeps its own rules. To also stop using Sign in with Apple with Samla, open Settings › Apple Account › Sign in with Apple." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سيؤدي هذا إلى حذف بيانات حسابك وقوائم الحظر من هذا الجهاز نهائيًا. تبقى القوائم المقفلة حاليًا حتى تنتهي، ويحتفظ «احظر للأبد» بقواعده. ولإيقاف تسجيل الدخول بحساب Apple مع الصملة، افتح الإعدادات ‹ حساب Apple ‹ تسجيل الدخول باستخدام Apple."
+          }
+        }
+      }
+    },
+    "Time" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الوقت"
+          }
+        }
+      }
+    },
+    "Time is like a sword: if you don’t cut it, it cuts you." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الوقت كالسيف، إن لم تقطعه قطعك."
+          }
+        }
+      }
+    },
+    "Time to wrap up." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حان وقت الإنهاء."
+          }
+        }
+      }
+    },
+    "Tips" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نصائح"
+          }
+        }
+      }
+    },
+    "To" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إلى"
+          }
+        }
+      }
+    },
+    "To turn it off, you ask and then wait %lld days. You can cancel the request anytime." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لإيقافه، تطلب الإلغاء ثم تنتظر %lld يومًا، ويمكنك إلغاء الطلب في أي وقت."
+          }
+        }
+      }
+    },
+    "To use Partner, add one in Settings › Accountability Partner." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لاستخدام الشريك، أضِفه من الإعدادات ‹ شريك المساءلة."
+          }
+        }
+      }
+    },
+    "Too many attempts. Try again at %@." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "محاولات كثيرة. حاول مجددًا الساعة %@."
+          }
+        }
+      }
+    },
+    "Total: %@" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المجموع: %@"
+          }
+        }
+      }
+    },
+    "Try Again" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حاول مرة أخرى"
+          }
+        }
+      }
+    },
+    "Turn Off Block Forever" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إيقاف «احظر للأبد»"
+          }
+        }
+      }
+    },
+    "Turn On" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تفعيل"
+          }
+        }
+      }
+    },
+    "Turning it off takes 360 days" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إيقافه يحتاج 360 يومًا"
+          }
+        }
+      }
+    },
+    "Unlimited lists" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "قوائم غير محدودة"
+          }
+        }
+      }
+    },
+    "Unlock" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إلغاء القفل"
+          }
+        }
+      }
+    },
+    "Unlock focus and change digital habits" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حرّر تركيزك وغيّر عاداتك الرقمية"
+          }
+        }
+      }
+    },
+    "Unlocks in %lld days" : {
+      "localizations" : {
+        "ar" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "يُلغى بعد %lld أيام"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "يُلغى بعد %lld يومًا"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "يُلغى بعد يوم"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "يُلغى بعد %lld يوم"
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "يُلغى بعد يومين"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "يُلغى اليوم"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Unlocks in %lld day"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Unlocks in %lld days"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Unlocks on %@" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يُلغى في %@"
+          }
+        }
+      }
+    },
+    "Until %@" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حتى %@"
+          }
+        }
+      }
+    },
+    "Up to %lld block lists" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حتى %lld قوائم حظر"
+          }
+        }
+      }
+    },
+    "Version" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإصدار"
+          }
+        }
+      }
+    },
+    "Video" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الفيديو"
+          }
+        }
+      }
+    },
+    "We'll let you know" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سنُعلمك"
+          }
+        }
+      }
+    },
+    "Websites" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المواقع"
+          }
+        }
+      }
+    },
+    "Welcome to Samla" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مرحبًا بك في الصملة"
+          }
+        }
+      }
+    },
+    "What is Block Forever?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ما هو «احظر للأبد»؟"
+          }
+        }
+      }
+    },
+    "What is Samla?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ما هو الصملة؟"
+          }
+        }
+      }
+    },
+    "What to block" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ما الذي تريد حظره"
+          }
+        }
+      }
+    },
+    "When" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "متى"
+          }
+        }
+      }
+    },
+    "When a list starts or ends" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عند بدء القائمة أو انتهائها"
+          }
+        }
+      }
+    },
+    "Where does my data go?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أين تذهب بياناتي؟"
+          }
+        }
+      }
+    },
+    "While this list is active you won't be able to stop, edit or delete it, and Samla can't be deleted." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أثناء نشاط هذه القائمة لن تتمكن من إيقافها أو تعديلها أو حذفها، ولا يمكن حذف الصملة."
+          }
+        }
+      }
+    },
+    "While this list is active, only your partner's PIN can stop, edit or delete it, and Samla can't be deleted." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أثناء نشاط هذه القائمة، لا يمكن إيقافها أو تعديلها أو حذفها إلا برمز شريكك، ولا يمكن حذف الصملة."
+          }
+        }
+      }
+    },
+    "Whoever knows what they seek finds the effort easy." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "من عرف ما يطلب، هان عليه ما يبذل."
+          }
+        }
+      }
+    },
+    "Why can't I delete the app?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لماذا لا أستطيع حذف التطبيق؟"
+          }
+        }
+      }
+    },
+    "Without Screen Time, Samla can't block anything. You can allow it later from Home." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بدون «مدة استخدام الجهاز» لا يستطيع الصملة حظر أي شيء. يمكنك السماح بذلك لاحقًا من الرئيسية."
+          }
+        }
+      }
+    },
+    "Wrong PIN. %lld attempts left." : {
+      "localizations" : {
+        "ar" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "رمز غير صحيح. تبقّت %lld محاولات."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "رمز غير صحيح. تبقّت %lld محاولة."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "رمز غير صحيح. تبقّت محاولة واحدة."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "رمز غير صحيح. تبقّت %lld محاولة."
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "رمز غير صحيح. تبقّت محاولتان."
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "رمز غير صحيح."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Wrong PIN. %lld attempt left."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Wrong PIN. %lld attempts left."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Yes, except in Hard Mode. Under Extra Options choose how many breaks you get per 24 hours and how long each lasts. Start a break from the list's page or the block screen." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نعم، إلا في الوضع الصارم. من «خيارات إضافية» اختر عدد الاستراحات خلال 24 ساعة ومدة كل منها. ويمكنك بدء الاستراحة من صفحة القائمة أو من شاشة الحظر."
+          }
+        }
+      }
+    },
+    "You can block up to %lld websites per list." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحد الأقصى للمواقع في كل قائمة: %lld."
+          }
+        }
+      }
+    },
+    "You can change it anytime in iOS Settings." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يمكنك تغييره في أي وقت من إعدادات iOS."
+          }
+        }
+      }
+    },
+    "You stay in control" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التحكم بيدك"
+          }
+        }
+      }
+    },
+    "Your accountability partner can turn it off sooner with their PIN." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يمكن لشريك المساءلة إيقافه قبل ذلك برمزه."
+          }
+        }
+      }
+    },
+    "Your block lists, schedules, partner details and settings are stored only on your device. Deleting the app or using Delete Account & Data in Settings removes them." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تُحفظ قوائم الحظر والجداول وبيانات الشريك والإعدادات على جهازك فقط. ويؤدي حذف التطبيق أو استخدام «حذف الحساب والبيانات» في الإعدادات إلى إزالتها."
+          }
+        }
+      }
+    },
+    "Your lists stay on this device." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "قوائمك تبقى على هذا الجهاز."
+          }
+        }
+      }
+    },
+    "your partner" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "شريكك"
+          }
+        }
+      }
+    },
+    "Your partner will be removed after a %lld-day wait. Block Forever isn't affected and keeps its own 360-day wait." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سيُزال شريكك بعد انتظار %lld أيام. لا يتأثر «احظر للأبد» ويبقى انتظاره 360 يومًا."
+          }
+        }
+      }
+    },
+    "Your partner's PIN is stored only on this device, as a protected hash in the Keychain. It is never sent anywhere." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يُحفظ رمز شريكك على هذا الجهاز فقط، مشفّرًا في سلسلة المفاتيح، ولا يُرسل إلى أي مكان."
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

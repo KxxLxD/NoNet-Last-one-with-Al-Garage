@@ -68,9 +68,12 @@ struct ScheduleEditorSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
+                        // Days picked but "Add Slot" not tapped still count: never drop a choice silently.
+                        if !selectedDays.isEmpty { addSlots() }
                         onSave(working)
                         dismiss()
                     }
+                    .disabled(working.isEmpty && selectedDays.isEmpty)
                 }
             }
             .onAppear { working = initialSlots }

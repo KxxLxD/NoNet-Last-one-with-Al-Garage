@@ -9,11 +9,13 @@ struct ListsView: View {
     @State private var showCreate = false
     @State private var showPremium = false
     @State private var pendingDelete: BlockList?
+    @State private var pendingStart: BlockList?
 
     var body: some View {
         NavigationStack {
-            TimelineView(.periodic(from: .now, by: 30)) { context in
-                content(now: context.date)
+            // `.now`, not the tick's date: after a start or stop the tick date is stale for up to 30 s.
+            TimelineView(.periodic(from: .now, by: 30)) { _ in
+                content(now: .now)
             }
             .navigationTitle("Lists")
             .toolbar {
@@ -34,6 +36,7 @@ struct ListsView: View {
             } message: {
                 Text("Are you sure you want to delete this list?")
             }
+            .startConfirmation(for: $pendingStart)
         }
     }
 
@@ -64,7 +67,7 @@ struct ListsView: View {
         if !lists.isEmpty {
             Section(title) {
                 ForEach(lists) { list in
-                    ListRow(list: list, now: now)
+                    ListRow(list: list, now: now) { pendingStart = list }
                         .swipeActions(edge: .trailing) {
                             if !list.isLocked(at: now) {
                                 Button("Delete", systemImage: "trash", role: .destructive) { pendingDelete = list }
@@ -90,15 +93,26 @@ struct ListRow: View {
     @Environment(ListsModel.self) private var model
     let list: BlockList
     let now: Date
+    /// Called instead of starting when the list is protected and needs confirming first.
+    var onConfirmStart: () -> Void
 
     var body: some View {
         HStack(spacing: Spacing.m) {
             NavigationLink(value: list.id) {
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text(list.name)
-                        .font(.headline)
-                        .foregroundStyle(AppColors.text)
-                        .lineLimit(1)
+                    HStack(spacing: Spacing.xs) {
+                        Text(list.name)
+                            .font(.headline)
+                            .foregroundStyle(AppColors.text)
+                            .lineLimit(1)
+                        // While locked, the trailing lock already says so.
+                        if list.protection != .none && !list.isLocked(at: now) {
+                            Image(systemName: list.protection.systemImage)
+                                .font(.caption)
+                                .foregroundStyle(AppColors.textSecondary)
+                                .accessibilityLabel(list.protection.title)
+                        }
+                    }
                     StatusLine(status: ListStatus(list, at: now), detail: ListText.detail(for: list, at: now))
                 }
                 .padding(.vertical, Spacing.xs)
@@ -111,7 +125,15 @@ struct ListRow: View {
             } else if list.kind == .now {
                 let isActive = list.isActive(at: now)
                 Button {
-                    if isActive { Haptics.warning(); model.stop(list.id) } else { Haptics.success(); model.start(list.id) }
+                    if isActive {
+                        Haptics.warning()
+                        model.stop(list.id)
+                    } else if list.startNeedsConfirmation {
+                        onConfirmStart()
+                    } else {
+                        Haptics.success()
+                        model.start(list.id)
+                    }
                 } label: {
                     Image(systemName: isActive ? "stop.circle.fill" : "play.circle.fill")
                         .font(.title2)

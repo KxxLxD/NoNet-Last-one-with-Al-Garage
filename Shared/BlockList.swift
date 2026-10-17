@@ -58,6 +58,9 @@ struct BlockList: Codable, Identifiable, Equatable {
     var websites: [String] = []
     var selection = FamilyActivitySelection()
     var blockAdultContent = false
+    /// "No Internet mode": every app and website is blocked except `allowedSelection`.
+    var blocksEverything = false
+    var allowedSelection = FamilyActivitySelection()
     var breaks = BreakPolicy()
     var createdAt = Date()
     var updatedAt = Date()
@@ -83,6 +86,8 @@ struct BlockList: Codable, Identifiable, Equatable {
         websites = try c.decodeIfPresent([String].self, forKey: .websites) ?? []
         selection = (try? c.decodeIfPresent(FamilyActivitySelection.self, forKey: .selection)) ?? FamilyActivitySelection()
         blockAdultContent = try c.decodeIfPresent(Bool.self, forKey: .blockAdultContent) ?? false
+        blocksEverything = try c.decodeIfPresent(Bool.self, forKey: .blocksEverything) ?? false
+        allowedSelection = (try? c.decodeIfPresent(FamilyActivitySelection.self, forKey: .allowedSelection)) ?? FamilyActivitySelection()
         breaks = try c.decodeIfPresent(BreakPolicy.self, forKey: .breaks) ?? BreakPolicy()
         createdAt = try c.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
         updatedAt = try c.decodeIfPresent(Date.self, forKey: .updatedAt) ?? Date()
@@ -175,6 +180,6 @@ extension BlockList {
     var websiteCount: Int { websites.count + selection.webDomainTokens.count }
 
     var hasItems: Bool {
-        appCount + categoryCount + websiteCount > 0 || blockAdultContent
+        blocksEverything || appCount + categoryCount + websiteCount > 0 || blockAdultContent
     }
 }

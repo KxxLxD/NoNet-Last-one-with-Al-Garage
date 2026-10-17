@@ -23,11 +23,13 @@ struct ListEditorView: View {
 
     @State private var showItemsEditor = false
     @State private var showScheduleEditor = false
+    @State private var showDurationPicker = false
     @State private var showSummary = false
     @State private var showSavedToast = false
 
-    private let minuteOptions = Array(stride(from: 0, through: 55, by: 5))
     private static let breakLengths = [5, 10, 15, 20]
+    /// One-tap "Block Now" lengths; anything else is "Custom".
+    private static let durationPresets = [25 * 60, 3600, 2 * 3600, 4 * 3600, 8 * 3600, 86_400]
 
     init(mode: Mode) {
         self.mode = mode
@@ -91,6 +93,10 @@ struct ListEditorView: View {
             .sheet(isPresented: $showScheduleEditor) {
                 ScheduleEditorSheet(initialSlots: draft.slots) { draft.slots = $0 }
             }
+            .sheet(isPresented: $showDurationPicker) {
+                DurationPickerSheet(days: $days, hours: $hours, minutes: $minutes, maxDays: ListsModel.maxDays(for: draft.protection))
+                    .presentationDetents([.height(360)])
+            }
             .sheet(isPresented: $showSummary) {
                 ListSummarySheet(list: finalized, isEditing: isEditing, addsProtection: addsProtection, startsNow: startsNow) {
                     showSummary = false
@@ -151,11 +157,18 @@ struct ListEditorView: View {
                         .foregroundStyle(totalSeconds >= 5 * 60 ? AppColors.textSecondary : AppColors.danger)
                 }
                 .listRowSeparator(.hidden)
-                HStack(spacing: 0) {
-                    wheel("Days", selection: $days, values: Array(0...ListsModel.maxDays(for: draft.protection)))
-                    wheel("Hours", selection: $hours, values: Array(0...23))
-                    wheel("Minutes", selection: $minutes, values: minuteOptions)
+                // Chips instead of inline wheels: wheels in a scrolling form spin when you scroll past them.
+                FlowLayout {
+                    ForEach(Self.durationPresets, id: \.self) { seconds in
+                        ChipToggle(title: Formatters.duration(seconds: seconds), isOn: totalSeconds == seconds) {
+                            setDuration(seconds)
+                        }
+                    }
+                    ChipToggle(title: String(localized: "Custom"), isOn: !Self.durationPresets.contains(totalSeconds)) {
+                        showDurationPicker = true
+                    }
                 }
+                .padding(.vertical, Spacing.xs)
                 if !isEditing && draft.protection == .none {
                     Toggle("Start right away", isOn: $startImmediately)
                 }
@@ -252,22 +265,13 @@ struct ListEditorView: View {
         .disabled(disabled)
     }
 
-    private func wheel(_ title: LocalizedStringKey, selection: Binding<Int>, values: [Int]) -> some View {
-        VStack(spacing: Spacing.xs) {
-            Text(title)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(AppColors.textSecondary)
-            Picker(title, selection: selection) {
-                ForEach(values, id: \.self) { Text($0, format: .number).tag($0) }
-            }
-            .pickerStyle(.wheel)
-            .frame(height: 130)
-            .clipped()
-        }
-        .frame(maxWidth: .infinity)
-    }
-
     // MARK: - Helpers
+
+    private func setDuration(_ seconds: Int) {
+        days = seconds / 86_400
+        hours = (seconds % 86_400) / 3600
+        minutes = (seconds % 3600) / 60
+    }
 
     private var itemsSummary: String {
         let apps = draft.appCount + draft.categoryCount
@@ -333,6 +337,59 @@ struct ListEditorView: View {
             try? await Task.sleep(for: .seconds(1.2))
             dismiss()
         }
+    }
+}
+
+/// Days / hours / minutes wheels for a custom "Block Now" length, in their own sheet so
+/// scrolling the form can never spin them by accident.
+private struct DurationPickerSheet: View {
+    @Binding var days: Int
+    @Binding var hours: Int
+    @Binding var minutes: Int
+    let maxDays: Int
+
+    @Environment(\.dismiss) private var dismiss
+
+    private static let minuteOptions = Array(stride(from: 0, through: 55, by: 5))
+    private var totalSeconds: Int { days * 86_400 + hours * 3600 + minutes * 60 }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: Spacing.m) {
+                HStack(spacing: 0) {
+                    wheel("Days", selection: $days, values: Array(0...maxDays))
+                    wheel("Hours", selection: $hours, values: Array(0...23))
+                    wheel("Minutes", selection: $minutes, values: Self.minuteOptions)
+                }
+                Text(totalSeconds >= 5 * 60 ? Formatters.duration(seconds: totalSeconds) : String(localized: "At least 5 minutes"))
+                    .font(.headline)
+                    .foregroundStyle(totalSeconds >= 5 * 60 ? AppColors.primary : AppColors.danger)
+            }
+            .padding(.horizontal, Spacing.l)
+            .frame(maxHeight: .infinity, alignment: .top)
+            .navigationTitle("Duration")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+    }
+
+    private func wheel(_ title: LocalizedStringKey, selection: Binding<Int>, values: [Int]) -> some View {
+        VStack(spacing: Spacing.xs) {
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(AppColors.textSecondary)
+            Picker(title, selection: selection) {
+                ForEach(values, id: \.self) { Text($0, format: .number).tag($0) }
+            }
+            .pickerStyle(.wheel)
+            .frame(height: 150)
+            .clipped()
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 

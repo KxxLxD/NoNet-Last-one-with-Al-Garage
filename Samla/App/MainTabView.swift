@@ -1,27 +1,84 @@
 import SwiftUI
 
-enum AppTab: Int {
+enum AppTab: Int, CaseIterable {
     case home = 0
     case lists = 1
     case settings = 2
+
+    var title: LocalizedStringKey {
+        switch self {
+        case .home: "Home"
+        case .lists: "Lists"
+        case .settings: "Settings"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .home: "house.fill"
+        case .lists: "list.bullet"
+        case .settings: "gearshape.fill"
+        }
+    }
 }
 
+/// Three tabs with a plain white bar: a hairline on top, the selected tab in navy and
+/// the others grey — no glass or shimmer. The system bar is hidden so each tab still
+/// keeps its own navigation state.
 struct MainTabView: View {
     @AppStorage(StorageKey.selectedTab) private var selectedTab = AppTab.home
 
     var body: some View {
         TabView(selection: $selectedTab) {
             HomeView()
-                .tabItem { Label("Home", systemImage: "house") }
                 .tag(AppTab.home)
-
+                .toolbar(.hidden, for: .tabBar)
             ListsView()
-                .tabItem { Label("Lists", systemImage: "list.bullet") }
                 .tag(AppTab.lists)
-
+                .toolbar(.hidden, for: .tabBar)
             SettingsView()
-                .tabItem { Label("Settings", systemImage: "gearshape") }
                 .tag(AppTab.settings)
+                .toolbar(.hidden, for: .tabBar)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            TabBar(selection: $selectedTab)
+        }
+    }
+}
+
+private struct TabBar: View {
+    @Binding var selection: AppTab
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(AppTab.allCases, id: \.self) { tab in
+                Button {
+                    if selection != tab { Haptics.tap() }
+                    selection = tab
+                } label: {
+                    VStack(spacing: Spacing.xs) {
+                        Image(systemName: tab.systemImage)
+                            .font(.system(size: 22, weight: .medium))
+                            .frame(height: 26)
+                        Text(tab.title)
+                            .font(.caption2.weight(.medium))
+                    }
+                    .foregroundStyle(selection == tab ? AppColors.primary : AppColors.stopped)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, Spacing.s)
+                    .padding(.bottom, Spacing.xs)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(selection == tab ? [.isSelected, .isButton] : .isButton)
+            }
+        }
+        .background(alignment: .top) {
+            AppColors.surface
+                .ignoresSafeArea(edges: .bottom)
+                .overlay(alignment: .top) {
+                    Rectangle().fill(AppColors.border).frame(height: 0.5)
+                }
         }
     }
 }
