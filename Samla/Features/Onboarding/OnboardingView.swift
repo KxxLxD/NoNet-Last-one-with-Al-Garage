@@ -13,6 +13,7 @@ struct OnboardingView: View {
     @Environment(ForeverStore.self) private var forever
     @Environment(ListsModel.self) private var lists
     @AppStorage(StorageKey.onboardingCompleted) private var onboardingCompleted = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var step: Step = .welcome
     @State private var screenTimeDenied = false
@@ -25,7 +26,7 @@ struct OnboardingView: View {
             ScrollView {
                 content
                     .id(step)
-                    .transition(.push(from: .trailing))
+                    .transition(reduceMotion ? .opacity : .push(from: .trailing))
                     .padding(.horizontal, Spacing.xl)
                     .padding(.top, Spacing.xxl)
             }
@@ -84,6 +85,8 @@ struct OnboardingView: View {
                 .font(.caption.weight(.semibold).monospacedDigit())
                 .foregroundStyle(AppColors.textSecondary)
                 .fixedSize()
+                // The progress bar already says "1 of 4" to VoiceOver.
+                .accessibilityHidden(true)
         }
         .padding(.horizontal, Spacing.l)
         .padding(.top, Spacing.s)
@@ -257,6 +260,7 @@ private struct StepContent: View {
     let points: [Point]
 
     @State private var appeared = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(spacing: Spacing.xxl) {
@@ -272,6 +276,7 @@ private struct StepContent: View {
                     Text(title)
                         .font(.largeTitle.weight(.bold))
                         .foregroundStyle(AppColors.primary)
+                        .accessibilityAddTraits(.isHeader)
                     Text(subtitle)
                         .font(.body)
                         .foregroundStyle(AppColors.textSecondary)
@@ -302,7 +307,8 @@ private struct StepContent: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .onAppear { appeared = true }
+        // No bounce with Reduce Motion on.
+        .onAppear { if !reduceMotion { appeared = true } }
     }
 }
 

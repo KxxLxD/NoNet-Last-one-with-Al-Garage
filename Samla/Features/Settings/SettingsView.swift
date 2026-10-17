@@ -7,6 +7,7 @@ struct SettingsView: View {
     @Environment(AccountStore.self) private var account
     @Environment(ForeverStore.self) private var forever
     @Environment(\.openURL) private var openURL
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var showForeverSetup = false
 
     var body: some View {
@@ -65,8 +66,10 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("Account") {
+                Section {
                     AccountSection()
+                } header: {
+                    Text("Account").sectionCaption()
                 }
             }
             .navigationTitle("Settings")
@@ -120,18 +123,26 @@ struct SettingsView: View {
     }
 
     private func row(_ title: LocalizedStringKey, systemImage: String, color: Color, detail: String? = nil, trailing: Trailing = .none) -> some View {
-        HStack(spacing: Spacing.m) {
+        // Side by side normally; at accessibility sizes the detail goes under the title so
+        // neither has to break words.
+        let isLarge = dynamicTypeSize.isAccessibilitySize
+        return HStack(spacing: Spacing.m) {
             IconSquare(systemName: systemImage, color: color)
-            Text(title).foregroundStyle(AppColors.text)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).foregroundStyle(AppColors.text)
+                if isLarge, let detail {
+                    Text(detail).foregroundStyle(AppColors.textSecondary)
+                }
+            }
             Spacer()
-            if let detail {
+            if !isLarge, let detail {
                 Text(detail)
                     .foregroundStyle(AppColors.textSecondary)
             }
             if trailing != .none {
                 Image(systemName: trailing == .external ? "arrow.up.forward" : "chevron.forward")
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(AppColors.stopped)
+                    .foregroundStyle(AppColors.textSecondary)
                     .accessibilityHidden(true)
             }
         }

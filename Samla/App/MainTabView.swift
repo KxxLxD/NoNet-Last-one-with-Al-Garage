@@ -60,6 +60,7 @@ private struct TabBar: View {
                         Image(systemName: tab.systemImage)
                             .font(.system(size: 22, weight: .medium))
                             .frame(height: 26)
+                            .accessibilityHidden(true)
                         Text(tab.title)
                             .font(.caption2.weight(.medium))
                     }
@@ -77,6 +78,8 @@ private struct TabBar: View {
         }
         // Capped like the system tab bar, so huge text can't push tabs off screen.
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .accessibilityElement(children: .contain)
+        .accessibilityAddTraits(.isTabBar)
         .background(alignment: .top) {
             AppColors.surface
                 .ignoresSafeArea(edges: .bottom)

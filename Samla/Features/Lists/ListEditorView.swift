@@ -108,6 +108,7 @@ struct ListEditorView: View {
                         } else {
                             Haptics.warning()
                             withAnimation { showValidation = true }
+                            Announcer.say(missingSummary)
                         }
                     }
                 }
@@ -149,15 +150,19 @@ struct ListEditorView: View {
 
     private var nameSection: some View {
         Section {
-            TextField("e.g., Sleep", text: $draft.name)
+            TextField("Name", text: $draft.name, prompt: Text("e.g., Sleep"))
                 .textInputAutocapitalization(.words)
                 .autocorrectionDisabled()
         } header: {
             Text("Name")
+                .sectionCaption()
         } footer: {
-            if showValidation && trimmedName.count < 2 {
-                missing("Enter a name of at least 2 characters.")
+            Group {
+                if showValidation && trimmedName.count < 2 {
+                    missing("Enter a name of at least 2 characters.")
+                }
             }
+            .sectionCaption()
         }
     }
 
@@ -175,13 +180,17 @@ struct ListEditorView: View {
             }
         } header: {
             Text("What to block")
+                .sectionCaption()
         } footer: {
-            if showValidation && !draft.hasItems {
-                missing("Choose at least one app, category or website.")
-            } else if isStarter {
-                // Apple doesn't let Samla pick apps, so a starter alone won't block the TikTok app itself.
-                Label("Starter lists block websites. Add the apps too (TikTok, Instagram…) in What to block › Apps.", systemImage: "info.circle.fill")
+            Group {
+                if showValidation && !draft.hasItems {
+                    missing("Choose at least one app, category or website.")
+                } else if isStarter {
+                    // Apple doesn't let Samla pick apps, so a starter alone won't block the TikTok app itself.
+                    Label("Starter lists block websites. Add the apps too (TikTok, Instagram…) in What to block › Apps.", systemImage: "info.circle.fill")
+                }
             }
+            .sectionCaption()
         }
     }
 
@@ -198,7 +207,7 @@ struct ListEditorView: View {
             case .now:
                 LabeledContent("Duration") {
                     Text(totalSeconds >= 5 * 60 ? Formatters.duration(seconds: totalSeconds) : String(localized: "At least 5 minutes"))
-                        .foregroundStyle(totalSeconds >= 5 * 60 ? AppColors.textSecondary : AppColors.danger)
+                        .foregroundStyle(totalSeconds >= 5 * 60 ? AppColors.textSecondary : AppColors.dangerText)
                 }
                 .listRowSeparator(.hidden)
                 // Chips instead of inline wheels: wheels in a scrolling form spin when you scroll past them.
@@ -230,10 +239,14 @@ struct ListEditorView: View {
             }
         } header: {
             Text("Time")
+                .sectionCaption()
         } footer: {
-            if showValidation && draft.kind == .scheduled && draft.slots.isEmpty {
-                missing("Add at least one day and time.")
+            Group {
+                if showValidation && draft.kind == .scheduled && draft.slots.isEmpty {
+                    missing("Add at least one day and time.")
+                }
             }
+            .sectionCaption()
         }
     }
 
@@ -247,20 +260,26 @@ struct ListEditorView: View {
                     Spacer()
                     Text(draft.protection.title).foregroundStyle(AppColors.textSecondary)
                     if draft.breaks.count > 0 && !draft.isHard {
-                        Text("·").foregroundStyle(AppColors.textSecondary)
+                        Text("·")
+                            .foregroundStyle(AppColors.textSecondary)
+                            .accessibilityHidden(true)
                         Text("\(draft.breaks.count) breaks").foregroundStyle(AppColors.textSecondary)
                     }
                     Image(systemName: "chevron.down")
                         .font(.footnote.weight(.semibold))
                         .foregroundStyle(AppColors.textSecondary)
                         .rotationEffect(.degrees(showExtras ? 180 : 0))
+                        .accessibilityHidden(true)
                 }
             }
             .accessibilityValue(showExtras ? Text("Expanded") : Text("Collapsed"))
         } footer: {
-            if !showExtras {
-                Text("Protection and breaks.")
+            Group {
+                if !showExtras {
+                    Text("Protection and breaks.")
+                }
             }
+            .sectionCaption()
         }
     }
 
@@ -290,12 +309,16 @@ struct ListEditorView: View {
             }
         } header: {
             Text("Protection")
+                .sectionCaption()
         } footer: {
-            switch draft.protection {
-            case .none: Text("Edit, stop or delete anytime.")
-            case .hard: Text("Can't be stopped, edited or deleted while active, and Samla can't be deleted. No breaks.")
-            case .partner: Text("Only your partner's PIN can stop, edit or delete it while active.")
+            Group {
+                switch draft.protection {
+                case .none: Text("Edit, stop or delete anytime.")
+                case .hard: Text("Can't be stopped, edited or deleted while active, and Samla can't be deleted. No breaks.")
+                case .partner: Text("Only your partner's PIN can stop, edit or delete it while active.")
+                }
             }
+            .sectionCaption()
         }
     }
 
@@ -309,6 +332,17 @@ struct ListEditorView: View {
                     .font(.title3.weight(.semibold).monospacedDigit())
                     .frame(minWidth: 32)
                 counterButton("plus", disabled: draft.breaks.count == 5) { draft.breaks.count += 1 }
+            }
+            // One VoiceOver control with a value, adjusted by swiping up and down.
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text("Breaks per day"))
+            .accessibilityValue(Text(draft.breaks.count, format: .number))
+            .accessibilityAdjustableAction { direction in
+                switch direction {
+                case .increment: if draft.breaks.count < 5 { draft.breaks.count += 1 }
+                case .decrement: if draft.breaks.count > 0 { draft.breaks.count -= 1 }
+                @unknown default: break
+                }
             }
             if draft.breaks.count > 0 {
                 VStack(alignment: .leading, spacing: Spacing.s) {
@@ -325,12 +359,16 @@ struct ListEditorView: View {
             }
         } header: {
             Text("Breaks")
+                .sectionCaption()
         } footer: {
-            if draft.breaks.count > 0 {
-                Text("\(draft.breaks.count.formatted(.number.locale(.app))) × \(Formatters.duration(minutes: draft.breaks.minutes)) per day")
-            } else {
-                Text("Short breaks let you open blocked apps for a few minutes.")
+            Group {
+                if draft.breaks.count > 0 {
+                    Text("\(draft.breaks.count.formatted(.number.locale(.app))) × \(Formatters.duration(minutes: draft.breaks.minutes)) per day")
+                } else {
+                    Text("Short breaks let you open blocked apps for a few minutes.")
+                }
             }
+            .sectionCaption()
         }
     }
 
@@ -359,9 +397,19 @@ struct ListEditorView: View {
         minutes = (seconds % 3600) / 60
     }
 
+    /// The footer messages, spoken together for VoiceOver when "Create" can't go ahead.
+    private var missingSummary: String {
+        var messages: [String] = []
+        if trimmedName.count < 2 { messages.append(String(localized: "Enter a name of at least 2 characters.")) }
+        if !draft.hasItems { messages.append(String(localized: "Choose at least one app, category or website.")) }
+        if draft.kind == .scheduled && draft.slots.isEmpty { messages.append(String(localized: "Add at least one day and time.")) }
+        if draft.kind == .now && totalSeconds < 5 * 60 { messages.append(String(localized: "At least 5 minutes")) }
+        return messages.joined(separator: " ")
+    }
+
     private func missing(_ message: LocalizedStringKey) -> some View {
         Label(message, systemImage: "exclamationmark.circle.fill")
-            .foregroundStyle(AppColors.danger)
+            .foregroundStyle(AppColors.dangerText)
     }
 
     private var itemsSummary: String {
@@ -426,6 +474,7 @@ struct ListEditorView: View {
         }
         Haptics.success()
         showSavedToast = true
+        Announcer.say(String(localized: isEditing ? "List updated" : "List created"))
         Task {
             try? await Task.sleep(for: .seconds(1.2))
             dismiss()
@@ -456,7 +505,7 @@ private struct DurationPickerSheet: View {
                 }
                 Text(totalSeconds >= 5 * 60 ? Formatters.duration(seconds: totalSeconds) : String(localized: "At least 5 minutes"))
                     .font(.headline)
-                    .foregroundStyle(totalSeconds >= 5 * 60 ? AppColors.primary : AppColors.danger)
+                    .foregroundStyle(totalSeconds >= 5 * 60 ? AppColors.primary : AppColors.dangerText)
             }
             .padding(.horizontal, Spacing.l)
             .frame(maxHeight: .infinity, alignment: .top)
@@ -506,7 +555,7 @@ private struct ListSummarySheet: View {
                         .listRowBackground(Color.clear)
                 }
                 BlockedItemsSection(list: list)
-                Section("Time") {
+                Section {
                     switch list.kind {
                     case .now:
                         LabeledContent("Duration", value: Formatters.duration(seconds: list.durationSeconds))
@@ -519,17 +568,23 @@ private struct ListSummarySheet: View {
                     if list.allowsBreaks {
                         LabeledContent("Breaks", value: "\(list.breaks.count.formatted(.number.locale(.app))) × \(Formatters.duration(minutes: list.breaks.minutes))")
                     }
+                } header: {
+                    Text("Time").sectionCaption()
                 }
                 Section {
                     Label(list.protection.title, systemImage: list.protection.systemImage)
                 } header: {
                     Text("Protection")
+                        .sectionCaption()
                 } footer: {
-                    if addsProtection {
-                        Text(list.isHard
-                             ? "While this list is active you won't be able to stop, edit or delete it, and Samla can't be deleted."
-                             : "While this list is active, only your partner's PIN can stop, edit or delete it, and Samla can't be deleted.")
+                    Group {
+                        if addsProtection {
+                            Text(list.isHard
+                                 ? "While this list is active you won't be able to stop, edit or delete it, and Samla can't be deleted."
+                                 : "While this list is active, only your partner's PIN can stop, edit or delete it, and Samla can't be deleted.")
+                        }
                     }
+                    .sectionCaption()
                 }
             }
             .navigationTitle(isEditing ? "Confirm Changes" : "Confirm List")

@@ -11,7 +11,7 @@ struct PoliciesView: View {
 
     var body: some View {
         List {
-            Section("Privacy Policy") {
+            Section {
                 ForEach(privacy.indices, id: \.self) { index in
                     Text(privacy[index])
                         .font(.subheadline)
@@ -21,9 +21,11 @@ struct PoliciesView: View {
                 if let url = AppLinks.privacyPolicy {
                     Link("Full Privacy Policy", destination: url)
                 }
+            } header: {
+                Text("Privacy Policy").sectionCaption()
             }
 
-            Section("Terms of Use") {
+            Section {
                 Text("Samla is provided to help you build healthier digital habits. Hard Mode and Block Forever are voluntary commitments: once on, they can't be turned off early, so choose carefully.")
                     .font(.subheadline)
                     .foregroundStyle(AppColors.text)
@@ -31,6 +33,8 @@ struct PoliciesView: View {
                 if let terms = AppLinks.termsOfUse {
                     Link("Apple Standard EULA", destination: terms)
                 }
+            } header: {
+                Text("Terms of Use").sectionCaption()
             }
 
             if let email = AppLinks.supportEmail {

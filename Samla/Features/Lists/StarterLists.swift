@@ -61,7 +61,7 @@ struct StarterListsSection: View {
                         Spacer()
                         Image(systemName: "chevron.forward")
                             .font(.footnote.weight(.semibold))
-                            .foregroundStyle(AppColors.stopped)
+                            .foregroundStyle(AppColors.textSecondary)
                             .accessibilityHidden(true)
                     }
                 }
@@ -71,8 +71,10 @@ struct StarterListsSection: View {
             }
         } header: {
             Text("Start with a ready list")
+                .sectionCaption()
         } footer: {
             Text("You can change everything before saving.")
+                .sectionCaption()
         }
     }
 }

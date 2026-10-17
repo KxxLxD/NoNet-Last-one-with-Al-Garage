@@ -31,12 +31,42 @@
         }
       }
     },
+    "“%@” resumed." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استؤنفت «%@»."
+          }
+        }
+      }
+    },
+    "“%@” skipped today." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم تخطي «%@» اليوم."
+          }
+        }
+      }
+    },
     "“%@” starts blocking again soon." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "سيعود حظر «%@» بعد قليل."
+          }
+        }
+      }
+    },
+    "“%@” stopped." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "توقفت «%@»."
           }
         }
       }
@@ -127,6 +157,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "/ %@"
+          }
+        }
+      }
+    },
+    "%@ added" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تمت إضافة %@"
           }
         }
       }
@@ -927,6 +967,16 @@
         }
       }
     },
+    "Allowed" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مسموح"
+          }
+        }
+      }
+    },
     "Allowed Apps" : {
       "localizations" : {
         "ar" : {
@@ -1107,12 +1157,12 @@
         }
       }
     },
-    "Block all" : {
+    "Block all %@" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "حظر الكل"
+            "value" : "حظر كل %@"
           }
         }
       }
@@ -1297,12 +1347,32 @@
         }
       }
     },
+    "Break ended" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "انتهت الاستراحة"
+          }
+        }
+      }
+    },
     "Break ends in a minute" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "تنتهي الاستراحة بعد دقيقة"
+          }
+        }
+      }
+    },
+    "Break started" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بدأت الاستراحة"
           }
         }
       }
@@ -3843,12 +3913,12 @@
         }
       }
     },
-    "Unblock all" : {
+    "Unblock all %@" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "إلغاء حظر الكل"
+            "value" : "إلغاء حظر كل %@"
           }
         }
       }
@@ -4003,6 +4073,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "سنُعلمك"
+          }
+        }
+      }
+    },
+    "Website" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الموقع"
           }
         }
       }

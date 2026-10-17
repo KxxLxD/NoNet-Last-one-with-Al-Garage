@@ -90,10 +90,9 @@ struct HomeView: View {
 
         Section {
             if let list = current {
-                // A hidden link plus our own white chevron: the system one is grey on navy and vanishes.
-                ZStack {
-                    NavigationLink(value: list.id) { EmptyView() }
-                        .opacity(0)
+                // A real link (so VoiceOver and keyboards see a button) with the system chevron
+                // swapped for a white one: the grey default vanishes on navy.
+                NavigationLink(value: list.id) {
                     HStack(spacing: Spacing.s) {
                         VStack(alignment: .leading, spacing: Spacing.s) {
                             Label(list.isOnBreak(at: now) ? "On break" : "Blocking now", systemImage: list.isOnBreak(at: now) ? "cup.and.saucer.fill" : "shield.lefthalf.filled")
@@ -102,7 +101,7 @@ struct HomeView: View {
                             Text(list.name)
                                 .font(.title2.weight(.bold))
                                 .foregroundStyle(.white)
-                                .lineLimit(1)
+                                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
                             if let end = list.isOnBreak(at: now) ? list.breakUntil : list.activeUntil(at: now) {
                                 CountdownText(end: end)
                                     .font(.system(size: 52, weight: .bold, design: .rounded))
@@ -120,12 +119,14 @@ struct HomeView: View {
                     }
                     .padding(.vertical, Spacing.m)
                 }
+                .navigationLinkIndicatorVisibility(.hidden)
             } else {
                 VStack(alignment: .leading, spacing: Spacing.l) {
                     VStack(alignment: .leading, spacing: Spacing.xs) {
                         Text("Nothing is blocking right now")
                             .font(.title3.weight(.bold))
                             .foregroundStyle(.white)
+                            .accessibilityAddTraits(.isHeader)
                         nextUp(now: now)
                             .font(.subheadline)
                             .foregroundStyle(.white.opacity(0.8))
@@ -165,44 +166,68 @@ struct HomeView: View {
         if model.lists.isEmpty {
             StarterListsSection(onPick: starterTapped, onCustom: createTapped)
         } else {
-            Section("Quick Start") {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: Spacing.s) {
-                        ForEach(startable) { list in
-                            Button {
-                                start(list)
-                            } label: {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Label(list.name, systemImage: list.startNeedsConfirmation ? list.protection.systemImage : "play.fill")
-                                        .font(.subheadline.weight(.semibold))
-                                        .lineLimit(1)
-                                    Text(Formatters.duration(seconds: list.durationSeconds))
-                                        .font(.caption)
-                                        .foregroundStyle(AppColors.textSecondary)
-                                }
-                                .foregroundStyle(AppColors.primary)
-                                .padding(.horizontal, Spacing.l)
-                                .padding(.vertical, Spacing.m)
-                                .background(AppColors.primarySoft, in: RoundedRectangle(cornerRadius: Radius.control))
-                            }
-                            .buttonStyle(.plain)
-                        }
-                        Button(action: createTapped) {
-                            Label("New List", systemImage: "plus")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(AppColors.primary)
-                                .padding(.horizontal, Spacing.l)
-                                .frame(minHeight: 52)
-                                .overlay(RoundedRectangle(cornerRadius: Radius.control).stroke(AppColors.border, style: StrokeStyle(lineWidth: 1, dash: [4])))
-                        }
-                        .buttonStyle(.plain)
+            Section {
+                if dynamicTypeSize.isAccessibilitySize {
+                    // Stacked at accessibility sizes: a horizontal row would push "New List" off screen.
+                    VStack(alignment: .leading, spacing: Spacing.s) {
+                        quickStartChips(startable)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, Spacing.l)
                     .padding(.vertical, Spacing.m)
+                    .listRowInsets(EdgeInsets())
+                } else {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: Spacing.s) {
+                            quickStartChips(startable)
+                        }
+                        .padding(.horizontal, Spacing.l)
+                        .padding(.vertical, Spacing.m)
+                    }
+                    .listRowInsets(EdgeInsets())
                 }
-                .listRowInsets(EdgeInsets())
+            } header: {
+                Text("Quick Start").sectionCaption()
             }
         }
+    }
+
+    @ViewBuilder
+    private func quickStartChips(_ startable: [BlockList]) -> some View {
+        // Stacked at accessibility sizes: full-width chips whose names wrap instead of truncating.
+        let isLarge = dynamicTypeSize.isAccessibilitySize
+        ForEach(startable) { list in
+            Button {
+                start(list)
+            } label: {
+                VStack(alignment: .leading, spacing: 2) {
+                    Label(list.name, systemImage: list.startNeedsConfirmation ? list.protection.systemImage : "play.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .lineLimit(isLarge ? nil : 1)
+                        .fixedSize(horizontal: false, vertical: isLarge)
+                    Text(Formatters.duration(seconds: list.durationSeconds))
+                        .font(.caption)
+                        .foregroundStyle(AppColors.textSecondary)
+                }
+                .frame(maxWidth: isLarge ? .infinity : nil, alignment: .leading)
+                .foregroundStyle(AppColors.primary)
+                .padding(.horizontal, Spacing.l)
+                .padding(.vertical, Spacing.m)
+                .background(AppColors.primarySoft, in: RoundedRectangle(cornerRadius: Radius.control))
+            }
+            .buttonStyle(.plain)
+            // The lock is only visible: say the protection too.
+            .accessibilityValue(list.protection == .none ? Text(verbatim: "") : Text(list.protection.title))
+        }
+        Button(action: createTapped) {
+            Label("New List", systemImage: "plus")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(AppColors.primary)
+                .padding(.horizontal, Spacing.l)
+                .frame(maxWidth: isLarge ? .infinity : nil, minHeight: 52, alignment: .leading)
+                .overlay(RoundedRectangle(cornerRadius: Radius.control).stroke(AppColors.border, style: StrokeStyle(lineWidth: 1, dash: [4])))
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Block Forever
@@ -219,7 +244,8 @@ struct HomeView: View {
                         foreverLabel(status: String(localized: "Off"), color: AppColors.textSecondary)
                         Image(systemName: "chevron.forward")
                             .font(.footnote.weight(.semibold))
-                            .foregroundStyle(AppColors.stopped)
+                            .foregroundStyle(AppColors.textSecondary)
+                            .accessibilityHidden(true)
                     }
                 }
             }
@@ -300,6 +326,7 @@ private struct PermissionsSheet: View {
     @Environment(NotificationService.self) private var notifications
     @Environment(ListsModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         NavigationStack {
@@ -327,22 +354,28 @@ private struct PermissionsSheet: View {
     }
 
     private func row(_ title: LocalizedStringKey, detail: LocalizedStringKey, systemImage: String, isGranted: Bool, action: LocalizedStringKey, perform: @escaping () -> Void) -> some View {
-        HStack(spacing: Spacing.m) {
-            IconSquare(systemName: systemImage, color: isGranted ? AppColors.active : AppColors.scheduled)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                Text(detail)
-                    .font(.caption)
-                    .foregroundStyle(AppColors.textSecondary)
+        // At accessibility sizes the button moves under the text instead of squeezing it.
+        let isLarge = dynamicTypeSize.isAccessibilitySize
+        let layout = isLarge ? AnyLayout(VStackLayout(alignment: .leading, spacing: Spacing.s)) : AnyLayout(HStackLayout(spacing: Spacing.m))
+        return layout {
+            HStack(spacing: Spacing.m) {
+                IconSquare(systemName: systemImage, color: isGranted ? AppColors.active : AppColors.scheduled)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                    Text(detail)
+                        .font(.caption)
+                        .foregroundStyle(AppColors.textSecondary)
+                }
             }
-            Spacer()
+            if !isLarge { Spacer(minLength: 0) }
             if isGranted {
-                Image(systemName: "checkmark.circle.fill").foregroundStyle(AppColors.active)
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(AppColors.active)
+                    .accessibilityLabel("Allowed")
             } else {
                 Button(action, action: perform)
                     .buttonStyle(.borderedProminent)
                     .buttonBorderShape(.capsule)
-                    .controlSize(.small)
             }
         }
     }

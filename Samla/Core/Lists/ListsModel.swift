@@ -160,6 +160,9 @@ final class ListsModel {
             list.session = DateInterval(start: now, duration: TimeInterval(list.durationSeconds))
             list.breakUntil = nil
         }
+        if let list = list(withID: id), list.isActive(at: now) {
+            Announcer.say(String(localized: "“\(list.name)” is now blocking."))
+        }
     }
 
     func stop(_ id: UUID, partnerApproved: Bool = false, now: Date = .now) {
@@ -169,6 +172,9 @@ final class ListsModel {
             list.session = nil
             list.breakUntil = nil
         }
+        if let list = list(withID: id), !list.isActive(at: now) {
+            Announcer.say(String(localized: "“\(list.name)” stopped."))
+        }
     }
 
     func takeBreak(_ id: UUID, now: Date = .now) {
@@ -177,10 +183,14 @@ final class ListsModel {
             list.breakUntil = now.addingTimeInterval(TimeInterval(list.breaks.minutes * 60))
             list.breakStarts.append(now)
         }
+        if list(withID: id)?.isOnBreak(at: now) == true {
+            Announcer.say(String(localized: "Break started"))
+        }
     }
 
     func endBreak(_ id: UUID) {
         mutate(id) { $0.breakUntil = nil }
+        Announcer.say(String(localized: "Break ended"))
     }
 
     /// "Skip Today": turns an unprotected scheduled list off until its current window ends.
@@ -190,10 +200,16 @@ final class ListsModel {
             list.skippedUntil = end
             list.breakUntil = nil
         }
+        if let list = list(withID: id), list.isSkipped(at: now) {
+            Announcer.say(String(localized: "“\(list.name)” skipped today."))
+        }
     }
 
     func resumeSchedule(_ id: UUID) {
         mutate(id) { $0.skippedUntil = nil }
+        if let list = list(withID: id) {
+            Announcer.say(String(localized: "“\(list.name)” resumed."))
+        }
     }
 
     // MARK: - System sync

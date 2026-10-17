@@ -23,6 +23,7 @@ struct PartnerPINSheet: View {
                     Image(systemName: "person.2.fill")
                         .font(.largeTitle)
                         .foregroundStyle(AppColors.primary)
+                        .accessibilityHidden(true)
                     Text("Hand the phone to \(partner.name ?? String(localized: "your partner"))")
                         .font(.headline)
                         .foregroundStyle(AppColors.text)
@@ -47,7 +48,7 @@ struct PartnerPINSheet: View {
                 if let errorMessage {
                     Text(errorMessage)
                         .font(.footnote)
-                        .foregroundStyle(AppColors.danger)
+                        .foregroundStyle(AppColors.dangerText)
                 }
 
                 VStack(spacing: Spacing.m) {
@@ -96,5 +97,6 @@ struct PartnerPINSheet: View {
             pin = ""
             errorMessage = String(localized: "Too many attempts. Try again at \(Formatters.clock(until)).")
         }
+        if let errorMessage { Announcer.say(errorMessage) }
     }
 }

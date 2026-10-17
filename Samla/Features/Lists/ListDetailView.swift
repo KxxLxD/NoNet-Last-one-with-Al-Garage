@@ -67,6 +67,7 @@ struct ListDetailView: View {
                         .font(.largeTitle.weight(.bold))
                         .foregroundStyle(AppColors.primary)
                         .lineLimit(2)
+                        .accessibilityAddTraits(.isHeader)
                     if let countdownEnd = list.isOnBreak(at: now) ? list.breakUntil : end {
                         CountdownText(end: countdownEnd)
                             .font(.system(size: 48, weight: .bold, design: .rounded))
@@ -82,7 +83,7 @@ struct ListDetailView: View {
 
             BlockedItemsSection(list: list)
 
-            Section("Time") {
+            Section {
                 switch list.kind {
                 case .now:
                     LabeledContent("Duration", value: Formatters.duration(seconds: list.durationSeconds))
@@ -95,16 +96,22 @@ struct ListDetailView: View {
                 if list.allowsBreaks {
                     LabeledContent("Breaks", value: String(localized: "\(list.breaksRemaining(at: now)) of \(list.breaks.count) left", locale: .app))
                 }
+            } header: {
+                Text("Time").sectionCaption()
             }
 
             Section {
                 Label(list.protection.title, systemImage: list.protection.systemImage)
             } header: {
                 Text("Protection")
+                    .sectionCaption()
             } footer: {
-                if needsPartner {
-                    Text("Protected by your partner")
+                Group {
+                    if needsPartner {
+                        Text("Protected by your partner")
+                    }
                 }
+                .sectionCaption()
             }
 
             // Secondary actions
@@ -186,7 +193,7 @@ struct ListDetailView: View {
                     } label: {
                         Label("Stop", systemImage: "stop.fill")
                     }
-                    .buttonStyle(SecondaryButtonStyle(tint: AppColors.danger))
+                    .buttonStyle(SecondaryButtonStyle(tint: AppColors.dangerText))
                 } else {
                     Button {
                         if list.startNeedsConfirmation {
@@ -223,7 +230,7 @@ struct BlockedItemsSection: View {
     let list: BlockList
 
     var body: some View {
-        Section("What to block") {
+        Section {
             if list.blocksEverything {
                 Label("No Internet Mode", systemImage: "wifi.slash")
                 LabeledContent("Allowed Apps", value: list.allowedSelection.applicationTokens.count.formatted(.number.locale(.app)))
@@ -234,6 +241,8 @@ struct BlockedItemsSection: View {
                     LabeledContent("Adult websites", value: String(localized: "Blocked"))
                 }
             }
+        } header: {
+            Text("What to block").sectionCaption()
         }
     }
 }

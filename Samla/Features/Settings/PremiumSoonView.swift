@@ -20,9 +20,11 @@ struct PremiumSoonView: View {
                     Image(systemName: "sparkles")
                         .font(.system(size: 48))
                         .foregroundStyle(AppColors.primary)
+                        .accessibilityHidden(true)
                     Text("Premium is coming soon")
                         .font(.title2.weight(.bold))
                         .foregroundStyle(AppColors.primary)
+                        .accessibilityAddTraits(.isHeader)
                     if reason == .listLimit {
                         Text("The free version holds \(ListsModel.freeListLimit) lists. Premium will remove the limit — for now, delete a list you no longer use to make room.")
                             .font(.subheadline)
@@ -41,6 +43,7 @@ struct PremiumSoonView: View {
                 feature("moon.stars.fill", "Blocking during prayer times")
             } footer: {
                 Text("Block Forever stays free forever.")
+                    .sectionCaption()
             }
 
             Section {

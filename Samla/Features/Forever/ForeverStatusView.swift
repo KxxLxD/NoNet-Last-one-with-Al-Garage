@@ -34,6 +34,7 @@ struct ForeverStatusView: View {
                     .padding(.vertical, Spacing.s)
                 } footer: {
                     Text(quote)
+                        .sectionCaption()
                 }
 
                 Section {
@@ -61,6 +62,7 @@ struct ForeverStatusView: View {
                     Button("Request Unlock", role: .destructive) { confirmRequest = true }
                 } footer: {
                     Text("Protection stays fully on during the wait. You can cancel the request anytime.")
+                        .sectionCaption()
                 }
             }
         }

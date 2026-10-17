@@ -18,6 +18,7 @@ struct AccountSection: View {
                 HStack(spacing: Spacing.m) {
                     Image(systemName: "apple.logo")
                         .font(.title3)
+                        .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(account.displayName ?? String(localized: "Apple Account"))
                             .font(.subheadline.weight(.semibold))
@@ -44,7 +45,7 @@ struct AccountSection: View {
                     if let errorMessage {
                         Text(errorMessage)
                             .font(.footnote)
-                            .foregroundStyle(AppColors.danger)
+                            .foregroundStyle(AppColors.dangerText)
                     }
                 }
                 .padding(.vertical, Spacing.xs)

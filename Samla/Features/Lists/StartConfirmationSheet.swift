@@ -45,6 +45,7 @@ private struct StartConfirmationSheet: View {
                             Text(list.name)
                                 .font(.title2.weight(.bold))
                                 .foregroundStyle(AppColors.primary)
+                                .accessibilityAddTraits(.isHeader)
                             Text(list.isHard
                                  ? "While this list is active you won't be able to stop, edit or delete it, and Samla can't be deleted."
                                  : "While this list is active, only your partner's PIN can stop, edit or delete it, and Samla can't be deleted.")

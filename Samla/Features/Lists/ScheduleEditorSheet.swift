@@ -18,7 +18,7 @@ struct ScheduleEditorSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Days") {
+                Section {
                     ForEach(0..<7, id: \.self) { day in
                         Toggle(Formatters.weekday(day), isOn: Binding {
                             selectedDays.contains(day)
@@ -26,6 +26,8 @@ struct ScheduleEditorSheet: View {
                             if isOn { selectedDays.insert(day) } else { selectedDays.remove(day) }
                         })
                     }
+                } header: {
+                    Text("Days").sectionCaption()
                 }
 
                 Section {
@@ -33,6 +35,7 @@ struct ScheduleEditorSheet: View {
                     DatePicker("To", selection: $to, displayedComponents: .hourAndMinute)
                 } footer: {
                     Text("Total: \(Formatters.duration(minutes: previewSlot.durationMinutes))")
+                        .sectionCaption()
                 }
 
                 Section {
@@ -44,7 +47,7 @@ struct ScheduleEditorSheet: View {
                     .disabled(selectedDays.isEmpty)
                 }
 
-                Section("Slots") {
+                Section {
                     if working.isEmpty {
                         Text("No slots").foregroundStyle(.secondary)
                     } else {
@@ -58,6 +61,8 @@ struct ScheduleEditorSheet: View {
                         }
                         .onDelete { working.remove(atOffsets: $0) }
                     }
+                } header: {
+                    Text("Slots").sectionCaption()
                 }
             }
             .navigationTitle("Scheduling")

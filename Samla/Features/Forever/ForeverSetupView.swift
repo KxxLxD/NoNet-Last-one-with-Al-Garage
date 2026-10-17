@@ -80,6 +80,7 @@ struct ForeverSetupView: View {
         }
         forever.enable(blocksMatureApps: blocksMatureApps)
         lists.refreshSystemState()
+        Announcer.say(String(localized: "Block Forever is on"))
         dismiss()
         onDone()
     }
@@ -92,6 +93,7 @@ struct ForeverAyah: View {
             Image(systemName: "shield.lefthalf.filled")
                 .font(.system(size: 44))
                 .foregroundStyle(AppColors.primary)
+                .accessibilityHidden(true)
             Text("“Tell the believing men to lower their gaze.”")
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AppColors.primary)

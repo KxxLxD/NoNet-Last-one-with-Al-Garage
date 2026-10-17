@@ -11,15 +11,18 @@ enum AppColors {
     static let surface = Color.white
     static let border = Color(hex: 0xE5E7EB)
     static let text = Color(hex: 0x111827)
-    static let textSecondary = Color(hex: 0x6B7280)
+    /// 6.1:1 on white and 5.5:1 on the grey page background (WCAG AA for small text on both).
+    static let textSecondary = Color(hex: 0x5B6270)
+    /// Fills and destructive buttons; use `dangerText` for red text.
     static let danger = Color(hex: 0xDC2626)
+    static let dangerText = Color(hex: 0xB91C1C)
 
     // List status: the bright shades for dots and icons…
     static let active = Color(hex: 0x16A34A)
     static let scheduled = Color(hex: 0xEA580C)
     static let stopped = Color(hex: 0x9CA3AF)
     // …and darker ones for text, so small text passes WCAG AA (4.5:1) on white.
-    static let activeText = Color(hex: 0x15803D)
+    static let activeText = Color(hex: 0x166534)
     static let scheduledText = Color(hex: 0xC2410C)
 }
 

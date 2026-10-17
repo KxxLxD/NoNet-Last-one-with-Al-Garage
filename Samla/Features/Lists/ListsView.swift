@@ -56,6 +56,7 @@ struct ListsView: View {
                         Text("Start your first block list")
                             .font(.title3.weight(.bold))
                             .foregroundStyle(AppColors.text)
+                            .accessibilityAddTraits(.isHeader)
                         Text("Choose apps and websites, then block them now or on a schedule.")
                             .font(.subheadline)
                             .foregroundStyle(AppColors.textSecondary)
@@ -75,6 +76,7 @@ struct ListsView: View {
                 if !subscriptions.isPremium {
                     Section {} footer: {
                         Text(String(localized: "\(model.lists.count) of \(ListsModel.freeListLimit) free lists used", locale: .app))
+                            .sectionCaption()
                     }
                 }
             }
@@ -84,7 +86,7 @@ struct ListsView: View {
     @ViewBuilder
     private func section(_ title: LocalizedStringKey, _ lists: [BlockList], now: Date) -> some View {
         if !lists.isEmpty {
-            Section(title) {
+            Section {
                 ForEach(lists) { list in
                     ListRow(list: list, now: now) { pendingStart = list }
                         .swipeActions(edge: .trailing) {
@@ -93,6 +95,8 @@ struct ListsView: View {
                             }
                         }
                 }
+            } header: {
+                Text(title).sectionCaption()
             }
         }
     }
@@ -167,6 +171,9 @@ struct ListRow: View {
                     Image(systemName: isActive ? "stop.circle.fill" : "play.circle.fill")
                         .font(.title2)
                         .foregroundStyle(isActive ? AppColors.danger : AppColors.primary)
+                        // The glyph is ~28 pt; the tap area is 44 pt.
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.borderless)
                 .accessibilityLabel(isActive ? Text("Stop \(list.name)") : Text("Start \(list.name)"))

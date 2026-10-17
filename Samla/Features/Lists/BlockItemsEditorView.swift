@@ -20,6 +20,7 @@ struct BlockItemsEditorView: View {
     @Environment(ScreenTimeAuthorization.self) private var screenTime
     @Environment(ForeverStore.self) private var forever
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     @State private var items: Items
     private let initialItems: Items
@@ -120,9 +121,12 @@ struct BlockItemsEditorView: View {
                 }
             }
         } footer: {
-            if items.blocksEverything {
-                Text("Choose apps only, like Maps or your bank. Phone calls always work, and every website stays blocked.")
+            Group {
+                if items.blocksEverything {
+                    Text("Choose apps only, like Maps or your bank. Phone calls always work, and every website stays blocked.")
+                }
             }
+            .sectionCaption()
         }
     }
 
@@ -150,13 +154,17 @@ struct BlockItemsEditorView: View {
                 Label(token)
             }
         } header: {
-            HStack {
-                Text("Apps")
-                Spacer()
-                if appCount > 0 { Text(appCount, format: .number) }
+            Group {
+                HStack {
+                    Text("Apps")
+                    Spacer()
+                    if appCount > 0 { Text(appCount, format: .number) }
+                }
             }
+            .sectionCaption()
         } footer: {
             Text("In Apple's list, tick a category to block all its apps, or open it and pick only some.")
+                .sectionCaption()
         }
     }
 
@@ -167,10 +175,14 @@ struct BlockItemsEditorView: View {
             ForEach(WebsiteCategory.distractions) { categoryRow($0) }
         } header: {
             Text("Distractions")
+                .sectionCaption()
         } footer: {
-            Text(isFull
-                 ? "You've reached Apple's limit of \(websiteLimit) websites per list."
-                 : "Tick a category to block all of it, or open it to pick sites. \(items.websites.count) of \(websiteLimit) websites used.")
+            Group {
+                Text(isFull
+                     ? "You've reached Apple's limit of \(websiteLimit) websites per list."
+                     : "Tick a category to block all of it, or open it to pick sites. \(items.websites.count) of \(websiteLimit) websites used.")
+            }
+            .sectionCaption()
         }
     }
 
@@ -194,11 +206,13 @@ struct BlockItemsEditorView: View {
                         Image(systemName: "chevron.forward")
                             .font(.footnote.weight(.semibold))
                             .foregroundStyle(AppColors.textSecondary)
+                            .accessibilityHidden(true)
                     }
                 }
             }
         } header: {
             Text("Protect Yourself")
+                .sectionCaption()
         }
     }
 
@@ -228,20 +242,28 @@ struct BlockItemsEditorView: View {
                     .foregroundStyle(AppColors.textSecondary)
             }
         } label: {
+            // At accessibility sizes the icon goes and the count moves under the title, so the
+            // title keeps the width instead of wrapping letter by letter.
+            let isLarge = dynamicTypeSize.isAccessibilitySize
+            let count = String(localized: "\(chosen) of \(category.sites.count)", locale: .app)
+            let showsCount = !covered && chosen > 0
             HStack(spacing: Spacing.s) {
                 Button { toggleAll(category) } label: {
                     SelectionMark(fill: fill)
-                        .frame(width: 44, height: 44)
+                        .frame(minWidth: 44, minHeight: 44)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.borderless)
                 .disabled(covered)
-                .accessibilityLabel(fill == .all ? Text("Unblock all") : Text("Block all"))
+                .accessibilityLabel(fill == .all ? Text("Unblock all \(Text(category.title))") : Text("Block all \(Text(category.title))"))
+                .accessibilityValue(showsCount ? Text(count) : Text(verbatim: ""))
 
-                Image(systemName: category.systemImage)
-                    .foregroundStyle(AppColors.primary)
-                    .frame(width: 24)
-                    .accessibilityHidden(true)
+                if !isLarge {
+                    Image(systemName: category.systemImage)
+                        .foregroundStyle(AppColors.primary)
+                        .frame(width: 24)
+                        .accessibilityHidden(true)
+                }
                 VStack(alignment: .leading, spacing: 2) {
                     Text(category.title)
                         .foregroundStyle(AppColors.text)
@@ -250,10 +272,15 @@ struct BlockItemsEditorView: View {
                             .font(.caption)
                             .foregroundStyle(AppColors.activeText)
                     }
+                    if isLarge && showsCount {
+                        Text(count)
+                            .font(.subheadline)
+                            .foregroundStyle(AppColors.textSecondary)
+                    }
                 }
                 Spacer(minLength: Spacing.s)
-                if !covered && chosen > 0 {
-                    Text(String(localized: "\(chosen) of \(category.sites.count)", locale: .app))
+                if !isLarge && showsCount {
+                    Text(count)
                         .font(.subheadline)
                         .foregroundStyle(AppColors.textSecondary)
                 }
@@ -290,7 +317,8 @@ struct BlockItemsEditorView: View {
             HStack(spacing: Spacing.m) {
                 Image(systemName: "globe")
                     .foregroundStyle(AppColors.textSecondary)
-                TextField("e.g., example.com", text: $websiteInput)
+                    .accessibilityHidden(true)
+                TextField("Website", text: $websiteInput, prompt: Text("e.g., example.com"))
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .keyboardType(.URL)
@@ -314,14 +342,18 @@ struct BlockItemsEditorView: View {
             }
         } header: {
             Text("Other Websites")
+                .sectionCaption()
         } footer: {
-            if !websiteInput.isEmpty && normalizedInput == nil {
-                Text("Enter a website like example.com")
-            } else if foreverActive {
-                Text("Block Forever uses \(ForeverBlock.blockedDomains.count) of Apple's \(ShieldEngine.maxFilterDomains)-website limit.")
-            } else if !customWebsites.isEmpty {
-                Text("Swipe a website to remove it.")
+            Group {
+                if !websiteInput.isEmpty && normalizedInput == nil {
+                    Text("Enter a website like example.com")
+                } else if foreverActive {
+                    Text("Block Forever uses \(ForeverBlock.blockedDomains.count) of Apple's \(ShieldEngine.maxFilterDomains)-website limit.")
+                } else if !customWebsites.isEmpty {
+                    Text("Swipe a website to remove it.")
+                }
             }
+            .sectionCaption()
         }
     }
 
@@ -387,10 +419,18 @@ struct BlockItemsEditorView: View {
     }
 
     private func addWebsite() {
-        guard let domain = normalizedInput, !isFull else { return }
+        guard !isFull else {
+            Announcer.say(String(localized: "You've reached Apple's limit of \(websiteLimit) websites per list."))
+            return
+        }
+        guard let domain = normalizedInput else {
+            Announcer.say(String(localized: "Enter a website like example.com"))
+            return
+        }
         if !items.websites.contains(domain) {
             Haptics.tap()
             withAnimation { items.websites.insert(domain, at: 0) }
+            Announcer.say(String(localized: "\(domain) added"))
         }
         websiteInput = ""
     }

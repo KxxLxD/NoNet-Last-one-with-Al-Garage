@@ -36,6 +36,7 @@ struct AboutView: View {
                 }
             } footer: {
                 Text("Everything stays on your device. We collect no data.")
+                    .sectionCaption()
             }
         }
         .navigationTitle("About Samla")

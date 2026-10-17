@@ -49,6 +49,7 @@ struct PartnerSettingsView: View {
             LabeledContent("PIN", value: "••••")
         } footer: {
             Text("Lists protected by your partner can only be stopped, edited or deleted with this PIN while they're active.")
+                .sectionCaption()
         }
 
         Section {
@@ -56,6 +57,7 @@ struct PartnerSettingsView: View {
             Button("Remove Partner", role: .destructive) { pendingAction = .remove }
         } footer: {
             Text("Both need your partner's current PIN.")
+                .sectionCaption()
         }
 
         Section {
@@ -91,9 +93,11 @@ private struct PartnerSetupForm: View {
                 .foregroundStyle(AppColors.textSecondary)
         }
 
-        Section("Partner's Name") {
-            TextField("e.g., Ahmed", text: $name)
+        Section {
+            TextField("Partner's Name", text: $name, prompt: Text("e.g., Ahmed"))
                 .textInputAutocapitalization(.words)
+        } header: {
+            Text("Partner's Name").sectionCaption()
         }
 
         Section {
@@ -101,10 +105,14 @@ private struct PartnerSetupForm: View {
             pinField("Confirm PIN", text: $confirmPIN)
         } header: {
             Text("PIN — your partner types it")
+                .sectionCaption()
         } footer: {
-            if !confirmPIN.isEmpty && pin != confirmPIN {
-                Text("The PINs don't match.")
+            Group {
+                if !confirmPIN.isEmpty && pin != confirmPIN {
+                    Text("The PINs don't match.")
+                }
             }
+            .sectionCaption()
         }
 
         Section {

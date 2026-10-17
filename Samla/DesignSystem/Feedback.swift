@@ -1,3 +1,4 @@
+import Accessibility
 import SwiftUI
 import UIKit
 
@@ -16,22 +17,42 @@ enum Haptics {
     }
 }
 
+/// Speaks a status message with VoiceOver (WCAG 4.1.3): saved, wrong PIN, form errors,
+/// start/stop. Does nothing when VoiceOver is off.
+enum Announcer {
+    static func say(_ message: String) {
+        AccessibilityNotification.Announcement(message).post()
+    }
+}
+
 extension View {
     /// A short "✓ List created" confirmation shown over the bottom of the view.
     func successToast(isPresented: Bool, message: LocalizedStringKey) -> some View {
-        overlay(alignment: .bottom) {
-            if isPresented {
-                Label(message, systemImage: "checkmark.circle.fill")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, Spacing.l)
-                    .padding(.vertical, Spacing.m)
-                    .background(AppColors.primary, in: Capsule())
-                    .padding(.bottom, Spacing.xl)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+        modifier(SuccessToast(isPresented: isPresented, message: message))
+    }
+}
+
+private struct SuccessToast: ViewModifier {
+    let isPresented: Bool
+    let message: LocalizedStringKey
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        content
+            .overlay(alignment: .bottom) {
+                if isPresented {
+                    Label(message, systemImage: "checkmark.circle.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, Spacing.l)
+                        .padding(.vertical, Spacing.m)
+                        .background(AppColors.primary, in: Capsule())
+                        .padding(.bottom, Spacing.xl)
+                        // Fade only when Reduce Motion is on.
+                        .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+                }
             }
-        }
-        .animation(.spring(duration: 0.3), value: isPresented)
+            .animation(.spring(duration: 0.3), value: isPresented)
     }
 }
 
@@ -112,6 +133,7 @@ struct ChipToggle: View {
             .font(.subheadline.weight(.medium))
             .padding(.horizontal, Spacing.m)
             .padding(.vertical, Spacing.s)
+            .frame(minHeight: 44)
             .foregroundStyle(isOn ? Color.white : AppColors.primary)
             .background(isOn ? AppColors.primary : AppColors.primarySoft, in: Capsule())
         }

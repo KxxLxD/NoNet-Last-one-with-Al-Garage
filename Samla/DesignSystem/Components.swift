@@ -29,6 +29,16 @@ extension View {
     }
 }
 
+// MARK: - Section text
+
+extension View {
+    /// Section header/footer color: iOS's default grey is 3.3:1 on the grouped background;
+    /// this one is 5.5:1, so headers and footers pass WCAG AA.
+    func sectionCaption() -> some View {
+        foregroundStyle(AppColors.textSecondary)
+    }
+}
+
 // MARK: - Buttons
 
 /// Main action: navy, rendered as tinted Liquid Glass on iOS 26 and later.
@@ -163,6 +173,8 @@ struct StatusLine: View {
     /// Off where a section header already names the status: "● Ends 6:00 AM".
     var showsTitle = true
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     var body: some View {
         HStack(spacing: 6) {
             Circle()
@@ -175,12 +187,17 @@ struct StatusLine: View {
                     .fontWeight(.semibold)
             }
             if let detail {
-                if showsTitle { Text("·").foregroundStyle(AppColors.textSecondary) }
+                if showsTitle {
+                    Text("·")
+                        .foregroundStyle(AppColors.textSecondary)
+                        .accessibilityHidden(true)
+                }
                 Text(detail).foregroundStyle(AppColors.textSecondary)
             }
         }
         .font(.subheadline)
-        .lineLimit(1)
+        // One line normally; at accessibility sizes wrap instead of cutting off the time.
+        .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
     }
 }
 
