@@ -15,6 +15,12 @@
 
 ### المرحلة 1 — الآن (عليك، دقائق)
 - [x] **1. دمج الشغل في الفرع الرئيسي** — تم (2026-10-17): `NoNet-Garage` صار نسختنا
+- [ ] **1.2 ترتيب GitHub (2026-10-17):** الفرع الرئيسي صار `main` (نسخة من `NoNet-Garage`)، وانحذف `NoNet-App` (محفوظ كوسم `archive/NoNet-App`)، وأُضيف README وLICENSE وCI وقوالب
+  - Settings ‹ General ‹ Default branch ← `main`
+  - ادمج الـPull Request من `refactor/project-structure` إلى `main` بعد ما يخضرّ الـCI
+  - Settings ‹ Rules ‹ Rulesets ← حماية `main`: Pull Request إلزامي + نجاح فحص «Build & test»
+  - بعدها احذف `NoNet-Garage` و`refactor/project-structure`
+  - About (الترس بجانب الوصف) ← الوصف والمواضيع (topics)
 - [ ] **1.5 (اختياري) إعادة تسمية المستودع** من `NoNet-Last-one-with-Al-Garage` إلى اسم باسم الصملة (Settings ‹ General ‹ Repository name) — بعدها نحدّث روابط الصفحات في `AppLinks.swift` و`docs/site/build_site.py`
 - [ ] **2. تشغيل صفحات الويب:** إعدادات المستودع ‹ Pages ‹ Deploy from a branch ‹ `gh-pages` / root
   - الرئيسية: https://kxxlxd.github.io/NoNet-Last-one-with-Al-Garage/

@@ -1,0 +1,9 @@
+# Normalize line endings; keep binaries untouched.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.pdf binary
+*.storekit text
+
+# GitHub language stats: the website generator and audits aren't app code.
+docs/** linguist-documentation

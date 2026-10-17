@@ -1,11 +1,44 @@
-# Xcode user state
+# Xcode
 xcuserdata/
 *.xcuserstate
+*.xcscmblueprint
+*.xccheckout
 DerivedData/
 build/
+*.moved-aside
+*.hmap
+timeline.xctimeline
+playground.xcworkspace
+
+# Build products
+*.ipa
+*.dSYM
+*.dSYM.zip
+*.xcarchive
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Signing material and secrets — never commit these
+*.p8
+*.p12
+*.cer
+*.mobileprovision
+.env
+.env.*
 
 # macOS
 .DS_Store
+.AppleDouble
+.LSOverride
 
 # Backups
 *.backup

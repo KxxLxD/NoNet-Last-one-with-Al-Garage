@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A newer push to the same branch cancels the run in progress.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build & test
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Select the newest stable Xcode
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | grep -iv beta | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
+      - name: Pick an iPhone simulator
+        id: simulator
+        run: |
+          ID=$(xcrun simctl list devices available --json | python3 -c '
+          import json, sys
+          runtimes = json.load(sys.stdin)["devices"]
+          for runtime in sorted(runtimes, reverse=True):
+              if "iOS" not in runtime:
+                  continue
+              for device in runtimes[runtime]:
+                  if device["name"].startswith("iPhone"):
+                      print(device["udid"])
+                      raise SystemExit
+          ')
+          echo "Using simulator $ID"
+          echo "id=$ID" >> "$GITHUB_OUTPUT"
+
+      - name: Build and test
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project Samla.xcodeproj \
+            -scheme Samla \
+            -destination "id=${{ steps.simulator.outputs.id }}" \
+            -skipMacroValidation \
+            | if command -v xcbeautify >/dev/null; then xcbeautify --renderer github-actions; else cat; fi
