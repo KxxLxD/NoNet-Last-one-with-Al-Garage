@@ -42,6 +42,8 @@ struct CountdownText: View {
     var body: some View {
         Text(timerInterval: Date.now...max(end, .now), countsDown: true)
             .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.5)
     }
 }
 

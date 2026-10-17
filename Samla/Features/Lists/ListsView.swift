@@ -10,6 +10,7 @@ struct ListsView: View {
     @State private var showPremium = false
     @State private var pendingDelete: BlockList?
     @State private var pendingStart: BlockList?
+    @State private var pendingStarter: StarterList?
 
     var body: some View {
         NavigationStack {
@@ -28,6 +29,7 @@ struct ListsView: View {
             }
             .navigationDestination(for: UUID.self) { ListDetailView(listID: $0) }
             .sheet(isPresented: $showCreate) { ListEditorView(mode: .create) }
+            .sheet(item: $pendingStarter) { ListEditorView(mode: .starter($0.makeList())) }
             .sheet(isPresented: $showPremium) { NavigationStack { PremiumSoonView(reason: .listLimit) } }
             .confirmationDialog("Delete List", isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }), titleVisibility: .visible) {
                 Button("Delete", role: .destructive) {
@@ -43,14 +45,26 @@ struct ListsView: View {
     @ViewBuilder
     private func content(now: Date) -> some View {
         if model.lists.isEmpty {
-            ContentUnavailableView {
-                Label("Start your first block list", systemImage: "shield.lefthalf.filled")
-            } description: {
-                Text("Choose apps and websites, then block them now or on a schedule.")
-            } actions: {
-                Button("Create List", action: createTapped)
-                    .buttonStyle(.borderedProminent)
-                    .buttonBorderShape(.capsule)
+            // Empty state with a way forward: three starters, one tap from a first list.
+            List {
+                Section {
+                    VStack(spacing: Spacing.s) {
+                        Image(systemName: "shield.lefthalf.filled")
+                            .font(.system(size: 44))
+                            .foregroundStyle(AppColors.primary)
+                            .accessibilityHidden(true)
+                        Text("Start your first block list")
+                            .font(.title3.weight(.bold))
+                            .foregroundStyle(AppColors.text)
+                        Text("Choose apps and websites, then block them now or on a schedule.")
+                            .font(.subheadline)
+                            .foregroundStyle(AppColors.textSecondary)
+                    }
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .listRowBackground(Color.clear)
+                }
+                StarterListsSection(onPick: starterTapped, onCustom: createTapped)
             }
         } else {
             let sorted = model.sorted(model.lists)
@@ -80,6 +94,14 @@ struct ListsView: View {
                         }
                 }
             }
+        }
+    }
+
+    private func starterTapped(_ starter: StarterList) {
+        if model.canCreateList(isPremium: subscriptions.isPremium) {
+            pendingStarter = starter
+        } else {
+            showPremium = true
         }
     }
 
@@ -118,9 +140,9 @@ struct ListRow: View {
                                 .accessibilityLabel(list.protection.title)
                         }
                     }
-                    // The section header already names the status, except "On break" inside Active.
+                    // The section header already names the status, except "On break" and "Skipped today".
                     let status = ListStatus(list, at: now)
-                    StatusLine(status: status, detail: ListText.detail(for: list, at: now), showsTitle: status == .onBreak)
+                    StatusLine(status: status, detail: ListText.detail(for: list, at: now), showsTitle: status == .onBreak || status == .skipped)
                 }
                 .padding(.vertical, Spacing.xs)
             }
@@ -153,7 +175,7 @@ struct ListRow: View {
     }
 }
 
-/// Shared status details: "Ends 6:00 AM", "Until 6:05 AM", a schedule summary or a duration.
+/// Shared status details: "Ends 6:00 AM", "Until 6:05 AM", "Starts 10:00 PM", a schedule summary or a duration.
 enum ListText {
     static func detail(for list: BlockList, at now: Date) -> String? {
         if list.isOnBreak(at: now), let until = list.breakUntil {
@@ -163,8 +185,14 @@ enum ListText {
             return String(localized: "Ends \(Formatters.clock(end, now: now))")
         }
         switch list.kind {
-        case .now: return Formatters.duration(seconds: list.durationSeconds)
-        case .scheduled: return Formatters.scheduleSummary(list.slots)
+        case .now:
+            return Formatters.duration(seconds: list.durationSeconds)
+        case .scheduled:
+            // What used to be Home's "Later Today": the next start, when it's today.
+            if !list.isSkipped(at: now), let start = list.nextStartToday(after: now) {
+                return String(localized: "Starts \(Formatters.clock(start, now: now))")
+            }
+            return Formatters.scheduleSummary(list.slots)
         }
     }
 }

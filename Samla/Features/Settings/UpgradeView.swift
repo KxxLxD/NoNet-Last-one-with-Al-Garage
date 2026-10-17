@@ -18,22 +18,22 @@ struct UpgradeView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: Spacing.l) {
                 header
 
                 if store.isPremium {
                     Label("Premium is active. Thank you!", systemImage: "checkmark.seal.fill")
                         .font(.headline)
                         .foregroundStyle(AppColors.activeText)
-                        .card(padding: 16)
+                        .card()
                 }
 
                 plans
                 FeatureComparison()
                 footerLinks
             }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 16)
+            .padding(.horizontal, Spacing.xl)
+            .padding(.vertical, Spacing.l)
         }
         .background(AppColors.background)
         .navigationTitle("Premium")
@@ -71,7 +71,7 @@ struct UpgradeView: View {
     // MARK: - Sections
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Spacing.s) {
             Text("Unlock focus and change digital habits")
                 .font(.title2.weight(.semibold))
                 .foregroundStyle(AppColors.text)
@@ -84,7 +84,7 @@ struct UpgradeView: View {
     @ViewBuilder
     private var plans: some View {
         if store.products.isEmpty {
-            VStack(spacing: 12) {
+            VStack(spacing: Spacing.m) {
                 if store.isLoadingProducts {
                     ProgressView()
                 } else {
@@ -113,8 +113,8 @@ struct UpgradeView: View {
     }
 
     private var footerLinks: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 16) {
+        VStack(alignment: .leading, spacing: Spacing.m) {
+            HStack(spacing: Spacing.l) {
                 Button("Restore Purchases") {
                     Task { await store.restore() }
                 }
@@ -126,7 +126,7 @@ struct UpgradeView: View {
                 .font(.caption)
                 .foregroundStyle(AppColors.textSecondary)
 
-            HStack(spacing: 16) {
+            HStack(spacing: Spacing.l) {
                 if let terms = AppLinks.termsOfUse {
                     Link("Terms of Use", destination: terms)
                 }
@@ -154,9 +154,9 @@ struct UpgradeView: View {
         }
         .buttonStyle(PrimaryButtonStyle(height: 50))
         .disabled(selectedProduct == nil || isPurchasing)
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
-        .padding(.bottom, 16)
+        .padding(.horizontal, Spacing.l)
+        .padding(.top, Spacing.s)
+        .padding(.bottom, Spacing.l)
         .background(AppColors.background)
     }
 
@@ -197,7 +197,7 @@ private struct PlanCard: View {
 
     var body: some View {
         Button(action: onSelect) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: Spacing.s) {
                 HStack {
                     Text(product.displayName)
                         .font(.title3.weight(.semibold))
@@ -231,10 +231,10 @@ private struct PlanCard: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(20)
-            .background(AppColors.surface, in: RoundedRectangle(cornerRadius: 20))
+            .padding(Spacing.l)
+            .background(AppColors.surface, in: RoundedRectangle(cornerRadius: Radius.card))
             .overlay(
-                RoundedRectangle(cornerRadius: 20)
+                RoundedRectangle(cornerRadius: Radius.card)
                     .stroke(isSelected ? AppColors.primary : AppColors.border, lineWidth: isSelected ? 1.5 : 0.5)
             )
         }
@@ -265,7 +265,7 @@ private enum PeriodFormatter {
 
 private struct FeatureComparison: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Spacing.m) {
             Text("Free")
                 .font(.headline)
                 .foregroundStyle(AppColors.text)
@@ -288,7 +288,7 @@ private struct FeatureComparison: View {
     }
 
     private func row(_ icon: String, _ text: LocalizedStringKey, available: Bool) -> some View {
-        HStack(spacing: 10) {
+        HStack(spacing: Spacing.s) {
             Image(systemName: available ? "checkmark.circle.fill" : "xmark.circle")
                 .foregroundStyle(available ? AppColors.primary : AppColors.textSecondary)
             Image(systemName: icon)

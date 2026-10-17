@@ -83,34 +83,6 @@ struct SecondaryButtonStyle: ButtonStyle {
     }
 }
 
-/// Small tinted square holding an SF Symbol (used for "+", play/stop buttons).
-struct IconTile: View {
-    let systemName: String
-    var size: CGFloat = 32
-
-    var body: some View {
-        Image(systemName: systemName)
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(AppColors.primary)
-            .frame(width: size, height: size)
-            .background(AppColors.primarySoft, in: RoundedRectangle(cornerRadius: 9))
-    }
-}
-
-// MARK: - Text
-
-/// Section heading used above cards.
-struct SectionTitle: View {
-    let title: LocalizedStringKey
-
-    var body: some View {
-        Text(title)
-            .font(.title3.weight(.semibold))
-            .foregroundStyle(AppColors.primary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
 // MARK: - Branding
 
 /// The Samla logo, falling back to a shield symbol if the image asset is missing.
@@ -140,13 +112,15 @@ struct BrandLogo: View {
 
 /// How a list looks in the UI right now. Colors follow traffic-light rules.
 enum ListStatus {
-    case active, onBreak, scheduled, stopped
+    case active, onBreak, skipped, scheduled, stopped
 
     init(_ list: BlockList, at date: Date) {
         if list.isOnBreak(at: date) && list.isActive(at: date) {
             self = .onBreak
         } else if list.isActive(at: date) {
             self = .active
+        } else if list.isSkipped(at: date) {
+            self = .skipped
         } else if list.kind == .scheduled {
             self = .scheduled
         } else {
@@ -158,7 +132,7 @@ enum ListStatus {
         switch self {
         case .active: AppColors.active
         case .onBreak, .scheduled: AppColors.scheduled
-        case .stopped: AppColors.stopped
+        case .skipped, .stopped: AppColors.stopped
         }
     }
 
@@ -167,7 +141,7 @@ enum ListStatus {
         switch self {
         case .active: AppColors.activeText
         case .onBreak, .scheduled: AppColors.scheduledText
-        case .stopped: AppColors.textSecondary
+        case .skipped, .stopped: AppColors.textSecondary
         }
     }
 
@@ -175,6 +149,7 @@ enum ListStatus {
         switch self {
         case .active: "Active"
         case .onBreak: "On break"
+        case .skipped: "Skipped today"
         case .scheduled: "Scheduled"
         case .stopped: "Stopped"
         }

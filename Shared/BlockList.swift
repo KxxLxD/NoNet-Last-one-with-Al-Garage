@@ -69,6 +69,8 @@ struct BlockList: Codable, Identifiable, Equatable {
     var session: DateInterval?
     var breakUntil: Date?
     var breakStarts: [Date] = []
+    /// "Skip Today": an unprotected scheduled list stays off until this moment (the current window's end).
+    var skippedUntil: Date?
 
     init(name: String) {
         self.name = name
@@ -94,6 +96,7 @@ struct BlockList: Codable, Identifiable, Equatable {
         session = try c.decodeIfPresent(DateInterval.self, forKey: .session)
         breakUntil = try c.decodeIfPresent(Date.self, forKey: .breakUntil)
         breakStarts = try c.decodeIfPresent([Date].self, forKey: .breakStarts) ?? []
+        skippedUntil = try c.decodeIfPresent(Date.self, forKey: .skippedUntil)
     }
 }
 
@@ -110,11 +113,18 @@ extension BlockList {
             guard let session else { return false }
             return session.start <= date && date < session.end
         case .scheduled:
+            guard !isSkipped(at: date) else { return false }
             let parts = calendar.dateComponents([.weekday, .hour, .minute], from: date)
             guard let weekday = parts.weekday, let hour = parts.hour, let minute = parts.minute else { return false }
             let minuteOfDay = hour * 60 + minute
             return slots.contains { $0.contains(day: weekday - 1, minute: minuteOfDay) }
         }
+    }
+
+    /// Skipped for today. Protected lists ignore a skip: their schedule is the commitment.
+    func isSkipped(at date: Date) -> Bool {
+        guard kind == .scheduled, protection == .none, let skippedUntil else { return false }
+        return date < skippedUntil
     }
 
     /// When the current blocking window ends, or nil if the list isn't active.

@@ -257,3 +257,53 @@ struct WebsiteCatalogTests {
         #expect(ai.kind == .distraction)
     }
 }
+
+@Suite("Skip Today")
+struct SkipTodayTests {
+    private func sleepList(protection: ProtectionMode = .none) -> BlockList {
+        var list = BlockList(name: "Sleep")
+        list.kind = .scheduled
+        list.protection = protection
+        list.slots = (0..<7).map { ScheduleSlot(day: $0, fromMinutes: 22 * 60, toMinutes: 6 * 60) }
+        return list
+    }
+
+    @Test func skipTurnsTheWindowOffUntilItEndsThenTheScheduleReturns() throws {
+        let night = date(2026, 10, 17, 23)
+        var list = sleepList()
+        let end = try #require(list.activeUntil(at: night, calendar: calendar))
+        list.skippedUntil = end
+        #expect(list.isSkipped(at: night))
+        #expect(!list.isActive(at: night, calendar: calendar))
+        #expect(!list.isActive(at: end.addingTimeInterval(-60), calendar: calendar))
+        #expect(list.isActive(at: night.addingTimeInterval(24 * 3600), calendar: calendar))
+    }
+
+    @Test func protectedListsIgnoreASkip() {
+        let night = date(2026, 10, 17, 23)
+        var list = sleepList(protection: .hard)
+        list.skippedUntil = night.addingTimeInterval(3600)
+        #expect(!list.isSkipped(at: night))
+        #expect(list.isActive(at: night, calendar: calendar))
+    }
+}
+
+@Suite("Starter lists")
+struct StarterListTests {
+    @Test func everyStarterIsReadyToSaveAndFitsWithBlockForever() {
+        let room = ShieldEngine.maxFilterDomains - ForeverBlock.blockedDomains.count
+        for starter in StarterList.all {
+            let list = starter.makeList()
+            #expect(list.hasItems)
+            #expect(list.websites.count <= room, "\(starter.id) has too many websites")
+            #expect(list.websites.allSatisfy { WebsiteInput.normalize($0) == $0 })
+        }
+    }
+
+    @Test func sleepRunsEveryNight() {
+        let sleep = StarterList.sleep.makeList()
+        #expect(sleep.kind == .scheduled)
+        #expect(sleep.slots.count == 7)
+        #expect(sleep.slots.allSatisfy { $0.fromMinutes == 22 * 60 && $0.toMinutes == 7 * 60 })
+    }
+}

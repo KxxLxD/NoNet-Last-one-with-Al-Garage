@@ -44,6 +44,11 @@ final class NotificationService {
                 requests.append(reminder)
             }
             guard list.kind == .scheduled else { continue }
+            // While skipped, the current window's "ended" note would cheer a block that never ran.
+            // It comes back with the next reschedule (app opened or any list changed).
+            let skippedEnd = list.isSkipped(at: now) ? list.skippedUntil.map {
+                Calendar.current.dateComponents([.weekday, .hour, .minute], from: $0)
+            } : nil
             for slot in list.slots {
                 requests.append(weekly(
                     id: "slot.start.\(slot.id.uuidString)",
@@ -53,6 +58,10 @@ final class NotificationService {
                     minute: slot.fromMinutes
                 ))
                 let endDay = slot.isOvernight ? (slot.day + 1) % 7 : slot.day
+                if let skippedEnd, skippedEnd.weekday.map({ $0 - 1 }) == endDay,
+                   (skippedEnd.hour ?? 0) * 60 + (skippedEnd.minute ?? 0) == slot.toMinutes % (24 * 60) {
+                    continue
+                }
                 requests.append(weekly(
                     id: "slot.end.\(slot.id.uuidString)",
                     title: String(localized: "Block ended 🎉"),

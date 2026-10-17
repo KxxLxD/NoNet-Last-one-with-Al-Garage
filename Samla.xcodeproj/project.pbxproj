@@ -63,7 +63,7 @@
 		AA10000000000000000000A3 /* SamlaMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SamlaMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA2000000000000000000002 /* SamlaShield.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SamlaShield.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA3000000000000000000002 /* SamlaShieldAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SamlaShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		FB0E177C2E697E9B00AA0757 /* Samla.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Samla.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB0E177C2E697E9B00AA0757 /* Samla.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Samla.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FBE41E273082E3C700852C04 /* SamlaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SamlaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -238,7 +238,7 @@
 		};
 		FB0E177B2E697E9B00AA0757 /* Samla */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = FB0E17872E697E9C00AA0757 /* Build configuration list for PBXNativeTarget Samla */;
+			buildConfigurationList = FB0E17872E697E9C00AA0757 /* Build configuration list for PBXNativeTarget "Samla" */;
 			buildPhases = (
 				FB0E17782E697E9B00AA0757 /* Sources */,
 				FB0E17792E697E9B00AA0757 /* Frameworks */,
@@ -791,46 +791,46 @@
 		FBE41E2B3082E3C700852C04 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = app.samla.SamlaTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Samla.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Samla";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 			};
 			name = Debug;
 		};
 		FBE41E2C3082E3C700852C04 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = app.samla.SamlaTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Samla.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Samla";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 			};
 			name = Release;
 		};
@@ -873,7 +873,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FB0E17872E697E9C00AA0757 /* Build configuration list for PBXNativeTarget Samla */ = {
+		FB0E17872E697E9C00AA0757 /* Build configuration list for PBXNativeTarget "Samla" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FB0E17882E697E9C00AA0757 /* Debug */,

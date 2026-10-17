@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// Home, top to bottom: a missing-permissions banner (only when needed), a filled navy
-/// "now" card with a big countdown, quick-start buttons for your lists, one Block Forever
-/// row, and what starts later today.
+/// Home is "what's happening now": a missing-permissions banner (only when needed), a filled navy
+/// "now" card with a big countdown (or what starts next), quick-start buttons for your lists —
+/// starter lists when there are none yet — and one Block Forever row. Managing lists lives in Lists.
 struct HomeView: View {
     @Environment(ListsModel.self) private var model
     @Environment(SubscriptionStore.self) private var subscriptions
@@ -15,6 +15,7 @@ struct HomeView: View {
     @State private var showPremium = false
     @State private var showForeverSetup = false
     @State private var showPermissions = false
+    @State private var pendingStarter: StarterList?
     @State private var pendingStart: BlockList?
 
     private var missingPermissions: Bool { !screenTime.isApproved || !notifications.isAuthorized }
@@ -29,7 +30,6 @@ struct HomeView: View {
                     nowCard(now: now)
                     quickStart(now: now)
                     foreverRow
-                    todaySection(now: now)
                 }
                 .listSectionSpacing(.compact)
             }
@@ -41,6 +41,7 @@ struct HomeView: View {
                 }
             }
             .sheet(isPresented: $showCreate) { ListEditorView(mode: .create) }
+            .sheet(item: $pendingStarter) { ListEditorView(mode: .starter($0.makeList())) }
             .sheet(isPresented: $showPremium) { NavigationStack { PremiumSoonView(reason: .listLimit) } }
             .sheet(isPresented: $showForeverSetup) { ForeverSetupView() }
             .sheet(isPresented: $showPermissions) {
@@ -125,7 +126,7 @@ struct HomeView: View {
                         Text("Nothing is blocking right now")
                             .font(.title3.weight(.bold))
                             .foregroundStyle(.white)
-                        Text("Start a list and stay focused.")
+                        nextUp(now: now)
                             .font(.subheadline)
                             .foregroundStyle(.white.opacity(0.8))
                     }
@@ -146,46 +147,61 @@ struct HomeView: View {
 
     // MARK: - Quick start
 
+    /// What starts next today, or a nudge when nothing is scheduled.
+    private func nextUp(now: Date) -> Text {
+        let next = model.lists
+            .compactMap { list in list.nextStartToday(after: now).map { (list, $0) } }
+            .min { $0.1 < $1.1 }
+        if case let (list, start)? = next {
+            return Text("Next: “\(list.name)” at \(Formatters.clock(start, now: now))")
+        }
+        return Text("Start a list and stay focused.")
+    }
+
     @ViewBuilder
     private func quickStart(now: Date) -> some View {
         let startable = model.sorted(model.lists.filter { $0.kind == .now && !$0.isActive(at: now) })
 
-        Section("Quick Start") {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: Spacing.s) {
-                    ForEach(startable) { list in
-                        Button {
-                            start(list)
-                        } label: {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Label(list.name, systemImage: list.startNeedsConfirmation ? list.protection.systemImage : "play.fill")
-                                    .font(.subheadline.weight(.semibold))
-                                    .lineLimit(1)
-                                Text(Formatters.duration(seconds: list.durationSeconds))
-                                    .font(.caption)
-                                    .foregroundStyle(AppColors.textSecondary)
+        if model.lists.isEmpty {
+            StarterListsSection(onPick: starterTapped, onCustom: createTapped)
+        } else {
+            Section("Quick Start") {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: Spacing.s) {
+                        ForEach(startable) { list in
+                            Button {
+                                start(list)
+                            } label: {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Label(list.name, systemImage: list.startNeedsConfirmation ? list.protection.systemImage : "play.fill")
+                                        .font(.subheadline.weight(.semibold))
+                                        .lineLimit(1)
+                                    Text(Formatters.duration(seconds: list.durationSeconds))
+                                        .font(.caption)
+                                        .foregroundStyle(AppColors.textSecondary)
+                                }
+                                .foregroundStyle(AppColors.primary)
+                                .padding(.horizontal, Spacing.l)
+                                .padding(.vertical, Spacing.m)
+                                .background(AppColors.primarySoft, in: RoundedRectangle(cornerRadius: Radius.control))
                             }
-                            .foregroundStyle(AppColors.primary)
-                            .padding(.horizontal, Spacing.l)
-                            .padding(.vertical, Spacing.m)
-                            .background(AppColors.primarySoft, in: RoundedRectangle(cornerRadius: Radius.control))
+                            .buttonStyle(.plain)
+                        }
+                        Button(action: createTapped) {
+                            Label("New List", systemImage: "plus")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(AppColors.primary)
+                                .padding(.horizontal, Spacing.l)
+                                .frame(minHeight: 52)
+                                .overlay(RoundedRectangle(cornerRadius: Radius.control).stroke(AppColors.border, style: StrokeStyle(lineWidth: 1, dash: [4])))
                         }
                         .buttonStyle(.plain)
                     }
-                    Button(action: createTapped) {
-                        Label("New List", systemImage: "plus")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(AppColors.primary)
-                            .padding(.horizontal, Spacing.l)
-                            .frame(minHeight: 52)
-                            .overlay(RoundedRectangle(cornerRadius: Radius.control).stroke(AppColors.border, style: StrokeStyle(lineWidth: 1, dash: [4])))
-                    }
-                    .buttonStyle(.plain)
+                    .padding(.horizontal, Spacing.l)
+                    .padding(.vertical, Spacing.m)
                 }
-                .padding(.horizontal, Spacing.l)
-                .padding(.vertical, Spacing.m)
+                .listRowInsets(EdgeInsets())
             }
-            .listRowInsets(EdgeInsets())
         }
     }
 
@@ -234,27 +250,6 @@ struct HomeView: View {
         return String(localized: "On")
     }
 
-    // MARK: - Later today
-
-    @ViewBuilder
-    private func todaySection(now: Date) -> some View {
-        let upcoming = model.lists
-            .compactMap { list in list.nextStartToday(after: now).map { (list, $0) } }
-            .sorted { $0.1 < $1.1 }
-
-        if !upcoming.isEmpty {
-            Section("Later Today") {
-                ForEach(upcoming, id: \.0.id) { list, start in
-                    NavigationLink(value: list.id) {
-                        LabeledContent(list.name) {
-                            Text("Starts \(Formatters.clock(start, now: now))")
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     // MARK: - Actions
 
     /// Names the list the big button starts, so it never starts something unexpected.
@@ -279,6 +274,14 @@ struct HomeView: View {
         } else {
             Haptics.success()
             model.start(list.id)
+        }
+    }
+
+    private func starterTapped(_ starter: StarterList) {
+        if model.canCreateList(isPremium: subscriptions.isPremium) {
+            pendingStarter = starter
+        } else {
+            showPremium = true
         }
     }
 

@@ -7,6 +7,8 @@ import SwiftUI
 struct ListEditorView: View {
     enum Mode {
         case create
+        /// A new list pre-filled from a starter (Sleep, Focus, Social Media).
+        case starter(BlockList)
         /// `partnerApproved`: the partner already entered their PIN for an active protected list.
         case edit(BlockList, partnerApproved: Bool = false)
     }
@@ -44,6 +46,8 @@ struct ListEditorView: View {
         case .create:
             list = BlockList(name: "")
             list.durationSeconds = 60 * 60
+        case .starter(let template):
+            list = template
         case .edit(let existing, _):
             list = existing
         }
@@ -58,6 +62,11 @@ struct ListEditorView: View {
 
     private var isEditing: Bool {
         if case .edit = mode { return true }
+        return false
+    }
+
+    private var isStarter: Bool {
+        if case .starter = mode { return true }
         return false
     }
 
@@ -169,6 +178,9 @@ struct ListEditorView: View {
         } footer: {
             if showValidation && !draft.hasItems {
                 missing("Choose at least one app, category or website.")
+            } else if isStarter {
+                // Apple doesn't let Samla pick apps, so a starter alone won't block the TikTok app itself.
+                Label("Starter lists block websites. Add the apps too (TikTok, Instagram…) in What to block › Apps.", systemImage: "info.circle.fill")
             }
         }
     }

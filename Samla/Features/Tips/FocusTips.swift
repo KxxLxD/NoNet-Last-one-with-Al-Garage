@@ -24,7 +24,7 @@ enum FocusTips {
                 String(localized: "🎮 To reduce gaming time:\n• Limit games to 1 hour a day\n• Block gaming apps outside that window\n• Replace games with exercise or reading"),
                 String(localized: "📱 To quit the social media habit:\n• Remove the apps from your home screen\n• Keep only essential notifications\n• Set specific browsing windows (e.g. 7–8 PM)"),
                 String(localized: "🧠 To resist the urge to scroll:\n• Wait 10 minutes before opening the app\n• Name the feeling behind the urge (boredom, stress)\n• Put the phone in another room for focused work"),
-                String(localized: "🛡️ To quit adult content for good:\n• Turn on \"Block adult websites\" in a Hard Mode list\n• Block the apps and browsers you relapse on\n• Talk to someone you trust and track your streak"),
+                String(localized: "🛡️ To quit adult content for good:\n• Turn on \"Adult Websites\" in What to block, in a Hard Mode list\n• Block the apps and browsers you relapse on\n• Talk to someone you trust and track your streak"),
                 String(localized: "🎲 To stop gambling:\n• Block betting apps and websites in a Hard Mode list\n• Remove saved payment cards from those services\n• Seek support from a professional or a support group"),
             ]),
             Topic(id: "alternatives", title: "Healthy Alternatives", systemImage: "leaf.fill", tips: [

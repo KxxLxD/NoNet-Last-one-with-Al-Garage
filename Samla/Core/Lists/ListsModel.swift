@@ -183,6 +183,19 @@ final class ListsModel {
         mutate(id) { $0.breakUntil = nil }
     }
 
+    /// "Skip Today": turns an unprotected scheduled list off until its current window ends.
+    func skipToday(_ id: UUID, now: Date = .now) {
+        mutate(id) { list in
+            guard list.kind == .scheduled, list.protection == .none, let end = list.activeUntil(at: now) else { return }
+            list.skippedUntil = end
+            list.breakUntil = nil
+        }
+    }
+
+    func resumeSchedule(_ id: UUID) {
+        mutate(id) { $0.skippedUntil = nil }
+    }
+
     // MARK: - System sync
 
     /// Re-applies shields and schedules. Call on launch and whenever the app becomes active.

@@ -138,7 +138,7 @@ struct ListDetailView: View {
         }
     }
 
-    /// The one big action under the header: Start, Stop, or why it's locked.
+    /// The one big action under the header: Start, Stop, Skip Today / Resume Now, or why it's locked.
     @ViewBuilder
     private func primaryAction(_ list: BlockList, isActive: Bool, hardLocked: Bool, needsPartner: Bool, end: Date?, now: Date) -> some View {
         if hardLocked, let end {
@@ -156,6 +156,28 @@ struct ListDetailView: View {
                     Image(systemName: "lock.fill").foregroundStyle(AppColors.primary)
                 }
             }
+        } else if list.kind == .scheduled && list.protection == .none && (isActive || list.isSkipped(at: now)) {
+            Section {
+                if list.isSkipped(at: now) {
+                    Button {
+                        Haptics.success()
+                        model.resumeSchedule(list.id)
+                    } label: {
+                        Label("Resume Now", systemImage: "play.fill")
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                } else {
+                    Button {
+                        Haptics.warning()
+                        model.skipToday(list.id)
+                    } label: {
+                        Label("Skip Today", systemImage: "forward.fill")
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                }
+            }
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets())
         } else if list.kind == .now {
             Section {
                 if isActive {

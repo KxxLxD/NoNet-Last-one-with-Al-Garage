@@ -677,12 +677,22 @@
         }
       }
     },
-    "🛡️ To quit adult content for good:\n• Turn on \"Block adult websites\" in a Hard Mode list\n• Block the apps and browsers you relapse on\n• Talk to someone you trust and track your streak" : {
+    "1 hour · social media, videos and news" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "🛡️ لترك الإباحية للأبد:\n• فعّل \"حظر مواقع البالغين\" في قائمة بالوضع الصارم\n• احجب التطبيقات والمتصفحات التي تنتكس فيها\n• تحدث مع شخص تثق به وتابع أيام التزامك"
+            "value" : "ساعة · التواصل والفيديو والأخبار"
+          }
+        }
+      }
+    },
+    "2 hours · social media and short videos" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ساعتان · التواصل والمقاطع القصيرة"
           }
         }
       }
@@ -1587,6 +1597,26 @@
         }
       }
     },
+    "Create this list" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أنشئ هذه القائمة"
+          }
+        }
+      }
+    },
+    "Create your own" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أنشئ قائمتك"
+          }
+        }
+      }
+    },
     "Crypto & Trading" : {
       "localizations" : {
         "ar" : {
@@ -1863,6 +1893,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "كل يوم"
+          }
+        }
+      }
+    },
+    "Every night, 10 PM–7 AM" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كل ليلة، 10 م–7 ص"
           }
         }
       }
@@ -2237,16 +2277,6 @@
         }
       }
     },
-    "Later Today" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لاحقًا اليوم"
-          }
-        }
-      }
-    },
     "Length of each break" : {
       "localizations" : {
         "ar" : {
@@ -2417,6 +2447,16 @@
         }
       }
     },
+    "Next: “%@” at %@" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التالي: «%1$@» الساعة %2$@"
+          }
+        }
+      }
+    },
     "No account" : {
       "localizations" : {
         "ar" : {
@@ -2433,16 +2473,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "وضع بلا إنترنت"
-          }
-        }
-      }
-    },
-    "No partner" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "بدون شريك"
           }
         }
       }
@@ -2673,16 +2703,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "الشريك"
-          }
-        }
-      }
-    },
-    "Partner on" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الشريك مفعّل"
           }
         }
       }
@@ -3063,6 +3083,16 @@
         }
       }
     },
+    "Resume Now" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استئناف الآن"
+          }
+        }
+      }
+    },
     "Samla" : {
       "localizations" : {
         "ar" : {
@@ -3313,6 +3343,26 @@
         }
       }
     },
+    "Skip Today" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تخطَّ اليوم"
+          }
+        }
+      }
+    },
+    "Skipped today" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "متخطاة اليوم"
+          }
+        }
+      }
+    },
     "Sleep" : {
       "localizations" : {
         "ar" : {
@@ -3453,6 +3503,16 @@
         }
       }
     },
+    "Start with a ready list" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ابدأ بقائمة جاهزة"
+          }
+        }
+      }
+    },
     "Start your first block list" : {
       "localizations" : {
         "ar" : {
@@ -3469,6 +3529,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ابدأ «%@»"
+          }
+        }
+      }
+    },
+    "Starter lists block websites. Add the apps too (TikTok, Instagram…) in What to block › Apps." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "القوائم الجاهزة تحظر المواقع. أضف التطبيقات نفسها (تيك توك، انستقرام…) من «ما الذي تريد حظره» ‹ «التطبيقات»."
           }
         }
       }
@@ -4161,6 +4231,16 @@
         }
       }
     },
+    "You can change everything before saving." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تقدر تغيّر أي شيء قبل الحفظ."
+          }
+        }
+      }
+    },
     "You can change it anytime in iOS Settings." : {
       "localizations" : {
         "ar" : {
@@ -4247,6 +4327,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "يُحفظ رمز شريكك على هذا الجهاز فقط، مشفّرًا في سلسلة المفاتيح، ولا يُرسل إلى أي مكان."
+          }
+        }
+      }
+    },
+    "🛡️ To quit adult content for good:\n• Turn on \"Adult Websites\" in What to block, in a Hard Mode list\n• Block the apps and browsers you relapse on\n• Talk to someone you trust and track your streak" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🛡️ لترك الإباحية للأبد:\n• فعّل «مواقع البالغين» في «ما الذي تريد حظره» ضمن قائمة بالوضع الصارم\n• احجب التطبيقات والمتصفحات التي تنتكس فيها\n• تحدث مع شخص تثق به وتابع أيام التزامك"
           }
         }
       }
