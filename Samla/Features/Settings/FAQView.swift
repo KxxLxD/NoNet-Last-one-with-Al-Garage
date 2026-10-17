@@ -17,7 +17,7 @@ struct FAQView: View {
         Item(id: 4, question: "I forgot my partner's PIN. What now?",
              answer: "Open Settings › Accountability Partner and tap Forgot PIN. Your partner is removed after 7 days. Block Forever isn't affected and keeps its 360-day wait."),
         Item(id: 5, question: "Blocking isn't working?",
-             answer: "Make sure Screen Time access is allowed. If Home shows a permissions card, tap it and allow access. Blocking only works on a real iPhone."),
+             answer: "Make sure Screen Time access is allowed. If Home shows a missing-permissions banner, tap Fix and allow access. Blocking only works on a real iPhone."),
         Item(id: 6, question: "Where does my data go?",
              answer: "Everything stays on your device. Samla has no servers, collects no data and never sells anything. Apple's Screen Time keeps the apps you choose private, even from Samla."),
         Item(id: 7, question: "Are breaks allowed?",
@@ -26,6 +26,10 @@ struct FAQView: View {
              answer: "Choose Schedule under When, then add days and times. Blocking starts and stops automatically, even when Samla is closed."),
         Item(id: 9, question: "How many lists can I create?",
              answer: "The free version holds 3 lists. Premium, coming soon, will remove the limit. Block Forever stays free forever."),
+        Item(id: 10, question: "Can I block AI apps like ChatGPT?",
+             answer: "Yes. In What to block, tick AI Tools to block their websites, and choose the apps themselves under Apps. Apple doesn't let Samla pick apps for you."),
+        Item(id: 11, question: "What is No Internet Mode?",
+             answer: "It blocks every app and website while the list is active, except the apps you allow. Apple doesn't let any app turn off Wi-Fi itself, and phone calls always work."),
     ]
 
     var body: some View {

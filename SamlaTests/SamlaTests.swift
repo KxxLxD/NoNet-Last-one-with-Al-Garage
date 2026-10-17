@@ -234,3 +234,26 @@ struct LocalizationTests {
         #expect(missing.isEmpty, "Missing Arabic: \(missing.keys.sorted())")
     }
 }
+
+@Suite("Website categories")
+struct WebsiteCatalogTests {
+    @Test func everyDomainIsValidAndListedOnce() {
+        let domains = WebsiteCategory.all.flatMap { $0.sites.map(\.domain) }
+        #expect(Set(domains).count == domains.count, "A domain appears in two categories")
+        for domain in domains {
+            #expect(WebsiteInput.normalize(domain) == domain, "\(domain) isn't a bare domain")
+        }
+    }
+
+    @Test func foreverCategoriesMatchBlockForever() {
+        let covered = WebsiteCategory.all.filter(\.coveredByForever).flatMap { $0.sites.map(\.domain) }
+        #expect(Set(covered) == Set(ForeverBlock.blockedDomains))
+        #expect(ForeverBlock.blockedDomains.count < ShieldEngine.maxFilterDomains)
+    }
+
+    @Test func includesAITools() throws {
+        let ai = try #require(WebsiteCategory.all.first { $0.id == "ai" })
+        #expect(ai.sites.contains { $0.domain == "chatgpt.com" })
+        #expect(ai.kind == .distraction)
+    }
+}

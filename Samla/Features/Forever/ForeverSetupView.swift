@@ -30,9 +30,14 @@ struct ForeverSetupView: View {
                 }
 
                 Section {
-                    Toggle("Also lock all 17+ apps", isOn: $blocksMatureApps)
-                } footer: {
-                    Text("Hides and blocks every app rated 17+, which covers most dating and gambling apps. Some regular apps rated 17+ will be locked too.")
+                    Toggle(isOn: $blocksMatureApps) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Also lock all 17+ apps")
+                            Text("Hides and blocks every app rated 17+, which covers most dating and gambling apps. Some regular apps rated 17+ will be locked too.")
+                                .font(.caption)
+                                .foregroundStyle(AppColors.textSecondary)
+                        }
+                    }
                 }
             }
             .navigationTitle("Block Forever")

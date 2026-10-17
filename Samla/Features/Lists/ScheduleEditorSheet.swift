@@ -78,6 +78,7 @@ struct ScheduleEditorSheet: View {
             }
             .onAppear { working = initialSlots }
         }
+        .interactiveDismissDisabled(working != initialSlots || !selectedDays.isEmpty)
     }
 
     private func addSlots() {

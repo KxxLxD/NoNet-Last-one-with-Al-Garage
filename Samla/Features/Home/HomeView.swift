@@ -9,6 +9,7 @@ struct HomeView: View {
     @Environment(ForeverStore.self) private var forever
     @Environment(ScreenTimeAuthorization.self) private var screenTime
     @Environment(NotificationService.self) private var notifications
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     @State private var showCreate = false
     @State private var showPremium = false
@@ -57,13 +58,18 @@ struct HomeView: View {
             Button {
                 showPermissions = true
             } label: {
-                HStack(spacing: Spacing.m) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundStyle(AppColors.scheduled)
-                    Text("Some permissions are missing")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(AppColors.text)
-                    Spacer()
+                // Stacked at accessibility sizes so the message never breaks mid-word.
+                let isLarge = dynamicTypeSize.isAccessibilitySize
+                let layout = isLarge ? AnyLayout(VStackLayout(alignment: .leading, spacing: Spacing.s)) : AnyLayout(HStackLayout(spacing: Spacing.m))
+                layout {
+                    HStack(spacing: Spacing.m) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(AppColors.scheduled)
+                        Text("Some permissions are missing")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(AppColors.text)
+                    }
+                    if !isLarge { Spacer(minLength: 0) }
                     Text("Fix")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(AppColors.primary)
@@ -83,27 +89,36 @@ struct HomeView: View {
 
         Section {
             if let list = current {
-                NavigationLink(value: list.id) {
-                    VStack(alignment: .leading, spacing: Spacing.s) {
-                        Label(list.isOnBreak(at: now) ? "On break" : "Blocking now", systemImage: list.isOnBreak(at: now) ? "cup.and.saucer.fill" : "shield.lefthalf.filled")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.white.opacity(0.8))
-                        Text(list.name)
-                            .font(.title2.weight(.bold))
-                            .foregroundStyle(.white)
-                            .lineLimit(1)
-                        if let end = list.isOnBreak(at: now) ? list.breakUntil : list.activeUntil(at: now) {
-                            CountdownText(end: end)
-                                .font(.system(size: 52, weight: .bold, design: .rounded))
-                                .foregroundStyle(.white)
-                            Text(ListText.detail(for: list, at: now) ?? "")
-                                .font(.subheadline)
+                // A hidden link plus our own white chevron: the system one is grey on navy and vanishes.
+                ZStack {
+                    NavigationLink(value: list.id) { EmptyView() }
+                        .opacity(0)
+                    HStack(spacing: Spacing.s) {
+                        VStack(alignment: .leading, spacing: Spacing.s) {
+                            Label(list.isOnBreak(at: now) ? "On break" : "Blocking now", systemImage: list.isOnBreak(at: now) ? "cup.and.saucer.fill" : "shield.lefthalf.filled")
+                                .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(.white.opacity(0.8))
+                            Text(list.name)
+                                .font(.title2.weight(.bold))
+                                .foregroundStyle(.white)
+                                .lineLimit(1)
+                            if let end = list.isOnBreak(at: now) ? list.breakUntil : list.activeUntil(at: now) {
+                                CountdownText(end: end)
+                                    .font(.system(size: 52, weight: .bold, design: .rounded))
+                                    .foregroundStyle(.white)
+                                Text(ListText.detail(for: list, at: now) ?? "")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.white.opacity(0.8))
+                            }
                         }
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.forward")
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(.white.opacity(0.7))
+                            .accessibilityHidden(true)
                     }
                     .padding(.vertical, Spacing.m)
                 }
-                .tint(.white)
             } else {
                 VStack(alignment: .leading, spacing: Spacing.l) {
                     VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -180,12 +195,12 @@ struct HomeView: View {
         Section {
             if forever.isActive() {
                 NavigationLink(value: HomeRoute.forever) {
-                    foreverLabel(status: foreverDetail, color: AppColors.active)
+                    foreverLabel(status: foreverDetail, color: AppColors.activeText)
                 }
             } else {
                 Button { showForeverSetup = true } label: {
                     HStack {
-                        foreverLabel(status: String(localized: "Off"), color: AppColors.stopped)
+                        foreverLabel(status: String(localized: "Off"), color: AppColors.textSecondary)
                         Image(systemName: "chevron.forward")
                             .font(.footnote.weight(.semibold))
                             .foregroundStyle(AppColors.stopped)

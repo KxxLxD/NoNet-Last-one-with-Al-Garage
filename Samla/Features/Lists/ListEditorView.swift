@@ -2,7 +2,8 @@ import FamilyControls
 import SwiftUI
 
 /// Creates or edits a block list in a native form, like adding an alarm in Clock:
-/// Name | Blocked | Time | Protection | Breaks, with "Create" at the top trailing edge.
+/// Name | What to block | Time up front, Protection and Breaks folded under "Extra Options",
+/// and "Create" at the top trailing edge.
 struct ListEditorView: View {
     enum Mode {
         case create
@@ -16,6 +17,8 @@ struct ListEditorView: View {
 
     private let mode: Mode
     @State private var draft: BlockList
+    private let initialDraft: BlockList
+    private let initialSeconds: Int
     @State private var startImmediately = true
     @State private var days: Int
     @State private var hours: Int
@@ -26,6 +29,9 @@ struct ListEditorView: View {
     @State private var showDurationPicker = false
     @State private var showSummary = false
     @State private var showSavedToast = false
+    /// Set by a "Create" tap on an incomplete form: each missing field then says what it needs.
+    @State private var showValidation = false
+    @State private var showExtras: Bool
 
     private static let breakLengths = [5, 10, 15, 20]
     /// One-tap "Block Now" lengths; anything else is "Custom".
@@ -42,9 +48,12 @@ struct ListEditorView: View {
             list = existing
         }
         _draft = State(initialValue: list)
+        initialDraft = list
+        initialSeconds = list.durationSeconds / 300 * 300
         _days = State(initialValue: list.durationSeconds / 86_400)
         _hours = State(initialValue: (list.durationSeconds % 86_400) / 3600)
         _minutes = State(initialValue: (list.durationSeconds % 3600) / 60 / 5 * 5)
+        _showExtras = State(initialValue: list.protection != .none || list.breaks.count > 0)
     }
 
     private var isEditing: Bool {
@@ -70,8 +79,11 @@ struct ListEditorView: View {
                 nameSection
                 blockedSection
                 timeSection
-                protectionSection
-                if !draft.isHard { breaksSection }
+                extrasSection
+                if showExtras {
+                    protectionSection
+                    if !draft.isHard { breaksSection }
+                }
             }
             .navigationTitle(isEditing ? "Edit List" : "New List")
             .navigationBarTitleDisplayMode(.inline)
@@ -80,14 +92,24 @@ struct ListEditorView: View {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(isEditing ? "Save" : "Create") { showSummary = true }
-                        .disabled(!isFormValid)
+                    // Always tappable: a disabled button can't say what's missing.
+                    Button(isEditing ? "Save" : "Create") {
+                        if isFormValid {
+                            showSummary = true
+                        } else {
+                            Haptics.warning()
+                            withAnimation { showValidation = true }
+                        }
+                    }
                 }
             }
             .sheet(isPresented: $showItemsEditor) {
                 BlockItemsEditorView(list: draft) { edited in
                     draft.websites = edited.websites
                     draft.selection = edited.selection
+                    draft.blockAdultContent = edited.blockAdultContent
+                    draft.blocksEverything = edited.blocksEverything
+                    draft.allowedSelection = edited.allowedSelection
                 }
             }
             .sheet(isPresented: $showScheduleEditor) {
@@ -105,17 +127,28 @@ struct ListEditorView: View {
                 .presentationDetents([.medium, .large])
             }
             .successToast(isPresented: showSavedToast, message: isEditing ? "List updated" : "List created")
+            // Coming back from adding a partner: use them right away.
+            .onChange(of: partner.hasPartner) { _, hasPartner in
+                if hasPartner { protectionBinding.wrappedValue = .partner }
+            }
         }
-        .interactiveDismissDisabled(showSavedToast)
+        // Also while there are edits, so a swipe down can't silently discard them.
+        .interactiveDismissDisabled(showSavedToast || draft != initialDraft || totalSeconds != initialSeconds)
     }
 
     // MARK: - Sections
 
     private var nameSection: some View {
-        Section("Name") {
+        Section {
             TextField("e.g., Sleep", text: $draft.name)
                 .textInputAutocapitalization(.words)
                 .autocorrectionDisabled()
+        } header: {
+            Text("Name")
+        } footer: {
+            if showValidation && trimmedName.count < 2 {
+                missing("Enter a name of at least 2 characters.")
+            }
         }
     }
 
@@ -131,13 +164,12 @@ struct ListEditorView: View {
                         .foregroundStyle(AppColors.text)
                 }
             }
-            Toggle(isOn: $draft.blockAdultContent) {
-                Label("Block adult websites", systemImage: "checkmark.shield.fill")
-            }
         } header: {
             Text("What to block")
         } footer: {
-            Text("Adult websites use Apple's built-in content filter.")
+            if showValidation && !draft.hasItems {
+                missing("Choose at least one app, category or website.")
+            }
         }
     }
 
@@ -186,6 +218,37 @@ struct ListEditorView: View {
             }
         } header: {
             Text("Time")
+        } footer: {
+            if showValidation && draft.kind == .scheduled && draft.slots.isEmpty {
+                missing("Add at least one day and time.")
+            }
+        }
+    }
+
+    private var extrasSection: some View {
+        Section {
+            Button {
+                withAnimation { showExtras.toggle() }
+            } label: {
+                HStack(spacing: Spacing.s) {
+                    Text("Extra Options").foregroundStyle(AppColors.text)
+                    Spacer()
+                    Text(draft.protection.title).foregroundStyle(AppColors.textSecondary)
+                    if draft.breaks.count > 0 && !draft.isHard {
+                        Text("·").foregroundStyle(AppColors.textSecondary)
+                        Text("\(draft.breaks.count) breaks").foregroundStyle(AppColors.textSecondary)
+                    }
+                    Image(systemName: "chevron.down")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(AppColors.textSecondary)
+                        .rotationEffect(.degrees(showExtras ? 180 : 0))
+                }
+            }
+            .accessibilityValue(showExtras ? Text("Expanded") : Text("Collapsed"))
+        } footer: {
+            if !showExtras {
+                Text("Protection and breaks.")
+            }
         }
     }
 
@@ -194,23 +257,32 @@ struct ListEditorView: View {
             Picker("Protection", selection: protectionBinding) {
                 Label("None", systemImage: ProtectionMode.none.systemImage).tag(ProtectionMode.none)
                 Label("Hard Mode", systemImage: ProtectionMode.hard.systemImage).tag(ProtectionMode.hard)
-                Label("Partner", systemImage: ProtectionMode.partner.systemImage).tag(ProtectionMode.partner)
-                    .disabled(!partner.hasPartner)
+                if partner.hasPartner {
+                    Label("Partner", systemImage: ProtectionMode.partner.systemImage).tag(ProtectionMode.partner)
+                }
             }
             .pickerStyle(.inline)
             .labelsHidden()
+            if !partner.hasPartner {
+                // A real way to get there instead of a greyed-out option that silently does nothing.
+                NavigationLink {
+                    PartnerSettingsView()
+                } label: {
+                    LabeledContent {
+                        Text("Add a Partner")
+                    } label: {
+                        Label("Partner", systemImage: ProtectionMode.partner.systemImage)
+                            .foregroundStyle(AppColors.text)
+                    }
+                }
+            }
         } header: {
             Text("Protection")
         } footer: {
-            VStack(alignment: .leading, spacing: Spacing.xs) {
-                switch draft.protection {
-                case .none: Text("Edit, stop or delete anytime.")
-                case .hard: Text("Can't be stopped, edited or deleted while active, and Samla can't be deleted. No breaks.")
-                case .partner: Text("Only your partner's PIN can stop, edit or delete it while active.")
-                }
-                if !partner.hasPartner {
-                    Text("To use Partner, add one in Settings › Accountability Partner.")
-                }
+            switch draft.protection {
+            case .none: Text("Edit, stop or delete anytime.")
+            case .hard: Text("Can't be stopped, edited or deleted while active, and Samla can't be deleted. No breaks.")
+            case .partner: Text("Only your partner's PIN can stop, edit or delete it while active.")
             }
         }
     }
@@ -260,6 +332,8 @@ struct ListEditorView: View {
                 .frame(width: 36, height: 36)
                 .foregroundStyle(disabled ? AppColors.stopped : AppColors.primary)
                 .background(AppColors.primarySoft, in: Circle())
+                .frame(width: 44, height: 44)
+                .contentShape(Circle())
         }
         .buttonStyle(.borderless)
         .disabled(disabled)
@@ -273,11 +347,18 @@ struct ListEditorView: View {
         minutes = (seconds % 3600) / 60
     }
 
+    private func missing(_ message: LocalizedStringKey) -> some View {
+        Label(message, systemImage: "exclamationmark.circle.fill")
+            .foregroundStyle(AppColors.danger)
+    }
+
     private var itemsSummary: String {
+        if draft.blocksEverything { return String(localized: "No Internet Mode") }
         let apps = draft.appCount + draft.categoryCount
         var parts: [String] = []
         if apps > 0 { parts.append(String(localized: "\(apps) apps", locale: .app)) }
         if draft.websiteCount > 0 { parts.append(String(localized: "\(draft.websiteCount) websites", locale: .app)) }
+        if draft.blockAdultContent { parts.append(String(localized: "Adult filter")) }
         return parts.isEmpty ? String(localized: "Add") : parts.joined(separator: " · ")
     }
 
@@ -412,13 +493,7 @@ private struct ListSummarySheet: View {
                         .foregroundStyle(AppColors.primary)
                         .listRowBackground(Color.clear)
                 }
-                Section("What to block") {
-                    LabeledContent("Apps", value: (list.appCount + list.categoryCount).formatted(.number.locale(.app)))
-                    LabeledContent("Websites", value: list.websiteCount.formatted(.number.locale(.app)))
-                    if list.blockAdultContent {
-                        LabeledContent("Adult websites", value: String(localized: "Blocked"))
-                    }
-                }
+                BlockedItemsSection(list: list)
                 Section("Time") {
                     switch list.kind {
                     case .now:

@@ -78,13 +78,9 @@ struct ListDetailView: View {
                 .listRowInsets(EdgeInsets(top: 0, leading: Spacing.xs, bottom: 0, trailing: Spacing.xs))
             }
 
-            Section("What to block") {
-                LabeledContent("Apps", value: (list.appCount + list.categoryCount).formatted(.number.locale(.app)))
-                LabeledContent("Websites", value: list.websiteCount.formatted(.number.locale(.app)))
-                if list.blockAdultContent {
-                    LabeledContent("Adult websites", value: String(localized: "Blocked"))
-                }
-            }
+            primaryAction(list, isActive: isActive, hardLocked: hardLocked, needsPartner: needsPartner, end: end, now: now)
+
+            BlockedItemsSection(list: list)
 
             Section("Time") {
                 switch list.kind {
@@ -106,14 +102,12 @@ struct ListDetailView: View {
             } header: {
                 Text("Protection")
             } footer: {
-                if hardLocked, let end {
-                    Text("Hard Mode · unlocks \(Formatters.clock(end, now: now))")
-                } else if needsPartner {
+                if needsPartner {
                     Text("Protected by your partner")
                 }
             }
 
-            // Actions
+            // Secondary actions
             Section {
                 if isActive && list.allowsBreaks {
                     if list.isOnBreak(at: now) {
@@ -126,27 +120,12 @@ struct ListDetailView: View {
                         .disabled(list.breaksRemaining(at: now) == 0)
                     }
                 }
-                if list.kind == .now {
-                    if isActive {
-                        Button("Stop") {
-                            if needsPartner { pendingPartnerAction = .stop } else { Haptics.warning(); model.stop(list.id) }
-                        }
-                        .disabled(hardLocked)
-                    } else {
-                        Button("Start") {
-                            if list.startNeedsConfirmation {
-                                pendingStart = list
-                            } else {
-                                Haptics.success()
-                                model.start(list.id)
-                            }
-                        }
+                // While Hard Mode is locked the row above already explains; no dead buttons.
+                if !hardLocked {
+                    Button("Delete List", role: .destructive) {
+                        if needsPartner { pendingPartnerAction = .delete } else { deleteApproved = false; confirmDelete = true }
                     }
                 }
-                Button("Delete List", role: .destructive) {
-                    if needsPartner { pendingPartnerAction = .delete } else { deleteApproved = false; confirmDelete = true }
-                }
-                .disabled(hardLocked)
             }
         }
         .toolbar {
@@ -159,6 +138,52 @@ struct ListDetailView: View {
         }
     }
 
+    /// The one big action under the header: Start, Stop, or why it's locked.
+    @ViewBuilder
+    private func primaryAction(_ list: BlockList, isActive: Bool, hardLocked: Bool, needsPartner: Bool, end: Date?, now: Date) -> some View {
+        if hardLocked, let end {
+            Section {
+                Label {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Locked until \(Formatters.clock(end, now: now))")
+                            .font(.headline)
+                            .foregroundStyle(AppColors.text)
+                        Text("Hard Mode can't be stopped, edited or deleted while it's active.")
+                            .font(.caption)
+                            .foregroundStyle(AppColors.textSecondary)
+                    }
+                } icon: {
+                    Image(systemName: "lock.fill").foregroundStyle(AppColors.primary)
+                }
+            }
+        } else if list.kind == .now {
+            Section {
+                if isActive {
+                    Button {
+                        if needsPartner { pendingPartnerAction = .stop } else { Haptics.warning(); model.stop(list.id) }
+                    } label: {
+                        Label("Stop", systemImage: "stop.fill")
+                    }
+                    .buttonStyle(SecondaryButtonStyle(tint: AppColors.danger))
+                } else {
+                    Button {
+                        if list.startNeedsConfirmation {
+                            pendingStart = list
+                        } else {
+                            Haptics.success()
+                            model.start(list.id)
+                        }
+                    } label: {
+                        Label("Start", systemImage: "play.fill")
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                }
+            }
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets())
+        }
+    }
+
     private func perform(_ action: PartnerAction) {
         guard let list = model.list(withID: listID) else { return }
         switch action {
@@ -167,6 +192,26 @@ struct ListDetailView: View {
         case .delete:
             deleteApproved = true
             confirmDelete = true
+        }
+    }
+}
+
+/// "What to block" rows, shared by the list's page and the summary before saving.
+struct BlockedItemsSection: View {
+    let list: BlockList
+
+    var body: some View {
+        Section("What to block") {
+            if list.blocksEverything {
+                Label("No Internet Mode", systemImage: "wifi.slash")
+                LabeledContent("Allowed Apps", value: list.allowedSelection.applicationTokens.count.formatted(.number.locale(.app)))
+            } else {
+                LabeledContent("Apps", value: (list.appCount + list.categoryCount).formatted(.number.locale(.app)))
+                LabeledContent("Websites", value: list.websiteCount.formatted(.number.locale(.app)))
+                if list.blockAdultContent {
+                    LabeledContent("Adult websites", value: String(localized: "Blocked"))
+                }
+            }
         }
     }
 }

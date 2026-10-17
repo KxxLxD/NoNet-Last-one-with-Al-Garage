@@ -24,16 +24,19 @@ struct ForeverBlock: Codable, Equatable, Sendable {
         return true
     }
 
-    /// Gambling and dating sites blocked on top of Apple's adult content filter.
-    /// Kept to 25 because the web filter accepts 50 domains in total, shared with the lists.
-    static let blockedDomains: [String] = [
-        // Gambling
+    static let gamblingDomains = [
         "bet365.com", "1xbet.com", "stake.com", "betway.com", "williamhill.com", "pokerstars.com",
         "draftkings.com", "fanduel.com", "betfair.com", "melbet.com", "parimatch.com", "888casino.com",
-        // Dating
+    ]
+
+    static let datingDomains = [
         "tinder.com", "bumble.com", "badoo.com", "hinge.co", "okcupid.com", "match.com", "pof.com",
         "grindr.com", "happn.com", "muzz.com", "eharmony.com", "ashleymadison.com", "adultfriendfinder.com",
     ]
+
+    /// Gambling and dating sites blocked on top of Apple's adult content filter.
+    /// Kept to 25 because the web filter accepts 50 domains in total, shared with the lists.
+    static let blockedDomains = gamblingDomains + datingDomains
 }
 
 enum ForeverBlockRepository {

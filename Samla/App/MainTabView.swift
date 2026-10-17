@@ -63,7 +63,7 @@ private struct TabBar: View {
                         Text(tab.title)
                             .font(.caption2.weight(.medium))
                     }
-                    .foregroundStyle(selection == tab ? AppColors.primary : AppColors.stopped)
+                    .foregroundStyle(selection == tab ? AppColors.primary : AppColors.textSecondary)
                     .frame(maxWidth: .infinity)
                     .padding(.top, Spacing.s)
                     .padding(.bottom, Spacing.xs)
@@ -71,8 +71,12 @@ private struct TabBar: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(selection == tab ? [.isSelected, .isButton] : .isButton)
+                // Like the system tab bar: long-press shows the tab enlarged at big text sizes.
+                .accessibilityShowsLargeContentViewer()
             }
         }
+        // Capped like the system tab bar, so huge text can't push tabs off screen.
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .background(alignment: .top) {
             AppColors.surface
                 .ignoresSafeArea(edges: .bottom)

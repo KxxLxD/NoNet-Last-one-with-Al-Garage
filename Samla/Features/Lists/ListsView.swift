@@ -58,6 +58,11 @@ struct ListsView: View {
                 section("Active", sorted.filter { $0.isActive(at: now) }, now: now)
                 section("Scheduled", sorted.filter { !$0.isActive(at: now) && $0.kind == .scheduled }, now: now)
                 section("Stopped", sorted.filter { !$0.isActive(at: now) && $0.kind == .now }, now: now)
+                if !subscriptions.isPremium {
+                    Section {} footer: {
+                        Text(String(localized: "\(model.lists.count) of \(ListsModel.freeListLimit) free lists used", locale: .app))
+                    }
+                }
             }
         }
     }
@@ -113,7 +118,9 @@ struct ListRow: View {
                                 .accessibilityLabel(list.protection.title)
                         }
                     }
-                    StatusLine(status: ListStatus(list, at: now), detail: ListText.detail(for: list, at: now))
+                    // The section header already names the status, except "On break" inside Active.
+                    let status = ListStatus(list, at: now)
+                    StatusLine(status: status, detail: ListText.detail(for: list, at: now), showsTitle: status == .onBreak)
                 }
                 .padding(.vertical, Spacing.xs)
             }

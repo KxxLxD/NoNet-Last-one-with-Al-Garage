@@ -162,6 +162,15 @@ enum ListStatus {
         }
     }
 
+    /// Darker than `color`, for readable status text.
+    var textColor: Color {
+        switch self {
+        case .active: AppColors.activeText
+        case .onBreak, .scheduled: AppColors.scheduledText
+        case .stopped: AppColors.textSecondary
+        }
+    }
+
     var title: LocalizedStringKey {
         switch self {
         case .active: "Active"
@@ -176,17 +185,22 @@ enum ListStatus {
 struct StatusLine: View {
     let status: ListStatus
     var detail: String?
+    /// Off where a section header already names the status: "● Ends 6:00 AM".
+    var showsTitle = true
 
     var body: some View {
         HStack(spacing: 6) {
             Circle()
                 .fill(status.color)
                 .frame(width: 8, height: 8)
-            Text(status.title)
-                .foregroundStyle(status.color)
-                .fontWeight(.semibold)
+                .accessibilityHidden(true)
+            if showsTitle {
+                Text(status.title)
+                    .foregroundStyle(status.textColor)
+                    .fontWeight(.semibold)
+            }
             if let detail {
-                Text("·").foregroundStyle(AppColors.textSecondary)
+                if showsTitle { Text("·").foregroundStyle(AppColors.textSecondary) }
                 Text(detail).foregroundStyle(AppColors.textSecondary)
             }
         }

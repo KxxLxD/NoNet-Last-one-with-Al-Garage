@@ -61,6 +61,8 @@ struct OnboardingView: View {
                     .font(.body.weight(.semibold))
                     .frame(width: 36, height: 36)
                     .background(AppColors.primarySoft, in: Circle())
+                    .frame(width: 44, height: 44)
+                    .contentShape(Circle())
             }
             .buttonStyle(.plain)
             .foregroundStyle(AppColors.primary)
@@ -114,14 +116,14 @@ struct OnboardingView: View {
                 subtitle: "Apple will ask you to allow it next.",
                 points: [
                     .init("app.badge.checkmark.fill", "Needed to block", "Apple only lets apps block other apps through Screen Time."),
-                    .init("eye.slash.fill", "Samla can't see your activity", "Apple keeps the apps you choose private, even from Samla."),
+                    .init("eye.slash.fill", "Samla can't see your activity", "Apple's message mentions activity data, but Apple keeps it hidden from Samla."),
                     .init("slider.horizontal.3", "You stay in control", "You can change it anytime in iOS Settings."),
                 ]
             )
             if screenTimeDenied {
                 Label("Without Screen Time, Samla can't block anything. You can allow it later from Home.", systemImage: "exclamationmark.circle.fill")
                     .font(.subheadline)
-                    .foregroundStyle(AppColors.scheduled)
+                    .foregroundStyle(AppColors.scheduledText)
                     .padding(Spacing.l)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(AppColors.scheduled.opacity(0.1), in: RoundedRectangle(cornerRadius: Radius.control))
@@ -141,7 +143,7 @@ struct OnboardingView: View {
             )
         case .notifications:
             StepContent(
-                systemImage: "bell.badge.fill",
+                systemImage: "bell.fill",
                 title: "Stay on Track",
                 subtitle: "A few helpful notifications, never spam.",
                 points: [

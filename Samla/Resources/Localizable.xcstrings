@@ -221,6 +221,70 @@
         }
       }
     },
+    "%lld breaks" : {
+      "localizations" : {
+        "ar" : {
+          "variations" : {
+            "plural" : {
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "بلا استراحات"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "استراحة واحدة"
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "استراحتان"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld استراحات"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld استراحة"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld استراحة"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld break"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld breaks"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld days" : {
       "localizations" : {
         "ar" : {
@@ -355,6 +419,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld من %2$lld"
+          }
+        }
+      }
+    },
+    "%lld of %lld free lists used" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استخدمت %1$lld من %2$lld قوائم مجانية"
           }
         }
       }
@@ -743,12 +817,42 @@
         }
       }
     },
+    "Add a Partner" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أضف شريكًا"
+          }
+        }
+      }
+    },
+    "Add at least one day and time." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أضف يومًا ووقتًا واحدًا على الأقل."
+          }
+        }
+      }
+    },
     "Add Slot" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "إضافة فترة"
+          }
+        }
+      }
+    },
+    "Adult filter" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فلتر البالغين"
           }
         }
       }
@@ -763,12 +867,22 @@
         }
       }
     },
-    "Adult websites use Apple's built-in content filter." : {
+    "Adult Websites" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تستخدم مواقع البالغين فلتر المحتوى المدمج من Apple."
+            "value" : "مواقع البالغين"
+          }
+        }
+      }
+    },
+    "AI Tools" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أدوات الذكاء الاصطناعي"
           }
         }
       }
@@ -803,6 +917,16 @@
         }
       }
     },
+    "Allowed Apps" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التطبيقات المسموحة"
+          }
+        }
+      }
+    },
     "Also lock all 17+ apps" : {
       "localizations" : {
         "ar" : {
@@ -829,16 +953,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "حساب Apple"
-          }
-        }
-      }
-    },
-    "Apple keeps the apps you choose private, even from Samla." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تُبقي Apple التطبيقات التي تختارها خاصة حتى عن الصملة."
           }
         }
       }
@@ -873,22 +987,32 @@
         }
       }
     },
+    "Apple's built-in filter blocks adult sites in every browser." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فلتر Apple المدمج يحظر مواقع البالغين في كل المتصفحات."
+          }
+        }
+      }
+    },
+    "Apple's message mentions activity data, but Apple keeps it hidden from Samla." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "رسالة Apple تذكر بيانات النشاط، لكن Apple تخفيها عن الصملة."
+          }
+        }
+      }
+    },
     "Apps" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "التطبيقات"
-          }
-        }
-      }
-    },
-    "Apps & Categories" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "التطبيقات والفئات"
           }
         }
       }
@@ -973,12 +1097,12 @@
         }
       }
     },
-    "Block adult websites" : {
+    "Block all" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "حظر مواقع البالغين"
+            "value" : "حظر الكل"
           }
         }
       }
@@ -1013,6 +1137,16 @@
         }
       }
     },
+    "Block Forever is free and always on, not just while this list runs." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«احظر للأبد» مجاني ومفعّل دائمًا، لا وقت تشغيل القائمة فقط."
+          }
+        }
+      }
+    },
     "Block Forever is on" : {
       "localizations" : {
         "ar" : {
@@ -1043,12 +1177,32 @@
         }
       }
     },
+    "Block Forever uses %lld of Apple's %lld-website limit." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«احظر للأبد» يستخدم %1$lld من حد Apple البالغ %2$lld موقعًا."
+          }
+        }
+      }
+    },
     "Block started" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "بدأ الحظر"
+          }
+        }
+      }
+    },
+    "Block these for good" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "احظرها نهائيًا"
           }
         }
       }
@@ -1103,6 +1257,16 @@
         }
       }
     },
+    "Blocks every app and website except the apps you allow." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحظر كل التطبيقات والمواقع ما عدا التطبيقات التي تسمح بها."
+          }
+        }
+      }
+    },
     "Blocks porn, gambling and dating websites in every browser." : {
       "localizations" : {
         "ar" : {
@@ -1149,6 +1313,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "الاستراحات في اليوم"
+          }
+        }
+      }
+    },
+    "Can I block AI apps like ChatGPT?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هل أقدر أحظر تطبيقات الذكاء الاصطناعي مثل ChatGPT؟"
           }
         }
       }
@@ -1253,6 +1427,26 @@
         }
       }
     },
+    "Choose apps only, like Maps or your bank. Phone calls always work, and every website stays blocked." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر تطبيقات فقط، مثل الخرائط أو تطبيق البنك. المكالمات تعمل دائمًا، وتبقى كل المواقع محظورة."
+          }
+        }
+      }
+    },
+    "Choose at least one app, category or website." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر تطبيقًا أو فئة أو موقعًا واحدًا على الأقل."
+          }
+        }
+      }
+    },
     "Choose Schedule under When, then add days and times. Blocking starts and stops automatically, even when Samla is closed." : {
       "localizations" : {
         "ar" : {
@@ -1263,22 +1457,22 @@
         }
       }
     },
-    "Chosen apps open to the Samla block screen while the list is active." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تُفتح التطبيقات المختارة على شاشة حظر الصملة أثناء نشاط القائمة."
-          }
-        }
-      }
-    },
     "Close" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "إغلاق"
+          }
+        }
+      }
+    },
+    "Collapsed" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مطوي"
           }
         }
       }
@@ -1363,6 +1557,16 @@
         }
       }
     },
+    "Covered by Block Forever" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مشمول في «احظر للأبد»"
+          }
+        }
+      }
+    },
     "Create" : {
       "localizations" : {
         "ar" : {
@@ -1383,12 +1587,32 @@
         }
       }
     },
+    "Crypto & Trading" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "العملات الرقمية والتداول"
+          }
+        }
+      }
+    },
     "Custom" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "مخصص"
+          }
+        }
+      }
+    },
+    "Dating" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المواعدة"
           }
         }
       }
@@ -1423,6 +1647,26 @@
         }
       }
     },
+    "Delete All My Data" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حذف كل بياناتي"
+          }
+        }
+      }
+    },
+    "Delete all your data?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حذف كل بياناتك؟"
+          }
+        }
+      }
+    },
     "Delete List" : {
       "localizations" : {
         "ar" : {
@@ -1449,6 +1693,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "الانضباط أن تختار ما تريده أكثر، لا ما تريده الآن."
+          }
+        }
+      }
+    },
+    "Distractions" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المشتتات"
           }
         }
       }
@@ -1483,22 +1737,22 @@
         }
       }
     },
+    "e.g., example.com" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مثال: example.com"
+          }
+        }
+      }
+    },
     "e.g., Sleep" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "مثال: النوم"
-          }
-        }
-      }
-    },
-    "e.g., youtube.com" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "مثال: youtube.com"
           }
         }
       }
@@ -1583,6 +1837,16 @@
         }
       }
     },
+    "Enter a name of at least 2 characters." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أدخل اسمًا من حرفين على الأقل."
+          }
+        }
+      }
+    },
     "Enter a website like example.com" : {
       "localizations" : {
         "ar" : {
@@ -1629,6 +1893,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "كل ما تحتاجه لتبقى على المسار الصحيح."
+          }
+        }
+      }
+    },
+    "Expanded" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مفتوح"
+          }
+        }
+      }
+    },
+    "Extra Options" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خيارات إضافية"
           }
         }
       }
@@ -1723,6 +2007,16 @@
         }
       }
     },
+    "Gambling" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "القمار"
+          }
+        }
+      }
+    },
     "Games" : {
       "localizations" : {
         "ar" : {
@@ -1783,22 +2077,22 @@
         }
       }
     },
-    "Hard Mode · unlocks %@" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الوضع الصارم · يُفتح %@"
-          }
-        }
-      }
-    },
     "Hard Mode and partner protection" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "الوضع الصارم وحماية الشريك"
+          }
+        }
+      }
+    },
+    "Hard Mode can't be stopped, edited or deleted while it's active." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الوضع الصارم لا يمكن إيقافه أو تعديله أو حذفه أثناء نشاطه."
           }
         }
       }
@@ -1913,6 +2207,26 @@
         }
       }
     },
+    "In Apple's list, tick a category to block all its apps, or open it and pick only some." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "في قائمة Apple، اختر الفئة لحظر كل تطبيقاتها، أو افتحها واختر بعضها فقط."
+          }
+        }
+      }
+    },
+    "It blocks every app and website while the list is active, except the apps you allow. Apple doesn't let any app turn off Wi-Fi itself, and phone calls always work." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحظر كل التطبيقات والمواقع أثناء نشاط القائمة، ما عدا التطبيقات التي تسمح بها. Apple لا تسمح لأي تطبيق بإطفاء الواي فاي نفسه، والمكالمات تعمل دائمًا."
+          }
+        }
+      }
+    },
     "Language" : {
       "localizations" : {
         "ar" : {
@@ -2003,6 +2317,16 @@
         }
       }
     },
+    "Locked until %@" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مقفلة حتى %@"
+          }
+        }
+      }
+    },
     "Log out" : {
       "localizations" : {
         "ar" : {
@@ -2023,12 +2347,12 @@
         }
       }
     },
-    "Make sure Screen Time access is allowed. If Home shows a permissions card, tap it and allow access. Blocking only works on a real iPhone." : {
+    "Make sure Screen Time access is allowed. If Home shows a missing-permissions banner, tap Fix and allow access. Blocking only works on a real iPhone." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تأكد من السماح بالوصول إلى «مدة استخدام الجهاز». إذا ظهرت بطاقة الأذونات في الرئيسية، فاضغط عليها واسمح بالوصول. لا يعمل الحظر إلا على جهاز iPhone حقيقي."
+            "value" : "تأكد من السماح بالوصول إلى «مدة استخدام الجهاز». إذا ظهر في الرئيسية شريط «بعض الأذونات ناقصة»، فاضغط «إصلاح» واسمح بالوصول. لا يعمل الحظر إلا على جهاز iPhone حقيقي."
           }
         }
       }
@@ -2083,12 +2407,32 @@
         }
       }
     },
+    "News" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الأخبار"
+          }
+        }
+      }
+    },
     "No account" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "بدون حساب"
+          }
+        }
+      }
+    },
+    "No Internet Mode" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "وضع بلا إنترنت"
           }
         }
       }
@@ -2313,6 +2657,16 @@
         }
       }
     },
+    "Other Websites" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مواقع أخرى"
+          }
+        }
+      }
+    },
     "Partner" : {
       "localizations" : {
         "ar" : {
@@ -2483,6 +2837,16 @@
         }
       }
     },
+    "Protect Yourself" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "احمِ نفسك"
+          }
+        }
+      }
+    },
     "Protect yourself for good" : {
       "localizations" : {
         "ar" : {
@@ -2519,6 +2883,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "الحماية"
+          }
+        }
+      }
+    },
+    "Protection and breaks." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحماية والاستراحات."
           }
         }
       }
@@ -2579,6 +2953,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "استبدال رمز"
+          }
+        }
+      }
+    },
+    "Reels and Shorts can't be blocked on their own — block Instagram or YouTube instead." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يمكن حظر الريلز والشورتس وحدها — احظر انستقرام أو يوتيوب بدلًا منها."
           }
         }
       }
@@ -2879,6 +3263,16 @@
         }
       }
     },
+    "Short Videos" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المقاطع القصيرة"
+          }
+        }
+      }
+    },
     "Sign in failed. Please try again." : {
       "localizations" : {
         "ar" : {
@@ -2949,12 +3343,12 @@
         }
       }
     },
-    "Social" : {
+    "Social Media" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "التواصل"
+            "value" : "التواصل الاجتماعي"
           }
         }
       }
@@ -3149,16 +3543,6 @@
         }
       }
     },
-    "Suggestions block the website. To block the app itself, choose it in Apps & Categories." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تحظر الاقتراحات الموقع فقط. لحظر التطبيق نفسه، اختره من «التطبيقات والفئات»."
-          }
-        }
-      }
-    },
     "Support Email" : {
       "localizations" : {
         "ar" : {
@@ -3199,12 +3583,12 @@
         }
       }
     },
-    "The free version holds %lld lists. Premium will remove the limit." : {
+    "The free version holds %lld lists. Premium will remove the limit — for now, delete a list you no longer use to make room." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تتيح النسخة المجانية %lld قوائم، وسيُلغي الاشتراك المميز هذا الحد."
+            "value" : "تتيح النسخة المجانية %lld قوائم، وسيُلغي الاشتراك المميز هذا الحد — حاليًا احذف قائمة لم تعد تستخدمها لتفريغ مكان."
           }
         }
       }
@@ -3235,6 +3619,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "سيؤدي هذا إلى حذف بيانات حسابك وقوائم الحظر من هذا الجهاز نهائيًا. تبقى القوائم المقفلة حاليًا حتى تنتهي، ويحتفظ «احظر للأبد» بقواعده. ولإيقاف تسجيل الدخول بحساب Apple مع الصملة، افتح الإعدادات ‹ حساب Apple ‹ تسجيل الدخول باستخدام Apple."
+          }
+        }
+      }
+    },
+    "This permanently deletes your block lists and settings from this device. Lists that are locked right now stay until they end, and Block Forever keeps its own rules." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سيؤدي هذا إلى حذف قوائم الحظر والإعدادات من هذا الجهاز نهائيًا. تبقى القوائم المقفلة حاليًا حتى تنتهي، ويحتفظ «احظر للأبد» بقواعده."
+          }
+        }
+      }
+    },
+    "Tick a category to block all of it, or open it to pick sites. %lld of %lld websites used." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر الفئة لحظرها كاملة، أو افتحها لتختار مواقع منها. المستخدم: %1$lld من %2$lld."
           }
         }
       }
@@ -3289,22 +3693,22 @@
         }
       }
     },
+    "To block an AI app too, choose it in Apps." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لحظر تطبيق ذكاء اصطناعي أيضًا، اختره من «التطبيقات»."
+          }
+        }
+      }
+    },
     "To turn it off, you ask and then wait %lld days. You can cancel the request anytime." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "لإيقافه، تطلب الإلغاء ثم تنتظر %lld يومًا، ويمكنك إلغاء الطلب في أي وقت."
-          }
-        }
-      }
-    },
-    "To use Partner, add one in Settings › Accountability Partner." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لاستخدام الشريك، أضِفه من الإعدادات ‹ شريك المساءلة."
           }
         }
       }
@@ -3365,6 +3769,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "إيقافه يحتاج 360 يومًا"
+          }
+        }
+      }
+    },
+    "Unblock all" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إلغاء حظر الكل"
           }
         }
       }
@@ -3503,12 +3917,12 @@
         }
       }
     },
-    "Video" : {
+    "Video & Streaming" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "الفيديو"
+            "value" : "الفيديو والبث"
           }
         }
       }
@@ -3549,6 +3963,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ما هو «احظر للأبد»؟"
+          }
+        }
+      }
+    },
+    "What is No Internet Mode?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ما هو «وضع بلا إنترنت»؟"
           }
         }
       }
@@ -3727,12 +4151,12 @@
         }
       }
     },
-    "You can block up to %lld websites per list." : {
+    "Yes. In What to block, tick AI Tools to block their websites, and choose the apps themselves under Apps. Apple doesn't let Samla pick apps for you." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "الحد الأقصى للمواقع في كل قائمة: %lld."
+            "value" : "نعم. في «ما الذي تريد حظره» اختر «أدوات الذكاء الاصطناعي» لحظر مواقعها، واختر التطبيقات نفسها من «التطبيقات». Apple لا تسمح للصملة باختيار التطبيقات عنك."
           }
         }
       }
@@ -3753,6 +4177,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "التحكم بيدك"
+          }
+        }
+      }
+    },
+    "You've reached Apple's limit of %lld websites per list." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "وصلت إلى حد Apple: %lld موقعًا لكل قائمة."
           }
         }
       }

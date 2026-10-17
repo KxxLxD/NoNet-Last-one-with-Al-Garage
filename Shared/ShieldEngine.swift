@@ -11,7 +11,7 @@ enum ShieldEngine {
     /// ManagedSettings caps shielded application tokens per store.
     private static let maxApplications = 50
     /// The web content filter accepts at most 50 domains.
-    private static let maxFilterDomains = 50
+    static let maxFilterDomains = 50
     /// App Store rating 300 = 12+, so every 17+ app is hidden and can't be opened.
     private static let matureAppsRatingCap = 300
 

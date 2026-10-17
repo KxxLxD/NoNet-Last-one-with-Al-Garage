@@ -50,7 +50,7 @@ struct AccountSection: View {
                 .padding(.vertical, Spacing.xs)
             }
 
-            Button("Delete Account & Data", role: .destructive) { confirmDelete = true }
+            Button(account.isSignedIn ? "Delete Account & Data" : "Delete All My Data", role: .destructive) { confirmDelete = true }
         }
         .alert("Log out?", isPresented: $confirmSignOut) {
             Button("Log out", role: .destructive) { account.signOut() }
@@ -58,11 +58,13 @@ struct AccountSection: View {
         } message: {
             Text("Your lists stay on this device.")
         }
-        .alert("Delete your account?", isPresented: $confirmDelete) {
+        .alert(account.isSignedIn ? "Delete your account?" : "Delete all your data?", isPresented: $confirmDelete) {
             Button("Delete", role: .destructive, action: deleteAccount)
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This permanently deletes your account details and block lists from this device. Lists that are locked right now stay until they end, and Block Forever keeps its own rules. To also stop using Sign in with Apple with Samla, open Settings › Apple Account › Sign in with Apple.")
+            Text(account.isSignedIn
+                 ? "This permanently deletes your account details and block lists from this device. Lists that are locked right now stay until they end, and Block Forever keeps its own rules. To also stop using Sign in with Apple with Samla, open Settings › Apple Account › Sign in with Apple."
+                 : "This permanently deletes your block lists and settings from this device. Lists that are locked right now stay until they end, and Block Forever keeps its own rules.")
         }
     }
 

@@ -24,7 +24,7 @@ struct SettingsView: View {
                         }
                     } else {
                         Button { showForeverSetup = true } label: {
-                            row("Block Forever", systemImage: "shield.lefthalf.filled", color: AppColors.secondary, detail: String(localized: "Off"), showsChevron: true)
+                            row("Block Forever", systemImage: "shield.lefthalf.filled", color: AppColors.secondary, detail: String(localized: "Off"), trailing: .chevron)
                         }
                     }
                     navigationRow("Tips", systemImage: "lightbulb.fill", color: AppColors.scheduled) {
@@ -45,14 +45,17 @@ struct SettingsView: View {
                     if let mail = AppLinks.supportMail {
                         linkRow("Support Email", systemImage: "envelope.fill", color: AppColors.active, url: mail)
                     }
-                    comingSoonRow("Community", systemImage: "person.3.fill", url: AppLinks.whatsAppCommunity ?? AppLinks.telegramChannel)
+                    // Shown once there's a link: a dead "Coming soon" row only lowers trust.
+                    if let community = AppLinks.whatsAppCommunity ?? AppLinks.telegramChannel {
+                        linkRow("Community", systemImage: "person.3.fill", color: AppColors.active, url: community)
+                    }
                 }
 
                 Section {
                     Button {
                         if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
                     } label: {
-                        row("Language", systemImage: "globe", color: AppColors.stopped, detail: currentLanguageName, showsChevron: true)
+                        row("Language", systemImage: "globe", color: AppColors.stopped, detail: currentLanguageName, trailing: .external)
                     }
                     navigationRow("Policies & Terms", systemImage: "doc.text.fill", color: AppColors.stopped) {
                         PoliciesView()
@@ -109,7 +112,16 @@ struct SettingsView: View {
         return Locale.current.localizedString(forLanguageCode: code) ?? code
     }
 
-    private func row(_ title: LocalizedStringKey, systemImage: String, color: Color, detail: String? = nil, showsChevron: Bool = false) -> some View {
+    /// What sits at the trailing edge of a row that isn't a NavigationLink.
+    private enum Trailing {
+        case none
+        /// Opens something inside Samla.
+        case chevron
+        /// Leaves Samla (iOS Settings, Safari, Mail).
+        case external
+    }
+
+    private func row(_ title: LocalizedStringKey, systemImage: String, color: Color, detail: String? = nil, trailing: Trailing = .none) -> some View {
         HStack(spacing: Spacing.m) {
             IconSquare(systemName: systemImage, color: color)
             Text(title).foregroundStyle(AppColors.text)
@@ -118,10 +130,11 @@ struct SettingsView: View {
                 Text(detail)
                     .foregroundStyle(AppColors.textSecondary)
             }
-            if showsChevron {
-                Image(systemName: "chevron.forward")
+            if trailing != .none {
+                Image(systemName: trailing == .external ? "arrow.up.forward" : "chevron.forward")
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(AppColors.stopped)
+                    .accessibilityHidden(true)
             }
         }
     }
@@ -134,16 +147,7 @@ struct SettingsView: View {
 
     private func linkRow(_ title: LocalizedStringKey, systemImage: String, color: Color, url: URL) -> some View {
         Link(destination: url) {
-            row(title, systemImage: systemImage, color: color, showsChevron: true)
-        }
-    }
-
-    @ViewBuilder
-    private func comingSoonRow(_ title: LocalizedStringKey, systemImage: String, url: URL?) -> some View {
-        if let url {
-            linkRow(title, systemImage: systemImage, color: AppColors.active, url: url)
-        } else {
-            row(title, systemImage: systemImage, color: AppColors.stopped, detail: String(localized: "Coming soon"))
+            row(title, systemImage: systemImage, color: color, trailing: .external)
         }
     }
 }

@@ -24,7 +24,7 @@ struct PremiumSoonView: View {
                         .font(.title2.weight(.bold))
                         .foregroundStyle(AppColors.primary)
                     if reason == .listLimit {
-                        Text("The free version holds \(ListsModel.freeListLimit) lists. Premium will remove the limit.")
+                        Text("The free version holds \(ListsModel.freeListLimit) lists. Premium will remove the limit — for now, delete a list you no longer use to make room.")
                             .font(.subheadline)
                             .foregroundStyle(AppColors.textSecondary)
                     }

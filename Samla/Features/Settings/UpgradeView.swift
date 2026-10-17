@@ -24,7 +24,7 @@ struct UpgradeView: View {
                 if store.isPremium {
                     Label("Premium is active. Thank you!", systemImage: "checkmark.seal.fill")
                         .font(.headline)
-                        .foregroundStyle(AppColors.active)
+                        .foregroundStyle(AppColors.activeText)
                         .card(padding: 16)
                 }
 
